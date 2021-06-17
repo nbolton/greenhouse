@@ -21,6 +21,8 @@ const int timerIntervalSec = 5;
 const char auth[] = "IgXeM1Ri3cJZdHfs9ugS7gBfXXwzHqBS";
 const char ssid[] = "Manhattan";
 const char pass[] = "301 Park Ave";
+/*const float mvpc = 3.96; // magic number (related to input voltage of 12.19V)
+const float multiplier = 3; // resistor count*/
 
 enum windowState {
   windowUnknown, windowOpen, windowClosed
@@ -148,6 +150,16 @@ void timerEvent()
 
   Blynk.virtualWrite(V1, t);
   Blynk.virtualWrite(V2, h);
+
+  /*float counts = analogRead(A0);
+  float mv = counts * mvpc;
+  float volts = (mv * multiplier) / 1000;
+  
+  Serial.print(F("Counts: "));
+  Serial.print(counts);
+  Serial.print(F(" | Voltage: "));
+  Serial.print(volts);
+  Serial.println("V");*/
 
   flashLed(2);
 
