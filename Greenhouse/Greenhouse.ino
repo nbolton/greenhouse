@@ -12,8 +12,6 @@
 const int enA = 4; // 4 = D2 on 8266
 const int in1 = 0; // 0 = D3 on 8266
 const int in2 = 12; // 12 = D6 on 8266
-const float openTemp = 25.00;
-const float openHumid = 70;
 const int motorSpeed = 255;
 const int checkFreqSec = 1;
 const int openTimeSec = 12;
@@ -21,17 +19,18 @@ const int timerIntervalSec = 5;
 const char auth[] = "IgXeM1Ri3cJZdHfs9ugS7gBfXXwzHqBS";
 const char ssid[] = "Manhattan";
 const char pass[] = "301 Park Ave";
-/*const float mvpc = 3.96; // magic number (related to input voltage of 12.19V)
-const float multiplier = 3; // resistor count*/
+const int unknown = -1;
 
 enum windowState {
   windowUnknown, windowOpen, windowClosed
 };
 
 windowState ws = windowUnknown;
-int timerId = -1;
+int timerId = unknown;
 int led = LOW;
 bool autoMode = false;
+int openTemp = unknown;
+int openHumid = unknown;
 
 DHT dht(DHT_PIN, DHT_TYPE);
 BlynkTimer timer;
@@ -66,7 +65,7 @@ void loop()
 
 BLYNK_CONNECTED()
 {
-  Blynk.syncVirtual(V0, V3, V4);
+  Blynk.syncVirtual(V0, V3, V4, V5, V6);
 }
 
 BLYNK_WRITE(V0)
@@ -121,6 +120,20 @@ BLYNK_WRITE(V4)
   }
 }
 
+BLYNK_WRITE(V5)
+{
+  flashLed(2);
+  openTemp = param.asInt();
+  Serial.printf("Max temperature: %dC\n", openTemp);
+}
+
+BLYNK_WRITE(V6)
+{
+  flashLed(2);
+  openHumid = param.asInt();
+  Serial.printf("Max humidity: %d%%\n", openHumid);
+}
+
 void flashLed(int times)
 {
   for (int i = 0; i < times * 2; i++) {
@@ -151,26 +164,16 @@ void timerEvent()
   Blynk.virtualWrite(V1, t);
   Blynk.virtualWrite(V2, h);
 
-  /*float counts = analogRead(A0);
-  float mv = counts * mvpc;
-  float volts = (mv * multiplier) / 1000;
-  
-  Serial.print(F("Counts: "));
-  Serial.print(counts);
-  Serial.print(F(" | Voltage: "));
-  Serial.print(volts);
-  Serial.println("V");*/
-
   flashLed(2);
 
-  if (autoMode) {
+  if (autoMode && (openTemp != unknown) && (openHumid != unknown)) {
     if ((t > openTemp) || (h > openHumid)) {
       if (ws == windowClosed) {
         openWindow();
       }
     }
     else {
-      if (ws == windowOpen) {
+      if ((ws == windowOpen)) {
         closeWindow();
       }
     }
