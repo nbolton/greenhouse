@@ -36,7 +36,8 @@ DHT dht(DHT_PIN, DHT_TYPE);
 BlynkTimer timer;
 
 void flashLed(int times);
-void refresh();
+bool refresh();
+void refreshTimer();
 void closeWindow();
 void openWindow();
 void reboot();
@@ -44,6 +45,9 @@ void reboot();
 void setup()
 {
   Serial.begin(9600);
+
+  delay(1000);
+  Serial.println("\n\nGreenhouse system");
   
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -56,6 +60,14 @@ void setup()
   Blynk.begin(auth, ssid, pass);
 
   dht.begin();
+
+  // keep trying to refresh until it works
+  Serial.println("Initial refresh"); 
+  while (!refresh()) {
+    
+    Serial.println("Retry refresh");
+    delay(1000);
+  }
 }
 
 void loop()
@@ -71,6 +83,9 @@ BLYNK_CONNECTED()
 
 BLYNK_WRITE(V0)
 {
+  Serial.println("Blynk write V0");
+  flashLed(2);
+  
   autoMode = (param.asInt() == 1);
   
   Serial.print("Auto mode: ");
@@ -79,10 +94,13 @@ BLYNK_WRITE(V0)
   // light on for manual mode
   led = !autoMode ? LOW : HIGH;
   digitalWrite(LED_BUILTIN, led);
+
+  refresh();
 }
 
 BLYNK_WRITE(V3)
 {
+  Serial.println("Blynk write V3");
   int refreshRate = param.asInt();
   
   if (refreshRate <= 0) {
@@ -103,13 +121,14 @@ BLYNK_WRITE(V3)
     timer.deleteTimer(timerId);
   }
   
-  timerId = timer.setInterval(refreshRate * 1000L, refresh);
+  timerId = timer.setInterval(refreshRate * 1000L, refreshTimer);
 
   flashLed(3);
 }
 
 BLYNK_WRITE(V4)
 {
+  Serial.println("Blynk write V4");
   flashLed(4);
   
   int windowOpen = param.asInt();
@@ -123,9 +142,13 @@ BLYNK_WRITE(V4)
 
 BLYNK_WRITE(V5)
 {
+  Serial.println("Blynk write V5");
   flashLed(2);
+  
   openTemp = param.asInt();
   Serial.printf("Open temperature: %dC\n", openTemp);
+
+  refresh();
 }
 
 void flashLed(int times)
@@ -137,9 +160,11 @@ void flashLed(int times)
   }
 }
 
-// reset
 BLYNK_WRITE(V6)
 {
+  Serial.println("Blynk write V6");
+  flashLed(2);
+  
   if (param.asInt() == 1) {
     reboot();
   }
@@ -147,20 +172,26 @@ BLYNK_WRITE(V6)
 
 BLYNK_WRITE(V7)
 {
+  Serial.println("Blynk write V7");
+  flashLed(2);
+  
   if (param.asInt() == 1) {
     refresh();
   }
 }
 
-void refresh()
+bool refresh()
 {
   Serial.println("Refresh");
+  bool ok = true;
   
   float t = dht.readTemperature();
   float h = dht.readHumidity();
   
   if (isnan(t) || isnan(h)) {
-    const char dhtFail[] = "DHT device not functioning";
+    
+    ok = false;
+    const char dhtFail[] = "DHT device unavailable";
     Serial.println(dhtFail);
 
     // only send once per reboot (don't spam the timeline)
@@ -184,21 +215,40 @@ void refresh()
 
   flashLed(2);
 
-  // TODO: use something other than -1
-  if (t == unknown) {
+  if (t != unknown) {
+    Serial.println("t known");
     if (autoMode && (openTemp != unknown)) {
+      Serial.println("auto mode & open temp known");
       if (t > openTemp) {
+        Serial.println("t > openTemp");
         if (ws == windowClosed) {
+          Serial.println("ws == windowClosed");
           openWindow();
+        }
+        else {
+          Serial.println("window already open");
         }
       }
       else {
+        Serial.println("t <= openTemp");
         if (ws == windowOpen) {
+          Serial.println("ws == windowOpen");
           closeWindow();
+        }
+        else {
+          Serial.println("window already closed");
         }
       }
     }
+    else {
+      Serial.println("manual mode or open temp unknown");
+    }
   }
+  else {
+      Serial.println("t unknown");
+  }
+
+  return ok;
 }
 
 void closeWindow()
@@ -239,4 +289,10 @@ void reboot()
   wdt_disable();
   wdt_enable(WDTO_15MS);
   while (1) {}
+}
+
+void refreshTimer()
+{
+  Serial.println(F("Refresh timer"));
+  refresh();
 }
