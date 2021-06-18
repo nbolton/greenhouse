@@ -30,15 +30,16 @@ int timerId = unknown;
 int led = LOW;
 bool autoMode = false;
 int openTemp = unknown;
-int openHumid = unknown;
+bool dhtFailSent = false;
 
 DHT dht(DHT_PIN, DHT_TYPE);
 BlynkTimer timer;
 
 void flashLed(int times);
-void timerEvent();
+void refresh();
 void closeWindow();
 void openWindow();
+void reboot();
 
 void setup()
 {
@@ -65,7 +66,7 @@ void loop()
 
 BLYNK_CONNECTED()
 {
-  Blynk.syncVirtual(V0, V3, V4, V5, V6);
+  Blynk.syncVirtual(V0, V3, V4, V5);
 }
 
 BLYNK_WRITE(V0)
@@ -102,7 +103,7 @@ BLYNK_WRITE(V3)
     timer.deleteTimer(timerId);
   }
   
-  timerId = timer.setInterval(refreshRate * 1000L, timerEvent);
+  timerId = timer.setInterval(refreshRate * 1000L, refresh);
 
   flashLed(3);
 }
@@ -124,14 +125,7 @@ BLYNK_WRITE(V5)
 {
   flashLed(2);
   openTemp = param.asInt();
-  Serial.printf("Max temperature: %dC\n", openTemp);
-}
-
-BLYNK_WRITE(V6)
-{
-  flashLed(2);
-  openHumid = param.asInt();
-  Serial.printf("Max humidity: %d%%\n", openHumid);
+  Serial.printf("Open temperature: %dC\n", openTemp);
 }
 
 void flashLed(int times)
@@ -143,16 +137,40 @@ void flashLed(int times)
   }
 }
 
-void timerEvent()
+// reset
+BLYNK_WRITE(V6)
 {
-  Serial.println("Timer event");
+  if (param.asInt() == 1) {
+    reboot();
+  }
+}
+
+BLYNK_WRITE(V7)
+{
+  if (param.asInt() == 1) {
+    refresh();
+  }
+}
+
+void refresh()
+{
+  Serial.println("Refresh");
   
   float t = dht.readTemperature();
   float h = dht.readHumidity();
   
   if (isnan(t) || isnan(h)) {
-    Serial.println(F("Waiting for DHT"));
-    return;
+    const char dhtFail[] = "DHT device not functioning";
+    Serial.println(dhtFail);
+
+    // only send once per reboot (don't spam the timeline)
+    if (!dhtFailSent) {
+      Blynk.logEvent("log_warning", dhtFail);
+      dhtFailSent = true;
+    }
+    
+    t = unknown;
+    h = unknown;
   }
   
   Serial.print(F("Temperature: "));
@@ -166,15 +184,18 @@ void timerEvent()
 
   flashLed(2);
 
-  if (autoMode && (openTemp != unknown) && (openHumid != unknown)) {
-    if ((t > openTemp) || (h > openHumid)) {
-      if (ws == windowClosed) {
-        openWindow();
+  // TODO: use something other than -1
+  if (t == unknown) {
+    if (autoMode && (openTemp != unknown)) {
+      if (t > openTemp) {
+        if (ws == windowClosed) {
+          openWindow();
+        }
       }
-    }
-    else {
-      if ((ws == windowOpen)) {
-        closeWindow();
+      else {
+        if (ws == windowOpen) {
+          closeWindow();
+        }
       }
     }
   }
@@ -210,4 +231,12 @@ void openWindow()
 
   Serial.println(F("Window opened"));
   ws = windowOpen;
+}
+
+void reboot()
+{
+  Blynk.disconnect();
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {}
 }
