@@ -1,5 +1,4 @@
 #include "GreenhouseArduino.h"
-#include "Greenhouse.h"
 
 #include <unity.h>
 #include <Arduino.h>
@@ -14,8 +13,7 @@
 
 void test_hello_world(void)
 {
-    GreenhouseArduino ga;
-    Greenhouse greenhouse(ga);
+    GreenhouseArduino greenhouse;
     greenhouse.Setup();
     greenhouse.Loop();
 }

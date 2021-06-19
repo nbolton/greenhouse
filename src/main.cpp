@@ -3,8 +3,7 @@
 #include "../lib/embedded/SensorsImpl.h"
 #include "../lib/greenhouse/Greenhouse.h"
 
-GreenhouseArduino gh;
-Greenhouse greenhouse(gh);
+GreenhouseArduino greenhouse;
 
 void setup()
 {

@@ -1,7 +1,7 @@
-#include "IGreenhouseArduino.h"
+#include "Greenhouse.h"
 
-class GreenhouseArduino : public IGreenhouseArduino {
-  public:
-    void Setup();
-    void Loop();
+class GreenhouseArduino : public Greenhouse {
+    public:
+        void Setup();
+        void Loop();
 };

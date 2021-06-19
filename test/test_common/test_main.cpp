@@ -9,17 +9,9 @@
 // // clean stuff up here
 // }
 
-class GreenhouseArduino : public IGreenhouseArduino
-{
-    public:
-        void Setup() { }
-        void Loop() { }
-};
-
 void test_hello_world(void)
 {
-    GreenhouseArduino ga;
-    Greenhouse greenhouse(ga);
+    Greenhouse greenhouse;
     greenhouse.Setup();
     greenhouse.Loop();
 }
