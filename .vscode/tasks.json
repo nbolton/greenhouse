@@ -2,7 +2,7 @@
     "tasks": [
         {
             "type": "PlatformIO",
-            "task": "Test",
+            "task": "Test (native)",
             "problemMatcher": [
                 "$platformio"
             ],
@@ -10,7 +10,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "label": "PlatformIO: Test"
+            "label": "PlatformIO: Test (native)"
         }
     ],
     "version": "2.0.0"
