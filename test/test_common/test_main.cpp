@@ -9,15 +9,19 @@
 // // clean stuff up here
 // }
 
-class Blynk : public IBlynk { };
-class Sensors : public ISensors { };
+class GreenhouseArduino : public IGreenhouseArduino
+{
+    public:
+        void Setup() { }
+        void Loop() { }
+};
 
 void test_hello_world(void)
 {
-    Blynk blynk;
-    Sensors sensors;
-    Greenhouse greenhouse(blynk, sensors);
-    greenhouse.Run();
+    GreenhouseArduino ga;
+    Greenhouse greenhouse(ga);
+    greenhouse.Setup();
+    greenhouse.Loop();
 }
 
 void process()

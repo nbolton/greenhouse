@@ -11,6 +11,15 @@
                 "isDefault": true
             },
             "label": "PlatformIO: Test (native)"
+        },
+        {
+            "type": "PlatformIO",
+            "task": "Test (nodemcuv2)",
+            "problemMatcher": [
+                "$platformio"
+            ],
+            "group": "build",
+            "label": "PlatformIO: Test (nodemcuv2)"
         }
     ],
     "version": "2.0.0"

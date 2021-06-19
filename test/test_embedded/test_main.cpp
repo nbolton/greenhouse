@@ -1,3 +1,6 @@
+#include "GreenhouseArduino.h"
+#include "Greenhouse.h"
+
 #include <unity.h>
 #include <Arduino.h>
 
@@ -9,8 +12,12 @@
 // // clean stuff up here
 // }
 
-void test_hello_world(void) {
-    TEST_ASSERT_EQUAL(42, 42);
+void test_hello_world(void)
+{
+    GreenhouseArduino ga;
+    Greenhouse greenhouse(ga);
+    greenhouse.Setup();
+    greenhouse.Loop();
 }
 
 void process() {

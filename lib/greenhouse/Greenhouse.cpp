@@ -1,13 +1,18 @@
 #include "Greenhouse.h"
+
 #include <stdio.h>
 
-Greenhouse::Greenhouse(IBlynk& blynk, ISensors& sensors) :
-    m_blynk(blynk),
-    m_sensors(sensors)
+Greenhouse::Greenhouse(IGreenhouseArduino& ga) :
+  m_ga(ga)
 {
 }
 
-void Greenhouse::Run()
+void Greenhouse::Setup()
 {
-    printf("Hello world");
+  m_ga.Setup();
+}
+
+void Greenhouse::Loop()
+{
+  m_ga.Loop();
 }

@@ -1,15 +1,14 @@
 #pragma once
 
-#include "IBlynk.h"
-#include "ISensors.h"
+#include "IGreenhouseArduino.h"
 
 class Greenhouse
 {
     public:
-        Greenhouse(IBlynk& blynk, ISensors& sensors);
-        void Run();
+        Greenhouse(IGreenhouseArduino& ga);
+        void Setup();
+        void Loop();
 
     private:
-        IBlynk& m_blynk;
-        ISensors& m_sensors;
+        IGreenhouseArduino& m_ga;
 };
