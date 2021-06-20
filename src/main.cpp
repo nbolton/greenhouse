@@ -7,6 +7,7 @@ GreenhouseArduino greenhouse;
 
 void setup()
 {
+    GreenhouseArduino::Instance(greenhouse);
     greenhouse.Setup();
 }
 

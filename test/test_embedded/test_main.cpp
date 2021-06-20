@@ -14,6 +14,8 @@
 void test_hello_world(void)
 {
     GreenhouseArduino greenhouse;
+    GreenhouseArduino::Instance(greenhouse);
+
     greenhouse.Setup();
     greenhouse.Loop();
 }

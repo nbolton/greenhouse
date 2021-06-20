@@ -1,13 +1,8 @@
 #include "GreenhouseArduino.h"
 
+#include "BlynkCommon.h"
+
 #include <Arduino.h>
-
-#define BLYNK_PRINT Serial
-#define BLYNK_TEMPLATE_ID "TMPLovPyrAUR"
-#define BLYNK_DEVICE_NAME "Greenhouse"
-
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
 #include <DHT.h>
 
 #define DHT_PIN 14 // 14 = D5 on 8266
@@ -25,16 +20,8 @@ const char ssid[] = "Manhattan";
 const char pass[] = "301 Park Ave";
 const int unknown = -1;
 
-enum windowState {
-  windowUnknown, windowOpen, windowClosed
-};
-
-windowState ws = windowUnknown;
 int timerId = unknown;
 int led = LOW;
-bool autoMode = false;
-int openTemp = unknown;
-bool dhtFailSent = false;
 
 DHT dht(DHT_PIN, DHT_TYPE);
 BlynkTimer timer;
@@ -42,9 +29,19 @@ BlynkTimer timer;
 void flashLed(int times);
 bool refresh();
 void refreshTimer();
-void closeWindow();
-void openWindow();
 void reboot();
+
+GreenhouseArduino* s_instance = nullptr;
+
+GreenhouseArduino& Instance()
+{
+  return s_instance;
+}
+
+void Instance(GreenhouseArduino& ga)
+{
+  s_instance = ga;
+}
 
 void GreenhouseArduino::Setup()
 {
@@ -80,6 +77,72 @@ void GreenhouseArduino::Loop()
   timer.run();
 }
 
+float GreenhouseArduino::GetTemperature() const
+{
+  return dht.readTemperature();
+}
+
+float GreenhouseArduino::GetHumidity() const
+{
+  return dht.readHumidity();
+}
+
+bool GreenhouseArduino::IsDhtReady() const
+{
+  return !isnan(t) && !isnan(h);
+}
+
+void GreenhouseArduino::ReportTemperature(float t)
+{
+  Blynk.virtualWrite(V1, t);
+}
+
+void GreenhouseArduino::ReportHumidity(float f)
+{
+  Blynk.virtualWrite(V2, h);
+}
+
+void GreenhouseArduino::FlashLed(int times)
+{
+  for (int i = 0; i < times * 2; i++) {
+    led = (led == LOW) ? HIGH : LOW;
+    digitalWrite(LED_BUILTIN, led);
+    delay(100);
+  }
+}
+
+void GreenhouseArduino::CloseWindow()
+{
+  Serial.println(F("Closing window..."));
+  Blynk.virtualWrite(V4, 0);
+  
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  
+  delay(openTimeSec * 1000);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+
+  Serial.println(F("Window closed"));
+  ws = windowClosed;
+}
+
+void GreenhouseArduino::OpenWindow()
+{
+  Serial.println(F("Opening window..."));
+  Blynk.virtualWrite(V4, 1);
+  
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+
+  delay(openTimeSec * 1000);
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+
+  Serial.println(F("Window opened"));
+  ws = windowOpen;
+}
+
 BLYNK_CONNECTED()
 {
   Blynk.syncVirtual(V0, V3, V4, V5);
@@ -87,16 +150,18 @@ BLYNK_CONNECTED()
 
 BLYNK_WRITE(V0)
 {
+  GreenhouseArduino ga = GreenhouseArduino::Instance();
+
   Serial.println("Blynk write V0");
   flashLed(2);
   
-  autoMode = (param.asInt() == 1);
+  ga.m_autoMode = (param.asInt() == 1);
   
   Serial.print("Auto mode: ");
-  Serial.println(autoMode ? "Auto" : "Manual");
+  Serial.println(ga.m_autoMode ? "Auto" : "Manual");
 
   // light on for manual mode
-  led = !autoMode ? LOW : HIGH;
+  led = !ga.m_autoMode ? LOW : HIGH;
   digitalWrite(LED_BUILTIN, led);
 
   refresh();
@@ -132,15 +197,17 @@ BLYNK_WRITE(V3)
 
 BLYNK_WRITE(V4)
 {
+  GreenhouseArduino ga = GreenhouseArduino::Instance();
+
   Serial.println("Blynk write V4");
   flashLed(4);
   
   int windowOpen = param.asInt();
   if (windowOpen == 1) {
-    openWindow();
+    ga.OpenWindow();
   }
   else {
-    closeWindow();
+    ga.CloseWindow();
   }
 }
 
@@ -153,15 +220,6 @@ BLYNK_WRITE(V5)
   Serial.printf("Open temperature: %dC\n", openTemp);
 
   refresh();
-}
-
-void flashLed(int times)
-{
-  for (int i = 0; i < times * 2; i++) {
-    led = (led == LOW) ? HIGH : LOW;
-    digitalWrite(LED_BUILTIN, led);
-    delay(100);
-  }
 }
 
 BLYNK_WRITE(V6)
@@ -186,105 +244,7 @@ BLYNK_WRITE(V7)
 
 bool refresh()
 {
-  Serial.println("Refresh");
-  bool ok = true;
-  
-  float t = dht.readTemperature();
-  float h = dht.readHumidity();
-  
-  if (isnan(t) || isnan(h)) {
-    
-    ok = false;
-    const char dhtFail[] = "DHT device unavailable";
-    Serial.println(dhtFail);
-
-    // only send once per reboot (don't spam the timeline)
-    if (!dhtFailSent) {
-      Blynk.logEvent("log_warning", dhtFail);
-      dhtFailSent = true;
-    }
-    
-    t = unknown;
-    h = unknown;
-  }
-  
-  Serial.print(F("Temperature: "));
-  Serial.print(t);
-  Serial.print(F(" | Humidity: "));
-  Serial.print(h);
-  Serial.println("%");
-
-  Blynk.virtualWrite(V1, t);
-  Blynk.virtualWrite(V2, h);
-
-  flashLed(2);
-
-  if (t != unknown) {
-    Serial.println("t known");
-    if (autoMode && (openTemp != unknown)) {
-      Serial.println("auto mode & open temp known");
-      if (t > openTemp) {
-        Serial.println("t > openTemp");
-        if (ws == windowClosed) {
-          Serial.println("ws == windowClosed");
-          openWindow();
-        }
-        else {
-          Serial.println("window already open");
-        }
-      }
-      else {
-        Serial.println("t <= openTemp");
-        if (ws == windowOpen) {
-          Serial.println("ws == windowOpen");
-          closeWindow();
-        }
-        else {
-          Serial.println("window already closed");
-        }
-      }
-    }
-    else {
-      Serial.println("manual mode or open temp unknown");
-    }
-  }
-  else {
-      Serial.println("t unknown");
-  }
-
-  return ok;
-}
-
-void closeWindow()
-{
-  Serial.println(F("Closing window..."));
-  Blynk.virtualWrite(V4, 0);
-  
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
-  
-  delay(openTimeSec * 1000);
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
-
-  Serial.println(F("Window closed"));
-  ws = windowClosed;
-}
-
-void openWindow()
-{
-  Serial.println(F("Opening window..."));
-  Blynk.virtualWrite(V4, 1);
-  
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);
-
-  delay(openTimeSec * 1000);
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
-
-  Serial.println(F("Window opened"));
-  ws = windowOpen;
+  return GreenhouseArduino::Instance().Refresh();
 }
 
 void reboot()
