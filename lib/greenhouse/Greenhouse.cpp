@@ -8,7 +8,7 @@ Greenhouse::Greenhouse() :
   m_dhtFailSent(false),
   m_autoMode(false),
   m_openTemp(unknown),
-  m_ws(windowUnknown)
+  m_windowState(windowUnknown)
 {
 }
 
@@ -23,14 +23,13 @@ void Greenhouse::Loop()
 bool Greenhouse::Refresh()
 {
   Log().Trace("Refresh");
-  bool ok = true;
+
+  bool ok = ReadDhtSensor();
+  float t = Temperature();
+  float h = Humidity();
   
-  float t = GetTemperature();
-  float h = GetHumidity();
-  
-  if (!IsDhtReady()) {
+  if (!ok) {
     
-    ok = false;
     const char dhtFail[] = "DHT device unavailable";
     Log().Trace(dhtFail);
 
@@ -46,42 +45,45 @@ bool Greenhouse::Refresh()
   
   Log().Trace("Temperature: %dC | Humidity: %d%%", t, h);
 
-  ReportTemperature(t);
-  ReportHumidity(t);
+  ReportDhtValues();
 
   FlashLed(2);
 
   if (t != unknown) {
-    Log().Trace("t known");
+    Log().Trace("Temp is known");
+
     if (m_autoMode && (m_openTemp != unknown)) {
-      Log().Trace("auto mode & open temp known");
+      Log().Trace("In auto mode and open temp is known");
+
       if (t > m_openTemp) {
-        Log().Trace("t > openTemp");
-        if (m_ws == windowClosed) {
-          Log().Trace("ws == windowClosed");
+        Log().Trace("Temp is above open temp");
+
+        if (m_windowState == windowClosed) {
+          Log().Trace("Window is closed, opening window");
           OpenWindow();
         }
         else {
-          Log().Trace("window already open");
+          Log().Trace("Window already open");
         }
       }
       else {
-        Log().Trace("t <= openTemp");
-        if (m_ws == windowOpen) {
-          Log().Trace("ws == windowOpen");
+        Log().Trace("Temp is below open temp");
+
+        if (m_windowState == windowOpen) {
+          Log().Trace("Window is open, closing window");
           CloseWindow();
         }
         else {
-          Log().Trace("window already closed");
+          Log().Trace("Window already closed");
         }
       }
     }
     else {
-      Log().Trace("manual mode or open temp unknown");
+      Log().Trace("In manual mode or open temp unknown");
     }
   }
   else {
-      Log().Trace("t unknown");
+      Log().Trace("Temp is unknown");
   }
 
   return ok;

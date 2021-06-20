@@ -2,7 +2,8 @@
 
 #include "Log.h"
 
-enum windowState {
+enum WindowState
+{
   windowUnknown, windowOpen, windowClosed
 };
 
@@ -13,22 +14,28 @@ class Greenhouse
         virtual void Setup();
         virtual void Loop();
         virtual bool Refresh();
+        virtual const ::Log& Log() const { return m_log; }
     
     protected:
-        virtual const Log& Log() const { return m_log; }
-        virtual float GetTemperature() const { return -1; }
-        virtual float GetHumidity() const { return -1; }
-        virtual bool IsDhtReady() const { return false; }
-        virtual void ReportTemperature(float t) { }
-        virtual void ReportHumidity(float h) { }
+        virtual bool ReadDhtSensor() { return false; }
+        virtual float Temperature() const { return -1; }
+        virtual float Humidity() const { return -1; }
+        virtual void ReportDhtValues() { }
         virtual void FlashLed(int times) { }
         virtual void OpenWindow() { }
         virtual void CloseWindow() { }
+
+        virtual void WindowState(::WindowState ws) { m_windowState = ws; }
+        virtual ::WindowState WindowState() const { return m_windowState; }
+        virtual void AutoMode(bool am) { m_autoMode = am; }
+        virtual bool AutoMode() const { return m_autoMode; }
+        virtual void OpenTemp(bool ot) { m_openTemp = ot; }
+        virtual int OpenTemp() const { return m_openTemp; }
 
     private:
         ::Log m_log;
         bool m_dhtFailSent;
         bool m_autoMode;
         int m_openTemp;
-        windowState m_ws;
+        ::WindowState m_windowState;
 };
