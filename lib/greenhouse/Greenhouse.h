@@ -26,6 +26,7 @@ protected:
   virtual void FlashLed(int times) {}
   virtual void OpenWindow() {}
   virtual void CloseWindow() {}
+  virtual void ReportWindowState() { }
 
   virtual void WindowState(::WindowState ws) { m_windowState = ws; }
   virtual ::WindowState WindowState() const { return m_windowState; }

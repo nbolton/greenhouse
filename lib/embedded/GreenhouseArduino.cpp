@@ -154,7 +154,9 @@ void GreenhouseArduino::FlashLed(int times)
 void GreenhouseArduino::CloseWindow()
 {
   TraceFlash(F("Closing window..."));
-  Blynk.virtualWrite(V4, 0);
+
+  WindowState(windowClosed);
+  ReportWindowState();
 
   digitalWrite(in1, LOW);
   digitalWrite(in2, HIGH);
@@ -164,13 +166,14 @@ void GreenhouseArduino::CloseWindow()
   digitalWrite(in2, LOW);
 
   TraceFlash(F("Window closed"));
-  WindowState(windowClosed);
 }
 
 void GreenhouseArduino::OpenWindow()
 {
   TraceFlash(F("Opening window..."));
-  Blynk.virtualWrite(V4, 1);
+
+  WindowState(windowOpen);
+  ReportWindowState();
 
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
@@ -178,9 +181,19 @@ void GreenhouseArduino::OpenWindow()
   delay(openTimeSec * 1000);
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
+}
 
-  TraceFlash(F("Window opened"));
-  WindowState(windowOpen);
+void GreenhouseArduino::ReportWindowState()
+{
+  if (WindowState() == windowOpen) {
+    Blynk.virtualWrite(V4, 1);
+  }
+  else if (WindowState() == windowClosed) {
+    Blynk.virtualWrite(V4, 0);
+  }
+  else {
+    TraceFlash(F("Unknown window state, can't report"));
+  }
 }
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)

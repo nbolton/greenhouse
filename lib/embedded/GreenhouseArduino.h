@@ -39,6 +39,7 @@ protected:
   void OpenWindow();
   void CloseWindow();
   void Reboot();
+  void ReportWindowState();
 
 private:
   ArduinoLog m_log;
