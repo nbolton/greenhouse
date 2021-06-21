@@ -21,6 +21,7 @@ class GreenhouseArduino : public Greenhouse {
         void ReportCritical(const char *m, ...) const;
 
         const ArduinoLog& Log() const { return m_log; }
+        void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
 
         void HandleAutoMode(bool autoMode);
         void HandleOpenTemp(bool openTemp);

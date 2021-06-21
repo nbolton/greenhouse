@@ -44,7 +44,7 @@ void GreenhouseArduino::Instance(GreenhouseArduino& ga)
 
 void refreshTimer()
 {
-  s_instance->Log().Trace("Refresh timer");
+  s_instance->TraceFlash(F("Refresh timer"));
   s_instance->Refresh();
 }
 
@@ -62,7 +62,7 @@ void GreenhouseArduino::Setup()
   Serial.begin(9600);
 
   delay(1000);
-  Log().Trace("\n\nGreenhouse system");
+  TraceFlash(F("\n\nGreenhouse system"));
   
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -77,10 +77,10 @@ void GreenhouseArduino::Setup()
   dht.begin();
 
   // keep trying to refresh until it works
-  Log().Trace("Initial refresh"); 
+  TraceFlash(F("Initial refresh"));
   while (!Refresh()) {
     
-    Log().Trace("Retry refresh");
+    TraceFlash(F("Retry refresh"));
     delay(1000);
   }
 }
@@ -165,7 +165,7 @@ void GreenhouseArduino::FlashLed(int times)
 
 void GreenhouseArduino::CloseWindow()
 {
-  Log().TraceFlash(F("Closing window..."));
+  TraceFlash(F("Closing window..."));
   Blynk.virtualWrite(V4, 0);
   
   digitalWrite(in1, LOW);
@@ -175,13 +175,13 @@ void GreenhouseArduino::CloseWindow()
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
-  Log().TraceFlash(F("Window closed"));
+  TraceFlash(F("Window closed"));
   WindowState(windowClosed);
 }
 
 void GreenhouseArduino::OpenWindow()
 {
-  Log().TraceFlash(F("Opening window..."));
+  TraceFlash(F("Opening window..."));
   Blynk.virtualWrite(V4, 1);
   
   digitalWrite(in1, HIGH);
@@ -191,7 +191,7 @@ void GreenhouseArduino::OpenWindow()
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
-  Log().TraceFlash(F("Window opened"));
+  TraceFlash(F("Window opened"));
   WindowState(windowOpen);
 }
 
@@ -214,7 +214,7 @@ void GreenhouseArduino::HandleOpenTemp(bool openTemp)
   FlashLed(2);
   
   OpenTemp(openTemp);
-  Log().Trace("Open temperature: %dC\n", openTemp);
+  Log().Trace("Open temperature: %dC", openTemp);
 
   Refresh();
 }
@@ -282,36 +282,36 @@ BLYNK_CONNECTED()
 
 BLYNK_WRITE(V0)
 {
-  s_instance->Log().Trace("Blynk write V0");
+  s_instance->TraceFlash(F("Blynk write V0"));
   s_instance->HandleAutoMode(param.asInt());
 }
 
 BLYNK_WRITE(V3)
 {
-  s_instance->Log().Trace("Blynk write V3");
+  s_instance->TraceFlash(F("Blynk write V3"));
   s_instance->HandleRefreshRate(param.asInt());
 }
 
 BLYNK_WRITE(V4)
 {
-  s_instance->Log().Trace("Blynk write V4");
+  s_instance->TraceFlash(F("Blynk write V4"));
   s_instance->HandleWindowOpen(param.asInt());
 }
 
 BLYNK_WRITE(V5)
 {
-  s_instance->Log().Trace("Blynk write V5");
+  s_instance->TraceFlash(F("Blynk write V5"));
   s_instance->HandleOpenTemp(param.asInt());
 }
 
 BLYNK_WRITE(V6)
 {
-  s_instance->Log().Trace("Blynk write V6");
+  s_instance->TraceFlash(F("Blynk write V6"));
   s_instance->HandleReset(param.asInt());
 }
 
 BLYNK_WRITE(V7)
 {
-  s_instance->Log().Trace("Blynk write V7");
+  s_instance->TraceFlash(F("Blynk write V7"));
   s_instance->HandleRefresh(param.asInt());
 }

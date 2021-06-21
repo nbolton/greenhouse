@@ -14,10 +14,10 @@
 void test_hello_world(void)
 {
     GreenhouseArduino greenhouse;
-    /*GreenhouseArduino::Instance(greenhouse);
+    GreenhouseArduino::Instance(greenhouse);
 
     greenhouse.Setup();
-    greenhouse.Loop();*/
+    greenhouse.Loop();
 }
 
 void process() {
