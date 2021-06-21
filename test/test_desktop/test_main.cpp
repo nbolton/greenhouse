@@ -8,17 +8,17 @@
 // // clean stuff up here
 // }
 
-void test_hello_world(void) {
-    TEST_ASSERT_EQUAL(42, 42);
+void test_hello_world(void) { TEST_ASSERT_EQUAL(42, 42); }
+
+void process()
+{
+  UNITY_BEGIN();
+  RUN_TEST(test_hello_world);
+  UNITY_END();
 }
 
-void process() {
-    UNITY_BEGIN();
-    RUN_TEST(test_hello_world);
-    UNITY_END();
-}
-
-int main(int argc, char **argv) {
-    process();
-    return 0;
+int main(int argc, char **argv)
+{
+  process();
+  return 0;
 }

@@ -12,13 +12,9 @@ Greenhouse::Greenhouse() :
 {
 }
 
-void Greenhouse::Setup()
-{
-}
+void Greenhouse::Setup() {}
 
-void Greenhouse::Loop()
-{
-}
+void Greenhouse::Loop() {}
 
 bool Greenhouse::Refresh()
 {
@@ -27,9 +23,8 @@ bool Greenhouse::Refresh()
   bool ok = ReadDhtSensor();
   float t = Temperature();
   float h = Humidity();
-  
+
   if (!ok) {
-    
     const char dhtFail[] = "DHT device unavailable";
     Log().Trace(dhtFail);
 
@@ -38,11 +33,11 @@ bool Greenhouse::Refresh()
       ReportWarning(dhtFail);
       m_dhtFailSent = true;
     }
-    
+
     t = unknown;
     h = unknown;
   }
-  
+
   Log().Trace("Temperature: %dC | Humidity: %d%%", t, h);
 
   ReportDhtValues();
@@ -83,7 +78,7 @@ bool Greenhouse::Refresh()
     }
   }
   else {
-      Log().Trace("Temp is unknown");
+    Log().Trace("Temp is unknown");
   }
 
   return ok;

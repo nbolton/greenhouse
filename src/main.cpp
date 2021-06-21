@@ -7,11 +7,8 @@ GreenhouseArduino greenhouse;
 
 void setup()
 {
-    GreenhouseArduino::Instance(greenhouse);
-    greenhouse.Setup();
+  GreenhouseArduino::Instance(greenhouse);
+  greenhouse.Setup();
 }
 
-void loop()
-{
-    greenhouse.Loop();
-}
+void loop() { greenhouse.Loop(); }
