@@ -86,7 +86,7 @@ bool GreenhouseArduino::ReadDhtSensor()
   float t = m_dht.readTemperature();
   float h = m_dht.readHumidity();
   
-  if (isnan(t) || !isnan(h)) {
+  if (isnan(t) || isnan(h)) {
     t = unknown;
     h = unknown;
     return false;
