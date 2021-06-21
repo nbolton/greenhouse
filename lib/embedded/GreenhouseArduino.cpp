@@ -166,6 +166,7 @@ void GreenhouseArduino::CloseWindow()
   digitalWrite(in2, LOW);
 
   TraceFlash(F("Window closed"));
+  ReportInfo("Window closed");
 }
 
 void GreenhouseArduino::OpenWindow()
@@ -181,6 +182,9 @@ void GreenhouseArduino::OpenWindow()
   delay(openTimeSec * 1000);
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
+
+  TraceFlash(F("Window opened"));
+  ReportInfo("Window opened");
 }
 
 void GreenhouseArduino::ReportWindowState()
