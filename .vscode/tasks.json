@@ -6,10 +6,7 @@
             "problemMatcher": [
                 "$platformio"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "label": "PlatformIO: Test (native)"
         },
         {
