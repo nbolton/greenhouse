@@ -167,7 +167,7 @@ void GreenhouseArduino::CloseWindow(float delta)
   digitalWrite(in2, LOW);
 
   TraceFlash(F("Window closed"));
-  ReportInfo("Window closed");
+  ReportInfo("Window closed, delta: %f", delta);
 }
 
 void GreenhouseArduino::OpenWindow(float delta)
@@ -186,7 +186,7 @@ void GreenhouseArduino::OpenWindow(float delta)
   digitalWrite(in2, LOW);
 
   TraceFlash(F("Window opened"));
-  ReportInfo("Window opened");
+  ReportInfo("Window opened, delta: %f", delta);
 }
 
 void GreenhouseArduino::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgress()); }
