@@ -2,7 +2,7 @@
 #include <cstdarg>
 #include <iostream>
 
-char buffer[80];
+static char buffer[80];
 
 void Log::Trace(const char *format, ...) const
 {

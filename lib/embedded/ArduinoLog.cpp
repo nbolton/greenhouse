@@ -2,7 +2,7 @@
 
 #include <cstdarg>
 
-char buffer[80];
+static char buffer[80];
 
 void ArduinoLog::TraceFlash(const __FlashStringHelper *f) const
 {

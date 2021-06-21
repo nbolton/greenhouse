@@ -25,7 +25,7 @@ const char auth[] = "IgXeM1Ri3cJZdHfs9ugS7gBfXXwzHqBS";
 const char ssid[] = "Manhattan";
 const char pass[] = "301 Park Ave";
 
-char reportBuffer[80];
+static char reportBuffer[80];
 
 DHT dht(DHT_PIN, DHT_TYPE);
 BlynkTimer timer;
