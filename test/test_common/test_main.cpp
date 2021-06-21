@@ -190,6 +190,23 @@ void Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgress_WindowClosedPartly(vo
   TEST_ASSERT_EQUAL_FLOAT(0.1, greenhouse.m_lastArg_CloseWindow_delta); // 10% delta
 }
 
+void Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgressRealistic_WindowOpenedPartly(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.m_mock_ReadDhtSensor = true;
+  greenhouse.m_mock_Temperature = 26.5; // 30% between 25C and 30C
+  greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(5); // 5% open
+  greenhouse.OpenStart(25.0);
+  greenhouse.OpenFinish(30.0);
+
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
+  TEST_ASSERT_EQUAL_FLOAT(0.25, greenhouse.m_lastArg_OpenWindow_delta); // 25% delta
+}
+
 void process()
 {
   UNITY_BEGIN();
@@ -202,6 +219,7 @@ void process()
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens);
   RUN_TEST(Test_Refresh_AutoModeAndBetweenBoundsAndAboveProgress_WindowOpenedPartly);
   RUN_TEST(Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgress_WindowClosedPartly);
+  RUN_TEST(Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgressRealistic_WindowOpenedPartly);
   UNITY_END();
 }
 
