@@ -38,7 +38,7 @@ bool Greenhouse::Refresh()
     h = unknown;
   }
 
-  Log().Trace("Temperature: %dC | Humidity: %d%%", t, h);
+  Log().Trace("Temperature: %.2fC | Humidity: %.2f%%", t, h);
 
   ReportDhtValues();
 
