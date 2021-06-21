@@ -45,8 +45,7 @@ bool Greenhouse::Refresh()
   FlashLed(2);
 
   bool noAction = true;
-  if (m_autoMode && (t != unknown) && (m_openStart != unknown) &&
-      (m_openFinish != unknown)) {
+  if (m_autoMode && (t != unknown) && (m_openStart != unknown) && (m_openFinish != unknown)) {
 
     // TODO: https://github.com/nbolton/home-automation/issues/20
     float openStart = (float)m_openStart;
@@ -54,6 +53,7 @@ bool Greenhouse::Refresh()
 
     if ((t >= openStart) && (t <= openFinish)) {
       // window should be semi-open
+      Log().Trace("window should be semi-open");
 
       float tempWidth = openFinish - openStart;
       float progressAsTemp = t - openStart;
@@ -62,7 +62,8 @@ bool Greenhouse::Refresh()
       noAction = !ApplyWindowProgress(expectedProgress);
     }
     else if (t > openFinish) {
-      // window should to be fully open
+      // window should be fully open
+      Log().Trace("window should be fully open");
       if (WindowProgress() < 100) {
         OpenWindow(WindowProgress() / 100);
         noAction = false;
@@ -70,6 +71,7 @@ bool Greenhouse::Refresh()
     }
     else {
       // window should be fully closed
+      Log().Trace("window should be fully closed");
       if (WindowProgress() > 0) {
         CloseWindow(WindowProgress() / 100);
         noAction = false;
@@ -91,6 +93,9 @@ bool Greenhouse::Refresh()
 bool Greenhouse::ApplyWindowProgress(float expectedProgress)
 {
   float currentProgress = (float)WindowProgress() / 100;
+
+  Log().Trace(
+    "Applying window progress, expected = %f, current = %f", expectedProgress, currentProgress);
 
   if (expectedProgress > currentProgress) {
     OpenWindow(expectedProgress - currentProgress);

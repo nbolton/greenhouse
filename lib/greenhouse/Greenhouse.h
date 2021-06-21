@@ -30,10 +30,10 @@ protected:
   virtual int WindowProgress() const { return m_windowProgress; }
   virtual void AutoMode(bool am) { m_autoMode = am; }
   virtual bool AutoMode() const { return m_autoMode; }
-  virtual void OpenStart(bool openStart) { m_openStart = openStart; }
-  virtual int OpenStart() const { return m_openStart; }
-  virtual void OpenFinish(bool openFinish) { m_openFinish = openFinish; }
-  virtual int OpenFinish() const { return m_openFinish; }
+  virtual void OpenStart(float openStart) { m_openStart = openStart; }
+  virtual float OpenStart() const { return m_openStart; }
+  virtual void OpenFinish(float openFinish) { m_openFinish = openFinish; }
+  virtual float OpenFinish() const { return m_openFinish; }
 
   virtual bool ApplyWindowProgress(float expectedProgress);
 
@@ -41,7 +41,7 @@ private:
   ::Log m_log;
   bool m_dhtFailSent;
   bool m_autoMode;
-  int m_openStart;
-  int m_openFinish;
+  float m_openStart;
+  float m_openFinish;
   int m_windowProgress;
 };
