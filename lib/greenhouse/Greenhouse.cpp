@@ -110,3 +110,16 @@ bool Greenhouse::ApplyWindowProgress(float expectedProgress)
 
   return false;
 }
+
+void Greenhouse::AddWindowProgressDelta(float delta)
+{
+  int wp = WindowProgress();
+  wp += delta * 100;
+  if (wp < 0) {
+    wp = 0;
+  }
+  else if (wp > 100) {
+    wp = 100;
+  }
+  WindowProgress(wp);
+}

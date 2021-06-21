@@ -37,6 +37,7 @@ protected:
   virtual float OpenFinish() const { return m_openFinish; }
 
   virtual bool ApplyWindowProgress(float expectedProgress);
+  virtual void AddWindowProgressDelta(float delta);
 
 private:
   ::Log m_log;

@@ -24,12 +24,14 @@ public:
   {
     m_calls_OpenWindow++;
     m_lastArg_OpenWindow_delta = delta;
+    AddWindowProgressDelta(delta);
   }
 
   void CloseWindow(float delta)
   {
     m_calls_CloseWindow++;
     m_lastArg_CloseWindow_delta = delta;
+    AddWindowProgressDelta(delta * -1);
   }
 
   // expose protected members to public
@@ -37,6 +39,7 @@ public:
   void OpenStart(float openStart) { Greenhouse::OpenStart(openStart); }
   void OpenFinish(float openFinish) { Greenhouse::OpenFinish(openFinish); }
   void WindowProgress(int windowProgress) { Greenhouse::WindowProgress(windowProgress); }
+  int WindowProgress() { return Greenhouse::WindowProgress(); }
 
   bool m_mock_ReadDhtSensor;
   float m_mock_Temperature;
@@ -156,41 +159,41 @@ void Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens(void)
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
 }
 
-void Test_Refresh_AutoModeAndBetweenBoundsAndAboveProgress_WindowOpenedPartly(void)
+void Test_Refresh_AutoModeAndInBoundsTooOpen_WindowClosedPartly(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 1.6; // 60% between
+  greenhouse.m_mock_Temperature = 26; // 20% between 25C and 30C
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(50); // 50% open
-  greenhouse.OpenStart(1.0);
-  greenhouse.OpenFinish(2.0);
-
-  greenhouse.Refresh();
-
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.1, greenhouse.m_lastArg_OpenWindow_delta); // 10% delta
-}
-
-void Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgress_WindowClosedPartly(void)
-{
-  GreenhouseTest greenhouse;
-  greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 1.4; // 40% between
-  greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(50); // 50% open
-  greenhouse.OpenStart(1.0);
-  greenhouse.OpenFinish(2.0);
+  greenhouse.OpenStart(25.0);
+  greenhouse.OpenFinish(30.0);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.1, greenhouse.m_lastArg_CloseWindow_delta); // 10% delta
+  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
 }
 
-void Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgressRealistic_WindowOpenedPartly(void)
+void Test_Refresh_AutoModeAndInBoundsTooClosed_WindowOpenedPartly(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.m_mock_ReadDhtSensor = true;
+  greenhouse.m_mock_Temperature = 29; // 80% between 25C and 30C
+  greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(50); // 50% open
+  greenhouse.OpenStart(25.0);
+  greenhouse.OpenFinish(30.0);
+
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
+  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_OpenWindow_delta); // 20% delta
+}
+
+void Test_Refresh_AutoModeAndInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
@@ -205,6 +208,15 @@ void Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgressRealistic_WindowOpened
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.25, greenhouse.m_lastArg_OpenWindow_delta); // 25% delta
+  TEST_ASSERT_EQUAL_INT(30, greenhouse.WindowProgress()); // 30% open
+
+  greenhouse.m_mock_Temperature = 29; // 80% between 25C and 30C
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_OpenWindow);
+  TEST_ASSERT_EQUAL_FLOAT(0.50, greenhouse.m_lastArg_OpenWindow_delta); // 55% delta
+  TEST_ASSERT_EQUAL_INT(80, greenhouse.WindowProgress()); // 80% open
 }
 
 void process()
@@ -217,9 +229,9 @@ void process()
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStart_WindowCloses);
   RUN_TEST(Test_Refresh_AutoModeAndAboveOpenStartAndAlreadyOpen_NothingHappens);
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens);
-  RUN_TEST(Test_Refresh_AutoModeAndBetweenBoundsAndAboveProgress_WindowOpenedPartly);
-  RUN_TEST(Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgress_WindowClosedPartly);
-  RUN_TEST(Test_Refresh_AutoModeAndBetweenBoundsAndBelowProgressRealistic_WindowOpenedPartly);
+  RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooOpen_WindowClosedPartly);
+  RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooClosed_WindowOpenedPartly);
+  RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooClosedTwice_WindowOpenedPartlyTwice);
   UNITY_END();
 }
 

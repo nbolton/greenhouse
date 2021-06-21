@@ -156,7 +156,7 @@ void GreenhouseArduino::CloseWindow(float delta)
   TraceFlash(F("Closing window..."));
   Log().Trace("Delta: %f", delta);
 
-  WindowProgress((float)WindowProgress() * delta);
+  AddWindowProgressDelta(delta * -1);
   ReportWindowProgress();
 
   digitalWrite(in1, LOW);
@@ -175,7 +175,7 @@ void GreenhouseArduino::OpenWindow(float delta)
   TraceFlash(F("Opening window..."));
   Log().Trace("Delta: %f", delta);
 
-  WindowProgress((float)WindowProgress() * delta);
+  AddWindowProgressDelta(delta);
   ReportWindowProgress();
 
   digitalWrite(in1, HIGH);
