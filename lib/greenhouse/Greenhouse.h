@@ -11,9 +11,15 @@ class Greenhouse
 {
     public:
         Greenhouse();
+
         virtual void Setup();
         virtual void Loop();
         virtual bool Refresh();
+
+        virtual void ReportInfo(const char *m, ...) const { }
+        virtual void ReportWarning(const char *m, ...) const { }
+        virtual void ReportCritical(const char *m, ...) const { }
+
         virtual const ::Log& Log() const { return m_log; }
     
     protected:

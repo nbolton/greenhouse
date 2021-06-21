@@ -1,8 +1,19 @@
 #include "GreenhouseArduino.h"
 
+#include <cstdarg>
+
+#define BLYNK_PRINT Serial
+#define BLYNK_TEMPLATE_ID "TMPLovPyrAUR"
+#define BLYNK_DEVICE_NAME "Greenhouse"
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <DHT.h>
+
 #define DHT_PIN 14 // 14 = D5 on 8266
 #define DHT_TYPE DHT11
 
+const int unknown = -1;
 const int enA = 4; // 4 = D2 on 8266
 const int in1 = 0; // 0 = D3 on 8266
 const int in2 = 12; // 12 = D6 on 8266
@@ -13,6 +24,11 @@ const int timerIntervalSec = 5;
 const char auth[] = "IgXeM1Ri3cJZdHfs9ugS7gBfXXwzHqBS";
 const char ssid[] = "Manhattan";
 const char pass[] = "301 Park Ave";
+
+char reportBuffer[80];
+
+DHT dht(DHT_PIN, DHT_TYPE);
+BlynkTimer timer;
 
 GreenhouseArduino* s_instance = nullptr;
 
@@ -33,8 +49,12 @@ void refreshTimer()
 }
 
 GreenhouseArduino::GreenhouseArduino() :
-  m_dht(DHT_PIN, DHT_TYPE)
-{ 
+  m_log(),
+  m_temperature(unknown),
+  m_humidity(unknown),
+  m_timerId(unknown),
+  m_led(LOW)
+{
 }
 
 void GreenhouseArduino::Setup()
@@ -54,7 +74,7 @@ void GreenhouseArduino::Setup()
 
   Blynk.begin(auth, ssid, pass);
 
-  m_dht.begin();
+  dht.begin();
 
   // keep trying to refresh until it works
   Log().Trace("Initial refresh"); 
@@ -68,7 +88,37 @@ void GreenhouseArduino::Setup()
 void GreenhouseArduino::Loop()
 {
   Blynk.run();
-  m_timer.run();
+  timer.run();
+}
+
+void GreenhouseArduino::ReportInfo(const char *format, ...) const
+{
+  va_list args;
+  va_start(args, format);
+  vsprintf(reportBuffer, format, args);
+  va_end(args);
+  
+  Blynk.logEvent("log_info", reportBuffer);
+}
+
+void GreenhouseArduino::ReportWarning(const char *format, ...) const
+{
+  va_list args;
+  va_start(args, format);
+  vsprintf(reportBuffer, format, args);
+  va_end(args);
+  
+  Blynk.logEvent("log_warning", reportBuffer);
+}
+
+void GreenhouseArduino::ReportCritical(const char *format, ...) const
+{
+  va_list args;
+  va_start(args, format);
+  vsprintf(reportBuffer, format, args);
+  va_end(args);
+  
+  Blynk.logEvent("log_critical", reportBuffer);
 }
 
 float GreenhouseArduino::Temperature() const
@@ -83,8 +133,8 @@ float GreenhouseArduino::Humidity() const
 
 bool GreenhouseArduino::ReadDhtSensor()
 {
-  float t = m_dht.readTemperature();
-  float h = m_dht.readHumidity();
+  float t = dht.readTemperature();
+  float h = dht.readHumidity();
   
   if (isnan(t) || isnan(h)) {
     t = unknown;
@@ -115,7 +165,7 @@ void GreenhouseArduino::FlashLed(int times)
 
 void GreenhouseArduino::CloseWindow()
 {
-  Log().Trace(F("Closing window..."));
+  Log().TraceFlash(F("Closing window..."));
   Blynk.virtualWrite(V4, 0);
   
   digitalWrite(in1, LOW);
@@ -125,13 +175,13 @@ void GreenhouseArduino::CloseWindow()
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
-  Log().Trace(F("Window closed"));
+  Log().TraceFlash(F("Window closed"));
   WindowState(windowClosed);
 }
 
 void GreenhouseArduino::OpenWindow()
 {
-  Log().Trace(F("Opening window..."));
+  Log().TraceFlash(F("Opening window..."));
   Blynk.virtualWrite(V4, 1);
   
   digitalWrite(in1, HIGH);
@@ -141,7 +191,7 @@ void GreenhouseArduino::OpenWindow()
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
-  Log().Trace(F("Window opened"));
+  Log().TraceFlash(F("Window opened"));
   WindowState(windowOpen);
 }
 
@@ -180,10 +230,10 @@ void GreenhouseArduino::HandleRefreshRate(int refreshRate)
   
   if (m_timerId != -1) {
     Log().Trace("Deleting old timer: %d", m_timerId);
-    m_timer.deleteTimer(m_timerId);
+    timer.deleteTimer(m_timerId);
   }
   
-  m_timerId = m_timer.setInterval(refreshRate * 1000L, refreshTimer);
+  m_timerId = timer.setInterval(refreshRate * 1000L, refreshTimer);
 
   FlashLed(3);
 }

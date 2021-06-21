@@ -3,12 +3,8 @@
 #include "Greenhouse.h"
 
 #include "ArduinoLog.h"
-#include "BlynkCommon.h"
 
 #include <Arduino.h>
-#include <DHT.h>
-
-const int unknown = -1;
 
 class GreenhouseArduino : public Greenhouse {
     public:
@@ -20,7 +16,11 @@ class GreenhouseArduino : public Greenhouse {
         void Setup();
         void Loop();
 
-        const ::Log& Log() const { return m_log; }
+        void ReportInfo(const char *m, ...) const;
+        void ReportWarning(const char *m, ...) const;
+        void ReportCritical(const char *m, ...) const;
+
+        const ArduinoLog& Log() const { return m_log; }
 
         void HandleAutoMode(bool autoMode);
         void HandleOpenTemp(bool openTemp);
@@ -43,8 +43,6 @@ class GreenhouseArduino : public Greenhouse {
         ArduinoLog m_log;
         float m_temperature;
         float m_humidity;
-        int m_timerId = unknown;
-        int m_led = LOW;
-        DHT m_dht;
-        BlynkTimer m_timer;
+        int m_timerId;
+        int m_led;
 };

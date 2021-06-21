@@ -35,7 +35,7 @@ bool Greenhouse::Refresh()
 
     // only send once per reboot (don't spam the timeline)
     if (!m_dhtFailSent) {
-      Log().ReportWarning(dhtFail);
+      ReportWarning(dhtFail);
       m_dhtFailSent = true;
     }
     
