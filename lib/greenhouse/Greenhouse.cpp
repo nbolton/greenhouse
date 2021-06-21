@@ -44,7 +44,8 @@ bool Greenhouse::Refresh()
 
   FlashLed(2);
 
-  if ((t != unknown) && (m_autoMode && (m_openTemp != unknown))) {
+  if (m_autoMode && (t != unknown) && (m_openTemp != unknown)) {
+    
     // TODO: https://github.com/nbolton/home-automation/issues/20
     if (t > (float)m_openTemp) {
       if (m_windowState != windowOpen) {
