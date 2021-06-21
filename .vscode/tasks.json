@@ -6,7 +6,10 @@
             "problemMatcher": [
                 "$platformio"
             ],
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "label": "PlatformIO: Test (native)"
         },
         {
@@ -15,10 +18,7 @@
             "problemMatcher": [
                 "$platformio"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "label": "PlatformIO: Test (nodemcuv2)"
         }
     ],
