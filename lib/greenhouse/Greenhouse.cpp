@@ -50,11 +50,12 @@ bool Greenhouse::Refresh()
     if (m_autoMode && (m_openTemp != unknown)) {
       Log().Trace("In auto mode and open temp is known");
 
-      if (t > m_openTemp) {
+      // TODO: is casting int to float needed?
+      if (t > (float)m_openTemp) {
         Log().Trace("Temp is above open temp");
 
-        if (m_windowState == windowClosed) {
-          Log().Trace("Window is closed, opening window");
+        if (m_windowState != windowOpen) {
+          Log().Trace("Window is not open, opening window");
           OpenWindow();
         }
         else {
@@ -64,8 +65,8 @@ bool Greenhouse::Refresh()
       else {
         Log().Trace("Temp is below open temp");
 
-        if (m_windowState == windowOpen) {
-          Log().Trace("Window is open, closing window");
+        if (m_windowState != windowClosed) {
+          Log().Trace("Window is not closed, closing window");
           CloseWindow();
         }
         else {
