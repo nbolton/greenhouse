@@ -25,6 +25,7 @@ protected:
   virtual void OpenWindow(float delta) {}
   virtual void CloseWindow(float delta) {}
   virtual void ReportWindowProgress() {}
+  virtual void ReportLastRefresh() {}
 
   virtual void WindowProgress(int windowProgress) { m_windowProgress = windowProgress; }
   virtual int WindowProgress() const { return m_windowProgress; }

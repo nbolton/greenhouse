@@ -41,6 +41,7 @@ protected:
   void CloseWindow(float delta);
   void Reboot();
   void ReportWindowProgress();
+  void ReportLastRefresh();
 
 private:
   ArduinoLog m_log;

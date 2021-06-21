@@ -9,6 +9,8 @@
 #include <BlynkSimpleEsp8266.h>
 #include <DHT.h>
 #include <ESP8266WiFi.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 #define DHT_PIN 14 // 14 = D5 on 8266
 #define DHT_TYPE DHT11
@@ -29,6 +31,8 @@ static char reportBuffer[80];
 
 DHT dht(DHT_PIN, DHT_TYPE);
 BlynkTimer timer;
+WiFiUDP ntpUdp;
+NTPClient timeClient(ntpUdp);
 
 GreenhouseArduino *s_instance = nullptr;
 
@@ -43,11 +47,7 @@ void refreshTimer()
 }
 
 GreenhouseArduino::GreenhouseArduino() :
-  m_log(),
-  m_temperature(unknown),
-  m_humidity(unknown),
-  m_timerId(unknown),
-  m_led(LOW)
+  m_log(), m_temperature(unknown), m_humidity(unknown), m_timerId(unknown), m_led(LOW)
 {
 }
 
@@ -189,9 +189,15 @@ void GreenhouseArduino::OpenWindow(float delta)
   ReportInfo("Window opened");
 }
 
-void GreenhouseArduino::ReportWindowProgress()
+void GreenhouseArduino::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgress()); }
+
+void GreenhouseArduino::ReportLastRefresh()
 {
-    Blynk.virtualWrite(V9, WindowProgress());
+  while (!timeClient.update()) {
+    timeClient.forceUpdate();
+  }
+
+  Blynk.virtualWrite(V10, timeClient.getFormattedTime());
 }
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)

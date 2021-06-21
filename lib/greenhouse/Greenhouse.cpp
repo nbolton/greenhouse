@@ -87,6 +87,8 @@ bool Greenhouse::Refresh()
     ReportWindowProgress();
   }
 
+  ReportLastRefresh();
+
   return ok;
 }
 
