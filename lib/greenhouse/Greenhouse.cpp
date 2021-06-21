@@ -44,42 +44,18 @@ bool Greenhouse::Refresh()
 
   FlashLed(2);
 
-  if (t != unknown) {
-    Log().Trace("Temp is known");
-
-    if (m_autoMode && (m_openTemp != unknown)) {
-      Log().Trace("In auto mode and open temp is known");
-
-      // TODO: https://github.com/nbolton/home-automation/issues/20
-      if (t > (float)m_openTemp) {
-        Log().Trace("Temp is above open temp");
-
-        if (m_windowState != windowOpen) {
-          Log().Trace("Window is not open, opening window");
-          OpenWindow();
-        }
-        else {
-          Log().Trace("Window already open");
-        }
-      }
-      else {
-        Log().Trace("Temp is below open temp");
-
-        if (m_windowState != windowClosed) {
-          Log().Trace("Window is not closed, closing window");
-          CloseWindow();
-        }
-        else {
-          Log().Trace("Window already closed");
-        }
+  if ((t != unknown) && (m_autoMode && (m_openTemp != unknown))) {
+    // TODO: https://github.com/nbolton/home-automation/issues/20
+    if (t > (float)m_openTemp) {
+      if (m_windowState != windowOpen) {
+        OpenWindow();
       }
     }
     else {
-      Log().Trace("In manual mode or open temp unknown");
+      if (m_windowState != windowClosed) {
+        CloseWindow();
+      }
     }
-  }
-  else {
-    Log().Trace("Temp is unknown");
   }
 
   return ok;
