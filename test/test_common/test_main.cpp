@@ -96,13 +96,43 @@ void Test_Refresh_AutoModeAndBelowOpenTemp_WindowCloses(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 1;
+  greenhouse.m_mock_Temperature = 0.9;
   greenhouse.AutoMode(true);
-  greenhouse.OpenTemp(2);
+  greenhouse.OpenTemp(1);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
+}
+
+void Test_Refresh_AutoModeAndAboveOpenTempAndAlreadyOpen_NothingHappens(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.m_mock_ReadDhtSensor = true;
+  greenhouse.m_mock_Temperature = 1.1;
+  greenhouse.AutoMode(true);
+  greenhouse.OpenTemp(1);
+  greenhouse.WindowState(windowOpen);
+
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
+}
+
+void Test_Refresh_AutoModeAndBelowOpenTempAndAlreadyClosed_NothingHappens(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.m_mock_ReadDhtSensor = true;
+  greenhouse.m_mock_Temperature = 0.9;
+  greenhouse.AutoMode(true);
+  greenhouse.OpenTemp(1);
+  greenhouse.WindowState(windowClosed);
+
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
 }
 
@@ -114,6 +144,8 @@ void process()
   RUN_TEST(Test_Refresh_AutoModeAndNoOpenTemp_NothingHappens);
   RUN_TEST(Test_Refresh_AutoModeAndAboveOpenTemp_WindowOpens);
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenTemp_WindowCloses);
+  RUN_TEST(Test_Refresh_AutoModeAndAboveOpenTempAndAlreadyOpen_NothingHappens);
+  RUN_TEST(Test_Refresh_AutoModeAndBelowOpenTempAndAlreadyClosed_NothingHappens);
   UNITY_END();
 }
 

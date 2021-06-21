@@ -50,7 +50,7 @@ bool Greenhouse::Refresh()
     if (m_autoMode && (m_openTemp != unknown)) {
       Log().Trace("In auto mode and open temp is known");
 
-      // TODO: is casting int to float needed?
+      // TODO: https://github.com/nbolton/home-automation/issues/20
       if (t > (float)m_openTemp) {
         Log().Trace("Temp is above open temp");
 
