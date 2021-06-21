@@ -214,12 +214,22 @@ void GreenhouseArduino::HandleAutoMode(bool autoMode)
   Refresh();
 }
 
-void GreenhouseArduino::HandleOpenTemp(bool openTemp)
+void GreenhouseArduino::HandleOpenStart(bool openStart)
 {
   FlashLed(2);
 
-  OpenTemp(openTemp);
-  Log().Trace("Open temperature: %dC", openTemp);
+  OpenStart(openStart);
+  Log().Trace("Open starting temperature: %dC", openStart);
+
+  Refresh();
+}
+
+void GreenhouseArduino::HandleOpenFinish(bool openFinish)
+{
+  FlashLed(2);
+
+  OpenFinish(openFinish);
+  Log().Trace("Open finishing temperature: %dC", openFinish);
 
   Refresh();
 }
@@ -304,7 +314,7 @@ BLYNK_WRITE(V4)
 BLYNK_WRITE(V5)
 {
   s_instance->TraceFlash(F("Blynk write V5"));
-  s_instance->HandleOpenTemp(param.asInt());
+  s_instance->HandleOpenStart(param.asInt());
 }
 
 BLYNK_WRITE(V6)
@@ -317,4 +327,10 @@ BLYNK_WRITE(V7)
 {
   s_instance->TraceFlash(F("Blynk write V7"));
   s_instance->HandleRefresh(param.asInt());
+}
+
+BLYNK_WRITE(V8)
+{
+  s_instance->TraceFlash(F("Blynk write V8"));
+  s_instance->HandleOpenFinish(param.asInt());
 }

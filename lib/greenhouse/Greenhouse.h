@@ -32,13 +32,16 @@ protected:
   virtual ::WindowState WindowState() const { return m_windowState; }
   virtual void AutoMode(bool am) { m_autoMode = am; }
   virtual bool AutoMode() const { return m_autoMode; }
-  virtual void OpenTemp(bool ot) { m_openTemp = ot; }
-  virtual int OpenTemp() const { return m_openTemp; }
+  virtual void OpenStart(bool openStart) { m_openStart = openStart; }
+  virtual int OpenStart() const { return m_openStart; }
+  virtual void OpenFinish(bool openFinish) { m_openFinish = openFinish; }
+  virtual int OpenFinish() const { return m_openFinish; }
 
 private:
   ::Log m_log;
   bool m_dhtFailSent;
   bool m_autoMode;
-  int m_openTemp;
+  int m_openStart;
+  int m_openFinish;
   ::WindowState m_windowState;
 };

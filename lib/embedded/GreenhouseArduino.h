@@ -24,7 +24,8 @@ public:
   void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
 
   void HandleAutoMode(bool autoMode);
-  void HandleOpenTemp(bool openTemp);
+  void HandleOpenStart(bool openStart);
+  void HandleOpenFinish(bool openFinish);
   void HandleRefreshRate(int refreshRate);
   void HandleWindowOpen(int openWindow);
   void HandleReset(int reset);

@@ -7,7 +7,8 @@ const int unknown = -1;
 Greenhouse::Greenhouse() :
   m_dhtFailSent(false),
   m_autoMode(false),
-  m_openTemp(unknown),
+  m_openStart(unknown),
+  m_openFinish(unknown),
   m_windowState(windowUnknown)
 {
 }
@@ -44,10 +45,10 @@ bool Greenhouse::Refresh()
   FlashLed(2);
 
   bool noAction = true;
-  if (m_autoMode && (t != unknown) && (m_openTemp != unknown)) {
+  if (m_autoMode && (t != unknown) && (m_openStart != unknown)) {
 
     // TODO: https://github.com/nbolton/home-automation/issues/20
-    if (t > (float)m_openTemp) {
+    if (t > (float)m_openStart) {
       if (m_windowState != windowOpen) {
         OpenWindow();
         noAction = false;
