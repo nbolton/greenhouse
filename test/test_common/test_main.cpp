@@ -36,11 +36,7 @@ public:
   void AutoMode(bool autoMode) { Greenhouse::AutoMode(autoMode); }
   void OpenStart(bool openStart) { Greenhouse::OpenStart(openStart); }
   void OpenFinish(bool openFinish) { Greenhouse::OpenFinish(openFinish); }
-
-  void WindowProgress(int windowProgress)
-  {
-    Greenhouse::WindowProgress(windowProgress);
-  }
+  void WindowProgress(int windowProgress) { Greenhouse::WindowProgress(windowProgress); }
 
   bool m_mock_ReadDhtSensor;
   float m_mock_Temperature;
@@ -169,8 +165,7 @@ void process()
   RUN_TEST(Test_Refresh_AutoModeAndAboveOpenStart_WindowOpens);
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStart_WindowCloses);
   RUN_TEST(Test_Refresh_AutoModeAndAboveOpenStartAndAlreadyOpen_NothingHappens);
-  RUN_TEST(
-    Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens);
+  RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens);
   UNITY_END();
 }
 
