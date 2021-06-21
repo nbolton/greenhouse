@@ -9,7 +9,7 @@ Greenhouse::Greenhouse() :
   m_autoMode(false),
   m_openStart(unknown),
   m_openFinish(unknown),
-  m_windowState(windowUnknown)
+  m_windowProgress(0)
 {
 }
 
@@ -45,18 +45,33 @@ bool Greenhouse::Refresh()
   FlashLed(2);
 
   bool noAction = true;
-  if (m_autoMode && (t != unknown) && (m_openStart != unknown)) {
+  if (m_autoMode && (t != unknown) && (m_openStart != unknown) &&
+      (m_openFinish != unknown)) {
 
     // TODO: https://github.com/nbolton/home-automation/issues/20
-    if (t > (float)m_openStart) {
-      if (m_windowState != windowOpen) {
-        OpenWindow();
+    float openStart = (float)m_openStart;
+    float openFinish = (float)m_openFinish;
+
+    if ((t >= openStart) && (t <= openFinish)) {
+      // window should be semi-open
+
+      float tempWidth = openFinish - openStart;
+      float progressAsTemp = t - openStart;
+      float expectedProgress = progressAsTemp / tempWidth;
+
+      noAction = !ApplyWindowProgress(expectedProgress);
+    }
+    else if (t > openFinish) {
+      // window should to be fully open
+      if (WindowProgress() < 100) {
+        OpenWindow(WindowProgress() / 100);
         noAction = false;
       }
     }
     else {
-      if (m_windowState != windowClosed) {
-        CloseWindow();
+      // window should be fully closed
+      if (WindowProgress() > 0) {
+        CloseWindow(WindowProgress() / 100);
         noAction = false;
       }
     }
@@ -67,8 +82,24 @@ bool Greenhouse::Refresh()
   // app was out of focus, so if window isn't opened or closed, report the
   // current window state back.
   if (noAction) {
-    ReportWindowState();
+    ReportWindowProgress();
   }
 
   return ok;
+}
+
+bool Greenhouse::ApplyWindowProgress(float expectedProgress)
+{
+  float currentProgress = (float)WindowProgress() / 100;
+
+  if (expectedProgress > currentProgress) {
+    OpenWindow(expectedProgress - currentProgress);
+    return true;
+  }
+  else if (expectedProgress < currentProgress) {
+    CloseWindow(currentProgress - expectedProgress);
+    return true;
+  }
+
+  return false;
 }

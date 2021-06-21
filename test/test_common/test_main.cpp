@@ -1,38 +1,55 @@
 #include "Greenhouse.h"
 #include <unity.h>
 
+const int unknown = -1;
+
 class GreenhouseTest : public Greenhouse {
 public:
-  GreenhouseTest();
+  GreenhouseTest() :
+    m_mock_ReadDhtSensor(false),
+    m_mock_Temperature(unknown),
+    m_mock_Humidity(unknown),
+    m_calls_OpenWindow(0),
+    m_calls_CloseWindow(0),
+    m_lastArg_OpenWindow_delta(unknown),
+    m_lastArg_CloseWindow_delta(unknown)
+  {
+  }
 
   bool ReadDhtSensor() { return m_mock_ReadDhtSensor; }
   float Temperature() const { return m_mock_Temperature; }
   float Humidity() const { return m_mock_Humidity; }
-  void OpenWindow() { m_calls_OpenWindow++; }
-  void CloseWindow() { m_calls_CloseWindow++; }
 
-  void WindowState(::WindowState ws) { Greenhouse::WindowState(ws); }
-  void AutoMode(bool am) { Greenhouse::AutoMode(am); }
-  void OpenStart(bool openStart) { return Greenhouse::OpenStart(openStart); }
-  void OpenFinish(bool openFinish) { return Greenhouse::OpenFinish(openFinish); }
+  void OpenWindow(float delta)
+  {
+    m_calls_OpenWindow++;
+    m_lastArg_OpenWindow_delta = delta;
+  }
+
+  void CloseWindow(float delta)
+  {
+    m_calls_CloseWindow++;
+    m_lastArg_CloseWindow_delta = delta;
+  }
+
+  // expose protected members to public
+  void AutoMode(bool autoMode) { Greenhouse::AutoMode(autoMode); }
+  void OpenStart(bool openStart) { Greenhouse::OpenStart(openStart); }
+  void OpenFinish(bool openFinish) { Greenhouse::OpenFinish(openFinish); }
+
+  void WindowProgress(int windowProgress)
+  {
+    Greenhouse::WindowProgress(windowProgress);
+  }
 
   bool m_mock_ReadDhtSensor;
   float m_mock_Temperature;
   float m_mock_Humidity;
   int m_calls_OpenWindow;
   int m_calls_CloseWindow;
+  float m_lastArg_OpenWindow_delta;
+  float m_lastArg_CloseWindow_delta;
 };
-
-const int unknown = -1;
-
-GreenhouseTest::GreenhouseTest() :
-  m_mock_ReadDhtSensor(false),
-  m_mock_Temperature(unknown),
-  m_mock_Humidity(unknown),
-  m_calls_OpenWindow(0),
-  m_calls_CloseWindow(0)
-{
-}
 
 // void setUp(void) {
 // // set stuff up here
@@ -85,7 +102,9 @@ void Test_Refresh_AutoModeAndAboveOpenStart_WindowOpens(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_Temperature = 1.1;
   greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(0);
   greenhouse.OpenStart(1);
+  greenhouse.OpenFinish(2);
 
   greenhouse.Refresh();
 
@@ -99,7 +118,9 @@ void Test_Refresh_AutoModeAndBelowOpenStart_WindowCloses(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_Temperature = 0.9;
   greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(1);
   greenhouse.OpenStart(1);
+  greenhouse.OpenFinish(2);
 
   greenhouse.Refresh();
 
@@ -114,7 +135,8 @@ void Test_Refresh_AutoModeAndAboveOpenStartAndAlreadyOpen_NothingHappens(void)
   greenhouse.m_mock_Temperature = 1.1;
   greenhouse.AutoMode(true);
   greenhouse.OpenStart(1);
-  greenhouse.WindowState(windowOpen);
+  greenhouse.OpenFinish(2);
+  greenhouse.WindowProgress(100);
 
   greenhouse.Refresh();
 
@@ -129,7 +151,8 @@ void Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens(void)
   greenhouse.m_mock_Temperature = 0.9;
   greenhouse.AutoMode(true);
   greenhouse.OpenStart(1);
-  greenhouse.WindowState(windowClosed);
+  greenhouse.OpenFinish(2);
+  greenhouse.WindowProgress(0);
 
   greenhouse.Refresh();
 
@@ -146,7 +169,8 @@ void process()
   RUN_TEST(Test_Refresh_AutoModeAndAboveOpenStart_WindowOpens);
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStart_WindowCloses);
   RUN_TEST(Test_Refresh_AutoModeAndAboveOpenStartAndAlreadyOpen_NothingHappens);
-  RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens);
+  RUN_TEST(
+    Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens);
   UNITY_END();
 }
 

@@ -2,8 +2,6 @@
 
 #include "Log.h"
 
-enum WindowState { windowUnknown, windowOpen, windowClosed };
-
 class Greenhouse {
 public:
   Greenhouse();
@@ -24,12 +22,12 @@ protected:
   virtual float Humidity() const { return -1; }
   virtual void ReportDhtValues() {}
   virtual void FlashLed(int times) {}
-  virtual void OpenWindow() {}
-  virtual void CloseWindow() {}
-  virtual void ReportWindowState() { }
+  virtual void OpenWindow(float delta) {}
+  virtual void CloseWindow(float delta) {}
+  virtual void ReportWindowProgress() {}
 
-  virtual void WindowState(::WindowState ws) { m_windowState = ws; }
-  virtual ::WindowState WindowState() const { return m_windowState; }
+  virtual void WindowProgress(int windowProgress) { m_windowProgress = windowProgress; }
+  virtual int WindowProgress() const { return m_windowProgress; }
   virtual void AutoMode(bool am) { m_autoMode = am; }
   virtual bool AutoMode() const { return m_autoMode; }
   virtual void OpenStart(bool openStart) { m_openStart = openStart; }
@@ -37,11 +35,13 @@ protected:
   virtual void OpenFinish(bool openFinish) { m_openFinish = openFinish; }
   virtual int OpenFinish() const { return m_openFinish; }
 
+  virtual bool ApplyWindowProgress(float expectedProgress);
+
 private:
   ::Log m_log;
   bool m_dhtFailSent;
   bool m_autoMode;
   int m_openStart;
   int m_openFinish;
-  ::WindowState m_windowState;
+  int m_windowProgress;
 };

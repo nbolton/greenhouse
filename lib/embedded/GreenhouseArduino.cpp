@@ -151,17 +151,18 @@ void GreenhouseArduino::FlashLed(int times)
   }
 }
 
-void GreenhouseArduino::CloseWindow()
+void GreenhouseArduino::CloseWindow(float delta)
 {
   TraceFlash(F("Closing window..."));
+  Log().Trace("Delta: %f", delta);
 
-  WindowState(windowClosed);
-  ReportWindowState();
+  WindowProgress((float)WindowProgress() * delta);
+  ReportWindowProgress();
 
   digitalWrite(in1, LOW);
   digitalWrite(in2, HIGH);
 
-  delay(openTimeSec * 1000);
+  delay((openTimeSec * 1000) * delta);
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
@@ -169,17 +170,18 @@ void GreenhouseArduino::CloseWindow()
   ReportInfo("Window closed");
 }
 
-void GreenhouseArduino::OpenWindow()
+void GreenhouseArduino::OpenWindow(float delta)
 {
   TraceFlash(F("Opening window..."));
+  Log().Trace("Delta: %f", delta);
 
-  WindowState(windowOpen);
-  ReportWindowState();
+  WindowProgress((float)WindowProgress() * delta);
+  ReportWindowProgress();
 
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
 
-  delay(openTimeSec * 1000);
+  delay((openTimeSec * 1000) * delta);
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
@@ -187,17 +189,9 @@ void GreenhouseArduino::OpenWindow()
   ReportInfo("Window opened");
 }
 
-void GreenhouseArduino::ReportWindowState()
+void GreenhouseArduino::ReportWindowProgress()
 {
-  if (WindowState() == windowOpen) {
-    Blynk.virtualWrite(V4, 1);
-  }
-  else if (WindowState() == windowClosed) {
-    Blynk.virtualWrite(V4, 0);
-  }
-  else {
-    TraceFlash(F("Unknown window state, can't report"));
-  }
+    Blynk.virtualWrite(V9, WindowProgress());
 }
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)
@@ -253,16 +247,11 @@ void GreenhouseArduino::HandleRefreshRate(int refreshRate)
   FlashLed(3);
 }
 
-void GreenhouseArduino::HandleWindowOpen(int windowOpen)
+void GreenhouseArduino::HandleWindowProgress(int windowProgress)
 {
   FlashLed(4);
-
-  if (windowOpen == 1) {
-    OpenWindow();
-  }
-  else {
-    CloseWindow();
-  }
+  ApplyWindowProgress((float)windowProgress / 100);
+  WindowProgress(windowProgress);
 }
 
 void GreenhouseArduino::HandleReset(int reset)
@@ -305,12 +294,6 @@ BLYNK_WRITE(V3)
   s_instance->HandleRefreshRate(param.asInt());
 }
 
-BLYNK_WRITE(V4)
-{
-  s_instance->TraceFlash(F("Blynk write V4"));
-  s_instance->HandleWindowOpen(param.asInt());
-}
-
 BLYNK_WRITE(V5)
 {
   s_instance->TraceFlash(F("Blynk write V5"));
@@ -333,4 +316,10 @@ BLYNK_WRITE(V8)
 {
   s_instance->TraceFlash(F("Blynk write V8"));
   s_instance->HandleOpenFinish(param.asInt());
+}
+
+BLYNK_WRITE(V9)
+{
+  s_instance->TraceFlash(F("Blynk write V9"));
+  s_instance->HandleWindowProgress(param.asInt());
 }

@@ -27,7 +27,7 @@ public:
   void HandleOpenStart(bool openStart);
   void HandleOpenFinish(bool openFinish);
   void HandleRefreshRate(int refreshRate);
-  void HandleWindowOpen(int openWindow);
+  void HandleWindowProgress(int windowProgress);
   void HandleReset(int reset);
   void HandleRefresh(int refresh);
 
@@ -37,10 +37,10 @@ protected:
   float Humidity() const;
   void ReportDhtValues();
   void FlashLed(int times);
-  void OpenWindow();
-  void CloseWindow();
+  void OpenWindow(float delta);
+  void CloseWindow(float delta);
   void Reboot();
-  void ReportWindowState();
+  void ReportWindowProgress();
 
 private:
   ArduinoLog m_log;
