@@ -25,12 +25,11 @@ bool Greenhouse::Refresh()
   float h = Humidity();
 
   if (!ok) {
-    const char dhtFail[] = "DHT device unavailable";
-    Log().Trace(dhtFail);
+    Log().Trace("DHT device unavailable");
 
     // only send once per reboot (don't spam the timeline)
     if (!m_dhtFailSent) {
-      ReportWarning(dhtFail);
+      ReportWarning("DHT device unavailable");
       m_dhtFailSent = true;
     }
 
