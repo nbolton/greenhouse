@@ -322,19 +322,13 @@ void GreenhouseArduino::Reset()
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V1, V3, V5, V8, V9);
+  Blynk.syncVirtual(V0, V3, V5, V8, V9, V11);
 }
 
 BLYNK_WRITE(V0)
 {
   s_instance->TraceFlash(F("Blynk write V0"));
   s_instance->HandleAutoMode(param.asInt());
-}
-
-BLYNK_WRITE(V1)
-{
-  s_instance->TraceFlash(F("Blynk write V1"));
-  s_instance->HandleFakeTemperature(param.asFloat());
 }
 
 BLYNK_WRITE(V3)
@@ -373,4 +367,10 @@ BLYNK_WRITE(V9)
 {
   s_instance->TraceFlash(F("Blynk write V9"));
   s_instance->HandleWindowProgress(param.asInt());
+}
+
+BLYNK_WRITE(V11)
+{
+  s_instance->TraceFlash(F("Blynk write V11"));
+  s_instance->HandleFakeTemperature(param.asFloat());
 }
