@@ -60,26 +60,29 @@ bool Greenhouse::Refresh()
       openStart,
       openFinish);
 
+    float expectedProgress;
+
     if ((temperature >= openStart) && (temperature <= openFinish)) {
       // window should be semi-open
       Log().Trace("Temperature in bounds");
 
       float tempWidth = openFinish - openStart;
       float progressAsTemp = temperature - openStart;
-      float expectedProgress = progressAsTemp / tempWidth;
-
-      windowMoved = ApplyWindowProgress(expectedProgress);
+      expectedProgress = progressAsTemp / tempWidth;
     }
     else if (temperature > openFinish) {
       // window should be fully open
       Log().Trace("Temperature above bounds");
       windowMoved = ApplyWindowProgress(1);
+      expectedProgress = 1;
     }
     else {
       // window should be fully closed
       Log().Trace("Temperature below bounds");
-      windowMoved = ApplyWindowProgress(0);
+      expectedProgress = 0;
     }
+    
+    windowMoved = ApplyWindowProgress(expectedProgress);
   }
 
   // Window state is only reported back when a window opens or closes;
