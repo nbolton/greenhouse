@@ -159,28 +159,11 @@ void Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens(void)
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
 }
 
-void Test_Refresh_AutoModeAndInBoundsTooOpen_WindowClosedPartly(void)
-{
-  GreenhouseTest greenhouse;
-  greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 26; // 20% between 25C and 30C
-  greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(50); // 50% open
-  greenhouse.OpenStart(25.0);
-  greenhouse.OpenFinish(30.0);
-
-  greenhouse.Refresh();
-
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
-}
-
 void Test_Refresh_AutoModeAndInBoundsTooClosed_WindowOpenedPartly(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 29; // 80% between 25C and 30C
+  greenhouse.m_mock_Temperature = 25 + (5 * 0.8); // 80% between 25C and 30C
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(50); // 50% open
   greenhouse.OpenStart(25.0);
@@ -193,11 +176,54 @@ void Test_Refresh_AutoModeAndInBoundsTooClosed_WindowOpenedPartly(void)
   TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_OpenWindow_delta); // 20% delta
 }
 
+void Test_Refresh_AutoModeAndInBoundsTooOpen_WindowClosedPartly(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.m_mock_ReadDhtSensor = true;
+  greenhouse.m_mock_Temperature = 25 + (5 * 0.4); // 40% between 25C and 30C
+  greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(80); // 80% open
+  greenhouse.OpenStart(25.0);
+  greenhouse.OpenFinish(30.0);
+
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
+  TEST_ASSERT_EQUAL_FLOAT(0.4, greenhouse.m_lastArg_CloseWindow_delta); // 40% delta
+}
+
+void Test_Refresh_AutoModeAndInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.m_mock_ReadDhtSensor = true;
+  greenhouse.m_mock_Temperature = 25 + (5 * 0.6); // 60% between 25C and 30C
+  greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(90); // 90% open
+  greenhouse.OpenStart(25.0);
+  greenhouse.OpenFinish(30.0);
+
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
+  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
+  TEST_ASSERT_EQUAL_INT(60, greenhouse.WindowProgress()); // 60% open
+
+  greenhouse.m_mock_Temperature = 25 + (5 * 0.4); // 40% between 25C and 30C
+  greenhouse.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
+  TEST_ASSERT_EQUAL_FLOAT(0.2, greenhouse.m_lastArg_CloseWindow_delta); // 20% delta
+  TEST_ASSERT_EQUAL_INT(40, greenhouse.WindowProgress()); // 40% open
+}
+
 void Test_Refresh_AutoModeAndInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 26.5; // 30% between 25C and 30C
+  greenhouse.m_mock_Temperature = 25 + (5 * 0.3); // 30% between 25C and 30C
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(5); // 5% open
   greenhouse.OpenStart(25.0);
@@ -229,9 +255,10 @@ void process()
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStart_WindowCloses);
   RUN_TEST(Test_Refresh_AutoModeAndAboveOpenStartAndAlreadyOpen_NothingHappens);
   RUN_TEST(Test_Refresh_AutoModeAndBelowOpenStartAndAlreadyClosed_NothingHappens);
-  RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooOpen_WindowClosedPartly);
   RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooClosed_WindowOpenedPartly);
+  RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooOpen_WindowClosedPartly);
   RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooClosedTwice_WindowOpenedPartlyTwice);
+  RUN_TEST(Test_Refresh_AutoModeAndInBoundsTooOpenTwice_WindowClosedPartlyTwice);
   UNITY_END();
 }
 
