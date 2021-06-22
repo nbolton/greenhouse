@@ -73,13 +73,9 @@ void GreenhouseArduino::Setup()
   Log().TraceFlash(F("System started"));
   ReportInfo("System started");
 
-  // keep trying to refresh until it works
-  TraceFlash(F("Initial refresh"));
-  while (!Refresh()) {
-
-    TraceFlash(F("Retry refresh"));
-    delay(1000);
-  }
+  // give DHT time to work
+  // TODO: test if this is really actually needed
+  delay(1000);
 }
 
 void GreenhouseArduino::Loop()
@@ -235,9 +231,6 @@ void GreenhouseArduino::HandleAutoMode(bool autoMode)
   // light on for manual mode
   m_led = !autoMode ? LOW : HIGH;
   digitalWrite(LED_BUILTIN, m_led);
-
-  Refresh();
-  Log().Trace("Test 1");
 }
 
 void GreenhouseArduino::HandleOpenStart(float openStart)
@@ -246,8 +239,6 @@ void GreenhouseArduino::HandleOpenStart(float openStart)
 
   OpenStart(openStart);
   Log().Trace("Open starting temperature: %dC", openStart);
-
-  Refresh();
 }
 
 void GreenhouseArduino::HandleOpenFinish(float openFinish)
@@ -256,8 +247,6 @@ void GreenhouseArduino::HandleOpenFinish(float openFinish)
 
   OpenFinish(openFinish);
   Log().Trace("Open finishing temperature: %dC", openFinish);
-
-  Refresh();
 }
 
 void GreenhouseArduino::HandleRefreshRate(int refreshRate)
@@ -306,7 +295,6 @@ void GreenhouseArduino::HandleRefresh(int refresh)
 void GreenhouseArduino::HandleFakeTemperature(float fakeTemperature)
 {
   m_fakeTemperature = fakeTemperature;
-  Refresh();
 }
 
 void GreenhouseArduino::Reset()
