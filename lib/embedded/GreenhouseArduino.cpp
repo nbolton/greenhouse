@@ -2,9 +2,7 @@
 
 #include <cstdarg>
 
-#define BLYNK_PRINT Serial
-#define BLYNK_TEMPLATE_ID "TMPLovPyrAUR"
-#define BLYNK_DEVICE_NAME "Greenhouse"
+#include "ho_config.h"
 
 #include <BlynkSimpleEsp8266.h>
 #include <DHT.h>
@@ -23,9 +21,6 @@ const int motorSpeed = 255;
 const int checkFreqSec = 1;
 const int openTimeSec = 12;
 const int timerIntervalSec = 5;
-const char auth[] = "IgXeM1Ri3cJZdHfs9ugS7gBfXXwzHqBS";
-const char ssid[] = "Manhattan";
-const char pass[] = "301 Park Ave";
 
 static char reportBuffer[80];
 
@@ -47,7 +42,12 @@ void refreshTimer()
 }
 
 GreenhouseArduino::GreenhouseArduino() :
-  m_log(), m_temperature(unknown), m_humidity(unknown), m_timerId(unknown), m_led(LOW)
+  m_log(),
+  m_temperature(unknown),
+  m_humidity(unknown),
+  m_timerId(unknown),
+  m_led(LOW),
+  m_fakeTemperature(unknown)
 {
 }
 
@@ -56,7 +56,7 @@ void GreenhouseArduino::Setup()
   Serial.begin(9600);
 
   delay(1000);
-  TraceFlash(F("\n\nGreenhouse system"));
+  Log().Trace("\n\n%s: Starting system", BLYNK_DEVICE_NAME);
 
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -69,6 +69,9 @@ void GreenhouseArduino::Setup()
   Blynk.begin(auth, ssid, pass);
 
   dht.begin();
+
+  Log().TraceFlash(F("System started"));
+  ReportInfo("System started");
 
   // keep trying to refresh until it works
   TraceFlash(F("Initial refresh"));
@@ -83,6 +86,12 @@ void GreenhouseArduino::Loop()
 {
   Blynk.run();
   timer.run();
+}
+
+bool GreenhouseArduino::Refresh()
+{
+  Log().Trace("Free heap: %d bytes", ESP.getFreeHeap());
+  return Greenhouse::Refresh();
 }
 
 void GreenhouseArduino::ReportInfo(const char *format, ...) const
@@ -115,12 +124,22 @@ void GreenhouseArduino::ReportCritical(const char *format, ...) const
   Blynk.logEvent("log_critical", reportBuffer);
 }
 
-float GreenhouseArduino::Temperature() const { return m_temperature; }
+float GreenhouseArduino::Temperature() const
+{
+  if (dhtFakeMode) {
+    return m_fakeTemperature;
+  }
+  return m_temperature;
+}
 
 float GreenhouseArduino::Humidity() const { return m_humidity; }
 
 bool GreenhouseArduino::ReadDhtSensor()
 {
+  if (dhtFakeMode) {
+    return true;
+  }
+
   float t = dht.readTemperature();
   float h = dht.readHumidity();
 
@@ -138,8 +157,8 @@ bool GreenhouseArduino::ReadDhtSensor()
 
 void GreenhouseArduino::ReportDhtValues()
 {
-  Blynk.virtualWrite(V1, m_temperature);
-  Blynk.virtualWrite(V2, m_humidity);
+  Blynk.virtualWrite(V1, Temperature());
+  Blynk.virtualWrite(V2, Humidity());
 }
 
 void GreenhouseArduino::FlashLed(int times)
@@ -154,37 +173,45 @@ void GreenhouseArduino::FlashLed(int times)
 void GreenhouseArduino::CloseWindow(float delta)
 {
   TraceFlash(F("Closing window..."));
-  Log().Trace("Delta: %f", delta);
+  Log().Trace("Delta: %.2f", delta);
 
   Greenhouse::CloseWindow(delta);
 
   digitalWrite(in1, LOW);
   digitalWrite(in2, HIGH);
 
-  delay((openTimeSec * 1000) * delta);
+  int runtime = (openTimeSec * 1000) * delta;
+  Log().Trace("Close runtime: %dms", runtime);
+  delay(runtime);
+
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
-  TraceFlash(F("Window closed"));
-  ReportInfo("Window closed, delta: %f", delta);
+  float percent = delta * 100;
+  Log().Trace("Window closed %.1f%%", percent);
+  ReportInfo("Window closed %.1f%%", percent);
 }
 
 void GreenhouseArduino::OpenWindow(float delta)
 {
   TraceFlash(F("Opening window..."));
-  Log().Trace("Delta: %f", delta);
+  Log().Trace("Delta: %.2f", delta);
 
   Greenhouse::OpenWindow(delta);
 
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
 
-  delay((openTimeSec * 1000) * delta);
+  int runtime = (openTimeSec * 1000) * delta;
+  Log().Trace("Open runtime: %dms", runtime);
+  delay(runtime);
+
   digitalWrite(in1, LOW);
   digitalWrite(in2, LOW);
 
-  TraceFlash(F("Window opened"));
-  ReportInfo("Window opened, delta: %f", delta);
+  float percent = delta * 100;
+  Log().Trace("Window opened %.1f%%", percent);
+  ReportInfo("Window opened %.1f%%", percent);
 }
 
 void GreenhouseArduino::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgress()); }
@@ -195,7 +222,7 @@ void GreenhouseArduino::ReportLastRefresh()
     timeClient.forceUpdate();
   }
 
-  Blynk.virtualWrite(V10, timeClient.getFormattedTime());
+  Blynk.virtualWrite(V10, timeClient.getFormattedTime() + "UTC");
 }
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)
@@ -210,6 +237,7 @@ void GreenhouseArduino::HandleAutoMode(bool autoMode)
   digitalWrite(LED_BUILTIN, m_led);
 
   Refresh();
+  Log().Trace("Test 1");
 }
 
 void GreenhouseArduino::HandleOpenStart(float openStart)
@@ -262,7 +290,7 @@ void GreenhouseArduino::HandleReset(int reset)
 {
   FlashLed(2);
   if (reset == 1) {
-    Reboot();
+    Reset();
   }
 }
 
@@ -275,8 +303,15 @@ void GreenhouseArduino::HandleRefresh(int refresh)
   }
 }
 
-void GreenhouseArduino::Reboot()
+void GreenhouseArduino::HandleFakeTemperature(float fakeTemperature)
 {
+  m_fakeTemperature = fakeTemperature;
+  Refresh();
+}
+
+void GreenhouseArduino::Reset()
+{
+  ReportWarning("System rebooting");
   Blynk.disconnect();
   wdt_disable();
   wdt_enable(WDTO_15MS);
@@ -284,12 +319,22 @@ void GreenhouseArduino::Reboot()
   }
 }
 
-BLYNK_CONNECTED() { Blynk.syncVirtual(V0, V3, V4, V5); }
+BLYNK_CONNECTED()
+{
+  // read all last known values from Blynk server
+  Blynk.syncVirtual(V0, V1, V3, V5, V8, V9);
+}
 
 BLYNK_WRITE(V0)
 {
   s_instance->TraceFlash(F("Blynk write V0"));
   s_instance->HandleAutoMode(param.asInt());
+}
+
+BLYNK_WRITE(V1)
+{
+  s_instance->TraceFlash(F("Blynk write V1"));
+  s_instance->HandleFakeTemperature(param.asFloat());
 }
 
 BLYNK_WRITE(V3)

@@ -1,5 +1,6 @@
 #include "Greenhouse.h"
 
+#include <cstdlib>
 #include <stdio.h>
 
 const int unknown = -1;
@@ -19,7 +20,7 @@ void Greenhouse::Loop() {}
 
 bool Greenhouse::Refresh()
 {
-  Log().Trace("Refresh");
+  Log().Trace("Refreshing");
 
   bool ok = ReadDhtSensor();
   float temperature = Temperature();
@@ -46,42 +47,42 @@ bool Greenhouse::Refresh()
 
   bool windowMoved = false;
 
-  const bool boundsKnown = (m_openStart != unknown) && (m_openFinish != unknown);
-  if (m_autoMode && (temperature != unknown) && boundsKnown) {
+  // TODO: https://github.com/nbolton/home-automation/issues/20
+  float openStart = (float)m_openStart;
+  float openFinish = (float)m_openFinish;
 
-    // TODO: https://github.com/nbolton/home-automation/issues/20
-    float openStart = (float)m_openStart;
-    float openFinish = (float)m_openFinish;
-
+  if (m_autoMode) {
     Log().Trace(
-      "Checking window bounds, wp=%d t=%.2f os=%.2f of=%.2f",
+      "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC",
       WindowProgress(),
       temperature,
       openStart,
       openFinish);
 
-    float expectedProgress;
+    if ((temperature != unknown) && (m_openStart != unknown) && (m_openFinish != unknown)) {
 
-    if ((temperature >= openStart) && (temperature <= openFinish)) {
-      // window should be semi-open
-      Log().Trace("Temperature in bounds");
+      float expectedProgress = 0;
 
-      float tempWidth = openFinish - openStart;
-      float progressAsTemp = temperature - openStart;
-      expectedProgress = progressAsTemp / tempWidth;
+      if ((temperature > openStart) && (temperature < openFinish)) {
+        // window should be semi-open
+        Log().Trace("Temperature in bounds");
+
+        float tempWidth = openFinish - openStart;
+        float progressAsTemp = temperature - openStart;
+        expectedProgress = progressAsTemp / tempWidth;
+      }
+      else if (temperature >= openFinish) {
+        // window should be fully open
+        Log().Trace("Temperature above bounds");
+        expectedProgress = 1;
+      }
+      else {
+        // window should be fully closed
+        Log().Trace("Temperature below bounds");
+      }
+
+      windowMoved = ApplyWindowProgress(expectedProgress);
     }
-    else if (temperature > openFinish) {
-      // window should be fully open
-      Log().Trace("Temperature above bounds");
-      expectedProgress = 1;
-    }
-    else {
-      // window should be fully closed
-      Log().Trace("Temperature below bounds");
-      expectedProgress = 0;
-    }
-    
-    windowMoved = ApplyWindowProgress(expectedProgress);
   }
 
   // Window state is only reported back when a window opens or closes;
@@ -101,18 +102,27 @@ bool Greenhouse::ApplyWindowProgress(float expectedProgress)
 {
   float currentProgress = (float)WindowProgress() / 100;
 
-  Log().Trace(
-    "Applying window progress, expected=%.2f, current=%.2f", expectedProgress, currentProgress);
+  // avoid constant micro movements; only open/close window if difference is more than 5%
+  const float threshold = 0.05;
+  bool overThreshold = std::abs(expectedProgress - currentProgress) > threshold;
+  bool fullValue = (expectedProgress == 0) || (expectedProgress == 1);
 
-  if (expectedProgress > currentProgress) {
-    OpenWindow(expectedProgress - currentProgress);
-    return true;
-  }
-  else if (expectedProgress < currentProgress) {
-    CloseWindow(currentProgress - expectedProgress);
-    return true;
+  if (overThreshold || fullValue) {
+
+    Log().Trace(
+      "Testing window progress, expected=%.2f, current=%.2f", expectedProgress, currentProgress);
+
+    if (expectedProgress > currentProgress) {
+      OpenWindow(expectedProgress - currentProgress);
+      return true;
+    }
+    else if (expectedProgress < currentProgress) {
+      CloseWindow(currentProgress - expectedProgress);
+      return true;
+    }
   }
 
+  Log().Trace("No window progress change");
   return false;
 }
 

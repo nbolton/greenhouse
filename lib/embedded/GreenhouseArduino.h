@@ -15,6 +15,7 @@ public:
 
   void Setup();
   void Loop();
+  bool Refresh();
 
   void ReportInfo(const char *m, ...) const;
   void ReportWarning(const char *m, ...) const;
@@ -30,6 +31,7 @@ public:
   void HandleWindowProgress(int windowProgress);
   void HandleReset(int reset);
   void HandleRefresh(int refresh);
+  void HandleFakeTemperature(float fakeTemperature);
 
 protected:
   bool ReadDhtSensor();
@@ -39,7 +41,7 @@ protected:
   void FlashLed(int times);
   void OpenWindow(float delta);
   void CloseWindow(float delta);
-  void Reboot();
+  void Reset();
   void ReportWindowProgress();
   void ReportLastRefresh();
 
@@ -49,4 +51,7 @@ private:
   float m_humidity;
   int m_timerId;
   int m_led;
+
+public:
+  float m_fakeTemperature;
 };

@@ -17,6 +17,23 @@
             ],
             "group": "build",
             "label": "PlatformIO: Test (nodemcuv2)"
+        },
+        {
+            "type": "PlatformIO",
+            "task": "Build (nodemcuv2)",
+            "problemMatcher": [
+                "$platformio"
+            ],
+            "group": "build",
+            "label": "PlatformIO: Build (nodemcuv2)"
+        },
+        {
+            "type": "PlatformIO",
+            "task": "Upload and Monitor (nodemcuv2)",
+            "problemMatcher": [
+                "$platformio"
+            ],
+            "label": "PlatformIO: Upload and Monitor (nodemcuv2)"
         }
     ],
     "version": "2.0.0"
