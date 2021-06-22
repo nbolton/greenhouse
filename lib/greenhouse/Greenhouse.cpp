@@ -22,8 +22,8 @@ bool Greenhouse::Refresh()
   Log().Trace("Refresh");
 
   bool ok = ReadDhtSensor();
-  float t = Temperature();
-  float h = Humidity();
+  float temperature = Temperature();
+  float humidity = Humidity();
 
   if (!ok) {
     Log().Trace("DHT device unavailable");
@@ -34,46 +34,59 @@ bool Greenhouse::Refresh()
       m_dhtFailSent = true;
     }
 
-    t = unknown;
-    h = unknown;
+    temperature = unknown;
+    humidity = unknown;
   }
 
-  Log().Trace("Temperature: %.2fC | Humidity: %.2f%%", t, h);
+  Log().Trace("Temperature: %.2fC | Humidity: %.2f%%", temperature, humidity);
 
   ReportDhtValues();
 
   FlashLed(2);
 
   bool noAction = true;
-  if (m_autoMode && (t != unknown) && (m_openStart != unknown) && (m_openFinish != unknown)) {
+
+  const bool boundsKnown = (m_openStart != unknown) && (m_openFinish != unknown);
+  if (m_autoMode && (temperature != unknown) && boundsKnown) {
 
     // TODO: https://github.com/nbolton/home-automation/issues/20
     float openStart = (float)m_openStart;
     float openFinish = (float)m_openFinish;
 
-    if ((t >= openStart) && (t <= openFinish)) {
+    Log().Trace(
+      "Checking window bounds, wp=%d t=%.2f os=%.2f of=%.2f",
+      WindowProgress(),
+      temperature,
+      openStart,
+      openFinish);
+
+    if ((temperature >= openStart) && (temperature <= openFinish)) {
       // window should be semi-open
-      Log().Trace("window should be semi-open");
+      Log().Trace("Temperature in bounds");
 
       float tempWidth = openFinish - openStart;
-      float progressAsTemp = t - openStart;
+      float progressAsTemp = temperature - openStart;
       float expectedProgress = progressAsTemp / tempWidth;
 
       noAction = !ApplyWindowProgress(expectedProgress);
     }
-    else if (t > openFinish) {
+    else if (temperature > openFinish) {
       // window should be fully open
-      Log().Trace("window should be fully open");
+      Log().Trace("Temperature above bounds");
+
       if (WindowProgress() < 100) {
-        OpenWindow(WindowProgress() / 100);
+        float progress = (float)WindowProgress() / 100;
+        float remainder = 1 - progress;
+        OpenWindow(remainder);
         noAction = false;
       }
     }
     else {
       // window should be fully closed
-      Log().Trace("window should be fully closed");
+      Log().Trace("Temperature below bounds");
+
       if (WindowProgress() > 0) {
-        CloseWindow(WindowProgress() / 100);
+        CloseWindow((float)WindowProgress() / 100);
         noAction = false;
       }
     }
