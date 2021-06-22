@@ -128,3 +128,13 @@ void Greenhouse::AddWindowProgressDelta(float delta)
   }
   WindowProgress(wp);
 }
+
+void Greenhouse::OpenWindow(float delta)
+{
+  AddWindowProgressDelta(delta);
+}
+
+void Greenhouse::CloseWindow(float delta)
+{
+  AddWindowProgressDelta(delta * -1);
+}

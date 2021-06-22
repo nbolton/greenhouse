@@ -25,7 +25,8 @@ public:
     Log().Trace("Mock OpenWindow, delta=%.2f", delta);
     m_calls_OpenWindow++;
     m_lastArg_OpenWindow_delta = delta;
-    AddWindowProgressDelta(delta);
+
+    Greenhouse::OpenWindow(delta);
   }
 
   void CloseWindow(float delta)
@@ -33,7 +34,8 @@ public:
     Log().Trace("Mock CloseWindow, delta=%.2f", delta);
     m_calls_CloseWindow++;
     m_lastArg_CloseWindow_delta = delta;
-    AddWindowProgressDelta(delta * -1);
+
+    Greenhouse::CloseWindow(delta);
   }
 
   // expose protected members to public

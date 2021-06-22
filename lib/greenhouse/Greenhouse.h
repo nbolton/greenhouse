@@ -22,8 +22,8 @@ protected:
   virtual float Humidity() const { return -1; }
   virtual void ReportDhtValues() {}
   virtual void FlashLed(int times) {}
-  virtual void OpenWindow(float delta) {}
-  virtual void CloseWindow(float delta) {}
+  virtual void OpenWindow(float delta);
+  virtual void CloseWindow(float delta);
   virtual void ReportWindowProgress() {}
   virtual void ReportLastRefresh() {}
 
