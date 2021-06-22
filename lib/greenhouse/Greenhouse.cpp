@@ -44,7 +44,7 @@ bool Greenhouse::Refresh()
 
   FlashLed(2);
 
-  bool noAction = true;
+  bool windowMoved = false;
 
   const bool boundsKnown = (m_openStart != unknown) && (m_openFinish != unknown);
   if (m_autoMode && (temperature != unknown) && boundsKnown) {
@@ -68,27 +68,17 @@ bool Greenhouse::Refresh()
       float progressAsTemp = temperature - openStart;
       float expectedProgress = progressAsTemp / tempWidth;
 
-      noAction = !ApplyWindowProgress(expectedProgress);
+      windowMoved = ApplyWindowProgress(expectedProgress);
     }
     else if (temperature > openFinish) {
       // window should be fully open
       Log().Trace("Temperature above bounds");
-
-      if (WindowProgress() < 100) {
-        float progress = (float)WindowProgress() / 100;
-        float remainder = 1 - progress;
-        OpenWindow(remainder);
-        noAction = false;
-      }
+      windowMoved = ApplyWindowProgress(1);
     }
     else {
       // window should be fully closed
       Log().Trace("Temperature below bounds");
-
-      if (WindowProgress() > 0) {
-        CloseWindow((float)WindowProgress() / 100);
-        noAction = false;
-      }
+      windowMoved = ApplyWindowProgress(0);
     }
   }
 
@@ -96,7 +86,7 @@ bool Greenhouse::Refresh()
   // Blynk doesn't show the latest switch values that were changed while the
   // app was out of focus, so if window isn't opened or closed, report the
   // current window state back.
-  if (noAction) {
+  if (!windowMoved) {
     ReportWindowProgress();
   }
 
@@ -110,7 +100,7 @@ bool Greenhouse::ApplyWindowProgress(float expectedProgress)
   float currentProgress = (float)WindowProgress() / 100;
 
   Log().Trace(
-    "Applying window progress, expected = %f, current = %f", expectedProgress, currentProgress);
+    "Applying window progress, expected=%.2f, current=%.2f", expectedProgress, currentProgress);
 
   if (expectedProgress > currentProgress) {
     OpenWindow(expectedProgress - currentProgress);
