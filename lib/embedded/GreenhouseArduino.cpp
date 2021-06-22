@@ -238,7 +238,7 @@ void GreenhouseArduino::HandleOpenStart(float openStart)
   FlashLed(2);
 
   OpenStart(openStart);
-  Log().Trace("Open starting temperature: %dC", openStart);
+  Log().Trace("Open starting temperature: %.2fC", openStart);
 }
 
 void GreenhouseArduino::HandleOpenFinish(float openFinish)
@@ -246,7 +246,7 @@ void GreenhouseArduino::HandleOpenFinish(float openFinish)
   FlashLed(2);
 
   OpenFinish(openFinish);
-  Log().Trace("Open finishing temperature: %dC", openFinish);
+  Log().Trace("Open finishing temperature: %.2fC", openFinish);
 }
 
 void GreenhouseArduino::HandleRefreshRate(int refreshRate)
