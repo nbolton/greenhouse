@@ -132,9 +132,11 @@ void Greenhouse::AddWindowProgressDelta(float delta)
 void Greenhouse::OpenWindow(float delta)
 {
   AddWindowProgressDelta(delta);
+  ReportWindowProgress();
 }
 
 void Greenhouse::CloseWindow(float delta)
 {
   AddWindowProgressDelta(delta * -1);
+  ReportWindowProgress();
 }
