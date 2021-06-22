@@ -73,7 +73,6 @@ bool Greenhouse::Refresh()
     else if (temperature > openFinish) {
       // window should be fully open
       Log().Trace("Temperature above bounds");
-      windowMoved = ApplyWindowProgress(1);
       expectedProgress = 1;
     }
     else {
