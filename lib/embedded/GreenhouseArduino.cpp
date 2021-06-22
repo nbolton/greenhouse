@@ -185,7 +185,6 @@ void GreenhouseArduino::CloseWindow(float delta)
 
   float percent = delta * 100;
   Log().Trace("Window closed %.1f%%", percent);
-  ReportInfo("Window closed %.1f%%", percent);
 }
 
 void GreenhouseArduino::OpenWindow(float delta)
@@ -207,7 +206,6 @@ void GreenhouseArduino::OpenWindow(float delta)
 
   float percent = delta * 100;
   Log().Trace("Window opened %.1f%%", percent);
-  ReportInfo("Window opened %.1f%%", percent);
 }
 
 void GreenhouseArduino::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgress()); }
