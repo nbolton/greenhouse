@@ -216,7 +216,21 @@ void GreenhouseArduino::ReportLastRefresh()
     timeClient.forceUpdate();
   }
 
-  Blynk.virtualWrite(V10, timeClient.getFormattedTime() + "UTC");
+  // current date
+  Blynk.virtualWrite(V10, timeClient.getFormattedTime() + " UTC");
+
+  // uptime
+  int seconds, minutes, hours, days;
+  long uptime = millis() / 1000;
+  minutes = uptime / 60;
+  seconds = uptime % 60;
+  hours = minutes / 60;
+  minutes = minutes % 60;
+  days = hours / 24;
+  hours = hours % 24;
+  char uptimeBuffer[50];
+  sprintf(uptimeBuffer, "%dd %dh %dm %ds", days, hours, minutes, seconds);
+  Blynk.virtualWrite(V12, uptimeBuffer);
 }
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)
