@@ -68,7 +68,6 @@ void GreenhouseArduino::Setup()
   analogWrite(enA, motorSpeed);
 
   Blynk.begin(auth, ssid, pass);
-
   dht.begin();
 
   // give DHT time to work
@@ -81,6 +80,7 @@ void GreenhouseArduino::Setup()
 
 void GreenhouseArduino::Loop()
 {
+  timeClient.update();
   Blynk.run();
   timer.run();
 }
@@ -231,10 +231,6 @@ void GreenhouseArduino::ReportWindowProgress()
 void GreenhouseArduino::ReportSystemInfo()
 {
   FlashLed(k_ledSend);
-
-  while (!timeClient.update()) {
-    timeClient.forceUpdate();
-  }
 
   // current time
   Blynk.virtualWrite(V10, timeClient.getFormattedTime() + " UTC");
