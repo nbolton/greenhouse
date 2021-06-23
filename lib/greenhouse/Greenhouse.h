@@ -2,7 +2,7 @@
 
 #include "Log.h"
 
-enum LedFlashTimes { k_ledRefresh = 1, k_ledSend = 2, k_ledRecieve = 4 };
+enum LedFlashTimes { k_ledRefresh = 1, k_ledSend = 2, k_ledRecieve = 3 };
 
 class Greenhouse {
 public:

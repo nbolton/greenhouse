@@ -21,7 +21,7 @@ const int motorSpeed = 255;
 const int checkFreqSec = 1;
 const int openTimeSec = 12;
 const int timerIntervalSec = 5;
-const int k_ledFlashDelay = 50; // ms
+const int k_ledFlashDelay = 30; // ms
 
 static char reportBuffer[80];
 
