@@ -343,7 +343,7 @@ void GreenhouseArduino::Reset()
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V3, V5, V8, V9, V11);
+  Blynk.syncVirtual(V0, V3, V5, V8, V9, V11, V14);
 }
 
 BLYNK_WRITE(V0)
