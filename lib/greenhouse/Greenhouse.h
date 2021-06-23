@@ -2,6 +2,8 @@
 
 #include "Log.h"
 
+enum LedFlashTimes { k_ledRefresh = 1, k_ledSend = 2, k_ledRecieve = 4 };
+
 class Greenhouse {
 public:
   Greenhouse();
@@ -10,20 +12,21 @@ public:
   virtual void Loop();
   virtual bool Refresh();
 
-  virtual void ReportInfo(const char *m, ...) const {}
-  virtual void ReportWarning(const char *m, ...) const {}
-  virtual void ReportCritical(const char *m, ...) const {}
+  virtual void ReportInfo(const char *m, ...) {}
+  virtual void ReportWarning(const char *m, ...) {}
+  virtual void ReportCritical(const char *m, ...) {}
 
   virtual const ::Log &Log() const { return m_log; }
 
 protected:
+  virtual void FlashLed(LedFlashTimes times) {}
   virtual bool ReadDhtSensor() { return false; }
   virtual float Temperature() const { return -1; }
   virtual float Humidity() const { return -1; }
-  virtual void ReportDhtValues() {}
-  virtual void FlashLed(int times) {}
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
+
+  virtual void ReportDhtValues() {}
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}
 

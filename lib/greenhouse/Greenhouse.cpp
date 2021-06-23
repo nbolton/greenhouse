@@ -43,7 +43,7 @@ bool Greenhouse::Refresh()
 
   ReportDhtValues();
 
-  FlashLed(2);
+  FlashLed(k_ledRefresh);
 
   bool windowMoved = false;
 

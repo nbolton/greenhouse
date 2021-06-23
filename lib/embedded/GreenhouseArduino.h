@@ -17,9 +17,9 @@ public:
   void Loop();
   bool Refresh();
 
-  void ReportInfo(const char *m, ...) const;
-  void ReportWarning(const char *m, ...) const;
-  void ReportCritical(const char *m, ...) const;
+  void ReportInfo(const char *m, ...);
+  void ReportWarning(const char *m, ...);
+  void ReportCritical(const char *m, ...);
 
   const ArduinoLog &Log() const { return m_log; }
   void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
@@ -35,14 +35,15 @@ public:
   void HandleTestMode(int fakeMode);
 
 protected:
+  void FlashLed(LedFlashTimes times);
   bool ReadDhtSensor();
   float Temperature() const;
   float Humidity() const;
-  void ReportDhtValues();
-  void FlashLed(int times);
   void OpenWindow(float delta);
   void CloseWindow(float delta);
   void Reset();
+
+  void ReportDhtValues();
   void ReportWindowProgress();
   void ReportSystemInfo();
 

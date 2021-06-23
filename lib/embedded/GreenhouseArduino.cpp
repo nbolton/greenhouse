@@ -21,6 +21,7 @@ const int motorSpeed = 255;
 const int checkFreqSec = 1;
 const int openTimeSec = 12;
 const int timerIntervalSec = 5;
+const int k_ledFlashDelay = 50; // ms
 
 static char reportBuffer[80];
 
@@ -84,39 +85,15 @@ void GreenhouseArduino::Loop()
   timer.run();
 }
 
-bool GreenhouseArduino::Refresh()
+bool GreenhouseArduino::Refresh() { return Greenhouse::Refresh(); }
+
+void GreenhouseArduino::FlashLed(LedFlashTimes times)
 {
-  return Greenhouse::Refresh();
-}
-
-void GreenhouseArduino::ReportInfo(const char *format, ...) const
-{
-  va_list args;
-  va_start(args, format);
-  vsprintf(reportBuffer, format, args);
-  va_end(args);
-
-  Blynk.logEvent("log_info", reportBuffer);
-}
-
-void GreenhouseArduino::ReportWarning(const char *format, ...) const
-{
-  va_list args;
-  va_start(args, format);
-  vsprintf(reportBuffer, format, args);
-  va_end(args);
-
-  Blynk.logEvent("log_warning", reportBuffer);
-}
-
-void GreenhouseArduino::ReportCritical(const char *format, ...) const
-{
-  va_list args;
-  va_start(args, format);
-  vsprintf(reportBuffer, format, args);
-  va_end(args);
-
-  Blynk.logEvent("log_critical", reportBuffer);
+  for (int i = 0; i < (int)times * 2; i++) {
+    m_led = (m_led == LOW) ? HIGH : LOW;
+    digitalWrite(LED_BUILTIN, m_led);
+    delay(k_ledFlashDelay);
+  }
 }
 
 float GreenhouseArduino::Temperature() const
@@ -148,21 +125,6 @@ bool GreenhouseArduino::ReadDhtSensor()
   m_humidity = h;
 
   return true;
-}
-
-void GreenhouseArduino::ReportDhtValues()
-{
-  Blynk.virtualWrite(V1, Temperature());
-  Blynk.virtualWrite(V2, Humidity());
-}
-
-void GreenhouseArduino::FlashLed(int times)
-{
-  for (int i = 0; i < times * 2; i++) {
-    m_led = (m_led == LOW) ? HIGH : LOW;
-    digitalWrite(LED_BUILTIN, m_led);
-    delay(100);
-  }
 }
 
 void GreenhouseArduino::CloseWindow(float delta)
@@ -207,10 +169,69 @@ void GreenhouseArduino::OpenWindow(float delta)
   Log().Trace("Window opened %.1f%%", percent);
 }
 
-void GreenhouseArduino::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgress()); }
+void GreenhouseArduino::Reset()
+{
+  ReportWarning("System rebooting");
+  Blynk.disconnect();
+  wdt_disable();
+  wdt_enable(WDTO_15MS);
+  while (1) {
+  }
+}
+
+void GreenhouseArduino::ReportInfo(const char *format, ...)
+{
+  FlashLed(k_ledSend);
+  
+  va_list args;
+  va_start(args, format);
+  vsprintf(reportBuffer, format, args);
+  va_end(args);
+
+  Blynk.logEvent("log_info", reportBuffer);
+}
+
+void GreenhouseArduino::ReportWarning(const char *format, ...)
+{
+  FlashLed(k_ledSend);
+
+  va_list args;
+  va_start(args, format);
+  vsprintf(reportBuffer, format, args);
+  va_end(args);
+
+  Blynk.logEvent("log_warning", reportBuffer);
+}
+
+void GreenhouseArduino::ReportCritical(const char *format, ...)
+{
+  FlashLed(k_ledSend);
+
+  va_list args;
+  va_start(args, format);
+  vsprintf(reportBuffer, format, args);
+  va_end(args);
+
+  Blynk.logEvent("log_critical", reportBuffer);
+}
+
+void GreenhouseArduino::ReportDhtValues()
+{
+  FlashLed(k_ledSend);
+  Blynk.virtualWrite(V1, Temperature());
+  Blynk.virtualWrite(V2, Humidity());
+}
+
+void GreenhouseArduino::ReportWindowProgress()
+{
+  FlashLed(k_ledSend);
+  Blynk.virtualWrite(V9, WindowProgress());
+}
 
 void GreenhouseArduino::ReportSystemInfo()
 {
+  FlashLed(k_ledSend);
+
   while (!timeClient.update()) {
     timeClient.forceUpdate();
   }
@@ -239,7 +260,7 @@ void GreenhouseArduino::ReportSystemInfo()
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle auto mode: %s", (autoMode ? "Auto" : "Manual"));
 
   AutoMode(autoMode == 1);
@@ -251,7 +272,7 @@ void GreenhouseArduino::HandleAutoMode(bool autoMode)
 
 void GreenhouseArduino::HandleOpenStart(float openStart)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle open start temperature: %.2fC", openStart);
 
   OpenStart(openStart);
@@ -259,7 +280,7 @@ void GreenhouseArduino::HandleOpenStart(float openStart)
 
 void GreenhouseArduino::HandleOpenFinish(float openFinish)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle open finish temperature: %.2fC", openFinish);
 
   OpenFinish(openFinish);
@@ -267,9 +288,9 @@ void GreenhouseArduino::HandleOpenFinish(float openFinish)
 
 void GreenhouseArduino::HandleRefreshRate(int refreshRate)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle refresh rate: %ds", refreshRate);
-  
+
   if (refreshRate <= 0) {
     Log().Trace("Invalid refresh rate: %ds", refreshRate);
     return;
@@ -286,7 +307,7 @@ void GreenhouseArduino::HandleRefreshRate(int refreshRate)
 
 void GreenhouseArduino::HandleWindowProgress(int windowProgress)
 {
-  FlashLed(4);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle window progress: %ds", windowProgress);
 
   if (WindowProgress() != unknown) {
@@ -295,13 +316,13 @@ void GreenhouseArduino::HandleWindowProgress(int windowProgress)
     // and the position might be something else.
     ApplyWindowProgress((float)windowProgress / 100);
   }
-  
+
   WindowProgress(windowProgress);
 }
 
 void GreenhouseArduino::HandleReset(int reset)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle reset: %ds", reset);
 
   if (reset == 1) {
@@ -311,7 +332,7 @@ void GreenhouseArduino::HandleReset(int reset)
 
 void GreenhouseArduino::HandleRefresh(int refresh)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle refresh: %ds", refresh);
 
   if (refresh == 1) {
@@ -321,7 +342,7 @@ void GreenhouseArduino::HandleRefresh(int refresh)
 
 void GreenhouseArduino::HandleFakeTemperature(float fakeTemperature)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle fake temperature: %.2fC", fakeTemperature);
 
   m_fakeTemperature = fakeTemperature;
@@ -329,20 +350,10 @@ void GreenhouseArduino::HandleFakeTemperature(float fakeTemperature)
 
 void GreenhouseArduino::HandleTestMode(int testMode)
 {
-  FlashLed(2);
+  FlashLed(k_ledRecieve);
   Log().Trace("Handle test mode: %s", testMode == 1 ? "On" : "Off");
 
   TestMode(testMode == 1);
-}
-
-void GreenhouseArduino::Reset()
-{
-  ReportWarning("System rebooting");
-  Blynk.disconnect();
-  wdt_disable();
-  wdt_enable(WDTO_15MS);
-  while (1) {
-  }
 }
 
 BLYNK_CONNECTED()
