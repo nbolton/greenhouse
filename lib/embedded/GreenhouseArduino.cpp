@@ -240,9 +240,9 @@ void GreenhouseArduino::ReportSystemInfo()
 void GreenhouseArduino::HandleAutoMode(bool autoMode)
 {
   FlashLed(2);
-  AutoMode(autoMode == 1);
+  Log().Trace("Handle auto mode: %s", (autoMode ? "Auto" : "Manual"));
 
-  Log().Trace("Auto mode: %s", (autoMode ? "Auto" : "Manual"));
+  AutoMode(autoMode == 1);
 
   // light on for manual mode
   m_led = !autoMode ? LOW : HIGH;
@@ -252,27 +252,28 @@ void GreenhouseArduino::HandleAutoMode(bool autoMode)
 void GreenhouseArduino::HandleOpenStart(float openStart)
 {
   FlashLed(2);
+  Log().Trace("Handle open start temperature: %.2fC", openStart);
 
   OpenStart(openStart);
-  Log().Trace("Open starting temperature: %.2fC", openStart);
 }
 
 void GreenhouseArduino::HandleOpenFinish(float openFinish)
 {
   FlashLed(2);
+  Log().Trace("Handle open finish temperature: %.2fC", openFinish);
 
   OpenFinish(openFinish);
-  Log().Trace("Open finishing temperature: %.2fC", openFinish);
 }
 
 void GreenhouseArduino::HandleRefreshRate(int refreshRate)
 {
+  FlashLed(2);
+  Log().Trace("Handle refresh rate: %ds", refreshRate);
+  
   if (refreshRate <= 0) {
     Log().Trace("Invalid refresh rate: %ds", refreshRate);
     return;
   }
-
-  Log().Trace("Setting refresh rate: %ds", refreshRate);
 
   if (m_timerId != -1) {
     Log().Trace("Deleting old timer: %d", m_timerId);
@@ -280,8 +281,7 @@ void GreenhouseArduino::HandleRefreshRate(int refreshRate)
   }
 
   m_timerId = timer.setInterval(refreshRate * 1000L, refreshTimer);
-
-  FlashLed(3);
+  Log().Trace("New refresh timer: %d", m_timerId);
 }
 
 void GreenhouseArduino::HandleWindowProgress(int windowProgress)
@@ -302,6 +302,8 @@ void GreenhouseArduino::HandleWindowProgress(int windowProgress)
 void GreenhouseArduino::HandleReset(int reset)
 {
   FlashLed(2);
+  Log().Trace("Handle reset: %ds", reset);
+
   if (reset == 1) {
     Reset();
   }
@@ -310,6 +312,7 @@ void GreenhouseArduino::HandleReset(int reset)
 void GreenhouseArduino::HandleRefresh(int refresh)
 {
   FlashLed(2);
+  Log().Trace("Handle refresh: %ds", refresh);
 
   if (refresh == 1) {
     Refresh();
@@ -319,15 +322,17 @@ void GreenhouseArduino::HandleRefresh(int refresh)
 void GreenhouseArduino::HandleFakeTemperature(float fakeTemperature)
 {
   FlashLed(2);
+  Log().Trace("Handle fake temperature: %.2fC", fakeTemperature);
+
   m_fakeTemperature = fakeTemperature;
-  Log().Trace("Fake temperature: %.2fC", fakeTemperature);
 }
 
 void GreenhouseArduino::HandleTestMode(int testMode)
 {
   FlashLed(2);
+  Log().Trace("Handle test mode: %s", testMode == 1 ? "On" : "Off");
+
   TestMode(testMode == 1);
-  Log().Trace("Test mode: %s", testMode == 1 ? "On" : "Off");
 }
 
 void GreenhouseArduino::Reset()
