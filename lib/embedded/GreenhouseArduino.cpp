@@ -323,7 +323,7 @@ void GreenhouseArduino::HandleWindowProgress(int windowProgress)
 void GreenhouseArduino::HandleReset(int reset)
 {
   FlashLed(k_ledRecieve);
-  Log().Trace("Handle reset: %ds", reset);
+  Log().Trace("Handle reset: %d", reset);
 
   if (reset == 1) {
     Reset();
@@ -333,7 +333,7 @@ void GreenhouseArduino::HandleReset(int reset)
 void GreenhouseArduino::HandleRefresh(int refresh)
 {
   FlashLed(k_ledRecieve);
-  Log().Trace("Handle refresh: %ds", refresh);
+  Log().Trace("Handle refresh: %d", refresh);
 
   if (refresh == 1) {
     Refresh();
