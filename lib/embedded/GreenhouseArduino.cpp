@@ -234,7 +234,7 @@ void GreenhouseArduino::ReportSystemInfo()
   // free heap
   int freeHeap = ESP.getFreeHeap();
   Log().Trace("Free heap: %d bytes", freeHeap);
-  Blynk.virtualWrite(V13, String(freeHeap) + " bytes");
+  Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)
