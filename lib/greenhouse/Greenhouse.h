@@ -35,6 +35,8 @@ protected:
   virtual float OpenStart() const { return m_openStart; }
   virtual void OpenFinish(float openFinish) { m_openFinish = openFinish; }
   virtual float OpenFinish() const { return m_openFinish; }
+  virtual void TestMode(bool testMode) { m_testMode = testMode; }
+  virtual bool TestMode() const { return m_testMode; }
 
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
@@ -46,4 +48,5 @@ private:
   float m_openStart;
   float m_openFinish;
   int m_windowProgress;
+  bool m_testMode;
 };

@@ -32,6 +32,7 @@ public:
   void HandleReset(int reset);
   void HandleRefresh(int refresh);
   void HandleFakeTemperature(float fakeTemperature);
+  void HandleTestMode(int fakeMode);
 
 protected:
   bool ReadDhtSensor();

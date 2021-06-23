@@ -7,5 +7,3 @@
 const char auth[] = "Auth token"; // Device -> Device info
 const char ssid[] = "WiFi SSID";
 const char pass[] = "WiFi password";
-
-const bool dhtFakeMode = false;

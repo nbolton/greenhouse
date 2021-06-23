@@ -121,7 +121,7 @@ void GreenhouseArduino::ReportCritical(const char *format, ...) const
 
 float GreenhouseArduino::Temperature() const
 {
-  if (dhtFakeMode) {
+  if (TestMode()) {
     return m_fakeTemperature;
   }
   return m_temperature;
@@ -131,7 +131,7 @@ float GreenhouseArduino::Humidity() const { return m_humidity; }
 
 bool GreenhouseArduino::ReadDhtSensor()
 {
-  if (dhtFakeMode) {
+  if (TestMode()) {
     return true;
   }
 
@@ -310,7 +310,16 @@ void GreenhouseArduino::HandleRefresh(int refresh)
 
 void GreenhouseArduino::HandleFakeTemperature(float fakeTemperature)
 {
+  FlashLed(2);
   m_fakeTemperature = fakeTemperature;
+  Log().Trace("Fake temperature: %.2fC", fakeTemperature);
+}
+
+void GreenhouseArduino::HandleTestMode(int testMode)
+{
+  FlashLed(2);
+  TestMode(testMode == 1);
+  Log().Trace("Test mode: %s", testMode == 1 ? "On" : "Off");
 }
 
 void GreenhouseArduino::Reset()
@@ -377,4 +386,10 @@ BLYNK_WRITE(V11)
 {
   s_instance->TraceFlash(F("Blynk write V11"));
   s_instance->HandleFakeTemperature(param.asFloat());
+}
+
+BLYNK_WRITE(V14)
+{
+  s_instance->TraceFlash(F("Blynk write V14"));
+  s_instance->HandleTestMode(param.asInt());
 }
