@@ -70,12 +70,12 @@ void GreenhouseArduino::Setup()
 
   dht.begin();
 
-  Log().TraceFlash(F("System started"));
-  ReportInfo("System started");
-
   // give DHT time to work
   // TODO: test if this is really actually needed
   delay(1000);
+
+  Log().TraceFlash(F("System started"));
+  ReportInfo("System started");
 }
 
 void GreenhouseArduino::Loop()
@@ -86,7 +86,6 @@ void GreenhouseArduino::Loop()
 
 bool GreenhouseArduino::Refresh()
 {
-  Log().Trace("Free heap: %d bytes", ESP.getFreeHeap());
   return Greenhouse::Refresh();
 }
 
@@ -210,13 +209,13 @@ void GreenhouseArduino::OpenWindow(float delta)
 
 void GreenhouseArduino::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgress()); }
 
-void GreenhouseArduino::ReportLastRefresh()
+void GreenhouseArduino::ReportSystemInfo()
 {
   while (!timeClient.update()) {
     timeClient.forceUpdate();
   }
 
-  // current date
+  // current time
   Blynk.virtualWrite(V10, timeClient.getFormattedTime() + " UTC");
 
   // uptime
@@ -231,6 +230,11 @@ void GreenhouseArduino::ReportLastRefresh()
   char uptimeBuffer[50];
   sprintf(uptimeBuffer, "%dd %dh %dm %ds", days, hours, minutes, seconds);
   Blynk.virtualWrite(V12, uptimeBuffer);
+
+  // free heap
+  int freeHeap = ESP.getFreeHeap();
+  Log().Trace("Free heap: %d bytes", freeHeap);
+  Blynk.virtualWrite(V13, String(freeHeap) + " bytes");
 }
 
 void GreenhouseArduino::HandleAutoMode(bool autoMode)

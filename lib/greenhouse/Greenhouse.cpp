@@ -93,7 +93,7 @@ bool Greenhouse::Refresh()
     ReportWindowProgress();
   }
 
-  ReportLastRefresh();
+  ReportSystemInfo();
 
   return ok;
 }

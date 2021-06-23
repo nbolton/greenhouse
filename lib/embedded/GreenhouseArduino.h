@@ -43,7 +43,7 @@ protected:
   void CloseWindow(float delta);
   void Reset();
   void ReportWindowProgress();
-  void ReportLastRefresh();
+  void ReportSystemInfo();
 
 private:
   ArduinoLog m_log;
