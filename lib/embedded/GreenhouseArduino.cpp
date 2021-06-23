@@ -287,7 +287,15 @@ void GreenhouseArduino::HandleRefreshRate(int refreshRate)
 void GreenhouseArduino::HandleWindowProgress(int windowProgress)
 {
   FlashLed(4);
-  ApplyWindowProgress((float)windowProgress / 100);
+  Log().Trace("Handle window progress: %ds", windowProgress);
+
+  if (WindowProgress() != unknown) {
+    // only apply window progress if it's not the 1st time;
+    // otherwise the window will always open from 0 on start,
+    // and the position might be something else.
+    ApplyWindowProgress((float)windowProgress / 100);
+  }
+  
   WindowProgress(windowProgress);
 }
 

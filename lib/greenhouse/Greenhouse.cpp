@@ -10,7 +10,7 @@ Greenhouse::Greenhouse() :
   m_autoMode(false),
   m_openStart(unknown),
   m_openFinish(unknown),
-  m_windowProgress(0)
+  m_windowProgress(unknown)
 {
 }
 
