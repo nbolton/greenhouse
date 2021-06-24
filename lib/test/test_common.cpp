@@ -268,8 +268,8 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
 void Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed()
 {
   GreenhouseTest greenhouse;
-  greenhouse.WindowProgress(20); // 20% open
-  greenhouse.OpenDayMinimum(0); // 0% min
+  greenhouse.WindowProgress(20);      // 20% open
+  greenhouse.OpenDayMinimum(0);       // 0% min
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);
@@ -280,8 +280,8 @@ void Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed()
 void Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed()
 {
   GreenhouseTest greenhouse;
-  greenhouse.WindowProgress(20); // 20% open
-  greenhouse.OpenDayMinimum(10); // 10% min
+  greenhouse.WindowProgress(20);     // 20% open
+  greenhouse.OpenDayMinimum(10);     // 10% min
   greenhouse.m_mock_CurrentHour = 0; // 12am
 
   greenhouse.ApplyWindowProgress(0);
@@ -292,8 +292,8 @@ void Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed()
 void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
 {
   GreenhouseTest greenhouse;
-  greenhouse.WindowProgress(20); // 20% open
-  greenhouse.OpenDayMinimum(10); // 10% min
+  greenhouse.WindowProgress(20);      // 20% open
+  greenhouse.OpenDayMinimum(10);      // 10% min
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);
