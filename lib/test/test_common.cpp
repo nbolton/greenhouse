@@ -1,3 +1,5 @@
+#include "test_common.h"
+
 #include "Greenhouse.h"
 #include <unity.h>
 
@@ -299,9 +301,8 @@ void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
   TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open
 }
 
-void process()
+void testCommon()
 {
-  UNITY_BEGIN();
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
   RUN_TEST(Test_Refresh_ManualMode_NothingHappens);
   RUN_TEST(Test_Refresh_AutoModeNoOpenBounds_NothingHappens);
@@ -316,35 +317,4 @@ void process()
   RUN_TEST(Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed);
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed);
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed);
-  UNITY_END();
 }
-
-#ifdef ARDUINO
-
-#include <Arduino.h>
-void setup()
-{
-  // NOTE!!! Wait for >2 secs
-  // if board doesn't support software reset via Serial.DTR/RTS
-  delay(2000);
-
-  process();
-}
-
-void loop()
-{
-  digitalWrite(13, HIGH);
-  delay(100);
-  digitalWrite(13, LOW);
-  delay(500);
-}
-
-#else
-
-int main(int argc, char **argv)
-{
-  process();
-  return 0;
-}
-
-#endif

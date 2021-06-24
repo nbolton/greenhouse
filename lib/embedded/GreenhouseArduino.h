@@ -40,10 +40,13 @@ protected:
   bool ReadDhtSensor();
   float Temperature() const;
   float Humidity() const;
-  void OpenWindow(float delta);
-  void CloseWindow(float delta);
   void Reset();
   int CurrentHour() const;
+
+  virtual void OpenWindow(float delta);
+  virtual void CloseWindow(float delta);
+  virtual void SystemDigitalWrite(int pin, int val);
+  virtual void SystemDelay(unsigned long ms);
 
   void ReportDhtValues();
   void ReportWindowProgress();

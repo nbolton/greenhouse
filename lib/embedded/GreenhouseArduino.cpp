@@ -126,6 +126,16 @@ bool GreenhouseArduino::ReadDhtSensor()
   return true;
 }
 
+void GreenhouseArduino::SystemDigitalWrite(int pin, int val)
+{
+  digitalWrite(pin, val);
+}
+
+void GreenhouseArduino::SystemDelay(unsigned long ms)
+{
+  delay(ms);
+}
+
 void GreenhouseArduino::CloseWindow(float delta)
 {
   TraceFlash(F("Closing window..."));
@@ -133,15 +143,15 @@ void GreenhouseArduino::CloseWindow(float delta)
 
   Greenhouse::CloseWindow(delta);
 
-  digitalWrite(k_motorPinIn1, LOW);
-  digitalWrite(k_motorPinIn2, HIGH);
+  SystemDigitalWrite(k_motorPinIn1, LOW);
+  SystemDigitalWrite(k_motorPinIn2, HIGH);
 
   int runtime = (k_openTimeSec * 1000) * delta;
   Log().Trace("Close runtime: %dms", runtime);
-  delay(runtime);
+  SystemDelay(runtime);
 
-  digitalWrite(k_motorPinIn1, LOW);
-  digitalWrite(k_motorPinIn2, LOW);
+  SystemDigitalWrite(k_motorPinIn1, LOW);
+  SystemDigitalWrite(k_motorPinIn2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window closed %.1f%%", percent);
@@ -154,19 +164,20 @@ void GreenhouseArduino::OpenWindow(float delta)
 
   Greenhouse::OpenWindow(delta);
 
-  digitalWrite(k_motorPinIn1, HIGH);
-  digitalWrite(k_motorPinIn2, LOW);
+  SystemDigitalWrite(k_motorPinIn1, HIGH);
+  SystemDigitalWrite(k_motorPinIn2, LOW);
 
   int runtime = (k_openTimeSec * 1000) * delta;
   Log().Trace("Open runtime: %dms", runtime);
-  delay(runtime);
+  SystemDelay(runtime);
 
-  digitalWrite(k_motorPinIn1, LOW);
-  digitalWrite(k_motorPinIn2, LOW);
+  SystemDigitalWrite(k_motorPinIn1, LOW);
+  SystemDigitalWrite(k_motorPinIn2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window opened %.1f%%", percent);
 }
+
 
 void GreenhouseArduino::Reset()
 {
