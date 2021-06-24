@@ -176,7 +176,7 @@ void GreenhouseArduino::Reset()
   }
 }
 
-void GreenhouseArduino::CurrentHour() const
+int GreenhouseArduino::CurrentHour() const
 {
   return timeClient.getHours();
 }
