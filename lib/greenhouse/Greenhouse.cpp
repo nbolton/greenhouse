@@ -103,44 +103,47 @@ bool Greenhouse::Refresh()
 
 bool Greenhouse::ApplyWindowProgress(float expectedProgress)
 {
+  // TODO: would 0/100 cause a random crash?
   float currentProgress = (float)WindowProgress() / 100;
 
-  // avoid constant micro movements; only open/close window if difference is more than 5%
+  // avoid constant micro movements; only open/close window if difference is more than threshold
   bool overThreshold = std::abs(expectedProgress - currentProgress) > windowAdjustThreshold;
   bool fullValue = (expectedProgress == 0) || (expectedProgress == 1);
 
   if (overThreshold || fullValue) {
 
-    Log().Trace(
-      "Testing window progress, expected=%.2f, current=%.2f", expectedProgress, currentProgress);
+    float closeDelta = currentProgress - expectedProgress;
+    float openDelta = expectedProgress - currentProgress;
 
-    if (expectedProgress > currentProgress) {
-      OpenWindow(expectedProgress - currentProgress);
+    Log().Trace(
+      "Testing window progress, expected=%.2f, current=%.2f, open=%.2f, close=%.2f, min=%d%%",
+      expectedProgress,
+      currentProgress,
+      openDelta,
+      closeDelta,
+      OpenDayMinimum());
+
+    bool isDayPeriod = (CurrentHour() >= k_dayStartHour) && (CurrentHour() <= k_dayEndHour);
+
+    // if open day minimum is set and it's day:
+    // - don't allow window to be closed less than open day minimum.
+    // - if already closed beyond minimum, open it up to match minimum.
+    if (isDayPeriod && (OpenDayMinimum() > 0)) {
+
+      float min = (float)OpenDayMinimum() / 100;
+      closeDelta -= min;
+      openDelta += min;
+
+      Log().Trace("Deltas adjusted, open=%.2f, close=%.2f", openDelta, closeDelta);
+    }
+
+    if (openDelta > 0) {
+      OpenWindow(openDelta);
       return true;
     }
-    else if (expectedProgress < currentProgress) {
-
-      float closeDelta = currentProgress - expectedProgress;
-      int projectedProgress = WindowProgress() - (closeDelta * 100);
-      bool isDayPeriod = (CurrentHour() >= k_dayStartHour) && (CurrentHour() <= k_dayEndHour);
-
-      // during day, don't allow window to be closed less than open day minimum (if set).
-      if (isDayPeriod && (OpenDayMinimum() > 0)) {
-        closeDelta -= (float)OpenDayMinimum() / 100;
-      }
-
-      Log().Trace(
-        "Testing close, delta=%.2f, projected=%d, hour=%d, min=%d, day=%s",
-        closeDelta,
-        projectedProgress,
-        CurrentHour(),
-        OpenDayMinimum(),
-        isDayPeriod ? "Y" : "N");
-
-      if (closeDelta > 0) {
-        CloseWindow(closeDelta);
-        return true;
-      }
+    else if (closeDelta > 0) {
+      CloseWindow(closeDelta);
+      return true;
     }
   }
 

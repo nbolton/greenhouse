@@ -301,6 +301,18 @@ void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
   TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open
 }
 
+void Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened()
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowProgress(5);       // 5% open
+  greenhouse.OpenDayMinimum(10);      // 10% min
+  greenhouse.m_mock_CurrentHour = 12; // 12pm
+
+  greenhouse.ApplyWindowProgress(0);
+
+  TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -317,4 +329,5 @@ void testCommon()
   RUN_TEST(Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed);
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed);
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed);
+  RUN_TEST(Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened);
 }
