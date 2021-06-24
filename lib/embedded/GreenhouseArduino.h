@@ -53,7 +53,5 @@ private:
   float m_humidity;
   int m_timerId;
   int m_led;
-
-public:
   float m_fakeTemperature;
 };
