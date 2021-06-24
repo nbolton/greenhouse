@@ -53,6 +53,8 @@ void GreenhouseArduino::Setup()
 {
   Serial.begin(9600);
 
+  // wait for serial to connect before first trace
+  // TODO: test if this is really actually needed
   delay(1000);
   Log().Trace("\n\n%s: Starting system", BLYNK_DEVICE_NAME);
 
