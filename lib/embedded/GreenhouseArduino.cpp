@@ -370,7 +370,7 @@ void GreenhouseArduino::HandleTestMode(int testMode)
 void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
 {
   FlashLed(k_ledRecieve);
-  s_instance->Log().Trace("Open day minimum: %s", openDayMinimum);
+  s_instance->Log().Trace("Open day minimum: %d", openDayMinimum);
 
   OpenDayMinimum(openDayMinimum);
 }
