@@ -146,7 +146,7 @@ void Test_Refresh_AutoModeInBoundsTooClosed_WindowOpenedPartly(void)
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_OpenWindow_delta); // 20% delta
-  TEST_ASSERT_EQUAL_INT(80, greenhouse.WindowProgress()); // 80% open
+  TEST_ASSERT_EQUAL_INT(80, greenhouse.WindowProgress());              // 80% open
 }
 
 void Test_Refresh_AutoModeInBoundsTooOpen_WindowClosedPartly(void)
@@ -164,7 +164,7 @@ void Test_Refresh_AutoModeInBoundsTooOpen_WindowClosedPartly(void)
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.4, greenhouse.m_lastArg_CloseWindow_delta); // 40% delta
-  TEST_ASSERT_EQUAL_INT(40, greenhouse.WindowProgress()); // 40% open
+  TEST_ASSERT_EQUAL_INT(40, greenhouse.WindowProgress());               // 40% open
 }
 
 void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
@@ -182,7 +182,7 @@ void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
-  TEST_ASSERT_EQUAL_INT(60, greenhouse.WindowProgress()); // 60% open
+  TEST_ASSERT_EQUAL_INT(60, greenhouse.WindowProgress());               // 60% open
 
   greenhouse.m_mock_Temperature = 25 + (5 * 0.4); // 40% between 25C and 30C
   greenhouse.Refresh();
@@ -190,7 +190,7 @@ void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
   TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.2, greenhouse.m_lastArg_CloseWindow_delta); // 20% delta
-  TEST_ASSERT_EQUAL_INT(40, greenhouse.WindowProgress()); // 40% open
+  TEST_ASSERT_EQUAL_INT(40, greenhouse.WindowProgress());               // 40% open
 }
 
 void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
@@ -208,7 +208,7 @@ void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.25, greenhouse.m_lastArg_OpenWindow_delta); // 25% delta
-  TEST_ASSERT_EQUAL_INT(30, greenhouse.WindowProgress()); // 30% open
+  TEST_ASSERT_EQUAL_INT(30, greenhouse.WindowProgress());               // 30% open
 
   greenhouse.m_mock_Temperature = 29; // 80% between 25C and 30C
   greenhouse.Refresh();
@@ -216,7 +216,7 @@ void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.50, greenhouse.m_lastArg_OpenWindow_delta); // 55% delta
-  TEST_ASSERT_EQUAL_INT(80, greenhouse.WindowProgress()); // 80% open
+  TEST_ASSERT_EQUAL_INT(80, greenhouse.WindowProgress());               // 80% open
 }
 
 void Test_Refresh_AutoModeBelowBounds_WindowClosedFully(void)
@@ -234,7 +234,7 @@ void Test_Refresh_AutoModeBelowBounds_WindowClosedFully(void)
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress()); // 0% open
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress());                // 0% open
 }
 
 void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
@@ -252,7 +252,7 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(0.4, greenhouse.m_lastArg_OpenWindow_delta); // 40% delta
-  TEST_ASSERT_EQUAL_INT(100, greenhouse.WindowProgress()); // 100% open
+  TEST_ASSERT_EQUAL_INT(100, greenhouse.WindowProgress());             // 100% open
 }
 
 void process()
