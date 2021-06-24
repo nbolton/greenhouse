@@ -51,6 +51,8 @@ GreenhouseArduino::GreenhouseArduino() :
 
 void GreenhouseArduino::Setup()
 {
+  Greenhouse::Setup();
+
   Serial.begin(9600);
 
   // wait for serial to connect before first trace
@@ -79,6 +81,8 @@ void GreenhouseArduino::Setup()
 
 void GreenhouseArduino::Loop()
 {
+  Greenhouse::Loop();
+  
   timeClient.update();
   Blynk.run();
   timer.run();
