@@ -10,10 +10,10 @@ const int k_dayEndHour = 20;  // 8pm
 Greenhouse::Greenhouse() :
   m_dhtFailSent(false),
   m_autoMode(false),
-  m_openStart(unknown),
-  m_openFinish(unknown),
-  m_windowProgress(unknown),
-  m_openDayMinimum(unknown)
+  m_openStart(k_unknown),
+  m_openFinish(k_unknown),
+  m_windowProgress(k_unknown),
+  m_openDayMinimum(k_unknown)
 {
 }
 
@@ -38,8 +38,8 @@ bool Greenhouse::Refresh()
       m_dhtFailSent = true;
     }
 
-    temperature = unknown;
-    humidity = unknown;
+    temperature = k_unknown;
+    humidity = k_unknown;
   }
 
   Log().Trace("Temperature: %.2fC | Humidity: %.2f%%", temperature, humidity);
@@ -62,7 +62,7 @@ bool Greenhouse::Refresh()
       openStart,
       openFinish);
 
-    if ((temperature != unknown) && (m_openStart != unknown) && (m_openFinish != unknown)) {
+    if ((temperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown)) {
 
       float expectedProgress = 0;
 

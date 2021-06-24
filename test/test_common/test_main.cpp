@@ -5,13 +5,13 @@ class GreenhouseTest : public Greenhouse {
 public:
   GreenhouseTest() :
     m_mock_ReadDhtSensor(false),
-    m_mock_Temperature(unknown),
-    m_mock_Humidity(unknown),
-    m_mock_CurrentHour(unknown),
+    m_mock_Temperature(k_unknown),
+    m_mock_Humidity(k_unknown),
+    m_mock_CurrentHour(k_unknown),
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
-    m_lastArg_OpenWindow_delta(unknown),
-    m_lastArg_CloseWindow_delta(unknown)
+    m_lastArg_OpenWindow_delta(k_unknown),
+    m_lastArg_CloseWindow_delta(k_unknown)
   {
   }
 
@@ -293,7 +293,7 @@ void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
   greenhouse.WindowProgress(20); // 20% open
   greenhouse.OpenDayMinimum(10); // 10% min
   greenhouse.m_mock_CurrentHour = 12; // 12pm
-  
+
   greenhouse.ApplyWindowProgress(0);
 
   TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open

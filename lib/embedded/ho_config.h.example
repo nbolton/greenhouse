@@ -4,6 +4,6 @@
 #define BLYNK_TEMPLATE_ID "Template ID" // Device -> Device info
 #define BLYNK_DEVICE_NAME "Device name"
 
-const char auth[] = "Auth token"; // Device -> Device info
-const char ssid[] = "WiFi SSID";
-const char pass[] = "WiFi password";
+const char k_auth[] = "Auth token"; // Device -> Device info
+const char k_ssid[] = "WiFi SSID";
+const char k_pass[] = "WiFi password";

@@ -2,7 +2,7 @@
 
 #include "Log.h"
 
-const int unknown = -1;
+const int k_unknown = -1;
 
 enum LedFlashTimes { k_ledRefresh = 1, k_ledSend = 2, k_ledRecieve = 3 };
 
@@ -23,11 +23,11 @@ public:
 protected:
   virtual void FlashLed(LedFlashTimes times) {}
   virtual bool ReadDhtSensor() { return false; }
-  virtual float Temperature() const { return unknown; }
-  virtual float Humidity() const { return unknown; }
+  virtual float Temperature() const { return k_unknown; }
+  virtual float Humidity() const { return k_unknown; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
-  virtual int CurrentHour() const { return unknown; }
+  virtual int CurrentHour() const { return k_unknown; }
 
   virtual void ReportDhtValues() {}
   virtual void ReportWindowProgress() {}

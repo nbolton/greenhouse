@@ -13,14 +13,11 @@
 #define DHT_PIN 14 // 14 = D5 on 8266
 #define DHT_TYPE DHT11
 
-const int unknown = -1;
-const int enA = 4;  // 4 = D2 on 8266
-const int in1 = 0;  // 0 = D3 on 8266
-const int in2 = 12; // 12 = D6 on 8266
-const int motorSpeed = 255;
-const int checkFreqSec = 1;
-const int openTimeSec = 12;
-const int timerIntervalSec = 5;
+const int k_motorPinEnA = 4;  // 4 = D2 on 8266
+const int k_motorPinIn1 = 0;  // 0 = D3 on 8266
+const int k_motorPinIn2 = 12; // 12 = D6 on 8266
+const int k_motorSpeed = 255;
+const int k_openTimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 
 static char reportBuffer[80];
@@ -44,11 +41,11 @@ void refreshTimer()
 
 GreenhouseArduino::GreenhouseArduino() :
   m_log(),
-  m_temperature(unknown),
-  m_humidity(unknown),
-  m_timerId(unknown),
+  m_temperature(k_unknown),
+  m_humidity(k_unknown),
+  m_timerId(k_unknown),
   m_led(LOW),
-  m_fakeTemperature(unknown)
+  m_fakeTemperature(k_unknown)
 {
 }
 
@@ -61,13 +58,13 @@ void GreenhouseArduino::Setup()
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  pinMode(enA, OUTPUT);
-  pinMode(in1, OUTPUT);
-  pinMode(in2, OUTPUT);
+  pinMode(k_motorPinEnA, OUTPUT);
+  pinMode(k_motorPinIn1, OUTPUT);
+  pinMode(k_motorPinIn2, OUTPUT);
 
-  analogWrite(enA, motorSpeed);
+  analogWrite(k_motorPinEnA, k_motorSpeed);
 
-  Blynk.begin(auth, ssid, pass);
+  Blynk.begin(k_auth, k_ssid, k_pass);
   dht.begin();
 
   // give DHT time to work
@@ -116,8 +113,8 @@ bool GreenhouseArduino::ReadDhtSensor()
   float h = dht.readHumidity();
 
   if (isnan(t) || isnan(h)) {
-    t = unknown;
-    h = unknown;
+    t = k_unknown;
+    h = k_unknown;
     return false;
   }
 
@@ -134,15 +131,15 @@ void GreenhouseArduino::CloseWindow(float delta)
 
   Greenhouse::CloseWindow(delta);
 
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
+  digitalWrite(k_motorPinIn1, LOW);
+  digitalWrite(k_motorPinIn2, HIGH);
 
-  int runtime = (openTimeSec * 1000) * delta;
+  int runtime = (k_openTimeSec * 1000) * delta;
   Log().Trace("Close runtime: %dms", runtime);
   delay(runtime);
 
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
+  digitalWrite(k_motorPinIn1, LOW);
+  digitalWrite(k_motorPinIn2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window closed %.1f%%", percent);
@@ -155,15 +152,15 @@ void GreenhouseArduino::OpenWindow(float delta)
 
   Greenhouse::OpenWindow(delta);
 
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);
+  digitalWrite(k_motorPinIn1, HIGH);
+  digitalWrite(k_motorPinIn2, LOW);
 
-  int runtime = (openTimeSec * 1000) * delta;
+  int runtime = (k_openTimeSec * 1000) * delta;
   Log().Trace("Open runtime: %dms", runtime);
   delay(runtime);
 
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
+  digitalWrite(k_motorPinIn1, LOW);
+  digitalWrite(k_motorPinIn2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window opened %.1f%%", percent);
@@ -311,7 +308,7 @@ void GreenhouseArduino::HandleWindowProgress(int windowProgress)
   FlashLed(k_ledRecieve);
   Log().Trace("Handle window progress: %ds", windowProgress);
 
-  if (WindowProgress() != unknown) {
+  if (WindowProgress() != k_unknown) {
     // only apply window progress if it's not the 1st time;
     // otherwise the window will always open from 0 on start,
     // and the position might be something else.
