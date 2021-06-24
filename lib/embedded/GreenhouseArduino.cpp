@@ -179,6 +179,11 @@ void GreenhouseArduino::Reset()
   }
 }
 
+void GreenhouseArduino::CurrentHour() const
+{
+  return timeClient.getHours();
+}
+
 void GreenhouseArduino::ReportInfo(const char *format, ...)
 {
   FlashLed(k_ledSend);
@@ -352,10 +357,18 @@ void GreenhouseArduino::HandleTestMode(int testMode)
   TestMode(testMode == 1);
 }
 
+void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
+{
+  FlashLed(k_ledRecieve);
+  s_instance->Log().Trace("Open day minimum: %s", openDayMinimum);
+
+  OpenDayMinimum(openDayMinimum);
+}
+
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V3, V5, V8, V9, V11, V14);
+  Blynk.syncVirtual(V0, V3, V5, V8, V9, V11, V14, V15);
 }
 
 BLYNK_WRITE(V0)
@@ -412,4 +425,10 @@ BLYNK_WRITE(V14)
 {
   s_instance->TraceFlash(F("Blynk write V14"));
   s_instance->HandleTestMode(param.asInt());
+}
+
+BLYNK_WRITE(V15)
+{
+  s_instance->TraceFlash(F("Blynk write V15"));
+  s_instance->HandleOpenDayMinimum(param.asInt());
 }

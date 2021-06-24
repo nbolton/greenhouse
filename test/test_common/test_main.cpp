@@ -1,14 +1,13 @@
 #include "Greenhouse.h"
 #include <unity.h>
 
-const int unknown = -1;
-
 class GreenhouseTest : public Greenhouse {
 public:
   GreenhouseTest() :
     m_mock_ReadDhtSensor(false),
     m_mock_Temperature(unknown),
     m_mock_Humidity(unknown),
+    m_mock_CurrentHour(unknown),
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
     m_lastArg_OpenWindow_delta(unknown),
@@ -19,6 +18,7 @@ public:
   bool ReadDhtSensor() { return m_mock_ReadDhtSensor; }
   float Temperature() const { return m_mock_Temperature; }
   float Humidity() const { return m_mock_Humidity; }
+  int CurrentHour() const { return m_mock_CurrentHour; }
 
   void OpenWindow(float delta)
   {
@@ -44,10 +44,18 @@ public:
   void OpenFinish(float openFinish) { Greenhouse::OpenFinish(openFinish); }
   void WindowProgress(int windowProgress) { Greenhouse::WindowProgress(windowProgress); }
   int WindowProgress() { return Greenhouse::WindowProgress(); }
+  void OpenDayMinimum(int openDayMinimum) { Greenhouse::OpenDayMinimum(openDayMinimum); }
+
+  bool ApplyWindowProgress(float expectedProgress)
+  {
+    return Greenhouse::ApplyWindowProgress(expectedProgress);
+  }
 
   bool m_mock_ReadDhtSensor;
   float m_mock_Temperature;
   float m_mock_Humidity;
+  int m_mock_CurrentHour;
+
   int m_calls_OpenWindow;
   int m_calls_CloseWindow;
   float m_lastArg_OpenWindow_delta;
@@ -255,6 +263,42 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
   TEST_ASSERT_EQUAL_INT(100, greenhouse.WindowProgress());             // 100% open
 }
 
+void Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed()
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowProgress(20); // 20% open
+  greenhouse.OpenDayMinimum(0); // 0% min
+  greenhouse.m_mock_CurrentHour = 12; // 12pm
+
+  greenhouse.ApplyWindowProgress(0);
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress()); // 0% open
+}
+
+void Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed()
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowProgress(20); // 20% open
+  greenhouse.OpenDayMinimum(10); // 10% min
+  greenhouse.m_mock_CurrentHour = 0; // 12am
+
+  greenhouse.ApplyWindowProgress(0);
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress()); // 0% open
+}
+
+void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowProgress(20); // 20% open
+  greenhouse.OpenDayMinimum(10); // 10% min
+  greenhouse.m_mock_CurrentHour = 12; // 12pm
+  
+  greenhouse.ApplyWindowProgress(0);
+
+  TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open
+}
+
 void process()
 {
   UNITY_BEGIN();
@@ -269,6 +313,9 @@ void process()
   RUN_TEST(Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice);
   RUN_TEST(Test_Refresh_AutoModeBelowBounds_WindowClosedFully);
   RUN_TEST(Test_Refresh_AutoModeAboveBounds_WindowOpenedFully);
+  RUN_TEST(Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed);
+  RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed);
+  RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed);
   UNITY_END();
 }
 

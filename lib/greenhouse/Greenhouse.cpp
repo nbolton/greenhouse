@@ -3,14 +3,17 @@
 #include <cstdlib>
 #include <stdio.h>
 
-const int unknown = -1;
+const float windowAdjustThreshold = 0.05;
+const int k_dayStartHour = 8; // 8am
+const int k_dayEndHour = 20;  // 8pm
 
 Greenhouse::Greenhouse() :
   m_dhtFailSent(false),
   m_autoMode(false),
   m_openStart(unknown),
   m_openFinish(unknown),
-  m_windowProgress(unknown)
+  m_windowProgress(unknown),
+  m_openDayMinimum(unknown)
 {
 }
 
@@ -103,8 +106,7 @@ bool Greenhouse::ApplyWindowProgress(float expectedProgress)
   float currentProgress = (float)WindowProgress() / 100;
 
   // avoid constant micro movements; only open/close window if difference is more than 5%
-  const float threshold = 0.05;
-  bool overThreshold = std::abs(expectedProgress - currentProgress) > threshold;
+  bool overThreshold = std::abs(expectedProgress - currentProgress) > windowAdjustThreshold;
   bool fullValue = (expectedProgress == 0) || (expectedProgress == 1);
 
   if (overThreshold || fullValue) {
@@ -117,8 +119,28 @@ bool Greenhouse::ApplyWindowProgress(float expectedProgress)
       return true;
     }
     else if (expectedProgress < currentProgress) {
-      CloseWindow(currentProgress - expectedProgress);
-      return true;
+
+      float closeDelta = currentProgress - expectedProgress;
+      int projectedProgress = WindowProgress() - (closeDelta * 100);
+      bool isDayPeriod = (CurrentHour() >= k_dayStartHour) && (CurrentHour() <= k_dayEndHour);
+
+      // during day, don't allow window to be closed less than open day minimum (if set).
+      if (isDayPeriod && (OpenDayMinimum() > 0)) {
+        closeDelta -= (float)OpenDayMinimum() / 100;
+      }
+
+      Log().Trace(
+        "Testing close, delta=%.2f, projected=%d, hour=%d, min=%d, day=%s",
+        closeDelta,
+        projectedProgress,
+        CurrentHour(),
+        OpenDayMinimum(),
+        isDayPeriod ? "Y" : "N");
+
+      if (closeDelta > 0) {
+        CloseWindow(closeDelta);
+        return true;
+      }
     }
   }
 

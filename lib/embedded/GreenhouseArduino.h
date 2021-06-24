@@ -33,6 +33,7 @@ public:
   void HandleRefresh(int refresh);
   void HandleFakeTemperature(float fakeTemperature);
   void HandleTestMode(int fakeMode);
+  void HandleOpenDayMinimum(int openDayMinimum);
 
 protected:
   void FlashLed(LedFlashTimes times);
@@ -42,6 +43,7 @@ protected:
   void OpenWindow(float delta);
   void CloseWindow(float delta);
   void Reset();
+  int CurrentHour() const;
 
   void ReportDhtValues();
   void ReportWindowProgress();
