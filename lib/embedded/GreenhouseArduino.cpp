@@ -72,11 +72,6 @@ void GreenhouseArduino::Setup()
 
   Blynk.begin(k_auth, k_ssid, k_pass);
   ambientDht.begin();
-
-  // give DHT time to work
-  // TODO: test if this is really actually needed
-  delay(1000);
-
   Log().TraceFlash(F("System started"));
   ReportInfo("System started");
 }
