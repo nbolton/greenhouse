@@ -59,4 +59,5 @@ private:
   int m_timerId;
   int m_led;
   float m_fakeTemperature;
+  bool m_refreshBusy;
 };

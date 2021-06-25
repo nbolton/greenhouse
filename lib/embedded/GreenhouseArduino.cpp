@@ -45,7 +45,8 @@ GreenhouseArduino::GreenhouseArduino() :
   m_humidity(k_unknown),
   m_timerId(k_unknown),
   m_led(LOW),
-  m_fakeTemperature(k_unknown)
+  m_fakeTemperature(k_unknown),
+  m_refreshBusy(false)
 {
 }
 
@@ -88,7 +89,22 @@ void GreenhouseArduino::Loop()
   timer.run();
 }
 
-bool GreenhouseArduino::Refresh() { return Greenhouse::Refresh(); }
+bool GreenhouseArduino::Refresh()
+{
+  // TODO: use mutex lock?
+  while (m_refreshBusy) {
+    Log().Trace("Refresh busy, skipping");
+    return false;
+  }
+
+  // TODO: this isn't an ideal mutex lock because the two threads could
+  // hit this line at the same time.
+  m_refreshBusy = true;
+  bool ok = Greenhouse::Refresh();
+  m_refreshBusy = false;
+
+  return ok;
+}
 
 void GreenhouseArduino::FlashLed(LedFlashTimes times)
 {
