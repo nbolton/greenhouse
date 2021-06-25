@@ -10,19 +10,20 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
-#define DHT_PIN 14 // 14 = D5 on 8266
-#define DHT_TYPE DHT11
+// 8266 free pins: D1, D4 (led), D7
+// https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
+const int k_motorPinEnA = 4;  // GPIO4  = D2 
+const int k_motorPinIn1 = 0;  // GPIO0  = D3 (connected to flash)
+const int k_motorPinIn2 = 12; // GPIO12 = D6
+const int k_dhtPin = 14;      // GPIO14 = D5
 
-const int k_motorPinEnA = 4;  // 4 = D2 on 8266
-const int k_motorPinIn1 = 0;  // 0 = D3 on 8266
-const int k_motorPinIn2 = 12; // 12 = D6 on 8266
 const int k_motorSpeed = 255;
 const int k_openTimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 
 static char reportBuffer[80];
 
-DHT dht(DHT_PIN, DHT_TYPE);
+DHT dht(k_dhtPin, DHT11);
 BlynkTimer timer;
 WiFiUDP ntpUdp;
 NTPClient timeClient(ntpUdp);
