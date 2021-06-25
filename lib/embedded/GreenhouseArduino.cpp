@@ -18,7 +18,7 @@ const int k_actuatorPinIn2 = 12; // GPIO12 = D6
 const int k_ambientDhtPin = 14;  // GPIO14 = D5
 
 const int k_actuatorSpeed = 255;
-const int k_openTimeSec = 12;
+const int k_actuatorRuntimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 
 static char reportBuffer[80];
@@ -161,7 +161,7 @@ void GreenhouseArduino::CloseWindow(float delta)
   SystemDigitalWrite(k_actuatorPinIn1, LOW);
   SystemDigitalWrite(k_actuatorPinIn2, HIGH);
 
-  int runtime = (k_openTimeSec * 1000) * delta;
+  int runtime = (k_actuatorRuntimeSec * 1000) * delta;
   Log().Trace("Close runtime: %dms", runtime);
   SystemDelay(runtime);
 
@@ -182,7 +182,7 @@ void GreenhouseArduino::OpenWindow(float delta)
   SystemDigitalWrite(k_actuatorPinIn1, HIGH);
   SystemDigitalWrite(k_actuatorPinIn2, LOW);
 
-  int runtime = (k_openTimeSec * 1000) * delta;
+  int runtime = (k_actuatorRuntimeSec * 1000) * delta;
   Log().Trace("Open runtime: %dms", runtime);
   SystemDelay(runtime);
 
