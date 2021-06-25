@@ -34,6 +34,8 @@ public:
   void HandleFakeTemperature(float fakeTemperature);
   void HandleTestMode(int fakeMode);
   void HandleOpenDayMinimum(int openDayMinimum);
+  void HandleLastWrite();
+  void HandleSystemStarted();
 
 protected:
   void FlashLed(LedFlashTimes times);
@@ -60,4 +62,5 @@ private:
   int m_led;
   float m_fakeTemperature;
   bool m_refreshBusy;
+  bool m_lastWriteDone;
 };

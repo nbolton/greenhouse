@@ -4,7 +4,13 @@
 
 const int k_unknown = -1;
 
-enum LedFlashTimes { k_ledRefresh = 1, k_ledSend = 2, k_ledRecieve = 3 };
+enum LedFlashTimes {
+  k_ledRefresh = 1,
+  k_ledSend = 2,
+  k_ledRecieve = 3,
+  k_ledStarted = 4,
+  k_ledReset = 5
+};
 
 class Greenhouse {
 public:

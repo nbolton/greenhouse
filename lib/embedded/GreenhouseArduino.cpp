@@ -72,8 +72,6 @@ void GreenhouseArduino::Setup()
 
   Blynk.begin(k_auth, k_ssid, k_pass);
   ambientDht.begin();
-  Log().TraceFlash(F("System started"));
-  ReportInfo("System started");
 }
 
 void GreenhouseArduino::Loop()
@@ -104,6 +102,10 @@ bool GreenhouseArduino::Refresh()
 
 void GreenhouseArduino::FlashLed(LedFlashTimes times)
 {
+  // disable flashing LED until after the last write is done
+  if (!m_lastWriteDone)
+    return;
+
   for (int i = 0; i < (int)times * 2; i++) {
     m_led = (m_led == LOW) ? HIGH : LOW;
     digitalWrite(LED_BUILTIN, m_led);
@@ -190,7 +192,9 @@ void GreenhouseArduino::OpenWindow(float delta)
 
 void GreenhouseArduino::Reset()
 {
+  FlashLed(k_ledReset);
   ReportWarning("System rebooting");
+
   Blynk.disconnect();
   wdt_disable();
   wdt_enable(WDTO_15MS);
@@ -381,6 +385,32 @@ void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
   OpenDayMinimum(openDayMinimum);
 }
 
+void GreenhouseArduino::HandleLastWrite()
+{
+  if (m_lastWriteDone) {
+    return;
+  }
+
+  m_lastWriteDone = true;
+
+  // if this is the first time that the last write was done, 
+  // this means that the system has started.
+  HandleSystemStarted();
+}
+
+void GreenhouseArduino::HandleSystemStarted()
+{
+  // run the first refresh (instead of waiting for the 1st refresh timer).
+  // we run the 1st refresh here instead of when the timer is created,
+  // because when we setup the timer for the first time, we may not
+  // have all of the correct initial values.
+  Refresh();
+
+  FlashLed(k_ledStarted);
+  Log().TraceFlash(F("System started"));
+  ReportInfo("System started");
+}
+
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
@@ -447,4 +477,7 @@ BLYNK_WRITE(V15)
 {
   s_instance->TraceFlash(F("Blynk write V15"));
   s_instance->HandleOpenDayMinimum(param.asInt());
+
+  // TODO: find a better way to always call this last
+  s_instance->HandleLastWrite();
 }
