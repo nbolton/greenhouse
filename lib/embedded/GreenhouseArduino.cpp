@@ -12,18 +12,18 @@
 
 // 8266 free pins: D1, D4 (led), D7
 // https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
-const int k_motorPinEnA = 4;  // GPIO4  = D2 
-const int k_motorPinIn1 = 0;  // GPIO0  = D3 (connected to flash)
-const int k_motorPinIn2 = 12; // GPIO12 = D6
-const int k_dhtPin = 14;      // GPIO14 = D5
+const int k_actuatorPinEnA = 4;  // GPIO4  = D2
+const int k_actuatorPinIn1 = 0;  // GPIO0  = D3 (connected to flash)
+const int k_actuatorPinIn2 = 12; // GPIO12 = D6
+const int k_ambientDhtPin = 14;  // GPIO14 = D5
 
-const int k_motorSpeed = 255;
+const int k_actuatorSpeed = 255;
 const int k_openTimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 
 static char reportBuffer[80];
 
-DHT dht(k_dhtPin, DHT11);
+DHT ambientDht(k_ambientDhtPin, DHT11);
 BlynkTimer timer;
 WiFiUDP ntpUdp;
 NTPClient timeClient(ntpUdp);
@@ -64,14 +64,14 @@ void GreenhouseArduino::Setup()
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  pinMode(k_motorPinEnA, OUTPUT);
-  pinMode(k_motorPinIn1, OUTPUT);
-  pinMode(k_motorPinIn2, OUTPUT);
+  pinMode(k_actuatorPinEnA, OUTPUT);
+  pinMode(k_actuatorPinIn1, OUTPUT);
+  pinMode(k_actuatorPinIn2, OUTPUT);
 
-  analogWrite(k_motorPinEnA, k_motorSpeed);
+  analogWrite(k_actuatorPinEnA, k_actuatorSpeed);
 
   Blynk.begin(k_auth, k_ssid, k_pass);
-  dht.begin();
+  ambientDht.begin();
 
   // give DHT time to work
   // TODO: test if this is really actually needed
@@ -132,8 +132,8 @@ bool GreenhouseArduino::ReadDhtSensor()
     return true;
   }
 
-  float t = dht.readTemperature();
-  float h = dht.readHumidity();
+  float t = ambientDht.readTemperature();
+  float h = ambientDht.readHumidity();
 
   if (isnan(t) || isnan(h)) {
     t = k_unknown;
@@ -158,15 +158,15 @@ void GreenhouseArduino::CloseWindow(float delta)
 
   Greenhouse::CloseWindow(delta);
 
-  SystemDigitalWrite(k_motorPinIn1, LOW);
-  SystemDigitalWrite(k_motorPinIn2, HIGH);
+  SystemDigitalWrite(k_actuatorPinIn1, LOW);
+  SystemDigitalWrite(k_actuatorPinIn2, HIGH);
 
   int runtime = (k_openTimeSec * 1000) * delta;
   Log().Trace("Close runtime: %dms", runtime);
   SystemDelay(runtime);
 
-  SystemDigitalWrite(k_motorPinIn1, LOW);
-  SystemDigitalWrite(k_motorPinIn2, LOW);
+  SystemDigitalWrite(k_actuatorPinIn1, LOW);
+  SystemDigitalWrite(k_actuatorPinIn2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window closed %.1f%%", percent);
@@ -179,15 +179,15 @@ void GreenhouseArduino::OpenWindow(float delta)
 
   Greenhouse::OpenWindow(delta);
 
-  SystemDigitalWrite(k_motorPinIn1, HIGH);
-  SystemDigitalWrite(k_motorPinIn2, LOW);
+  SystemDigitalWrite(k_actuatorPinIn1, HIGH);
+  SystemDigitalWrite(k_actuatorPinIn2, LOW);
 
   int runtime = (k_openTimeSec * 1000) * delta;
   Log().Trace("Open runtime: %dms", runtime);
   SystemDelay(runtime);
 
-  SystemDigitalWrite(k_motorPinIn1, LOW);
-  SystemDigitalWrite(k_motorPinIn2, LOW);
+  SystemDigitalWrite(k_actuatorPinIn1, LOW);
+  SystemDigitalWrite(k_actuatorPinIn2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window opened %.1f%%", percent);
