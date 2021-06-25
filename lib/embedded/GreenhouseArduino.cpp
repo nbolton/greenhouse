@@ -93,7 +93,7 @@ void GreenhouseArduino::Loop()
 bool GreenhouseArduino::Refresh()
 {
   // TODO: use mutex lock?
-  while (m_refreshBusy) {
+  if (m_refreshBusy) {
     Log().Trace("Refresh busy, skipping");
     return false;
   }
