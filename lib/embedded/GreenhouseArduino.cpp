@@ -83,7 +83,7 @@ void GreenhouseArduino::Setup()
 void GreenhouseArduino::Loop()
 {
   Greenhouse::Loop();
-  
+
   timeClient.update();
   Blynk.run();
   timer.run();
@@ -146,15 +146,9 @@ bool GreenhouseArduino::ReadDhtSensor()
   return true;
 }
 
-void GreenhouseArduino::SystemDigitalWrite(int pin, int val)
-{
-  digitalWrite(pin, val);
-}
+void GreenhouseArduino::SystemDigitalWrite(int pin, int val) { digitalWrite(pin, val); }
 
-void GreenhouseArduino::SystemDelay(unsigned long ms)
-{
-  delay(ms);
-}
+void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
 
 void GreenhouseArduino::CloseWindow(float delta)
 {
@@ -198,7 +192,6 @@ void GreenhouseArduino::OpenWindow(float delta)
   Log().Trace("Window opened %.1f%%", percent);
 }
 
-
 void GreenhouseArduino::Reset()
 {
   ReportWarning("System rebooting");
@@ -209,15 +202,12 @@ void GreenhouseArduino::Reset()
   }
 }
 
-int GreenhouseArduino::CurrentHour() const
-{
-  return timeClient.getHours();
-}
+int GreenhouseArduino::CurrentHour() const { return timeClient.getHours(); }
 
 void GreenhouseArduino::ReportInfo(const char *format, ...)
 {
   FlashLed(k_ledSend);
-  
+
   va_list args;
   va_start(args, format);
   vsprintf(reportBuffer, format, args);
