@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <stdio.h>
 
-const float windowAdjustThreshold = 0.05;
+const float k_windowAdjustThreshold = 0.05;
 const int k_dayStartHour = 8; // 8am
 const int k_dayEndHour = 20;  // 8pm
 
@@ -107,7 +107,7 @@ bool Greenhouse::ApplyWindowProgress(float expectedProgress)
   float currentProgress = (float)WindowProgress() / 100;
 
   // avoid constant micro movements; only open/close window if difference is more than threshold
-  bool overThreshold = std::abs(expectedProgress - currentProgress) > windowAdjustThreshold;
+  bool overThreshold = std::abs(expectedProgress - currentProgress) > k_windowAdjustThreshold;
   bool fullValue = (expectedProgress == 0) || (expectedProgress == 1);
 
   if (overThreshold || fullValue) {
