@@ -37,6 +37,7 @@ protected:
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual int CurrentHour() const { return k_unknown; }
+  virtual float CalculateMoisture(int analogValue) const;
 
   virtual void ReportSensorValues() {}
   virtual void ReportWindowProgress() {}

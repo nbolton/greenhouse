@@ -20,6 +20,7 @@ const int k_actuatorPinIn2 = 12; // GPIO12 = D6
 const int k_insideDhtPin = 14;   // GPIO14 = D5
 const int k_outsideDhtPin = 5;   // GPIO5 = D1
 const int k_oneWireBusPin = 13;  // GPIO13 = D7
+const int k_moisturePin = 0;     // ADC0
 
 const int k_actuatorSpeed = 255;
 const int k_actuatorRuntimeSec = 12;
@@ -58,7 +59,9 @@ GreenhouseArduino::GreenhouseArduino() :
   m_timerId(k_unknown),
   m_led(LOW),
   m_fakeSoilTemperature(k_unknown),
-  m_refreshBusy(false)
+  m_refreshBusy(false),
+  m_soilMoisture(k_unknown),
+  m_fakeSoilMoisture(k_unknown)
 {
 }
 
@@ -134,6 +137,14 @@ float GreenhouseArduino::SoilTemperature() const
   return m_soilTemperature;
 }
 
+float GreenhouseArduino::SoilMoisture() const
+{
+  if (TestMode()) {
+    return m_fakeSoilMoisture;
+  }
+  return m_soilMoisture;
+}
+
 bool GreenhouseArduino::ReadSensors()
 {
   if (TestMode()) {
@@ -170,6 +181,9 @@ bool GreenhouseArduino::ReadSensors()
     m_soilTemperature = k_unknown;
     return false;
   }
+
+  int moistureAnalog = analogRead(k_moisturePin);
+  m_soilMoisture = CalculateMoisture(moistureAnalog);
 
   return true;
 }
@@ -278,7 +292,7 @@ void GreenhouseArduino::ReportSensorValues()
   Blynk.virtualWrite(V19, OutsideTemperature());
   Blynk.virtualWrite(V20, OutsideHumidity());
   Blynk.virtualWrite(V11, SoilTemperature());
-
+  Blynk.virtualWrite(V21, SoilMoisture());
 }
 
 void GreenhouseArduino::ReportWindowProgress()
@@ -403,6 +417,14 @@ void GreenhouseArduino::HandleFakeSoilTemperature(float fakeSoilTemperature)
   m_fakeSoilTemperature = fakeSoilTemperature;
 }
 
+void GreenhouseArduino::HandleFakeSoilMoisture(float fakeSoilMoisture)
+{
+  FlashLed(k_ledRecieve);
+  Log().Trace("Handle fake soil moisture: %.2fC", fakeSoilMoisture);
+
+  m_fakeSoilMoisture = fakeSoilMoisture;
+}
+
 void GreenhouseArduino::HandleTestMode(int testMode)
 {
   FlashLed(k_ledRecieve);
@@ -514,4 +536,10 @@ BLYNK_WRITE(V18)
 {
   s_instance->TraceFlash(F("Blynk write V18"));
   s_instance->HandleFakeSoilTemperature(param.asFloat());
+}
+
+BLYNK_WRITE(V22)
+{
+  s_instance->TraceFlash(F("Blynk write V22"));
+  s_instance->HandleFakeSoilMoisture(param.asFloat());
 }

@@ -45,6 +45,7 @@ protected:
   float OutsideTemperature() const { return m_outsideTemperature; }
   float OutsideHumidity() const { return m_outsideHumidity; }
   float SoilTemperature() const;
+  float SoilMoisture() const;
   void Reset();
   int CurrentHour() const;
 
@@ -67,6 +68,8 @@ private:
   int m_timerId;
   int m_led;
   float m_fakeSoilTemperature;
+  float m_fakeSoilMoisture;
   bool m_refreshBusy;
   bool m_lastWriteDone;
+  float m_soilMoisture;
 };

@@ -6,6 +6,8 @@
 const float k_windowAdjustThreshold = 0.05;
 const int k_dayStartHour = 8; // 8am
 const int k_dayEndHour = 20;  // 8pm
+const int k_analogMoistureMin = 100;
+const int k_analogMoistureMax = 900;
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -178,4 +180,18 @@ void Greenhouse::CloseWindow(float delta)
 {
   AddWindowProgressDelta(delta * -1);
   ReportWindowProgress();
+}
+
+float Greenhouse::CalculateMoisture(int analogValue) const
+{
+  if (analogValue <= k_analogMoistureMin) {
+    return 0;
+  }
+
+  if (analogValue >= k_analogMoistureMax) {
+    return 100;
+  }
+
+  int range = k_analogMoistureMax - k_analogMoistureMin;
+  return ((float)(analogValue - k_analogMoistureMin) / range) * 100;
 }

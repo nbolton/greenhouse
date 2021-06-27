@@ -45,6 +45,7 @@ public:
   void WindowProgress(int windowProgress) { Greenhouse::WindowProgress(windowProgress); }
   int WindowProgress() { return Greenhouse::WindowProgress(); }
   void OpenDayMinimum(int openDayMinimum) { Greenhouse::OpenDayMinimum(openDayMinimum); }
+  float CalculateMoisture(int analogValue) const { return Greenhouse::CalculateMoisture(analogValue); }
 
   bool ApplyWindowProgress(float expectedProgress)
   {
@@ -310,6 +311,27 @@ void Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened()
   TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open
 }
 
+void Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero()
+{
+  GreenhouseTest greenhouse;
+  float percent = greenhouse.CalculateMoisture(100);
+  TEST_ASSERT_EQUAL_FLOAT(0, percent);
+}
+
+void Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred()
+{
+  GreenhouseTest greenhouse;
+  float percent = greenhouse.CalculateMoisture(900);
+  TEST_ASSERT_EQUAL_FLOAT(100, percent);
+}
+
+void Test_CalculateMoisture_InBounds_ReturnsPercent()
+{
+  GreenhouseTest greenhouse;
+  float percent = greenhouse.CalculateMoisture(305);
+  TEST_ASSERT_EQUAL_FLOAT(25.625, percent);
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -327,4 +349,7 @@ void testCommon()
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed);
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed);
   RUN_TEST(Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened);
+  RUN_TEST(Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero);
+  RUN_TEST(Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred);
+  RUN_TEST(Test_CalculateMoisture_InBounds_ReturnsPercent);
 }
