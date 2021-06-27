@@ -58,6 +58,7 @@ GreenhouseArduino::GreenhouseArduino() :
   m_outsideHumidity(k_unknown),
   m_timerId(k_unknown),
   m_led(LOW),
+  m_fakeInsideHumidity(k_unknown),
   m_fakeSoilTemperature(k_unknown),
   m_fakeSoilMoisture(k_unknown),
   m_refreshBusy(false),
@@ -129,6 +130,14 @@ void GreenhouseArduino::FlashLed(LedFlashTimes times)
     digitalWrite(LED_BUILTIN, m_led);
     delay(k_ledFlashDelay);
   }
+}
+
+float GreenhouseArduino::InsideHumidity() const
+{
+  if (TestMode()) {
+    return m_fakeInsideHumidity;
+  }
+  return m_insideHumidity;
 }
 
 float GreenhouseArduino::SoilTemperature() const
@@ -450,6 +459,14 @@ void GreenhouseArduino::HandleRefresh(int refresh)
   }
 }
 
+void GreenhouseArduino::HandleFakeInsideHumidity(float value)
+{
+  FlashLed(k_ledRecieve);
+  Log().Trace("Handle fake inside humidity: %.2f%%", value);
+
+  m_fakeInsideHumidity = value;
+}
+
 void GreenhouseArduino::HandleFakeSoilTemperature(float fakeSoilTemperature)
 {
   FlashLed(k_ledRecieve);
@@ -582,7 +599,14 @@ BLYNK_WRITE(V22)
 {
   s_instance->TraceFlash(F("Blynk write V22"));
   s_instance->HandleFakeSoilMoisture(param.asFloat());
+}
 
-  // TODO: find a better way to always call this last
+BLYNK_WRITE(V23)
+{
+  s_instance->TraceFlash(F("Blynk write V23"));
+  s_instance->HandleFakeInsideHumidity(param.asFloat());
+
+  // TODO: find a better way to always call this last; sometimes
+  // when adding new write functions, moving this gets forgotten about.
   s_instance->HandleLastWrite();
 }

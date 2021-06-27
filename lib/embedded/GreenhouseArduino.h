@@ -33,6 +33,7 @@ public:
   void HandleWindowProgress(int windowProgress);
   void HandleReset(int reset);
   void HandleRefresh(int refresh);
+  void HandleFakeInsideHumidity(float value);
   void HandleFakeSoilTemperature(float fakeTemperature);
   void HandleFakeSoilMoisture(float fakeTemperature);
   void HandleTestMode(int fakeMode);
@@ -44,7 +45,7 @@ protected:
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
   float InsideTemperature() const { return m_insideTemperature; }
-  float InsideHumidity() const { return m_insideHumidity; }
+  float InsideHumidity() const;
   float OutsideTemperature() const { return m_outsideTemperature; }
   float OutsideHumidity() const { return m_outsideHumidity; }
   float SoilTemperature() const;
@@ -71,6 +72,7 @@ private:
   float m_soilTemperature;
   int m_timerId;
   int m_led;
+  float m_fakeInsideHumidity;
   float m_fakeSoilTemperature;
   float m_fakeSoilMoisture;
   bool m_refreshBusy;
