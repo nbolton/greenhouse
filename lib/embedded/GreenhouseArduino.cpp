@@ -345,7 +345,7 @@ void GreenhouseArduino::ReportWarnings()
     m_soilMoistureWarningSent = true;
   }
 
-  if (!m_insideHumidityWarningSent && (m_insideHumidity >= IndoorHumidityWarning())) {
+  if (!m_insideHumidityWarningSent && (m_insideHumidity >= InsideHumidityWarning())) {
     ReportWarning("Inside humidity high (%d%%)", m_insideHumidity);
     m_insideHumidityWarningSent = true;
   }
@@ -504,7 +504,7 @@ void GreenhouseArduino::HandleInsideHumidityWarning(float insideHumidityWarning)
   FlashLed(k_ledRecieve);
   s_instance->Log().Trace("Handle inside humidity warning: %d", insideHumidityWarning);
 
-  IndoorHumidityWarning(insideHumidityWarning);
+  InsideHumidityWarning(insideHumidityWarning);
 }
 
 void GreenhouseArduino::HandleSoilMostureWarning(float soilMostureWarning)

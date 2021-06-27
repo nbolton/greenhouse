@@ -34,7 +34,7 @@ public:
   void HandleFakeSoilMoisture(float);
   void HandleTestMode(int);
   void HandleOpenDayMinimum(int);
-  void HandleIndoorHumidityWarning(float);
+  void HandleInsideHumidityWarning(float);
   void HandleSoilMostureWarning(float);
 
 protected:

@@ -16,7 +16,7 @@ Greenhouse::Greenhouse() :
   m_openFinish(k_unknown),
   m_windowProgress(k_unknown),
   m_openDayMinimum(k_unknown),
-  m_indoorHumidityWarning(k_unknown),
+  m_insideHumidityWarning(k_unknown),
   m_soilMostureWarning(k_unknown)
 {
 }

@@ -56,8 +56,8 @@ protected:
   virtual bool TestMode() const { return m_testMode; }
   virtual void OpenDayMinimum(int value) { m_openDayMinimum = value; }
   virtual int OpenDayMinimum() const { return m_openDayMinimum; }
-  virtual void IndoorHumidityWarning(float value) { m_indoorHumidityWarning = value; }
-  virtual float IndoorHumidityWarning() const { return m_indoorHumidityWarning; }
+  virtual void InsideHumidityWarning(float value) { m_insideHumidityWarning = value; }
+  virtual float InsideHumidityWarning() const { return m_insideHumidityWarning; }
   virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
   virtual float SoilMostureWarning() const { return m_soilMostureWarning; }
 
@@ -73,6 +73,6 @@ private:
   int m_windowProgress;
   bool m_testMode;
   int m_openDayMinimum;
-  float m_indoorHumidityWarning;
+  float m_insideHumidityWarning;
   float m_soilMostureWarning;
 };
