@@ -518,7 +518,7 @@ void GreenhouseArduino::HandleSoilMostureWarning(float soilMostureWarning)
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V15, V16, V17, V18, V22);
+  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V15, V16, V17, V18, V22, V23);
 }
 
 BLYNK_WRITE(V0)
