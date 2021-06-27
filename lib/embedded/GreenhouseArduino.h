@@ -41,27 +41,28 @@ protected:
   void ReportInfo(const char *m, ...);
   void ReportWarning(const char *m, ...);
   void ReportCritical(const char *m, ...);
+  void ReportSensorValues();
+  void ReportWindowProgress();
+  void ReportSystemInfo();
+  void ReportWarnings();
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
-  float InsideTemperature() const { return m_insideTemperature; }
-  float InsideHumidity() const;
-  float OutsideTemperature() const { return m_outsideTemperature; }
-  float OutsideHumidity() const { return m_outsideHumidity; }
-  float SoilTemperature() const;
-  float SoilMoisture() const;
   void Reset();
-  int CurrentHour() const;
 
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual void SystemDigitalWrite(int pin, int val);
   virtual void SystemDelay(unsigned long ms);
 
-  void ReportSensorValues();
-  void ReportWindowProgress();
-  void ReportSystemInfo();
-  void ReportWarnings();
+  // getters & setters
+  int CurrentHour() const;
+  float InsideTemperature() const { return m_insideTemperature; }
+  float InsideHumidity() const;
+  float OutsideTemperature() const { return m_outsideTemperature; }
+  float OutsideHumidity() const { return m_outsideHumidity; }
+  float SoilTemperature() const;
+  float SoilMoisture() const;
 
 private:
   ArduinoLog m_log;

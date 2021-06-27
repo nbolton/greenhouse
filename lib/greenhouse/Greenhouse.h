@@ -26,24 +26,26 @@ protected:
   virtual void ReportInfo(const char *m, ...) {}
   virtual void ReportWarning(const char *m, ...) {}
   virtual void ReportCritical(const char *m, ...) {}
-
-  virtual void FlashLed(LedFlashTimes times) {}
-  virtual bool ReadSensors() { return false; }
-  virtual float InsideTemperature() const { return k_unknown; }
-  virtual float InsideHumidity() const { return k_unknown; }
-  virtual float OutsideTemperature() const { return k_unknown; }
-  virtual float OutsideHumidity() const { return k_unknown; }
-  virtual float SoilTemperature() const { return k_unknown; }
-  virtual void OpenWindow(float delta);
-  virtual void CloseWindow(float delta);
-  virtual int CurrentHour() const { return k_unknown; }
-  virtual float CalculateMoisture(int analogValue) const;
-
   virtual void ReportSensorValues() {}
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
 
+  virtual void FlashLed(LedFlashTimes times) {}
+  virtual bool ReadSensors() { return false; }
+  virtual void OpenWindow(float delta);
+  virtual void CloseWindow(float delta);
+  virtual float CalculateMoisture(int analogValue) const;
+  virtual bool ApplyWindowProgress(float expectedProgress);
+  virtual void AddWindowProgressDelta(float delta);
+
+  // getters & setters
+  virtual int CurrentHour() const { return k_unknown; }
+  virtual float InsideTemperature() const { return k_unknown; }
+  virtual float InsideHumidity() const { return k_unknown; }
+  virtual float OutsideTemperature() const { return k_unknown; }
+  virtual float OutsideHumidity() const { return k_unknown; }
+  virtual float SoilTemperature() const { return k_unknown; }
   virtual void WindowProgress(int value) { m_windowProgress = value; }
   virtual int WindowProgress() const { return m_windowProgress; }
   virtual void AutoMode(bool value) { m_autoMode = value; }
@@ -60,9 +62,6 @@ protected:
   virtual float InsideHumidityWarning() const { return m_insideHumidityWarning; }
   virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
   virtual float SoilMostureWarning() const { return m_soilMostureWarning; }
-
-  virtual bool ApplyWindowProgress(float expectedProgress);
-  virtual void AddWindowProgressDelta(float delta);
 
 private:
   ::Log m_log;
