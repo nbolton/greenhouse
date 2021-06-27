@@ -36,6 +36,8 @@ public:
   void HandleOpenDayMinimum(int openDayMinimum);
   void HandleLastWrite();
   void HandleSystemStarted();
+  void HandleIndoorHumidityWarning(float indoorHumidityWarning);
+  void HandleSoilMostureWarning(float soilMostureWarning);
 
 protected:
   void FlashLed(LedFlashTimes times);
@@ -57,6 +59,7 @@ protected:
   void ReportSensorValues();
   void ReportWindowProgress();
   void ReportSystemInfo();
+  void ReportWarnings();
 
 private:
   ArduinoLog m_log;
@@ -72,4 +75,6 @@ private:
   bool m_refreshBusy;
   bool m_lastWriteDone;
   float m_soilMoisture;
+  bool m_insideHumidityWarningSent;
+  bool m_soilMoistureWarningSent;
 };

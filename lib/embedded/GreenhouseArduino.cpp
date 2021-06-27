@@ -61,7 +61,9 @@ GreenhouseArduino::GreenhouseArduino() :
   m_fakeSoilTemperature(k_unknown),
   m_refreshBusy(false),
   m_soilMoisture(k_unknown),
-  m_fakeSoilMoisture(k_unknown)
+  m_fakeSoilMoisture(k_unknown),
+  m_insideHumidityWarningSent(false),
+  m_soilMoistureWarningSent(false)
 {
 }
 
@@ -327,6 +329,19 @@ void GreenhouseArduino::ReportSystemInfo()
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
+void GreenhouseArduino::ReportWarnings()
+{
+  if (!m_soilMoistureWarningSent && (m_soilMoisture <= SoilMostureWarning())) {
+    ReportWarning("Soil moisture low (%d%%)", m_soilMoisture);
+    m_soilMoistureWarningSent = true;
+  }
+
+  if (!m_insideHumidityWarningSent && (m_insideHumidity >= IndoorHumidityWarning())) {
+    ReportWarning("Inside humidity high (%d%%)", m_insideHumidity);
+    m_insideHumidityWarningSent = true;
+  }
+}
+
 void GreenhouseArduino::HandleAutoMode(bool autoMode)
 {
   FlashLed(k_ledRecieve);
@@ -441,6 +456,22 @@ void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
   OpenDayMinimum(openDayMinimum);
 }
 
+void HandleIndoorHumidityWarning(float indoorHumidityWarning)
+{
+  FlashLed(k_ledRecieve);
+  s_instance->Log().Trace("Indoor humidity warning: %d", indoorHumidityWarning);
+
+  IndoorHumidityWarning(indoorHumidityWarning);
+}
+
+void HandleSoilMostureWarning(float soilMostureWarning)
+{
+  FlashLed(k_ledRecieve);
+  s_instance->Log().Trace("Soil moisture warning: %d", soilMostureWarning);
+
+  SoilMostureWarning(soilMostureWarning);
+}
+
 void GreenhouseArduino::HandleLastWrite()
 {
   if (m_lastWriteDone) {
@@ -470,7 +501,7 @@ void GreenhouseArduino::HandleSystemStarted()
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V15, V18);
+  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V15, V16, V17, V18);
 }
 
 BLYNK_WRITE(V0)
@@ -527,9 +558,18 @@ BLYNK_WRITE(V15)
 {
   s_instance->TraceFlash(F("Blynk write V15"));
   s_instance->HandleOpenDayMinimum(param.asInt());
+}
 
-  // TODO: find a better way to always call this last
-  s_instance->HandleLastWrite();
+BLYNK_WRITE(V16)
+{
+  s_instance->TraceFlash(F("Blynk write V16"));
+  s_instance->HandleIndoorHumidityWarning(param.asFloat());
+}
+
+BLYNK_WRITE(V17)
+{
+  s_instance->TraceFlash(F("Blynk write V17"));
+  s_instance->HandleSoilMostureWarning(param.asFloat());
 }
 
 BLYNK_WRITE(V18)
@@ -542,4 +582,7 @@ BLYNK_WRITE(V22)
 {
   s_instance->TraceFlash(F("Blynk write V22"));
   s_instance->HandleFakeSoilMoisture(param.asFloat());
+
+  // TODO: find a better way to always call this last
+  s_instance->HandleLastWrite();
 }

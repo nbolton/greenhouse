@@ -42,6 +42,7 @@ protected:
   virtual void ReportSensorValues() {}
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}
+  virtual void ReportWarnings() {}
 
   virtual void WindowProgress(int windowProgress) { m_windowProgress = windowProgress; }
   virtual int WindowProgress() const { return m_windowProgress; }
@@ -55,6 +56,10 @@ protected:
   virtual bool TestMode() const { return m_testMode; }
   virtual void OpenDayMinimum(int openDayMinimum) { m_openDayMinimum = openDayMinimum; }
   virtual int OpenDayMinimum() const { return m_openDayMinimum; }
+  virtual void IndoorHumidityWarning(float value) { m_indoorHumidityWarning = value; }
+  virtual float IndoorHumidityWarning() const { return m_indoorHumidityWarning; }
+  virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
+  virtual float SoilMostureWarning() const { return m_soilMostureWarning; }
 
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
@@ -68,4 +73,6 @@ private:
   int m_windowProgress;
   bool m_testMode;
   int m_openDayMinimum;
+  float m_indoorHumidityWarning;
+  float m_soilMostureWarning;
 };

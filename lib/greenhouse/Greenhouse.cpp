@@ -15,7 +15,9 @@ Greenhouse::Greenhouse() :
   m_openStart(k_unknown),
   m_openFinish(k_unknown),
   m_windowProgress(k_unknown),
-  m_openDayMinimum(k_unknown)
+  m_openDayMinimum(k_unknown),
+  m_indoorHumidityWarning(k_unknown),
+  m_soilMostureWarning(k_unknown)
 {
 }
 
@@ -49,6 +51,8 @@ bool Greenhouse::Refresh()
     soilTemperature);
 
   ReportSensorValues();
+
+  ReportWarnings();
 
   FlashLed(k_ledRefresh);
 
