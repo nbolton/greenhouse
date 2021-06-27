@@ -535,9 +535,8 @@ BLYNK_WRITE(V3)
 
 BLYNK_WRITE(V5)
 {
-  // TODO: https://github.com/nbolton/home-automation/issues/20
   s_instance->TraceFlash(F("Blynk write V5"));
-  s_instance->HandleOpenStart((float)param.asInt());
+  s_instance->HandleOpenStart(param.asFloat());
 }
 
 BLYNK_WRITE(V6)
@@ -554,9 +553,8 @@ BLYNK_WRITE(V7)
 
 BLYNK_WRITE(V8)
 {
-  // TODO: https://github.com/nbolton/home-automation/issues/20
   s_instance->TraceFlash(F("Blynk write V8"));
-  s_instance->HandleOpenFinish((float)param.asInt());
+  s_instance->HandleOpenFinish(param.asFloat());
 }
 
 BLYNK_WRITE(V9)

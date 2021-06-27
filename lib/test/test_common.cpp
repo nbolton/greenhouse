@@ -111,10 +111,10 @@ void Test_Refresh_AutoModeAboveBoundsAndAlreadyOpen_NothingHappens(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_SoilTemperature = 2.0;
+  greenhouse.m_mock_SoilTemperature = 2.1;
   greenhouse.AutoMode(true);
-  greenhouse.OpenStart(1.0);
-  greenhouse.OpenFinish(2.0);
+  greenhouse.OpenStart(1.1);
+  greenhouse.OpenFinish(2.1);
   greenhouse.WindowProgress(100);
 
   greenhouse.Refresh();
@@ -129,8 +129,8 @@ void Test_Refresh_AutoModeBelowBoundsAndAlreadyClosed_NothingHappens(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_SoilTemperature = 0.9;
   greenhouse.AutoMode(true);
-  greenhouse.OpenStart(1.0);
-  greenhouse.OpenFinish(2.0);
+  greenhouse.OpenStart(1.1);
+  greenhouse.OpenFinish(2.1);
   greenhouse.WindowProgress(0);
 
   greenhouse.Refresh();
@@ -145,16 +145,16 @@ void Test_Refresh_AutoModeInBoundsTooClosed_WindowOpenedPartly(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.8); // 80% between 25C and 30C
   greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(50); // 50% open
-  greenhouse.OpenStart(25.0);
-  greenhouse.OpenFinish(30.0);
+  greenhouse.WindowProgress(50);
+  greenhouse.OpenStart(25.1);
+  greenhouse.OpenFinish(30.1);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_OpenWindow_delta); // 20% delta
-  TEST_ASSERT_EQUAL_INT(80, greenhouse.WindowProgress());              // 80% open
+  TEST_ASSERT_FLOAT_WITHIN(0.01, 0.27, greenhouse.m_lastArg_OpenWindow_delta);
+  TEST_ASSERT_EQUAL_INT(77, greenhouse.WindowProgress());
 }
 
 void Test_Refresh_AutoModeInBoundsTooOpen_WindowClosedPartly(void)
@@ -163,16 +163,16 @@ void Test_Refresh_AutoModeInBoundsTooOpen_WindowClosedPartly(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.4); // 40% between 25C and 30C
   greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(80); // 80% open
-  greenhouse.OpenStart(25.0);
-  greenhouse.OpenFinish(30.0);
+  greenhouse.WindowProgress(80);
+  greenhouse.OpenStart(25.1);
+  greenhouse.OpenFinish(30.1);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.4, greenhouse.m_lastArg_CloseWindow_delta); // 40% delta
-  TEST_ASSERT_EQUAL_INT(40, greenhouse.WindowProgress());               // 40% open
+  TEST_ASSERT_FLOAT_WITHIN(0.01, 0.42, greenhouse.m_lastArg_CloseWindow_delta);
+  TEST_ASSERT_EQUAL_INT(37, greenhouse.WindowProgress());
 }
 
 void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
@@ -181,24 +181,24 @@ void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.6); // 60% between 25C and 30C
   greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(90); // 90% open
-  greenhouse.OpenStart(25.0);
-  greenhouse.OpenFinish(30.0);
+  greenhouse.WindowProgress(90);
+  greenhouse.OpenStart(25.1);
+  greenhouse.OpenFinish(30.1);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
-  TEST_ASSERT_EQUAL_INT(60, greenhouse.WindowProgress());               // 60% open
+  TEST_ASSERT_EQUAL_FLOAT(0.32, greenhouse.m_lastArg_CloseWindow_delta);
+  TEST_ASSERT_EQUAL_INT(57, greenhouse.WindowProgress());
 
-  greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.4); // 40% between 25C and 30C
+  greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.39); // 40% between 25C and 30C
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.2, greenhouse.m_lastArg_CloseWindow_delta); // 20% delta
-  TEST_ASSERT_EQUAL_INT(40, greenhouse.WindowProgress());               // 40% open
+  TEST_ASSERT_EQUAL_FLOAT(0.2, greenhouse.m_lastArg_CloseWindow_delta);
+  TEST_ASSERT_EQUAL_INT(37, greenhouse.WindowProgress());
 }
 
 void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
@@ -207,24 +207,24 @@ void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.3); // 30% between 25C and 30C
   greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(5); // 5% open
-  greenhouse.OpenStart(25.0);
-  greenhouse.OpenFinish(30.0);
+  greenhouse.WindowProgress(5);
+  greenhouse.OpenStart(25.1);
+  greenhouse.OpenFinish(30.1);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.25, greenhouse.m_lastArg_OpenWindow_delta); // 25% delta
-  TEST_ASSERT_EQUAL_INT(30, greenhouse.WindowProgress());               // 30% open
+  TEST_ASSERT_FLOAT_WITHIN(0.01, 0.22, greenhouse.m_lastArg_OpenWindow_delta);
+  TEST_ASSERT_EQUAL_INT(27, greenhouse.WindowProgress());
 
   greenhouse.m_mock_SoilTemperature = 29; // 80% between 25C and 30C
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.50, greenhouse.m_lastArg_OpenWindow_delta); // 55% delta
-  TEST_ASSERT_EQUAL_INT(80, greenhouse.WindowProgress());               // 80% open
+  TEST_ASSERT_FLOAT_WITHIN(0.01, 0.50, greenhouse.m_lastArg_OpenWindow_delta);
+  TEST_ASSERT_EQUAL_INT(77, greenhouse.WindowProgress());
 }
 
 void Test_Refresh_AutoModeBelowBounds_WindowClosedFully(void)
@@ -233,16 +233,16 @@ void Test_Refresh_AutoModeBelowBounds_WindowClosedFully(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_SoilTemperature = 24.9;
   greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(30); // 30% open
-  greenhouse.OpenStart(25.0);
-  greenhouse.OpenFinish(30.0);
+  greenhouse.WindowProgress(30);
+  greenhouse.OpenStart(25.1);
+  greenhouse.OpenFinish(30.1);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress());                // 0% open
+  TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta);
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress());
 }
 
 void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
@@ -251,64 +251,64 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
   greenhouse.m_mock_ReadDhtSensor = true;
   greenhouse.m_mock_SoilTemperature = 30.1;
   greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(60); // 60% open
-  greenhouse.OpenStart(25.0);
-  greenhouse.OpenFinish(30.0);
+  greenhouse.WindowProgress(60);
+  greenhouse.OpenStart(25.1);
+  greenhouse.OpenFinish(30.1);
 
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_OpenWindow);
-  TEST_ASSERT_EQUAL_FLOAT(0.4, greenhouse.m_lastArg_OpenWindow_delta); // 40% delta
-  TEST_ASSERT_EQUAL_INT(100, greenhouse.WindowProgress());             // 100% open
+  TEST_ASSERT_EQUAL_FLOAT(0.4, greenhouse.m_lastArg_OpenWindow_delta);
+  TEST_ASSERT_EQUAL_INT(100, greenhouse.WindowProgress());
 }
 
 void Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed()
 {
   GreenhouseTest greenhouse;
-  greenhouse.WindowProgress(20);      // 20% open
-  greenhouse.OpenDayMinimum(0);       // 0% min
+  greenhouse.WindowProgress(20);
+  greenhouse.OpenDayMinimum(0);
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);
 
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress()); // 0% open
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress());
 }
 
 void Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed()
 {
   GreenhouseTest greenhouse;
-  greenhouse.WindowProgress(20);     // 20% open
-  greenhouse.OpenDayMinimum(10);     // 10% min
+  greenhouse.WindowProgress(20);
+  greenhouse.OpenDayMinimum(10);
   greenhouse.m_mock_CurrentHour = 0; // 12am
 
   greenhouse.ApplyWindowProgress(0);
 
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress()); // 0% open
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WindowProgress());
 }
 
 void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
 {
   GreenhouseTest greenhouse;
-  greenhouse.WindowProgress(20);      // 20% open
-  greenhouse.OpenDayMinimum(10);      // 10% min
+  greenhouse.WindowProgress(20);
+  greenhouse.OpenDayMinimum(10);
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);
 
-  TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open
+  TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress());
 }
 
 void Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened()
 {
   GreenhouseTest greenhouse;
-  greenhouse.WindowProgress(5);       // 5% open
-  greenhouse.OpenDayMinimum(10);      // 10% min
+  greenhouse.WindowProgress(5);
+  greenhouse.OpenDayMinimum(10);
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);
 
-  TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress()); // 10% open
+  TEST_ASSERT_EQUAL_INT(10, greenhouse.WindowProgress());
 }
 
 void Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero()

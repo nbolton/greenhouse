@@ -56,10 +56,8 @@ bool Greenhouse::Refresh()
   ReportWarnings();
 
   bool windowMoved = false;
-
-  // TODO: https://github.com/nbolton/home-automation/issues/20
-  float openStart = (float)m_openStart;
-  float openFinish = (float)m_openFinish;
+  float openStart = m_openStart;
+  float openFinish = m_openFinish;
 
   if (m_autoMode) {
     Log().Trace(
