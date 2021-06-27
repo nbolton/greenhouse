@@ -31,7 +31,7 @@ public:
   void HandleWindowProgress(int windowProgress);
   void HandleReset(int reset);
   void HandleRefresh(int refresh);
-  void HandleFakeTemperature(float fakeTemperature);
+  void HandleFakeSoilTemperature(float fakeTemperature);
   void HandleTestMode(int fakeMode);
   void HandleOpenDayMinimum(int openDayMinimum);
   void HandleLastWrite();
@@ -39,9 +39,12 @@ public:
 
 protected:
   void FlashLed(LedFlashTimes times);
-  bool ReadDhtSensor();
-  float Temperature() const;
-  float Humidity() const;
+  bool ReadSensors();
+  float InsideTemperature() const;
+  float InsideHumidity() const;
+  float OutsideTemperature() const;
+  float OutsideHumidity() const;
+  float SoilTemperature() const;
   void Reset();
   int CurrentHour() const;
 
@@ -50,17 +53,20 @@ protected:
   virtual void SystemDigitalWrite(int pin, int val);
   virtual void SystemDelay(unsigned long ms);
 
-  void ReportDhtValues();
+  void ReportSensorValues();
   void ReportWindowProgress();
   void ReportSystemInfo();
 
 private:
   ArduinoLog m_log;
-  float m_temperature;
-  float m_humidity;
+  float m_insideTemperature;
+  float m_insideHumidity;
+  float m_outsideTemperature;
+  float m_outsideHumidity;
+  float m_soilTemperature;
   int m_timerId;
   int m_led;
-  float m_fakeTemperature;
+  float m_fakeSoilTemperature;
   bool m_refreshBusy;
   bool m_lastWriteDone;
 };

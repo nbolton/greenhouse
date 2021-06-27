@@ -6,24 +6,33 @@
 
 #include <BlynkSimpleEsp8266.h>
 #include <DHT.h>
+#include <DallasTemperature.h>
 #include <ESP8266WiFi.h>
 #include <NTPClient.h>
+#include <OneWire.h>
 #include <WiFiUdp.h>
 
-// 8266 free pins: D1, D4 (led), D7
+// 8266 free pins: D4 (led), A0
 // https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
 const int k_actuatorPinEnA = 4;  // GPIO4  = D2
 const int k_actuatorPinIn1 = 0;  // GPIO0  = D3 (connected to flash)
 const int k_actuatorPinIn2 = 12; // GPIO12 = D6
-const int k_ambientDhtPin = 14;  // GPIO14 = D5
+const int k_insideDhtPin = 14;   // GPIO14 = D5
+const int k_outsideDhtPin = 5;   // GPIO5 = D1
+const int k_oneWireBusPin = 13;  // GPIO13 = D7
 
 const int k_actuatorSpeed = 255;
 const int k_actuatorRuntimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
+const int k_soilProbeIndex = 0;
 
 static char reportBuffer[80];
 
-DHT ambientDht(k_ambientDhtPin, DHT11);
+DHT insideDht(k_insideDhtPin, DHT11);
+DHT outsideDht(k_outsideDhtPin, DHT21);
+OneWire oneWire(k_oneWireBusPin);
+DallasTemperature sensors(&oneWire);
+
 BlynkTimer timer;
 WiFiUDP ntpUdp;
 NTPClient timeClient(ntpUdp);
@@ -42,11 +51,13 @@ void refreshTimer()
 
 GreenhouseArduino::GreenhouseArduino() :
   m_log(),
-  m_temperature(k_unknown),
-  m_humidity(k_unknown),
+  m_insideTemperature(k_unknown),
+  m_insideHumidity(k_unknown),
+  m_outsideTemperature(k_unknown),
+  m_outsideHumidity(k_unknown),
   m_timerId(k_unknown),
   m_led(LOW),
-  m_fakeTemperature(k_unknown),
+  m_fakeSoilTemperature(k_unknown),
   m_refreshBusy(false)
 {
 }
@@ -71,7 +82,9 @@ void GreenhouseArduino::Setup()
   analogWrite(k_actuatorPinEnA, k_actuatorSpeed);
 
   Blynk.begin(k_auth, k_ssid, k_pass);
-  ambientDht.begin();
+  insideDht.begin();
+  outsideDht.begin();
+  sensors.begin();
 }
 
 void GreenhouseArduino::Loop()
@@ -113,33 +126,74 @@ void GreenhouseArduino::FlashLed(LedFlashTimes times)
   }
 }
 
-float GreenhouseArduino::Temperature() const
+float GreenhouseArduino::InsideTemperature() const
 {
-  if (TestMode()) {
-    return m_fakeTemperature;
-  }
-  return m_temperature;
+  //..
+  return m_insideTemperature;
 }
 
-float GreenhouseArduino::Humidity() const { return m_humidity; }
+float GreenhouseArduino::InsideHumidity() const
+{
+  //..
+  return m_insideHumidity;
+}
 
-bool GreenhouseArduino::ReadDhtSensor()
+float GreenhouseArduino::OutsideTemperature() const
+{
+  //..
+  return m_outsideTemperature;
+}
+
+float GreenhouseArduino::OutsideHumidity() const
+{
+  //..
+  return m_outsideHumidity;
+}
+
+float GreenhouseArduino::SoilTemperature() const
+{
+  if (TestMode()) {
+    return m_fakeSoilTemperature;
+  }
+  return m_soilTemperature;
+}
+
+bool GreenhouseArduino::ReadSensors()
 {
   if (TestMode()) {
     return true;
   }
 
-  float t = ambientDht.readTemperature();
-  float h = ambientDht.readHumidity();
-
-  if (isnan(t) || isnan(h)) {
-    t = k_unknown;
-    h = k_unknown;
+  m_insideTemperature = insideDht.readTemperature();
+  if (isnan(m_insideTemperature)) {
+    m_insideTemperature = k_unknown;
     return false;
   }
 
-  m_temperature = t;
-  m_humidity = h;
+  m_insideHumidity = insideDht.readHumidity();
+  if (isnan(m_insideHumidity)) {
+    m_insideHumidity = k_unknown;
+    return false;
+  }
+
+  m_outsideTemperature = outsideDht.readTemperature();
+  if (isnan(m_outsideTemperature)) {
+    m_outsideTemperature = k_unknown;
+    return false;
+  }
+
+  m_outsideHumidity = outsideDht.readHumidity();
+  if (isnan(m_outsideHumidity)) {
+    m_outsideHumidity = k_unknown;
+    return false;
+  }
+
+  sensors.requestTemperatures();
+  m_soilTemperature = sensors.getTempCByIndex(k_soilProbeIndex);
+  if (isnan(m_soilTemperature)) {
+    m_soilTemperature = k_unknown;
+    return false;
+  }
 
   return true;
 }
@@ -240,11 +294,15 @@ void GreenhouseArduino::ReportCritical(const char *format, ...)
   Blynk.logEvent("log_critical", reportBuffer);
 }
 
-void GreenhouseArduino::ReportDhtValues()
+void GreenhouseArduino::ReportSensorValues()
 {
   FlashLed(k_ledSend);
-  Blynk.virtualWrite(V1, Temperature());
-  Blynk.virtualWrite(V2, Humidity());
+  Blynk.virtualWrite(V1, InsideTemperature());
+  Blynk.virtualWrite(V2, InsideHumidity());
+  Blynk.virtualWrite(V19, OutsideTemperature());
+  Blynk.virtualWrite(V20, OutsideHumidity());
+  Blynk.virtualWrite(V11, SoilTemperature());
+
 }
 
 void GreenhouseArduino::ReportWindowProgress()
@@ -361,12 +419,12 @@ void GreenhouseArduino::HandleRefresh(int refresh)
   }
 }
 
-void GreenhouseArduino::HandleFakeTemperature(float fakeTemperature)
+void GreenhouseArduino::HandleFakeSoilTemperature(float fakeSoilTemperature)
 {
   FlashLed(k_ledRecieve);
-  Log().Trace("Handle fake temperature: %.2fC", fakeTemperature);
+  Log().Trace("Handle fake soil temperature: %.2fC", fakeSoilTemperature);
 
-  m_fakeTemperature = fakeTemperature;
+  m_fakeSoilTemperature = fakeSoilTemperature;
 }
 
 void GreenhouseArduino::HandleTestMode(int testMode)
@@ -393,7 +451,7 @@ void GreenhouseArduino::HandleLastWrite()
 
   m_lastWriteDone = true;
 
-  // if this is the first time that the last write was done, 
+  // if this is the first time that the last write was done,
   // this means that the system has started.
   HandleSystemStarted();
 }
@@ -414,7 +472,7 @@ void GreenhouseArduino::HandleSystemStarted()
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V3, V5, V8, V9, V11, V14, V15);
+  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V15, V18);
 }
 
 BLYNK_WRITE(V0)
@@ -461,12 +519,6 @@ BLYNK_WRITE(V9)
   s_instance->HandleWindowProgress(param.asInt());
 }
 
-BLYNK_WRITE(V11)
-{
-  s_instance->TraceFlash(F("Blynk write V11"));
-  s_instance->HandleFakeTemperature(param.asFloat());
-}
-
 BLYNK_WRITE(V14)
 {
   s_instance->TraceFlash(F("Blynk write V14"));
@@ -480,4 +532,10 @@ BLYNK_WRITE(V15)
 
   // TODO: find a better way to always call this last
   s_instance->HandleLastWrite();
+}
+
+BLYNK_WRITE(V18)
+{
+  s_instance->TraceFlash(F("Blynk write V18"));
+  s_instance->HandleFakeSoilTemperature(param.asFloat());
 }

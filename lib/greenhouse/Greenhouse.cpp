@@ -8,7 +8,7 @@ const int k_dayStartHour = 8; // 8am
 const int k_dayEndHour = 20;  // 8pm
 
 Greenhouse::Greenhouse() :
-  m_dhtFailSent(false),
+  m_sensorWarningSent(false),
   m_autoMode(false),
   m_openStart(k_unknown),
   m_openFinish(k_unknown),
@@ -25,26 +25,28 @@ bool Greenhouse::Refresh()
 {
   Log().Trace("Refreshing");
 
-  bool ok = ReadDhtSensor();
-  float temperature = Temperature();
-  float humidity = Humidity();
+  bool sensorsOk = ReadSensors();
+  float insideTemperature = InsideTemperature();
+  float outsideTemperature = OutsideTemperature();
+  float soilTemperature = SoilTemperature();
 
-  if (!ok) {
-    Log().Trace("DHT device unavailable");
+  if (!sensorsOk) {
+    Log().Trace("Sensors unavailable");
 
     // only send once per reboot (don't spam the timeline)
-    if (!m_dhtFailSent) {
-      ReportWarning("DHT device unavailable");
-      m_dhtFailSent = true;
+    if (!m_sensorWarningSent) {
+      ReportWarning("Sensors unavailable");
+      m_sensorWarningSent = true;
     }
-
-    temperature = k_unknown;
-    humidity = k_unknown;
   }
 
-  Log().Trace("Temperature: %.2fC | Humidity: %.2f%%", temperature, humidity);
+  Log().Trace(
+    "Temperatures, inside=%.2fC, outside=%.2f%%, soil=%.2f%%",
+    insideTemperature,
+    outsideTemperature,
+    soilTemperature);
 
-  ReportDhtValues();
+  ReportSensorValues();
 
   FlashLed(k_ledRefresh);
 
@@ -58,23 +60,25 @@ bool Greenhouse::Refresh()
     Log().Trace(
       "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC",
       WindowProgress(),
-      temperature,
+      soilTemperature,
       openStart,
       openFinish);
 
-    if ((temperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown)) {
+    if (
+      (soilTemperature != k_unknown) && (m_openStart != k_unknown) &&
+      (m_openFinish != k_unknown)) {
 
       float expectedProgress = 0;
 
-      if ((temperature > openStart) && (temperature < openFinish)) {
+      if ((soilTemperature > openStart) && (soilTemperature < openFinish)) {
         // window should be semi-open
         Log().Trace("Temperature in bounds");
 
         float tempWidth = openFinish - openStart;
-        float progressAsTemp = temperature - openStart;
+        float progressAsTemp = soilTemperature - openStart;
         expectedProgress = progressAsTemp / tempWidth;
       }
-      else if (temperature >= openFinish) {
+      else if (soilTemperature >= openFinish) {
         // window should be fully open
         Log().Trace("Temperature above bounds");
         expectedProgress = 1;
@@ -98,7 +102,7 @@ bool Greenhouse::Refresh()
 
   ReportSystemInfo();
 
-  return ok;
+  return sensorsOk;
 }
 
 bool Greenhouse::ApplyWindowProgress(float expectedProgress)

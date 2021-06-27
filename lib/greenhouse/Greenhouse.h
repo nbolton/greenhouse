@@ -28,14 +28,17 @@ public:
 
 protected:
   virtual void FlashLed(LedFlashTimes times) {}
-  virtual bool ReadDhtSensor() { return false; }
-  virtual float Temperature() const { return k_unknown; }
-  virtual float Humidity() const { return k_unknown; }
+  virtual bool ReadSensors() { return false; }
+  virtual float InsideTemperature() const { return k_unknown; }
+  virtual float InsideHumidity() const { return k_unknown; }
+  virtual float OutsideTemperature() const { return k_unknown; }
+  virtual float OutsideHumidity() const { return k_unknown; }
+  virtual float SoilTemperature() const { return k_unknown; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual int CurrentHour() const { return k_unknown; }
 
-  virtual void ReportDhtValues() {}
+  virtual void ReportSensorValues() {}
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}
 
@@ -57,7 +60,7 @@ protected:
 
 private:
   ::Log m_log;
-  bool m_dhtFailSent;
+  bool m_sensorWarningSent;
   bool m_autoMode;
   float m_openStart;
   float m_openFinish;

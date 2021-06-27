@@ -7,8 +7,7 @@ class GreenhouseTest : public Greenhouse {
 public:
   GreenhouseTest() :
     m_mock_ReadDhtSensor(false),
-    m_mock_Temperature(k_unknown),
-    m_mock_Humidity(k_unknown),
+    m_mock_SoilTemperature(k_unknown),
     m_mock_CurrentHour(k_unknown),
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
@@ -17,9 +16,8 @@ public:
   {
   }
 
-  bool ReadDhtSensor() { return m_mock_ReadDhtSensor; }
-  float Temperature() const { return m_mock_Temperature; }
-  float Humidity() const { return m_mock_Humidity; }
+  bool ReadSensors() { return m_mock_ReadDhtSensor; }
+  float SoilTemperature() const { return m_mock_SoilTemperature; }
   int CurrentHour() const { return m_mock_CurrentHour; }
 
   void OpenWindow(float delta)
@@ -54,8 +52,7 @@ public:
   }
 
   bool m_mock_ReadDhtSensor;
-  float m_mock_Temperature;
-  float m_mock_Humidity;
+  float m_mock_SoilTemperature;
   int m_mock_CurrentHour;
 
   int m_calls_OpenWindow;
@@ -87,7 +84,7 @@ void Test_Refresh_ManualMode_NothingHappens(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 1;
+  greenhouse.m_mock_SoilTemperature = 1;
   greenhouse.AutoMode(false);
 
   greenhouse.Refresh();
@@ -100,7 +97,7 @@ void Test_Refresh_AutoModeNoOpenBounds_NothingHappens(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 1;
+  greenhouse.m_mock_SoilTemperature = 1;
   greenhouse.AutoMode(true);
 
   greenhouse.Refresh();
@@ -113,7 +110,7 @@ void Test_Refresh_AutoModeAboveBoundsAndAlreadyOpen_NothingHappens(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 2.0;
+  greenhouse.m_mock_SoilTemperature = 2.0;
   greenhouse.AutoMode(true);
   greenhouse.OpenStart(1.0);
   greenhouse.OpenFinish(2.0);
@@ -129,7 +126,7 @@ void Test_Refresh_AutoModeBelowBoundsAndAlreadyClosed_NothingHappens(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 0.9;
+  greenhouse.m_mock_SoilTemperature = 0.9;
   greenhouse.AutoMode(true);
   greenhouse.OpenStart(1.0);
   greenhouse.OpenFinish(2.0);
@@ -145,7 +142,7 @@ void Test_Refresh_AutoModeInBoundsTooClosed_WindowOpenedPartly(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 25 + (5 * 0.8); // 80% between 25C and 30C
+  greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.8); // 80% between 25C and 30C
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(50); // 50% open
   greenhouse.OpenStart(25.0);
@@ -163,7 +160,7 @@ void Test_Refresh_AutoModeInBoundsTooOpen_WindowClosedPartly(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 25 + (5 * 0.4); // 40% between 25C and 30C
+  greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.4); // 40% between 25C and 30C
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(80); // 80% open
   greenhouse.OpenStart(25.0);
@@ -181,7 +178,7 @@ void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 25 + (5 * 0.6); // 60% between 25C and 30C
+  greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.6); // 60% between 25C and 30C
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(90); // 90% open
   greenhouse.OpenStart(25.0);
@@ -194,7 +191,7 @@ void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
   TEST_ASSERT_EQUAL_FLOAT(0.3, greenhouse.m_lastArg_CloseWindow_delta); // 30% delta
   TEST_ASSERT_EQUAL_INT(60, greenhouse.WindowProgress());               // 60% open
 
-  greenhouse.m_mock_Temperature = 25 + (5 * 0.4); // 40% between 25C and 30C
+  greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.4); // 40% between 25C and 30C
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_CloseWindow);
@@ -207,7 +204,7 @@ void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 25 + (5 * 0.3); // 30% between 25C and 30C
+  greenhouse.m_mock_SoilTemperature = 25 + (5 * 0.3); // 30% between 25C and 30C
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(5); // 5% open
   greenhouse.OpenStart(25.0);
@@ -220,7 +217,7 @@ void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
   TEST_ASSERT_EQUAL_FLOAT(0.25, greenhouse.m_lastArg_OpenWindow_delta); // 25% delta
   TEST_ASSERT_EQUAL_INT(30, greenhouse.WindowProgress());               // 30% open
 
-  greenhouse.m_mock_Temperature = 29; // 80% between 25C and 30C
+  greenhouse.m_mock_SoilTemperature = 29; // 80% between 25C and 30C
   greenhouse.Refresh();
 
   TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_CloseWindow);
@@ -233,7 +230,7 @@ void Test_Refresh_AutoModeBelowBounds_WindowClosedFully(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 24.9;
+  greenhouse.m_mock_SoilTemperature = 24.9;
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(30); // 30% open
   greenhouse.OpenStart(25.0);
@@ -251,7 +248,7 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.m_mock_ReadDhtSensor = true;
-  greenhouse.m_mock_Temperature = 30.1;
+  greenhouse.m_mock_SoilTemperature = 30.1;
   greenhouse.AutoMode(true);
   greenhouse.WindowProgress(60); // 60% open
   greenhouse.OpenStart(25.0);
