@@ -26,20 +26,20 @@ public:
 
   void HandleLastWrite();
   void HandleSystemStarted();
-  void HandleAutoMode(bool autoMode);
-  void HandleOpenStart(float openStart);
-  void HandleOpenFinish(float openFinish);
-  void HandleRefreshRate(int refreshRate);
-  void HandleWindowProgress(int windowProgress);
-  void HandleReset(int reset);
-  void HandleRefresh(int refresh);
-  void HandleFakeInsideHumidity(float value);
-  void HandleFakeSoilTemperature(float fakeTemperature);
-  void HandleFakeSoilMoisture(float fakeTemperature);
-  void HandleTestMode(int fakeMode);
-  void HandleOpenDayMinimum(int openDayMinimum);
-  void HandleIndoorHumidityWarning(float indoorHumidityWarning);
-  void HandleSoilMostureWarning(float soilMostureWarning);
+  void HandleAutoMode(bool);
+  void HandleOpenStart(float);
+  void HandleOpenFinish(float);
+  void HandleRefreshRate(int);
+  void HandleWindowProgress(int);
+  void HandleReset(int);
+  void HandleRefresh(int);
+  void HandleFakeInsideHumidity(float);
+  void HandleFakeSoilTemperature(float);
+  void HandleFakeSoilMoisture(float);
+  void HandleTestMode(int);
+  void HandleOpenDayMinimum(int);
+  void HandleIndoorHumidityWarning(float);
+  void HandleSoilMostureWarning(float);
 
 protected:
   void FlashLed(LedFlashTimes times);
