@@ -27,6 +27,7 @@ void Greenhouse::Loop() {}
 
 bool Greenhouse::Refresh()
 {
+  FlashLed(k_ledRefresh);
   Log().Trace("Refreshing");
 
   bool sensorsOk = ReadSensors();
@@ -53,8 +54,6 @@ bool Greenhouse::Refresh()
   ReportSensorValues();
 
   ReportWarnings();
-
-  FlashLed(k_ledRefresh);
 
   bool windowMoved = false;
 
