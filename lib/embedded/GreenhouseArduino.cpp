@@ -351,18 +351,6 @@ void GreenhouseArduino::ReportWarnings()
   }
 }
 
-void GreenhouseArduino::HandleAutoMode(bool autoMode)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle auto mode: %s", (autoMode ? "Auto" : "Manual"));
-
-  AutoMode(autoMode == 1);
-
-  // light on for manual mode
-  m_led = !autoMode ? LOW : HIGH;
-  digitalWrite(LED_BUILTIN, m_led);
-}
-
 void GreenhouseArduino::HandleLastWrite()
 {
   if (m_lastWriteDone) {
@@ -387,6 +375,18 @@ void GreenhouseArduino::HandleSystemStarted()
   FlashLed(k_ledStarted);
   Log().TraceFlash(F("System started"));
   ReportInfo("System started");
+}
+
+void GreenhouseArduino::HandleAutoMode(bool autoMode)
+{
+  FlashLed(k_ledRecieve);
+  Log().Trace("Handle auto mode: %s", (autoMode ? "Auto" : "Manual"));
+
+  AutoMode(autoMode == 1);
+
+  // light on for manual mode
+  m_led = !autoMode ? LOW : HIGH;
+  digitalWrite(LED_BUILTIN, m_led);
 }
 
 void GreenhouseArduino::HandleOpenStart(float openStart)
