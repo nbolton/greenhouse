@@ -44,17 +44,17 @@ protected:
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
 
-  virtual void WindowProgress(int windowProgress) { m_windowProgress = windowProgress; }
+  virtual void WindowProgress(int value) { m_windowProgress = value; }
   virtual int WindowProgress() const { return m_windowProgress; }
-  virtual void AutoMode(bool am) { m_autoMode = am; }
+  virtual void AutoMode(bool value) { m_autoMode = value; }
   virtual bool AutoMode() const { return m_autoMode; }
-  virtual void OpenStart(float openStart) { m_openStart = openStart; }
+  virtual void OpenStart(float value) { m_openStart = value; }
   virtual float OpenStart() const { return m_openStart; }
-  virtual void OpenFinish(float openFinish) { m_openFinish = openFinish; }
+  virtual void OpenFinish(float value) { m_openFinish = value; }
   virtual float OpenFinish() const { return m_openFinish; }
-  virtual void TestMode(bool testMode) { m_testMode = testMode; }
+  virtual void TestMode(bool value) { m_testMode = value; }
   virtual bool TestMode() const { return m_testMode; }
-  virtual void OpenDayMinimum(int openDayMinimum) { m_openDayMinimum = openDayMinimum; }
+  virtual void OpenDayMinimum(int value) { m_openDayMinimum = value; }
   virtual int OpenDayMinimum() const { return m_openDayMinimum; }
   virtual void IndoorHumidityWarning(float value) { m_indoorHumidityWarning = value; }
   virtual float IndoorHumidityWarning() const { return m_indoorHumidityWarning; }
