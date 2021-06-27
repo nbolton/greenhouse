@@ -459,12 +459,12 @@ void GreenhouseArduino::HandleRefresh(int refresh)
   }
 }
 
-void GreenhouseArduino::HandleFakeInsideHumidity(float value)
+void GreenhouseArduino::HandleFakeInsideHumidity(float fakeInsideHumidity)
 {
   FlashLed(k_ledRecieve);
-  Log().Trace("Handle fake inside humidity: %.2f%%", value);
+  Log().Trace("Handle fake inside humidity: %.2f%%", fakeInsideHumidity);
 
-  m_fakeInsideHumidity = value;
+  m_fakeInsideHumidity = fakeInsideHumidity;
 }
 
 void GreenhouseArduino::HandleFakeSoilTemperature(float fakeSoilTemperature)
@@ -494,23 +494,23 @@ void GreenhouseArduino::HandleTestMode(int testMode)
 void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
 {
   FlashLed(k_ledRecieve);
-  s_instance->Log().Trace("Open day minimum: %d", openDayMinimum);
+  s_instance->Log().Trace("Handle open day minimum: %d", openDayMinimum);
 
   OpenDayMinimum(openDayMinimum);
 }
 
-void GreenhouseArduino::HandleIndoorHumidityWarning(float indoorHumidityWarning)
+void GreenhouseArduino::HandleInsideHumidityWarning(float insideHumidityWarning)
 {
   FlashLed(k_ledRecieve);
-  s_instance->Log().Trace("Indoor humidity warning: %d", indoorHumidityWarning);
+  s_instance->Log().Trace("Handle inside humidity warning: %d", insideHumidityWarning);
 
-  IndoorHumidityWarning(indoorHumidityWarning);
+  IndoorHumidityWarning(insideHumidityWarning);
 }
 
 void GreenhouseArduino::HandleSoilMostureWarning(float soilMostureWarning)
 {
   FlashLed(k_ledRecieve);
-  s_instance->Log().Trace("Soil moisture warning: %d", soilMostureWarning);
+  s_instance->Log().Trace("Handle soil moisture warning: %d", soilMostureWarning);
 
   SoilMostureWarning(soilMostureWarning);
 }
@@ -580,7 +580,7 @@ BLYNK_WRITE(V15)
 BLYNK_WRITE(V16)
 {
   s_instance->TraceFlash(F("Blynk write V16"));
-  s_instance->HandleIndoorHumidityWarning(param.asFloat());
+  s_instance->HandleInsideHumidityWarning(param.asFloat());
 }
 
 BLYNK_WRITE(V17)
