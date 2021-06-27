@@ -40,10 +40,10 @@ public:
 protected:
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
-  float InsideTemperature() const;
-  float InsideHumidity() const;
-  float OutsideTemperature() const;
-  float OutsideHumidity() const;
+  float InsideTemperature() const { return m_insideTemperature; }
+  float InsideHumidity() const { reutrn m_insideHumidity; }
+  float OutsideTemperature() const { return m_outsideTemperature; }
+  float OutsideHumidity() const { return m_outsideHumidity; }
   float SoilTemperature() const;
   void Reset();
   int CurrentHour() const;

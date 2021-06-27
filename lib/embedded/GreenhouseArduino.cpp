@@ -126,30 +126,6 @@ void GreenhouseArduino::FlashLed(LedFlashTimes times)
   }
 }
 
-float GreenhouseArduino::InsideTemperature() const
-{
-  //..
-  return m_insideTemperature;
-}
-
-float GreenhouseArduino::InsideHumidity() const
-{
-  //..
-  return m_insideHumidity;
-}
-
-float GreenhouseArduino::OutsideTemperature() const
-{
-  //..
-  return m_outsideTemperature;
-}
-
-float GreenhouseArduino::OutsideHumidity() const
-{
-  //..
-  return m_outsideHumidity;
-}
-
 float GreenhouseArduino::SoilTemperature() const
 {
   if (TestMode()) {
