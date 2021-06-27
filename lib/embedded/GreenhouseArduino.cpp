@@ -59,9 +59,9 @@ GreenhouseArduino::GreenhouseArduino() :
   m_timerId(k_unknown),
   m_led(LOW),
   m_fakeSoilTemperature(k_unknown),
+  m_fakeSoilMoisture(k_unknown),
   m_refreshBusy(false),
   m_soilMoisture(k_unknown),
-  m_fakeSoilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false)
 {
@@ -482,7 +482,7 @@ void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
   OpenDayMinimum(openDayMinimum);
 }
 
-void HandleIndoorHumidityWarning(float indoorHumidityWarning)
+void GreenhouseArduino::HandleIndoorHumidityWarning(float indoorHumidityWarning)
 {
   FlashLed(k_ledRecieve);
   s_instance->Log().Trace("Indoor humidity warning: %d", indoorHumidityWarning);
@@ -490,7 +490,7 @@ void HandleIndoorHumidityWarning(float indoorHumidityWarning)
   IndoorHumidityWarning(indoorHumidityWarning);
 }
 
-void HandleSoilMostureWarning(float soilMostureWarning)
+void GreenhouseArduino::HandleSoilMostureWarning(float soilMostureWarning)
 {
   FlashLed(k_ledRecieve);
   s_instance->Log().Trace("Soil moisture warning: %d", soilMostureWarning);
