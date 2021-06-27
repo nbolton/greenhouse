@@ -17,10 +17,6 @@ public:
   void Loop();
   bool Refresh();
 
-  void ReportInfo(const char *m, ...);
-  void ReportWarning(const char *m, ...);
-  void ReportCritical(const char *m, ...);
-
   const ArduinoLog &Log() const { return m_log; }
   void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
 
@@ -42,6 +38,10 @@ public:
   void HandleSoilMostureWarning(float);
 
 protected:
+  void ReportInfo(const char *m, ...);
+  void ReportWarning(const char *m, ...);
+  void ReportCritical(const char *m, ...);
+
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
   float InsideTemperature() const { return m_insideTemperature; }

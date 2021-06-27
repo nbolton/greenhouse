@@ -20,13 +20,13 @@ public:
   virtual void Loop();
   virtual bool Refresh();
 
+  virtual const ::Log &Log() const { return m_log; }
+
+protected:
   virtual void ReportInfo(const char *m, ...) {}
   virtual void ReportWarning(const char *m, ...) {}
   virtual void ReportCritical(const char *m, ...) {}
 
-  virtual const ::Log &Log() const { return m_log; }
-
-protected:
   virtual void FlashLed(LedFlashTimes times) {}
   virtual bool ReadSensors() { return false; }
   virtual float InsideTemperature() const { return k_unknown; }
