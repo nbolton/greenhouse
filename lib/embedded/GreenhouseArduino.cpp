@@ -354,6 +354,32 @@ void GreenhouseArduino::HandleAutoMode(bool autoMode)
   digitalWrite(LED_BUILTIN, m_led);
 }
 
+void GreenhouseArduino::HandleLastWrite()
+{
+  if (m_lastWriteDone) {
+    return;
+  }
+
+  m_lastWriteDone = true;
+
+  // if this is the first time that the last write was done,
+  // this means that the system has started.
+  HandleSystemStarted();
+}
+
+void GreenhouseArduino::HandleSystemStarted()
+{
+  // run the first refresh (instead of waiting for the 1st refresh timer).
+  // we run the 1st refresh here instead of when the timer is created,
+  // because when we setup the timer for the first time, we may not
+  // have all of the correct initial values.
+  Refresh();
+
+  FlashLed(k_ledStarted);
+  Log().TraceFlash(F("System started"));
+  ReportInfo("System started");
+}
+
 void GreenhouseArduino::HandleOpenStart(float openStart)
 {
   FlashLed(k_ledRecieve);
@@ -470,32 +496,6 @@ void HandleSoilMostureWarning(float soilMostureWarning)
   s_instance->Log().Trace("Soil moisture warning: %d", soilMostureWarning);
 
   SoilMostureWarning(soilMostureWarning);
-}
-
-void GreenhouseArduino::HandleLastWrite()
-{
-  if (m_lastWriteDone) {
-    return;
-  }
-
-  m_lastWriteDone = true;
-
-  // if this is the first time that the last write was done,
-  // this means that the system has started.
-  HandleSystemStarted();
-}
-
-void GreenhouseArduino::HandleSystemStarted()
-{
-  // run the first refresh (instead of waiting for the 1st refresh timer).
-  // we run the 1st refresh here instead of when the timer is created,
-  // because when we setup the timer for the first time, we may not
-  // have all of the correct initial values.
-  Refresh();
-
-  FlashLed(k_ledStarted);
-  Log().TraceFlash(F("System started"));
-  ReportInfo("System started");
 }
 
 BLYNK_CONNECTED()

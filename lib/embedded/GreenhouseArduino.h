@@ -24,6 +24,8 @@ public:
   const ArduinoLog &Log() const { return m_log; }
   void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
 
+  void HandleLastWrite();
+  void HandleSystemStarted();
   void HandleAutoMode(bool autoMode);
   void HandleOpenStart(float openStart);
   void HandleOpenFinish(float openFinish);
@@ -34,8 +36,6 @@ public:
   void HandleFakeSoilTemperature(float fakeTemperature);
   void HandleTestMode(int fakeMode);
   void HandleOpenDayMinimum(int openDayMinimum);
-  void HandleLastWrite();
-  void HandleSystemStarted();
   void HandleIndoorHumidityWarning(float indoorHumidityWarning);
   void HandleSoilMostureWarning(float soilMostureWarning);
 
