@@ -162,41 +162,43 @@ bool GreenhouseArduino::ReadSensors()
     return true;
   }
 
+  int failures = 0;
+
   m_insideTemperature = insideDht.readTemperature();
   if (isnan(m_insideTemperature)) {
     m_insideTemperature = k_unknown;
-    return false;
+    failures++;
   }
 
   m_insideHumidity = insideDht.readHumidity();
   if (isnan(m_insideHumidity)) {
     m_insideHumidity = k_unknown;
-    return false;
+    failures++;
   }
 
   m_outsideTemperature = outsideDht.readTemperature();
   if (isnan(m_outsideTemperature)) {
     m_outsideTemperature = k_unknown;
-    return false;
+    failures++;
   }
 
   m_outsideHumidity = outsideDht.readHumidity();
   if (isnan(m_outsideHumidity)) {
     m_outsideHumidity = k_unknown;
-    return false;
+    failures++;
   }
 
   sensors.requestTemperatures();
   m_soilTemperature = sensors.getTempCByIndex(k_soilProbeIndex);
   if (isnan(m_soilTemperature)) {
     m_soilTemperature = k_unknown;
-    return false;
+    failures++;
   }
 
   int moistureAnalog = analogRead(k_moisturePin);
   m_soilMoisture = CalculateMoisture(moistureAnalog);
 
-  return true;
+  return failures == 0;
 }
 
 void GreenhouseArduino::SystemDigitalWrite(int pin, int val) { digitalWrite(pin, val); }
