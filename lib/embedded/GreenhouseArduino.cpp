@@ -12,7 +12,7 @@
 #include <OneWire.h>
 #include <WiFiUdp.h>
 
-// 8266 free pins: D4 (led), A0
+// 8266 free pins: D4 (led)
 // https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
 const int k_actuatorPinEnA = 4;  // GPIO4  = D2
 const int k_actuatorPinIn1 = 0;  // GPIO0  = D3 (connected to flash)
