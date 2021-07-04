@@ -20,7 +20,7 @@ const int k_actuatorPinIn2 = 12; // GPIO12 = D6
 const int k_insideDhtPin = 14;   // GPIO14 = D5
 const int k_outsideDhtPin = 5;   // GPIO5 = D1
 const int k_oneWireBusPin = 13;  // GPIO13 = D7
-const int k_moisturePin = 0;     // ADC0
+const int k_moisturePin = A0;
 
 const int k_actuatorSpeed = 255;
 const int k_actuatorRuntimeSec = 12;

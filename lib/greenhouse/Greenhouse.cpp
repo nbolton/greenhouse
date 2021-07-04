@@ -183,6 +183,12 @@ void Greenhouse::CloseWindow(float delta)
   ReportWindowProgress();
 }
 
+// float version of Arduino map()
+float mapFloat(float x, float in_min, float in_max, float out_min, float out_max)
+{
+  return (x - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min);
+}
+
 float Greenhouse::CalculateMoisture(int analogValue) const
 {
   if (analogValue <= k_analogMoistureMin) {
@@ -193,6 +199,5 @@ float Greenhouse::CalculateMoisture(int analogValue) const
     return 100;
   }
 
-  int range = k_analogMoistureMax - k_analogMoistureMin;
-  return ((float)(analogValue - k_analogMoistureMin) / range) * 100;
+  return mapFloat(analogValue, k_analogMoistureMin, k_analogMoistureMax, 0, 100);
 }
