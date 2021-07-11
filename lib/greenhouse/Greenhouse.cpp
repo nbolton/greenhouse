@@ -6,8 +6,8 @@
 const float k_windowAdjustThreshold = 0.05;
 const int k_dayStartHour = 8; // 8am
 const int k_dayEndHour = 20;  // 8pm
-const int k_analogMoistureMin = 100;
-const int k_analogMoistureMax = 900;
+const int k_soilSensorDry = 930; // in air
+const int k_soilSensorWet = 480; // in water
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -31,9 +31,6 @@ bool Greenhouse::Refresh()
   Log().Trace("Refreshing");
 
   bool sensorsOk = ReadSensors();
-  float insideTemperature = InsideTemperature();
-  float outsideTemperature = OutsideTemperature();
-  float soilTemperature = SoilTemperature();
 
   if (!sensorsOk) {
     Log().Trace("Sensors unavailable");
@@ -46,10 +43,16 @@ bool Greenhouse::Refresh()
   }
 
   Log().Trace(
-    "Temperatures, inside=%.2fC, outside=%.2f%%, soil=%.2f%%",
-    insideTemperature,
-    outsideTemperature,
-    soilTemperature);
+    "Temperatures, inside=%.2f°C, outside=%.2f°C, soil=%.2f°C",
+    InsideTemperature(),
+    OutsideTemperature(),
+    SoilTemperature());
+
+  Log().Trace(
+    "Moisture, inside=%.2f%%, outside=%.2f%%, soil=%.2f%%",
+    InsideHumidity(),
+    OutsideHumidity(),
+    SoilMoisture());
 
   ReportSensorValues();
 
@@ -60,6 +63,8 @@ bool Greenhouse::Refresh()
   float openFinish = m_openFinish;
 
   if (m_autoMode) {
+    float soilTemperature = SoilTemperature();
+
     Log().Trace(
       "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC",
       WindowProgress(),
@@ -191,13 +196,11 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 
 float Greenhouse::CalculateMoisture(int analogValue) const
 {
-  if (analogValue <= k_analogMoistureMin) {
-    return 0;
+  float percent = mapFloat(analogValue, k_soilSensorDry, k_soilSensorWet, 0, 100);
+  Log().Trace("Soil moisture, analog=%d, percent=%.2f%%", analogValue, percent);
+  if (percent < -10 || percent > 110) {
+    // something went wrong
+    return k_unknown;
   }
-
-  if (analogValue >= k_analogMoistureMax) {
-    return 100;
-  }
-
-  return mapFloat(analogValue, k_analogMoistureMin, k_analogMoistureMax, 0, 100);
+  return percent;
 }
