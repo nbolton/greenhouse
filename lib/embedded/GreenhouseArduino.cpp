@@ -77,7 +77,7 @@ void GreenhouseArduino::Setup()
   // wait for serial to connect before first trace
   // TODO: test if this is really actually needed
   delay(1000);
-  Log().Trace("\n\n%s: Starting system", BLYNK_DEVICE_NAME);
+  Log().Trace("\n\nStarting system: %s", BLYNK_DEVICE_NAME);
 
   pinMode(LED_BUILTIN, OUTPUT);
 
