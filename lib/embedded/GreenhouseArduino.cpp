@@ -480,7 +480,7 @@ void GreenhouseArduino::HandleFakeSoilTemperature(float fakeSoilTemperature)
 void GreenhouseArduino::HandleFakeSoilMoisture(float fakeSoilMoisture)
 {
   FlashLed(k_ledRecieve);
-  Log().Trace("Handle fake soil moisture: %.2fC", fakeSoilMoisture);
+  Log().Trace("Handle fake soil moisture: %.2f%%", fakeSoilMoisture);
 
   m_fakeSoilMoisture = fakeSoilMoisture;
 }
