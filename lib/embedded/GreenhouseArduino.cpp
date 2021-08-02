@@ -507,24 +507,36 @@ void printTemps() {
   Serial.println("°C");
 }
 
-void setSwitch(int i, bool on) {
+void setSwitch(int index, bool on) {
 
-  int pin = switchPins[i];
+  int pin = switchPins[index];
 
   if (on) {
     Serial.print("SR pin set: ");
     Serial.println(pin);
     
     msr.set_shift(pin);
-    switchState[i] = true;
+    switchState[index] = true;
   }
   else {
     Serial.print("SR pin clear: ");
     Serial.println(pin);
     
     msr.clear_shift(pin);
-    switchState[i] = false;
+    switchState[index] = false;
   }
+
+  String switchStates;
+  for (int i = 0; i < switchButtons; i++) {
+    switchStates += "S";
+    switchStates += i;
+    switchStates += "=";
+    switchStates += switchState[i] ? "On" : "Off";
+    if (i != (switchButtons - 1)) {
+      switchStates += ", ";
+    }
+  }
+  Blynk.virtualWrite(V33, switchStates);
 }
 
 void toggleSwitch(int i) {
