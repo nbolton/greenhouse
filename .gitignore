@@ -2,3 +2,4 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 ho_config.h
+.DS_Store

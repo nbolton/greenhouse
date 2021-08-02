@@ -5,22 +5,84 @@
 #include "ho_config.h"
 
 #include <BlynkSimpleEsp8266.h>
-#include <DHT.h>
 #include <DallasTemperature.h>
 #include <ESP8266WiFi.h>
 #include <NTPClient.h>
+#include <Arduino.h>
+#include <PCF8574.h>
+#include <MultiShiftRegister.h>
+#include <Thread.h>
 #include <OneWire.h>
 #include <WiFiUdp.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_SHT31.h>
 
-// 8266 free pins: D4 (led)
-// https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
-const int k_actuatorPinEnA = 4;  // GPIO4  = D2
-const int k_actuatorPinIn1 = 0;  // GPIO0  = D3 (connected to flash)
-const int k_actuatorPinIn2 = 12; // GPIO12 = D6
-const int k_insideDhtPin = 14;   // GPIO14 = D5
-const int k_outsideDhtPin = 5;   // GPIO5 = D1
-const int k_oneWireBusPin = 13;  // GPIO13 = D7
-const int k_moisturePin = A0;
+const int debug = false;
+
+// regular pins
+const int k_oneWirePin = D3;
+const int k_msrLatchPin = D5; // RCLK (12)  
+const int k_msrDataPin = D6; // SER (14)
+const int k_msrClockPin = D7; // SRCLK (11)
+const int k_actuatorPinA = D8;
+
+// msr pins
+const int relayPin = 0;
+const int startBeepPin = 1;
+const int switchPins[] = {0+8, 1+8, 2+8, 3+8};
+
+// io1 pins
+const int aMuxEn = P0;
+const int aMuxS0 = P1;
+const int aMuxS1 = P2;
+const int aMuxS2 = P3;
+const int aMuxS3 = P4;
+const int k_actuatorPin1 = P5;
+const int k_actuatorPin2 = P6;
+
+// amux pins
+const int k_voltsPin = 15;
+const int k_moisturePin = 3;
+
+const int msrTotal = 2;
+const int voltAverageCountMax = 100;
+const int voltMin = 5; // V, in case of sudden voltage drop
+const float voltSwitchOff = 10.5; // V
+const float voltSwitchOn = 13.5; // V
+
+const int switchButtons = 4;
+const int fanSwitch = 0;
+const int pumpSwitch1 = 2;
+const int pumpSwitch2 = 3;
+
+int switchState[switchButtons];
+int activeSwitch;
+int waterBatteryOn = -1;
+int waterBatteryOff = -1;
+int forceRelay = false;
+
+int voltCount = 0;
+float voltSum = 0;
+float voltAverage = -1;
+float volts = 0;
+bool pvLatchOn;
+int voltsAnalog;
+int voltCalibrationIn = 806;
+float voltCalibrationOut = 14;
+
+PCF8574 io1(0x20);
+MultiShiftRegister msr(msrTotal, k_msrLatchPin, k_msrClockPin, k_msrDataPin);
+
+Thread relayThread = Thread();
+Thread readThread = Thread();
+Thread testThread = Thread();
+
+OneWire oneWire(k_oneWirePin);
+DallasTemperature sensors(&oneWire);
+
+WiFiUDP ntpUdp;
+NTPClient timeClient(ntpUdp);
 
 const int k_actuatorSpeed = 255;
 const int k_actuatorRuntimeSec = 12;
@@ -29,16 +91,29 @@ const int k_soilProbeIndex = 0;
 
 static char reportBuffer[80];
 
-DHT insideDht(k_insideDhtPin, DHT11);
-DHT outsideDht(k_outsideDhtPin, DHT21);
-OneWire oneWire(k_oneWireBusPin);
-DallasTemperature sensors(&oneWire);
-
 BlynkTimer timer;
-WiFiUDP ntpUdp;
-NTPClient timeClient(ntpUdp);
+
+bool enableHeater = false;
+uint8_t loopCnt = 0;
+
+Adafruit_SHT31 sht31_a = Adafruit_SHT31();
+Adafruit_SHT31 sht31_b = Adafruit_SHT31();
 
 GreenhouseArduino *s_instance = nullptr;
+
+void startBeep(int times);
+void readCallback();
+void actuator(bool forward, int s, int t);
+void printTemps();
+void setSwitch(int i, bool on);
+void toggleSwitch(int i);
+void relayCallback();
+int analogMuxRead(byte chan);
+void switchPower(bool pv);
+void measureVolts();
+void beginSensor(Adafruit_SHT31& sht31, uint8_t addr, String shtName);
+void printValues(Adafruit_SHT31& sht31, String shtName);
+void testCallback();
 
 GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 
@@ -70,27 +145,74 @@ GreenhouseArduino::GreenhouseArduino() :
 
 void GreenhouseArduino::Setup()
 {
+  Wire.begin(); // Wire communication begin
+  Serial.begin(9600); // The baudrate of Serial monitor is set in 9600
+  while (!Serial); // Waiting for Serial Monitor
+  Serial.println("\nI2C Scanner");
+
   Greenhouse::Setup();
 
   Serial.begin(9600);
 
   // wait for serial to connect before first trace
-  // TODO: test if this is really actually needed
   delay(1000);
   Log().Trace("\n\nStarting system: %s", BLYNK_DEVICE_NAME);
 
+  pinMode(k_msrLatchPin, OUTPUT);
+  pinMode(k_msrClockPin, OUTPUT);
+  pinMode(k_msrDataPin, OUTPUT);
+  msr.shift();
+  
+  startBeep(1);
+
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(k_actuatorPinA, OUTPUT);
 
-  pinMode(k_actuatorPinEnA, OUTPUT);
-  pinMode(k_actuatorPinIn1, OUTPUT);
-  pinMode(k_actuatorPinIn2, OUTPUT);
+  io1.pinMode(aMuxS0, OUTPUT);
+  io1.pinMode(aMuxS1, OUTPUT);
+  io1.pinMode(aMuxS2, OUTPUT);
+  io1.pinMode(aMuxS3, OUTPUT);
+  io1.pinMode(aMuxEn, OUTPUT);
+  io1.pinMode(k_actuatorPin1, OUTPUT);
+  io1.pinMode(k_actuatorPin2, OUTPUT);
 
-  analogWrite(k_actuatorPinEnA, k_actuatorSpeed);
+  io1.digitalWrite(aMuxS0, LOW);
+  io1.digitalWrite(aMuxS1, LOW);
+  io1.digitalWrite(aMuxS2, LOW);
+  io1.digitalWrite(aMuxS3, LOW);
+  io1.digitalWrite(aMuxEn, LOW);
+  io1.digitalWrite(k_actuatorPin1, LOW);
+  io1.digitalWrite(k_actuatorPin2, LOW);
 
-  Blynk.begin(k_auth, k_ssid, k_pass);
-  insideDht.begin();
-  outsideDht.begin();
+  // 10ms seems to be the minimum switch time to stop the relay coil "buzzing"
+  // when it has insufficient power.
+  relayThread.onRun(relayCallback);
+  relayThread.setInterval(10);
+
+  readThread.onRun(readCallback);
+  readThread.setInterval(100);
+
+  testThread.onRun(testCallback);
+  testThread.setInterval(1000);
+
   sensors.begin();
+
+  timeClient.begin();
+  
+  measureVolts();
+
+  // turn on itially to use the last of the PV batt.
+  if (volts >= (voltSwitchOff * 1.1)) { // min +10%
+    switchPower(true);
+  }
+
+  beginSensor(sht31_a, 0x44, "SHT31 A");
+  beginSensor(sht31_b, 0x45, "SHT31 B");
+  
+  Blynk.begin(k_auth, k_ssid, k_pass);
+
+  Serial.println("System ready");
+  startBeep(2);
 }
 
 void GreenhouseArduino::Loop()
@@ -100,6 +222,30 @@ void GreenhouseArduino::Loop()
   timeClient.update();
   Blynk.run();
   timer.run();
+
+  if (timeClient.getHours() == waterBatteryOn) {
+    setSwitch(fanSwitch, true);
+    delay(5000); // HACK: wait for fan to spool up
+    setSwitch(pumpSwitch1, true);
+    setSwitch(pumpSwitch2, true);
+  }
+  else if (timeClient.getHours() == waterBatteryOff) {
+    setSwitch(fanSwitch, false);
+    setSwitch(pumpSwitch1, false);
+    setSwitch(pumpSwitch2, false);
+  }
+  
+  if (relayThread.shouldRun()) {
+    relayThread.run();
+  }
+
+  if (readThread.shouldRun()) {
+    readThread.run();
+  }
+
+  if (testThread.shouldRun()) {
+    testThread.run();
+  }
 }
 
 bool GreenhouseArduino::Refresh()
@@ -164,25 +310,25 @@ bool GreenhouseArduino::ReadSensors()
 
   int failures = 0;
 
-  m_insideTemperature = insideDht.readTemperature();
+  m_insideTemperature = sht31_a.readTemperature();
   if (isnan(m_insideTemperature)) {
     m_insideTemperature = k_unknown;
     failures++;
   }
 
-  m_insideHumidity = insideDht.readHumidity();
+  m_insideHumidity = sht31_a.readHumidity();
   if (isnan(m_insideHumidity)) {
     m_insideHumidity = k_unknown;
     failures++;
   }
 
-  m_outsideTemperature = outsideDht.readTemperature();
+  m_outsideTemperature = sht31_b.readTemperature();
   if (isnan(m_outsideTemperature)) {
     m_outsideTemperature = k_unknown;
     failures++;
   }
 
-  m_outsideHumidity = outsideDht.readHumidity();
+  m_outsideHumidity = sht31_b.readHumidity();
   if (isnan(m_outsideHumidity)) {
     m_outsideHumidity = k_unknown;
     failures++;
@@ -195,13 +341,13 @@ bool GreenhouseArduino::ReadSensors()
     failures++;
   }
 
-  int moistureAnalog = analogRead(k_moisturePin);
+  int moistureAnalog = analogMuxRead(k_moisturePin);
   m_soilMoisture = CalculateMoisture(moistureAnalog);
 
   return failures == 0;
 }
 
-void GreenhouseArduino::SystemDigitalWrite(int pin, int val) { digitalWrite(pin, val); }
+void GreenhouseArduino::SystemDigitalWrite(int pin, int val) { io1.digitalWrite(pin, val); }
 
 void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
 
@@ -212,15 +358,17 @@ void GreenhouseArduino::CloseWindow(float delta)
 
   Greenhouse::CloseWindow(delta);
 
-  SystemDigitalWrite(k_actuatorPinIn1, LOW);
-  SystemDigitalWrite(k_actuatorPinIn2, HIGH);
+  analogWrite(k_actuatorPinA, k_actuatorSpeed);
+
+  SystemDigitalWrite(k_actuatorPin1, LOW);
+  SystemDigitalWrite(k_actuatorPin2, HIGH);
 
   int runtime = (k_actuatorRuntimeSec * 1000) * delta;
   Log().Trace("Close runtime: %dms", runtime);
   SystemDelay(runtime);
 
-  SystemDigitalWrite(k_actuatorPinIn1, LOW);
-  SystemDigitalWrite(k_actuatorPinIn2, LOW);
+  SystemDigitalWrite(k_actuatorPin1, LOW);
+  SystemDigitalWrite(k_actuatorPin2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window closed %.1f%%", percent);
@@ -233,15 +381,17 @@ void GreenhouseArduino::OpenWindow(float delta)
 
   Greenhouse::OpenWindow(delta);
 
-  SystemDigitalWrite(k_actuatorPinIn1, HIGH);
-  SystemDigitalWrite(k_actuatorPinIn2, LOW);
+  analogWrite(k_actuatorPinA, k_actuatorSpeed);
+  
+  SystemDigitalWrite(k_actuatorPin1, HIGH);
+  SystemDigitalWrite(k_actuatorPin2, LOW);
 
   int runtime = (k_actuatorRuntimeSec * 1000) * delta;
   Log().Trace("Open runtime: %dms", runtime);
   SystemDelay(runtime);
 
-  SystemDigitalWrite(k_actuatorPinIn1, LOW);
-  SystemDigitalWrite(k_actuatorPinIn2, LOW);
+  SystemDigitalWrite(k_actuatorPin1, LOW);
+  SystemDigitalWrite(k_actuatorPin2, LOW);
 
   float percent = delta * 100;
   Log().Trace("Window opened %.1f%%", percent);
@@ -257,6 +407,289 @@ void GreenhouseArduino::Reset()
   wdt_enable(WDTO_15MS);
   while (1) {
   }
+}
+
+void startBeep(int times) {
+  
+  for (int i = 0; i < times; i++) {
+    msr.set_shift(startBeepPin);
+    delay(100);
+    
+    msr.clear_shift(startBeepPin);
+    delay(200);
+  }
+}
+
+void readCallback() {
+
+  if (Serial.available() > 0) {
+
+    String s = Serial.readString();
+    
+    switch(s.charAt(0)) {
+      case 'b': startBeep(1); return;
+      case 't': printTemps(); return;
+      
+      // e.g. af5
+      case 'a':
+      {
+        int sp = (int)s.charAt(2) - 48;
+        int t = s.charAt(3);
+        
+        switch (s.charAt(1)) {
+          case 'f': actuator(true, sp, t); return;
+          case 'r': actuator(false, sp, t); return;
+        }
+      }
+
+      // e.g. s1
+      case 's': {
+        switch (s.charAt(1)) {
+          case '0': toggleSwitch(0); return;
+          case '1': toggleSwitch(1); return;
+          case '2': toggleSwitch(2); return;
+          case '3': toggleSwitch(3); return;
+        }
+      }
+      
+      case 'r': {
+        forceRelay = !forceRelay;
+      }
+    }
+
+    Serial.print("Unknown: ");
+    Serial.println(s);
+  }
+}
+
+void actuator(bool forward, int s, int t) {
+
+  s *= 28; // 9 = 252 (out of 255)
+  t *= 1000; // 1 = 1000ms
+
+  Serial.print("Actuator D=");
+  Serial.print(forward ? "f" : "r");
+  Serial.print(" S=");
+  Serial.print(s);
+  Serial.print(" T=");
+  Serial.println(t);
+
+  analogWrite(k_actuatorPinA, s);
+
+  if (forward) {
+    io1.digitalWrite(k_actuatorPin1, HIGH);
+    io1.digitalWrite(k_actuatorPin2, LOW);
+  }
+  else {
+    io1.digitalWrite(k_actuatorPin1, LOW);
+    io1.digitalWrite(k_actuatorPin2, HIGH);
+  }
+
+  delay(t);
+
+  // stop
+  io1.digitalWrite(k_actuatorPin1, LOW);
+  io1.digitalWrite(k_actuatorPin2, LOW);
+  
+  Serial.println("Actuator done");
+}
+
+void printTemps() {
+  
+  sensors.requestTemperatures();
+  
+  Serial.print("T0: ");
+  Serial.print(sensors.getTempCByIndex(0));
+  Serial.println("°C");
+  
+  Serial.print("T1: ");
+  Serial.print(sensors.getTempCByIndex(1));
+  Serial.println("°C");
+}
+
+void setSwitch(int i, bool on) {
+
+  int pin = switchPins[i];
+
+  if (on) {
+    Serial.print("SR pin set: ");
+    Serial.println(pin);
+    
+    msr.set_shift(pin);
+    switchState[i] = true;
+  }
+  else {
+    Serial.print("SR pin clear: ");
+    Serial.println(pin);
+    
+    msr.clear_shift(pin);
+    switchState[i] = false;
+  }
+}
+
+void toggleSwitch(int i) {
+  
+  if (!switchState[i]) {
+    Serial.print("Toggle switch on: ");
+    Serial.println(i);
+    setSwitch(i, true);
+  }
+  else {
+    Serial.print("Toggle switch off: ");
+    Serial.println(i);
+    setSwitch(i, false);
+  }
+}
+
+void relayCallback() {
+  
+  measureVolts();
+
+  if (forceRelay) {
+    if (!pvLatchOn) {
+      switchPower(true);
+    }
+    return;
+  }
+
+  if (pvLatchOn && (volts <= voltMin)) {
+    Serial.println("Drop detected");
+    switchPower(false);
+    voltAverage = -1;
+  }
+  else if (voltAverage != -1) {
+    
+    if (!pvLatchOn && (voltAverage >= voltSwitchOn)) {
+      switchPower(true);
+    }
+    else if (pvLatchOn && (voltAverage <= voltSwitchOff)) {
+      switchPower(false);
+    }
+  }
+}
+
+int analogMuxRead(byte chan) {
+  
+  io1.digitalWrite(aMuxS0, bitRead(chan, 0));
+  io1.digitalWrite(aMuxS1, bitRead(chan, 1));
+  io1.digitalWrite(aMuxS2, bitRead(chan, 2));
+  io1.digitalWrite(aMuxS3, bitRead(chan, 3));
+
+  return analogRead(A0);
+}
+
+void measureVolts() {
+  
+  // 569 = 14V
+  voltsAnalog = analogMuxRead(k_voltsPin);
+  volts = mapFloat(voltsAnalog, 0, voltCalibrationIn, 0, voltCalibrationOut);
+
+  voltSum += volts;
+  voltCount++;
+  
+  if (voltCount >= voltAverageCountMax) {
+    
+    voltAverage = (voltSum / voltCount);
+    
+    voltCount = 0;
+    voltSum = 0;
+
+    if (debug) {
+      Serial.print("PV voltage analog: ");
+      Serial.print(voltsAnalog);
+      Serial.println("/1023");
+    
+      Serial.print("PV voltage sample: ");
+      Serial.print(volts);
+      Serial.println("V");
+      
+      Serial.print("PV voltage avg: "); 
+      Serial.print(voltAverage);
+      Serial.println("V");
+    }
+  
+    Blynk.virtualWrite(V29, voltsAnalog);
+    Blynk.virtualWrite(V30, voltAverage);
+
+    // HACK: keep reporting to show on graph
+    Blynk.virtualWrite(V28, pvLatchOn);
+  }
+}
+
+void switchPower(bool pv) {
+  
+  Serial.println("----");
+
+  if (pv) {
+    msr.set_shift(relayPin);
+  }
+  else {
+    msr.clear_shift(relayPin);
+  }
+  
+  Serial.println(pv ? "PV on" : "PV off");
+  pvLatchOn = pv;
+  
+  Serial.print("Source: ");
+  Serial.println(pv ? "PV" : "PSU");
+
+  Blynk.virtualWrite(V28, pvLatchOn);
+
+  Serial.println("----");
+}
+
+void beginSensor(Adafruit_SHT31& sht31, uint8_t addr, String shtName) {
+  
+  if (!sht31.begin(addr)) {
+    Serial.println("Couldn't find " + shtName);
+  }
+  /*
+  Serial.print(shtName + " heater is ");
+  if (sht31.isHeaterEnabled())
+    Serial.println("on");
+  else
+    Serial.println("off");*/
+}
+
+void printValues(Adafruit_SHT31& sht31, String shtName) {
+  
+  float t = sht31.readTemperature();
+  float h = sht31.readHumidity();
+
+  Serial.print(shtName);
+
+  if (!isnan(t)) {
+    Serial.print(": Temp ºC = ");
+    Serial.print(t);
+  } 
+  else {
+    Serial.println("\nFailed to read temperature of " + shtName);
+  }
+  
+  if (!isnan(h)) {
+    Serial.print(" / Humidity % = ");
+    Serial.println(h);
+  } 
+  else { 
+    Serial.println("\nFailed to read humidity of " + shtName);
+  }
+
+  // Toggle heater enabled state every 30 seconds
+  // An ~3.0 degC temperature increase can be noted when heater is enabled
+  if (++loopCnt == 30) {
+    enableHeater = !enableHeater;
+    sht31.heater(enableHeater);
+    if (sht31.isHeaterEnabled())
+      Serial.println(shtName + " heater turned on");
+    else
+      Serial.println(shtName + " heater turned off");
+
+    loopCnt = 0;
+  }
+}
+
+void testCallback() {
+  //
 }
 
 int GreenhouseArduino::CurrentHour() const { return timeClient.getHours(); }
@@ -360,6 +793,8 @@ void GreenhouseArduino::HandleLastWrite()
   }
 
   m_lastWriteDone = true;
+
+  s_instance->TraceFlash(F("Handling last Blynk write"));
 
   // if this is the first time that the last write was done,
   // this means that the system has started.
@@ -520,7 +955,7 @@ void GreenhouseArduino::HandleSoilMostureWarning(float soilMostureWarning)
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V15, V16, V17, V18, V22, V23);
+  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V15, V16, V17, V18, V22, V23, V24, V25, V26, V27, V31, V32);
 }
 
 BLYNK_WRITE(V0)
@@ -605,6 +1040,44 @@ BLYNK_WRITE(V23)
 {
   s_instance->TraceFlash(F("Blynk write V23"));
   s_instance->HandleFakeInsideHumidity(param.asFloat());
+}
+
+BLYNK_WRITE(V24)
+{
+  s_instance->TraceFlash(F("Blynk write V24"));
+  activeSwitch = param.asInt();
+}
+
+BLYNK_WRITE(V25)
+{
+  s_instance->TraceFlash(F("Blynk write V25"));
+  if (param.asInt() == 1) {
+    toggleSwitch(activeSwitch);
+  }
+}
+
+BLYNK_WRITE(V26)
+{
+  s_instance->TraceFlash(F("Blynk write V26"));
+  voltCalibrationIn = param.asInt();
+}
+
+BLYNK_WRITE(V27)
+{
+  s_instance->TraceFlash(F("Blynk write V27"));
+  voltCalibrationOut = param.asFloat();
+}
+
+BLYNK_WRITE(V31)
+{
+  s_instance->TraceFlash(F("Blynk write V31"));
+  waterBatteryOn = param.asInt();
+}
+
+BLYNK_WRITE(V32)
+{
+  s_instance->TraceFlash(F("Blynk write V32"));
+  waterBatteryOff = param.asInt();
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.

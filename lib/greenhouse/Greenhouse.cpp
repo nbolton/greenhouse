@@ -6,7 +6,7 @@
 const float k_windowAdjustThreshold = 0.05;
 const int k_dayStartHour = 8; // 8am
 const int k_dayEndHour = 20;  // 8pm
-const int k_soilSensorDry = 930; // in air
+const int k_soilSensorDry = 985; // in air
 const int k_soilSensorWet = 480; // in water
 
 Greenhouse::Greenhouse() :
@@ -199,7 +199,7 @@ float Greenhouse::CalculateMoisture(int analogValue) const
   float percent = mapFloat(analogValue, k_soilSensorDry, k_soilSensorWet, 0, 100);
   Log().Trace("Soil moisture, analog=%d, percent=%.2f%%", analogValue, percent);
   if (percent < -10 || percent > 110) {
-    // something went wrong
+    Log().Trace("Invalid soil moisture value");
     return k_unknown;
   }
   return percent;
