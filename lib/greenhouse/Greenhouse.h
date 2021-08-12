@@ -35,7 +35,7 @@ protected:
   virtual bool ReadSensors() { return false; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
-  virtual float CalculateMoisture(int analogValue) const;
+  virtual float CalculateMoisture(float analogValue) const;
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
 

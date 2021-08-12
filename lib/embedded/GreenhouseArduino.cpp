@@ -34,20 +34,27 @@ const int startBeepPin = 1;
 const int switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // io1 pins
-const int aMuxEn = P0;
+/*const int aMuxEn = P0;
 const int aMuxS0 = P1;
 const int aMuxS1 = P2;
 const int aMuxS2 = P3;
-const int aMuxS3 = P4;
-const int k_actuatorPin1 = P5;
-const int k_actuatorPin2 = P6;
+const int aMuxS3 = P4;*/
+const int k_actuatorPin1 = P6;
+const int k_actuatorPin2 = P7;
 
 // amux pins
-const int k_moisturePin = 3;
+// none
+
+// adc1 pins
+const ADS1115_MUX k_moisturePin = ADS1115_COMP_0_GND;
+
+// adc2 pins
+const ADS1115_MUX k_voltagePin = ADS1115_COMP_0_GND;
+const ADS1115_MUX k_currentPin = ADS1115_COMP_1_GND;
 
 const int msrTotal = 2;
 const int voltAverageCountMax = 100;
-const int pvVoltageMin = 5;            // V, in case of sudden voltage drop
+const int pvVoltageMin = 5;       // V, in case of sudden voltage drop
 const float voltSwitchOff = 10.5; // V
 const float voltSwitchOn = 13.5;  // V
 
@@ -109,7 +116,13 @@ uint8_t loopCnt = 0;
 Adafruit_SHT31 sht31_a = Adafruit_SHT31();
 Adafruit_SHT31 sht31_b = Adafruit_SHT31();
 
-ADS1115_WE adc1 = ADS1115_WE(0x48);
+struct ADC {
+  String name;
+  ADS1115_WE ads;
+  bool ready = false;
+};
+
+ADC adc1, adc2;
 
 GreenhouseArduino *s_instance = nullptr;
 
@@ -127,6 +140,7 @@ void measureCurrent();
 void beginSensor(Adafruit_SHT31 &sht31, uint8_t addr, String shtName);
 void printValues(Adafruit_SHT31 &sht31, String shtName);
 void testCallback();
+float readAdc(ADC &adc, ADS1115_MUX channel);
 
 GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 
@@ -178,22 +192,23 @@ void GreenhouseArduino::Setup()
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(k_actuatorPinA, OUTPUT);
 
+  io1.pinMode(k_actuatorPin1, OUTPUT);
+  io1.pinMode(k_actuatorPin2, OUTPUT);
+
+  io1.digitalWrite(k_actuatorPin1, LOW);
+  io1.digitalWrite(k_actuatorPin2, LOW);
+  /*
   io1.pinMode(aMuxS0, OUTPUT);
   io1.pinMode(aMuxS1, OUTPUT);
   io1.pinMode(aMuxS2, OUTPUT);
   io1.pinMode(aMuxS3, OUTPUT);
   io1.pinMode(aMuxEn, OUTPUT);
-  io1.pinMode(k_actuatorPin1, OUTPUT);
-  io1.pinMode(k_actuatorPin2, OUTPUT);
-
   io1.digitalWrite(aMuxS0, LOW);
   io1.digitalWrite(aMuxS1, LOW);
   io1.digitalWrite(aMuxS2, LOW);
   io1.digitalWrite(aMuxS3, LOW);
   io1.digitalWrite(aMuxEn, LOW);
-  io1.digitalWrite(k_actuatorPin1, LOW);
-  io1.digitalWrite(k_actuatorPin2, LOW);
-
+  */
   // 10ms seems to be the minimum switch time to stop the relay coil "buzzing"
   // when it has insufficient power.
   relayThread.onRun(relayCallback);
@@ -214,12 +229,24 @@ void GreenhouseArduino::Setup()
   beginSensor(sht31_a, 0x44, "SHT31 A");
   beginSensor(sht31_b, 0x45, "SHT31 B");
 
-  if (!adc1.init()) {
-    Serial.println("ADS1115 not connected");
+  adc1.name = "ADS1115 #1";
+  adc2.name = "ADS1115 #2";
+  adc1.ads = ADS1115_WE(0x48);
+  adc2.ads = ADS1115_WE(0x49);
+  adc1.ready = adc1.ads.init();
+  adc2.ready = adc2.ads.init();
+
+  if (!adc1.ready) {
+    Serial.printf("%s, not connected\n", adc1.name);
+  }
+
+  if (!adc2.ready) {
+    Serial.printf("%s, not connected\n", adc2.name);
   }
 
   // TODO: not default, experiment without this
-  adc1.setVoltageRange_mV(ADS1115_RANGE_6144);
+  adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
+  adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
 
   Blynk.begin(k_auth, k_ssid, k_pass);
 
@@ -383,7 +410,7 @@ bool GreenhouseArduino::ReadSensors()
     failures++;
   }
 
-  int moistureAnalog = analogMuxRead(k_moisturePin);
+  float moistureAnalog = readAdc(adc1, k_moisturePin);
   m_soilMoisture = CalculateMoisture(moistureAnalog);
 
   return failures == 0;
@@ -634,45 +661,58 @@ void relayCallback()
   }
   else if (pvVoltageAverage != k_unknown) {
 
-    if (!pvPowerSource && (pvVoltageSwitchOn != k_unknown) && (pvVoltageAverage >= pvVoltageSwitchOn)) {
+    if (
+      !pvPowerSource && (pvVoltageSwitchOn != k_unknown) &&
+      (pvVoltageAverage >= pvVoltageSwitchOn)) {
       switchPower(true);
     }
-    else if (pvPowerSource && (pvVoltageSwitchOff != k_unknown) && (pvVoltageAverage <= pvVoltageSwitchOff)) {
+    else if (
+      pvPowerSource && (pvVoltageSwitchOff != k_unknown) &&
+      (pvVoltageAverage <= pvVoltageSwitchOff)) {
       switchPower(false);
     }
   }
 }
 
 int analogMuxRead(byte chan)
-{
+{/*
   io1.digitalWrite(aMuxS0, bitRead(chan, 0));
   io1.digitalWrite(aMuxS1, bitRead(chan, 1));
   io1.digitalWrite(aMuxS2, bitRead(chan, 2));
-  io1.digitalWrite(aMuxS3, bitRead(chan, 3));
+  io1.digitalWrite(aMuxS3, bitRead(chan, 3));*/
 
   return analogRead(A0);
 }
 
-float readAdc1(ADS1115_MUX channel)
+float readAdc(ADC &adc, ADS1115_MUX channel)
 {
-  float voltage = 0.0;
-  adc1.setCompareChannels(channel);
-  adc1.startSingleMeasurement();
-
-  while (adc1.isBusy()) {
+  if (!adc.ready) {
+    Serial.printf("%s, not ready\n", adc.name.c_str());
+    return k_unknown;
   }
 
-  voltage = adc1.getResult_V(); // alternative: getResult_mV for Millivolt
-  return voltage;
+  adc.ads.setCompareChannels(channel);
+  adc.ads.startSingleMeasurement();
+
+  int times = 0;
+  while (adc.ads.isBusy()) {
+    delay(10);
+    if (times++ > 10) {
+      Serial.printf("%s, busy\n", adc.name.c_str());
+      return k_unknown;
+    }
+  }
+
+  return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 }
 
 void measureVoltage()
 {
-  if (pvVoltageSensorMax == k_unknown || pvVoltageOutputMax == k_unknown) {
+  if (!adc2.ready || pvVoltageSensorMax == k_unknown || pvVoltageOutputMax == k_unknown) {
     return;
   }
 
-  pvVoltageSensor = readAdc1(ADS1115_COMP_0_GND);
+  pvVoltageSensor = readAdc(adc2, k_voltagePin);
   pvVoltageOutput = mapFloat(
     pvVoltageSensor,
     pvVoltageSensorMin,
@@ -694,11 +734,11 @@ void measureVoltage()
 
 void measureCurrent()
 {
-  if (pvCurrentSensorMax == k_unknown || pvCurrentOutputMax == k_unknown) {
+  if (!adc2.ready || pvCurrentSensorMax == k_unknown || pvCurrentOutputMax == k_unknown) {
     return;
   }
 
-  pvCurrentSensor = readAdc1(ADS1115_COMP_1_GND);
+  pvCurrentSensor = readAdc(adc2, k_currentPin);
   pvCurrentOutput = mapFloat(
     pvCurrentSensor,
     pvCurrentSensorMin,
