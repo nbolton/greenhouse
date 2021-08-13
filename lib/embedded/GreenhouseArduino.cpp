@@ -46,7 +46,7 @@ const int k_actuatorPin2 = P7;
 // none
 
 // adc1 pins
-const ADS1115_MUX k_moisturePin = ADS1115_COMP_0_GND;
+const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
 
 // adc2 pins
 const ADS1115_MUX k_voltagePin = ADS1115_COMP_0_GND;
