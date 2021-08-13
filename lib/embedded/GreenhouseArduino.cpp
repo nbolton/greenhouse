@@ -60,8 +60,8 @@ const float voltSwitchOn = 13.5;  // V
 
 const int switchButtons = 4;
 const int fanSwitch = 0;
-const int pumpSwitch1 = 2;
-const int pumpSwitch2 = 3;
+const int pumpSwitch1 = 1;
+const int pumpSwitch2 = 2;
 
 int switchState[switchButtons];
 int activeSwitch;
