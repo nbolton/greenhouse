@@ -96,7 +96,7 @@ Thread readThread = Thread();
 Thread testThread = Thread();
 
 OneWire oneWire(k_oneWirePin);
-DallasTemperature sensors(&oneWire);
+DallasTemperature dt(&oneWire);
 
 WiFiUDP ntpUdp;
 NTPClient timeClient(ntpUdp);
@@ -105,6 +105,7 @@ const int k_actuatorSpeed = 255;
 const int k_actuatorRuntimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
+const int k_waterProbeIndex = 1;
 
 static char reportBuffer[80];
 
@@ -220,7 +221,7 @@ void GreenhouseArduino::Setup()
   testThread.onRun(testCallback);
   testThread.setInterval(1000);
 
-  sensors.begin();
+  dt.begin();
 
   timeClient.begin();
 
@@ -403,10 +404,16 @@ bool GreenhouseArduino::ReadSensors()
     failures++;
   }
 
-  sensors.requestTemperatures();
-  m_soilTemperature = sensors.getTempCByIndex(k_soilProbeIndex);
+  dt.requestTemperatures();
+  m_soilTemperature = dt.getTempCByIndex(k_soilProbeIndex);
   if (isnan(m_soilTemperature)) {
     m_soilTemperature = k_unknown;
+    failures++;
+  }
+
+  m_waterTemperature = dt.getTempCByIndex(k_waterProbeIndex);
+  if (isnan(m_waterTemperature)) {
+    m_waterTemperature = k_unknown;
     failures++;
   }
 
@@ -584,14 +591,14 @@ void actuator(bool forward, int s, int t)
 void printTemps()
 {
 
-  sensors.requestTemperatures();
+  dt.requestTemperatures();
 
   Serial.print("T0: ");
-  Serial.print(sensors.getTempCByIndex(0));
+  Serial.print(dt.getTempCByIndex(0));
   Serial.println("°C");
 
   Serial.print("T1: ");
-  Serial.print(sensors.getTempCByIndex(1));
+  Serial.print(dt.getTempCByIndex(1));
   Serial.println("°C");
 }
 
@@ -873,6 +880,7 @@ void GreenhouseArduino::ReportSensorValues()
   Blynk.virtualWrite(V20, OutsideHumidity());
   Blynk.virtualWrite(V11, SoilTemperature());
   Blynk.virtualWrite(V21, SoilMoisture());
+  Blynk.virtualWrite(V46, WaterTemperature());
 }
 
 void GreenhouseArduino::ReportWindowProgress()

@@ -63,6 +63,7 @@ protected:
   float OutsideHumidity() const { return m_outsideHumidity; }
   float SoilTemperature() const;
   float SoilMoisture() const;
+  float WaterTemperature() const { return m_waterTemperature; }
 
 private:
   ArduinoLog m_log;
@@ -71,6 +72,7 @@ private:
   float m_outsideTemperature;
   float m_outsideHumidity;
   float m_soilTemperature;
+  float m_waterTemperature;
   int m_timerId;
   int m_led;
   float m_fakeInsideHumidity;

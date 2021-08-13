@@ -43,10 +43,11 @@ bool Greenhouse::Refresh()
   }
 
   Log().Trace(
-    "Temperatures, inside=%.2f°C, outside=%.2f°C, soil=%.2f°C",
+    "Temperatures, inside=%.2f°C, outside=%.2f°C, soil=%.2f°C, water=%.2f°C",
     InsideTemperature(),
     OutsideTemperature(),
-    SoilTemperature());
+    SoilTemperature(),
+    WaterTemperature());
 
   Log().Trace(
     "Moisture, inside=%.2f%%, outside=%.2f%%, soil=%.2f%%",
