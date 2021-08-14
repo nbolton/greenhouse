@@ -168,13 +168,13 @@ void GreenhouseArduino::UpdateWaterBattery()
 {
   if (s_timeClient.getHours() == m_waterBatteryOn) {
     SetSwitch(k_fanSwitch, true);
-    
+
     // HACK: wait for fan to spool up. otherwise, this drains the caps and
     // causes the microcontroller to lose power. perhaps this can be fixed
-    // by having a cap for the microcontroller and a diode to prevent the 
+    // by having a cap for the microcontroller and a diode to prevent the
     // power components from stealing the power.
     delay(5000);
-    
+
     SetSwitch(k_pumpSwitch1, true);
     SetSwitch(k_pumpSwitch2, true);
   }
