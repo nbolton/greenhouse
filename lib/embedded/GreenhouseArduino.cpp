@@ -105,10 +105,13 @@ void GreenhouseArduino::Setup()
 {
   Greenhouse::Setup();
 
-  Serial.begin(9600);
+  if (k_trace) {
+    Serial.begin(9600);
 
-  // wait for serial to connect before first trace
-  delay(1000);
+    // wait for serial to connect before first trace
+    delay(1000);
+  }
+
   Log().Trace("\n\nStarting system: %s", BLYNK_DEVICE_NAME);
 
   pinMode(k_shiftRegisterLatchPin, OUTPUT);
