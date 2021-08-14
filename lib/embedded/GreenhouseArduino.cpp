@@ -34,16 +34,8 @@ const int startBeepPin = 1;
 const int switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // io1 pins
-/*const int aMuxEn = P0;
-const int aMuxS0 = P1;
-const int aMuxS1 = P2;
-const int aMuxS2 = P3;
-const int aMuxS3 = P4;*/
 const int k_actuatorPin1 = P6;
 const int k_actuatorPin2 = P7;
-
-// amux pins
-// none
 
 // adc1 pins
 const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
@@ -134,7 +126,6 @@ void printTemps();
 void setSwitch(int i, bool on);
 void toggleSwitch(int i);
 void relayCallback();
-int analogMuxRead(byte chan);
 void switchPower(bool pv);
 void measureVoltage();
 void measureCurrent();
@@ -198,18 +189,7 @@ void GreenhouseArduino::Setup()
 
   io1.digitalWrite(k_actuatorPin1, LOW);
   io1.digitalWrite(k_actuatorPin2, LOW);
-  /*
-  io1.pinMode(aMuxS0, OUTPUT);
-  io1.pinMode(aMuxS1, OUTPUT);
-  io1.pinMode(aMuxS2, OUTPUT);
-  io1.pinMode(aMuxS3, OUTPUT);
-  io1.pinMode(aMuxEn, OUTPUT);
-  io1.digitalWrite(aMuxS0, LOW);
-  io1.digitalWrite(aMuxS1, LOW);
-  io1.digitalWrite(aMuxS2, LOW);
-  io1.digitalWrite(aMuxS3, LOW);
-  io1.digitalWrite(aMuxEn, LOW);
-  */
+  
   // 10ms seems to be the minimum switch time to stop the relay coil "buzzing"
   // when it has insufficient power.
   relayThread.onRun(relayCallback);
@@ -679,16 +659,6 @@ void relayCallback()
       switchPower(false);
     }
   }
-}
-
-int analogMuxRead(byte chan)
-{/*
-  io1.digitalWrite(aMuxS0, bitRead(chan, 0));
-  io1.digitalWrite(aMuxS1, bitRead(chan, 1));
-  io1.digitalWrite(aMuxS2, bitRead(chan, 2));
-  io1.digitalWrite(aMuxS3, bitRead(chan, 3));*/
-
-  return analogRead(A0);
 }
 
 float readAdc(ADC &adc, ADS1115_MUX channel)
