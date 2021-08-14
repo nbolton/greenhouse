@@ -45,7 +45,7 @@ public:
   void WindowProgress(int windowProgress) { Greenhouse::WindowProgress(windowProgress); }
   int WindowProgress() { return Greenhouse::WindowProgress(); }
   void OpenDayMinimum(int openDayMinimum) { Greenhouse::OpenDayMinimum(openDayMinimum); }
-  float CalculateMoisture(int analogValue) const { return Greenhouse::CalculateMoisture(analogValue); }
+  float CalculateMoisture(float analogValue) const { return Greenhouse::CalculateMoisture(analogValue); }
 
   bool ApplyWindowProgress(float expectedProgress)
   {
@@ -314,22 +314,22 @@ void Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened()
 void Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero()
 {
   GreenhouseTest greenhouse;
-  float percent = greenhouse.CalculateMoisture(100);
+  float percent = greenhouse.CalculateMoisture(3.95);
   TEST_ASSERT_EQUAL_FLOAT(0, percent);
 }
 
 void Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred()
 {
   GreenhouseTest greenhouse;
-  float percent = greenhouse.CalculateMoisture(900);
+  float percent = greenhouse.CalculateMoisture(1.9);
   TEST_ASSERT_EQUAL_FLOAT(100, percent);
 }
 
 void Test_CalculateMoisture_InBounds_ReturnsPercent()
 {
   GreenhouseTest greenhouse;
-  float percent = greenhouse.CalculateMoisture(305);
-  TEST_ASSERT_EQUAL_FLOAT(25.625, percent);
+  float percent = greenhouse.CalculateMoisture(3);
+  TEST_ASSERT_FLOAT_WITHIN(.1, 46.34, percent);
 }
 
 void testCommon()
