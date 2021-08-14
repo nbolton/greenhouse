@@ -7,7 +7,7 @@
 #include <Arduino.h>
 #include <ADS1115_WE.h>
 
-const int k_switchButtons = 4;
+const int k_switchCount = 4;
 
 class Adafruit_SHT31;
 struct ADC;
@@ -94,8 +94,9 @@ private:
   void SwitchPower(bool pv);
   void MeasureVoltage();
   void MeasureCurrent();
-  void BeginSensor(Adafruit_SHT31 &sht31, uint8_t addr, String shtName);
   float ReadAdc(ADC &adc, ADS1115_MUX channel);
+  void InitSensors();
+  void UpdateWaterBattery();
 
 private:
   ArduinoLog m_log;
@@ -116,7 +117,7 @@ private:
   bool m_insideHumidityWarningSent;
   bool m_soilMoistureWarningSent;
   int m_activeSwitch;
-  int m_switchState[k_switchButtons];
+  int m_switchState[k_switchCount];
   int m_waterBatteryOn = k_unknown;
   int m_waterBatteryOff = k_unknown;
   int m_forceRelay = false;

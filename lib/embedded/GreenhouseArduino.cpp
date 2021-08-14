@@ -58,6 +58,8 @@ const int k_actuatorRuntimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
+const byte k_tempSensorAddr1 = 0x44;
+const byte k_tempSensorAddr2 = 0x45;
 
 static PCF8574 s_io1(0x20);
 static MultiShiftRegister s_shiftRegisters(
@@ -79,12 +81,7 @@ GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 void GreenhouseArduino::Instance(GreenhouseArduino &ga) { s_instance = &ga; }
 
 void relayCallback() { s_instance->RelayCallback(); }
-
-void refreshTimer()
-{
-  s_instance->TraceFlash(F("Refresh timer"));
-  s_instance->Refresh();
-}
+void refreshTimer() { s_instance->Refresh(); }
 
 GreenhouseArduino::GreenhouseArduino() :
   m_log(),
@@ -138,13 +135,62 @@ void GreenhouseArduino::Setup()
   s_relayThread.setInterval(10);
 
   s_dallas.begin();
-
   s_timeClient.begin();
 
   MeasureVoltage();
+  InitSensors();
 
-  BeginSensor(s_temperatureSensor1, 0x44, "SHT31 A");
-  BeginSensor(s_temperatureSensor2, 0x45, "SHT31 B");
+  Blynk.begin(k_auth, k_ssid, k_pass);
+
+  Log().Trace("System ready");
+  StartBeep(2);
+}
+
+void GreenhouseArduino::Loop()
+{
+  Greenhouse::Loop();
+
+  s_timeClient.update();
+  Blynk.run();
+  s_timer.run();
+
+  UpdateWaterBattery();
+
+  if (s_relayThread.shouldRun()) {
+    s_relayThread.run();
+  }
+}
+
+void GreenhouseArduino::UpdateWaterBattery()
+{
+  if (s_timeClient.getHours() == m_waterBatteryOn) {
+    SetSwitch(k_fanSwitch, true);
+    
+    // HACK: wait for fan to spool up. otherwise, this drains the caps and
+    // causes the microcontroller to lose power. perhaps this can be fixed
+    // by having a cap for the microcontroller and a diode to prevent the 
+    // power components from stealing the power.
+    delay(5000);
+    
+    SetSwitch(k_pumpSwitch1, true);
+    SetSwitch(k_pumpSwitch2, true);
+  }
+  else if (s_timeClient.getHours() == m_waterBatteryOff) {
+    SetSwitch(k_fanSwitch, false);
+    SetSwitch(k_pumpSwitch1, false);
+    SetSwitch(k_pumpSwitch2, false);
+  }
+}
+
+void GreenhouseArduino::InitSensors()
+{
+  if (!s_temperatureSensor1.begin(k_tempSensorAddr1)) {
+    Log().Trace("Couldn't find SHT31 #1");
+  }
+
+  if (!s_temperatureSensor2.begin(k_tempSensorAddr2)) {
+    Log().Trace("Couldn't find SHT31 #2");
+  }
 
   s_adc1.name = "ADS1115 #1";
   s_adc2.name = "ADS1115 #2";
@@ -164,36 +210,6 @@ void GreenhouseArduino::Setup()
   // TODO: not default, experiment without this
   s_adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
   s_adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
-
-  Blynk.begin(k_auth, k_ssid, k_pass);
-
-  Log().Trace("System ready");
-  StartBeep(2);
-}
-
-void GreenhouseArduino::Loop()
-{
-  Greenhouse::Loop();
-
-  s_timeClient.update();
-  Blynk.run();
-  s_timer.run();
-
-  if (s_timeClient.getHours() == m_waterBatteryOn) {
-    SetSwitch(k_fanSwitch, true);
-    delay(5000); // HACK: wait for fan to spool up
-    SetSwitch(k_pumpSwitch1, true);
-    SetSwitch(k_pumpSwitch2, true);
-  }
-  else if (s_timeClient.getHours() == m_waterBatteryOff) {
-    SetSwitch(k_fanSwitch, false);
-    SetSwitch(k_pumpSwitch1, false);
-    SetSwitch(k_pumpSwitch2, false);
-  }
-
-  if (s_relayThread.shouldRun()) {
-    s_relayThread.run();
-  }
 }
 
 bool GreenhouseArduino::Refresh()
@@ -373,7 +389,6 @@ void GreenhouseArduino::Reset()
 
 void GreenhouseArduino::StartBeep(int times)
 {
-
   for (int i = 0; i < times; i++) {
     s_shiftRegisters.set_shift(k_startBeepPin);
     delay(100);
@@ -385,7 +400,6 @@ void GreenhouseArduino::StartBeep(int times)
 
 void GreenhouseArduino::SetSwitch(int index, bool on)
 {
-
   int pin = k_switchPins[index];
 
   if (on) {
@@ -402,12 +416,12 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
   }
 
   String switchStates;
-  for (int i = 0; i < k_switchButtons; i++) {
+  for (int i = 0; i < k_switchCount; i++) {
     switchStates += "S";
     switchStates += i;
     switchStates += "=";
     switchStates += m_switchState[i] ? "On" : "Off";
-    if (i != (k_switchButtons - 1)) {
+    if (i != (k_switchCount - 1)) {
       switchStates += ", ";
     }
   }
@@ -539,13 +553,6 @@ void GreenhouseArduino::SwitchPower(bool pv)
   Blynk.virtualWrite(V28, m_pvPowerSource);
 
   Log().Trace("----");
-}
-
-void GreenhouseArduino::BeginSensor(Adafruit_SHT31 &sht31, uint8_t addr, String shtName)
-{
-  if (!sht31.begin(addr)) {
-    Log().Trace("Couldn't find %s", shtName.c_str());
-  }
 }
 
 int GreenhouseArduino::CurrentHour() const { return s_timeClient.getHours(); }
