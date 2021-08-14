@@ -209,10 +209,6 @@ void GreenhouseArduino::InitSensors()
   if (!s_adc2.ready) {
     Log().Trace("%s, not connected", s_adc2.name.c_str());
   }
-
-  // TODO: not default, experiment without this
-  s_adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
-  s_adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
 }
 
 bool GreenhouseArduino::Refresh()
@@ -478,6 +474,11 @@ float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
     Log().Trace("%s, not ready", adc.name.c_str());
     return k_unknown;
   }
+
+  // HACK: this keeps getting reset to default (possibly due to a power issue
+  // when the relay switches), so force the volt range every time we're about to read.
+  s_adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
+  s_adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
 
   adc.ads.setCompareChannels(channel);
   adc.ads.startSingleMeasurement();
