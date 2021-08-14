@@ -57,6 +57,7 @@ public:
   void HandlePvCurrentOutputMax(float param) { m_pvCurrentOutputMax = param; }
   void HandlePvVoltageSwitchOn(float param) { m_pvVoltageSwitchOn = param; }
   void HandlePvVoltageSwitchOff(float param) { m_pvVoltageSwitchOff = param; }
+  void HandlePvForceOn(int param) { m_pvForceOn = param; }
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -118,7 +119,6 @@ private:
   bool m_soilMoistureWarningSent;
   int m_activeSwitch;
   int m_switchState[k_switchCount];
-  int m_forceRelay = false;
   bool m_pvPowerSource;
   float m_pvVoltageSwitchOn = k_unknown;
   float m_pvVoltageSwitchOff = k_unknown;
@@ -137,4 +137,5 @@ private:
   float m_pvCurrentSensorMax = k_unknown;
   float m_pvCurrentOutputMin = 0;
   float m_pvCurrentOutputMax = k_unknown;
+  bool m_pvForceOn = false;
 };

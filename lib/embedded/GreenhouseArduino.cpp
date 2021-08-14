@@ -447,14 +447,12 @@ void GreenhouseArduino::RelayCallback()
 {
   MeasureVoltage();
 
-  if (m_forceRelay) {
+  if (m_pvForceOn) {
     if (!m_pvPowerSource) {
       SwitchPower(true);
     }
-    return;
   }
-
-  if (m_pvPowerSource && (m_pvVoltageOutput <= k_pvVoltageMin)) {
+  else if (m_pvPowerSource && (m_pvVoltageOutput <= k_pvVoltageMin)) {
     Log().Trace("PV voltage drop detected");
     SwitchPower(false);
     m_pvVoltageAverage = k_unknown;
@@ -869,7 +867,8 @@ BLYNK_CONNECTED()
     V40,
     V41,
     V44,
-    V45);
+    V45,
+    V47);
 }
 
 BLYNK_WRITE(V0)
@@ -1038,6 +1037,12 @@ BLYNK_WRITE(V45)
 {
   s_instance->TraceFlash(F("Blynk write V45"));
   s_instance->HandlePvVoltageSwitchOff(param.asFloat());
+}
+
+BLYNK_WRITE(V47)
+{
+  s_instance->TraceFlash(F("Blynk write V47"));
+  s_instance->HandlePvForceOn(param.asInt());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
