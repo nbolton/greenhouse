@@ -47,16 +47,16 @@ public:
   void HandleToggleSwitch(int);
   void HandleWaterBatteryOn(int param) { WaterBatteryOn(param); }
   void HandleWaterBatteryOff(int param) { WaterBatteryOff(param); }
-  void HandlePvVoltageSensorMin(int param) { m_pvVoltageSensorMin = param; }
-  void HandlePvVoltageSensorMax(int param) { m_pvVoltageSensorMax = param; }
-  void HandlePvVoltageOutputMin(int param) { m_pvVoltageOutputMin = param; }
-  void HandlePvVoltageOutputMax(int param) { m_pvVoltageOutputMax = param; }
-  void HandlePvCurrentSensorMin(int param) { m_pvCurrentSensorMin = param; }
-  void HandlePvCurrentSensorMax(int param) { m_pvCurrentSensorMax = param; }
-  void HandlePvCurrentOutputMin(int param) { m_pvCurrentOutputMin = param; }
-  void HandlePvCurrentOutputMax(int param) { m_pvCurrentOutputMax = param; }
-  void HandlePvVoltageSwitchOn(int param) { m_pvVoltageSwitchOn = param; }
-  void HandlePvVoltageSwitchOff(int param) { m_pvVoltageSwitchOff = param; }
+  void HandlePvVoltageSensorMin(float param) { m_pvVoltageSensorMin = param; }
+  void HandlePvVoltageSensorMax(float param) { m_pvVoltageSensorMax = param; }
+  void HandlePvVoltageOutputMin(float param) { m_pvVoltageOutputMin = param; }
+  void HandlePvVoltageOutputMax(float param) { m_pvVoltageOutputMax = param; }
+  void HandlePvCurrentSensorMin(float param) { m_pvCurrentSensorMin = param; }
+  void HandlePvCurrentSensorMax(float param) { m_pvCurrentSensorMax = param; }
+  void HandlePvCurrentOutputMin(float param) { m_pvCurrentOutputMin = param; }
+  void HandlePvCurrentOutputMax(float param) { m_pvCurrentOutputMax = param; }
+  void HandlePvVoltageSwitchOn(float param) { m_pvVoltageSwitchOn = param; }
+  void HandlePvVoltageSwitchOff(float param) { m_pvVoltageSwitchOff = param; }
 
 protected:
   void ReportInfo(const char *m, ...);
