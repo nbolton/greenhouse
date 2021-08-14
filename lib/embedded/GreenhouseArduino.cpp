@@ -4,7 +4,6 @@
 
 #include "ho_config.h"
 
-#include <ADS1115_WE.h>
 #include <Adafruit_SHT31.h>
 #include <Arduino.h>
 #include <BlynkSimpleEsp8266.h>
@@ -19,19 +18,23 @@
 #include <WiFiUdp.h>
 #include <Wire.h>
 
-const int debug = true;
+struct ADC {
+  String name;
+  ADS1115_WE ads;
+  bool ready = false;
+};
 
 // regular pins
 const int k_oneWirePin = D3;
-const int k_msrLatchPin = D5; // RCLK (12)
-const int k_msrDataPin = D6;  // SER (14)
-const int k_msrClockPin = D7; // SRCLK (11)
+const int k_shiftRegisterLatchPin = D5; // RCLK (12)
+const int k_shiftRegisterDataPin = D6;  // SER (14)
+const int k_shiftRegisterClockPin = D7; // SRCLK (11)
 const int k_actuatorPinA = D8;
 
 // msr pins
-const int relayPin = 0;
-const int startBeepPin = 1;
-const int switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
+const int k_relayPin = 0;
+const int k_startBeepPin = 1;
+const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // io1 pins
 const int k_actuatorPin1 = P6;
@@ -44,99 +47,38 @@ const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
 const ADS1115_MUX k_voltagePin = ADS1115_COMP_0_GND;
 const ADS1115_MUX k_currentPin = ADS1115_COMP_1_GND;
 
-const int msrTotal = 2;
-const int voltAverageCountMax = 100;
-const int pvVoltageMin = 5;       // V, in case of sudden voltage drop
-const float voltSwitchOff = 10.5; // V
-const float voltSwitchOn = 13.5;  // V
-
-const int switchButtons = 4;
-const int fanSwitch = 0;
-const int pumpSwitch1 = 1;
-const int pumpSwitch2 = 2;
-
-int switchState[switchButtons];
-int activeSwitch;
-int waterBatteryOn = k_unknown;
-int waterBatteryOff = k_unknown;
-int forceRelay = false;
-
-bool pvPowerSource;
-float pvVoltageSwitchOn = k_unknown;
-float pvVoltageSwitchOff = k_unknown;
-int pvVoltageCount = 0;
-float pvVoltageAverage = 0;
-float pvVoltageSum = 0;
-float pvVoltageSensor = k_unknown;
-float pvVoltageOutput = k_unknown;
-float pvVoltageSensorMin = 0;
-float pvVoltageSensorMax = k_unknown;
-float pvVoltageOutputMin = 0;
-float pvVoltageOutputMax = k_unknown;
-float pvCurrentSensor = k_unknown;
-float pvCurrentOutput = k_unknown;
-float pvCurrentSensorMin = 0;
-float pvCurrentSensorMax = k_unknown;
-float pvCurrentOutputMin = 0;
-float pvCurrentOutputMax = k_unknown;
-
-PCF8574 io1(0x20);
-MultiShiftRegister msr(msrTotal, k_msrLatchPin, k_msrClockPin, k_msrDataPin);
-
-Thread relayThread = Thread();
-Thread readThread = Thread();
-Thread testThread = Thread();
-
-OneWire oneWire(k_oneWirePin);
-DallasTemperature dt(&oneWire);
-
-WiFiUDP ntpUdp;
-NTPClient timeClient(ntpUdp);
-
+const int k_shiftRegisterTotal = 2;
+const int k_voltAverageCountMax = 100;
+const int k_pvVoltageMin = 5; // V, in case of sudden voltage drop
+const int k_fanSwitch = 0;
+const int k_pumpSwitch1 = 1;
+const int k_pumpSwitch2 = 2;
 const int k_actuatorSpeed = 255;
 const int k_actuatorRuntimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
 
-static char reportBuffer[80];
-
-BlynkTimer timer;
-
-bool enableHeater = false;
-uint8_t loopCnt = 0;
-
-Adafruit_SHT31 sht31_a = Adafruit_SHT31();
-Adafruit_SHT31 sht31_b = Adafruit_SHT31();
-
-struct ADC {
-  String name;
-  ADS1115_WE ads;
-  bool ready = false;
-};
-
-ADC adc1, adc2;
-
-GreenhouseArduino *s_instance = nullptr;
-
-void startBeep(int times);
-void readCallback();
-void actuator(bool forward, int s, int t);
-void printTemps();
-void setSwitch(int i, bool on);
-void toggleSwitch(int i);
-void relayCallback();
-void switchPower(bool pv);
-void measureVoltage();
-void measureCurrent();
-void beginSensor(Adafruit_SHT31 &sht31, uint8_t addr, String shtName);
-void printValues(Adafruit_SHT31 &sht31, String shtName);
-void testCallback();
-float readAdc(ADC &adc, ADS1115_MUX channel);
+static PCF8574 s_io1(0x20);
+static MultiShiftRegister s_shiftRegisters(
+  k_shiftRegisterTotal, k_shiftRegisterLatchPin, k_shiftRegisterClockPin, k_shiftRegisterDataPin);
+static Thread s_relayThread = Thread();
+static OneWire s_oneWire(k_oneWirePin);
+static DallasTemperature s_dallas(&s_oneWire);
+static WiFiUDP s_ntpUdp;
+static NTPClient s_timeClient(s_ntpUdp);
+static char s_reportBuffer[80];
+static BlynkTimer s_timer;
+static Adafruit_SHT31 s_temperatureSensor1;
+static Adafruit_SHT31 s_temperatureSensor2;
+static ADC s_adc1, s_adc2;
+static GreenhouseArduino *s_instance = nullptr;
 
 GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 
 void GreenhouseArduino::Instance(GreenhouseArduino &ga) { s_instance = &ga; }
+
+void relayCallback() { s_instance->RelayCallback(); }
 
 void refreshTimer()
 {
@@ -172,99 +114,85 @@ void GreenhouseArduino::Setup()
   delay(1000);
   Log().Trace("\n\nStarting system: %s", BLYNK_DEVICE_NAME);
 
-  pinMode(k_msrLatchPin, OUTPUT);
-  pinMode(k_msrClockPin, OUTPUT);
-  pinMode(k_msrDataPin, OUTPUT);
-  msr.shift();
+  pinMode(k_shiftRegisterLatchPin, OUTPUT);
+  pinMode(k_shiftRegisterClockPin, OUTPUT);
+  pinMode(k_shiftRegisterDataPin, OUTPUT);
+  s_shiftRegisters.shift();
 
-  startBeep(1);
+  StartBeep(1);
 
   Wire.begin();
 
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(k_actuatorPinA, OUTPUT);
 
-  io1.pinMode(k_actuatorPin1, OUTPUT);
-  io1.pinMode(k_actuatorPin2, OUTPUT);
+  s_io1.pinMode(k_actuatorPin1, OUTPUT);
+  s_io1.pinMode(k_actuatorPin2, OUTPUT);
 
-  io1.digitalWrite(k_actuatorPin1, LOW);
-  io1.digitalWrite(k_actuatorPin2, LOW);
-  
+  s_io1.digitalWrite(k_actuatorPin1, LOW);
+  s_io1.digitalWrite(k_actuatorPin2, LOW);
+
   // 10ms seems to be the minimum switch time to stop the relay coil "buzzing"
   // when it has insufficient power.
-  relayThread.onRun(relayCallback);
-  relayThread.setInterval(10);
+  s_relayThread.onRun(relayCallback);
+  s_relayThread.setInterval(10);
 
-  readThread.onRun(readCallback);
-  readThread.setInterval(100);
+  s_dallas.begin();
 
-  testThread.onRun(testCallback);
-  testThread.setInterval(1000);
+  s_timeClient.begin();
 
-  dt.begin();
+  MeasureVoltage();
 
-  timeClient.begin();
+  BeginSensor(s_temperatureSensor1, 0x44, "SHT31 A");
+  BeginSensor(s_temperatureSensor2, 0x45, "SHT31 B");
 
-  measureVoltage();
+  s_adc1.name = "ADS1115 #1";
+  s_adc2.name = "ADS1115 #2";
+  s_adc1.ads = ADS1115_WE(0x48);
+  s_adc2.ads = ADS1115_WE(0x49);
+  s_adc1.ready = s_adc1.ads.init();
+  s_adc2.ready = s_adc2.ads.init();
 
-  beginSensor(sht31_a, 0x44, "SHT31 A");
-  beginSensor(sht31_b, 0x45, "SHT31 B");
-
-  adc1.name = "ADS1115 #1";
-  adc2.name = "ADS1115 #2";
-  adc1.ads = ADS1115_WE(0x48);
-  adc2.ads = ADS1115_WE(0x49);
-  adc1.ready = adc1.ads.init();
-  adc2.ready = adc2.ads.init();
-
-  if (!adc1.ready) {
-    Serial.printf("%s, not connected\n", adc1.name);
+  if (!s_adc1.ready) {
+    Log().Trace("%s, not connected", s_adc1.name.c_str());
   }
 
-  if (!adc2.ready) {
-    Serial.printf("%s, not connected\n", adc2.name);
+  if (!s_adc2.ready) {
+    Log().Trace("%s, not connected", s_adc2.name.c_str());
   }
 
   // TODO: not default, experiment without this
-  adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
-  adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
+  s_adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
+  s_adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
 
   Blynk.begin(k_auth, k_ssid, k_pass);
 
-  Serial.println("System ready");
-  startBeep(2);
+  Log().Trace("System ready");
+  StartBeep(2);
 }
 
 void GreenhouseArduino::Loop()
 {
   Greenhouse::Loop();
 
-  timeClient.update();
+  s_timeClient.update();
   Blynk.run();
-  timer.run();
+  s_timer.run();
 
-  if (timeClient.getHours() == waterBatteryOn) {
-    setSwitch(fanSwitch, true);
+  if (s_timeClient.getHours() == m_waterBatteryOn) {
+    SetSwitch(k_fanSwitch, true);
     delay(5000); // HACK: wait for fan to spool up
-    setSwitch(pumpSwitch1, true);
-    setSwitch(pumpSwitch2, true);
+    SetSwitch(k_pumpSwitch1, true);
+    SetSwitch(k_pumpSwitch2, true);
   }
-  else if (timeClient.getHours() == waterBatteryOff) {
-    setSwitch(fanSwitch, false);
-    setSwitch(pumpSwitch1, false);
-    setSwitch(pumpSwitch2, false);
-  }
-
-  if (relayThread.shouldRun()) {
-    relayThread.run();
+  else if (s_timeClient.getHours() == m_waterBatteryOff) {
+    SetSwitch(k_fanSwitch, false);
+    SetSwitch(k_pumpSwitch1, false);
+    SetSwitch(k_pumpSwitch2, false);
   }
 
-  if (readThread.shouldRun()) {
-    readThread.run();
-  }
-
-  if (testThread.shouldRun()) {
-    testThread.run();
+  if (s_relayThread.shouldRun()) {
+    s_relayThread.run();
   }
 }
 
@@ -282,35 +210,13 @@ bool GreenhouseArduino::Refresh()
   bool ok = Greenhouse::Refresh();
   m_refreshBusy = false;
 
-  measureCurrent();
+  MeasureCurrent();
 
-  if (debug) {
-    Serial.print("PV voltage sensor: ");
-    Serial.print(pvVoltageSensor);
-    Serial.println("V");
-
-    Serial.print("PV voltage output: ");
-    Serial.print(pvVoltageOutput);
-    Serial.println("V");
-
-    Serial.print("PV voltage average: ");
-    Serial.print(pvVoltageAverage);
-    Serial.println("V");
-
-    Serial.print("PV current sensor: ");
-    Serial.print(pvCurrentSensor);
-    Serial.println("V");
-
-    Serial.print("PV current output: ");
-    Serial.print(pvCurrentOutput);
-    Serial.println("A");
-  }
-
-  Blynk.virtualWrite(V28, pvPowerSource);
-  Blynk.virtualWrite(V29, pvVoltageSensor);
-  Blynk.virtualWrite(V30, pvVoltageOutput);
-  Blynk.virtualWrite(V42, pvCurrentSensor);
-  Blynk.virtualWrite(V43, pvCurrentOutput);
+  Blynk.virtualWrite(V28, m_pvPowerSource);
+  Blynk.virtualWrite(V29, m_pvVoltageSensor);
+  Blynk.virtualWrite(V30, m_pvVoltageOutput);
+  Blynk.virtualWrite(V42, m_pvCurrentSensor);
+  Blynk.virtualWrite(V43, m_pvCurrentOutput);
 
   return ok;
 }
@@ -360,50 +266,50 @@ bool GreenhouseArduino::ReadSensors()
 
   int failures = 0;
 
-  m_insideTemperature = sht31_a.readTemperature();
+  m_insideTemperature = s_temperatureSensor1.readTemperature();
   if (isnan(m_insideTemperature)) {
     m_insideTemperature = k_unknown;
     failures++;
   }
 
-  m_insideHumidity = sht31_a.readHumidity();
+  m_insideHumidity = s_temperatureSensor1.readHumidity();
   if (isnan(m_insideHumidity)) {
     m_insideHumidity = k_unknown;
     failures++;
   }
 
-  m_outsideTemperature = sht31_b.readTemperature();
+  m_outsideTemperature = s_temperatureSensor2.readTemperature();
   if (isnan(m_outsideTemperature)) {
     m_outsideTemperature = k_unknown;
     failures++;
   }
 
-  m_outsideHumidity = sht31_b.readHumidity();
+  m_outsideHumidity = s_temperatureSensor2.readHumidity();
   if (isnan(m_outsideHumidity)) {
     m_outsideHumidity = k_unknown;
     failures++;
   }
 
-  dt.requestTemperatures();
-  m_soilTemperature = dt.getTempCByIndex(k_soilProbeIndex);
+  s_dallas.requestTemperatures();
+  m_soilTemperature = s_dallas.getTempCByIndex(k_soilProbeIndex);
   if (isnan(m_soilTemperature)) {
     m_soilTemperature = k_unknown;
     failures++;
   }
 
-  m_waterTemperature = dt.getTempCByIndex(k_waterProbeIndex);
+  m_waterTemperature = s_dallas.getTempCByIndex(k_waterProbeIndex);
   if (isnan(m_waterTemperature)) {
     m_waterTemperature = k_unknown;
     failures++;
   }
 
-  float moistureAnalog = readAdc(adc1, k_moisturePin);
+  float moistureAnalog = ReadAdc(s_adc1, k_moisturePin);
   m_soilMoisture = CalculateMoisture(moistureAnalog);
 
   return failures == 0;
 }
 
-void GreenhouseArduino::SystemDigitalWrite(int pin, int val) { io1.digitalWrite(pin, val); }
+void GreenhouseArduino::SystemDigitalWrite(int pin, int val) { s_io1.digitalWrite(pin, val); }
 
 void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
 
@@ -465,206 +371,96 @@ void GreenhouseArduino::Reset()
   }
 }
 
-void startBeep(int times)
+void GreenhouseArduino::StartBeep(int times)
 {
 
   for (int i = 0; i < times; i++) {
-    msr.set_shift(startBeepPin);
+    s_shiftRegisters.set_shift(k_startBeepPin);
     delay(100);
 
-    msr.clear_shift(startBeepPin);
+    s_shiftRegisters.clear_shift(k_startBeepPin);
     delay(200);
   }
 }
 
-void readCallback()
+void GreenhouseArduino::SetSwitch(int index, bool on)
 {
 
-  if (Serial.available() > 0) {
-
-    String s = Serial.readString();
-
-    switch (s.charAt(0)) {
-    case 'b':
-      startBeep(1);
-      return;
-    case 't':
-      printTemps();
-      return;
-
-    // e.g. af5
-    case 'a': {
-      int sp = (int)s.charAt(2) - 48;
-      int t = s.charAt(3);
-
-      switch (s.charAt(1)) {
-      case 'f':
-        actuator(true, sp, t);
-        return;
-      case 'r':
-        actuator(false, sp, t);
-        return;
-      }
-    }
-
-    // e.g. s1
-    case 's': {
-      switch (s.charAt(1)) {
-      case '0':
-        toggleSwitch(0);
-        return;
-      case '1':
-        toggleSwitch(1);
-        return;
-      case '2':
-        toggleSwitch(2);
-        return;
-      case '3':
-        toggleSwitch(3);
-        return;
-      }
-    }
-
-    case 'r': {
-      forceRelay = !forceRelay;
-    }
-    }
-
-    Serial.print("Unknown: ");
-    Serial.println(s);
-  }
-}
-
-void actuator(bool forward, int s, int t)
-{
-
-  s *= 28;   // 9 = 252 (out of 255)
-  t *= 1000; // 1 = 1000ms
-
-  Serial.print("Actuator D=");
-  Serial.print(forward ? "f" : "r");
-  Serial.print(" S=");
-  Serial.print(s);
-  Serial.print(" T=");
-  Serial.println(t);
-
-  analogWrite(k_actuatorPinA, s);
-
-  if (forward) {
-    io1.digitalWrite(k_actuatorPin1, HIGH);
-    io1.digitalWrite(k_actuatorPin2, LOW);
-  }
-  else {
-    io1.digitalWrite(k_actuatorPin1, LOW);
-    io1.digitalWrite(k_actuatorPin2, HIGH);
-  }
-
-  delay(t);
-
-  // stop
-  io1.digitalWrite(k_actuatorPin1, LOW);
-  io1.digitalWrite(k_actuatorPin2, LOW);
-
-  Serial.println("Actuator done");
-}
-
-void printTemps()
-{
-
-  dt.requestTemperatures();
-
-  Serial.print("T0: ");
-  Serial.print(dt.getTempCByIndex(0));
-  Serial.println("°C");
-
-  Serial.print("T1: ");
-  Serial.print(dt.getTempCByIndex(1));
-  Serial.println("°C");
-}
-
-void setSwitch(int index, bool on)
-{
-
-  int pin = switchPins[index];
+  int pin = k_switchPins[index];
 
   if (on) {
-    Serial.print("SR pin set: ");
-    Serial.println(pin);
+    Log().Trace("SR pin set: %d", pin);
 
-    msr.set_shift(pin);
-    switchState[index] = true;
+    s_shiftRegisters.set_shift(pin);
+    m_switchState[index] = true;
   }
   else {
-    Serial.print("SR pin clear: ");
-    Serial.println(pin);
+    Log().Trace("SR pin clear: %d", pin);
 
-    msr.clear_shift(pin);
-    switchState[index] = false;
+    s_shiftRegisters.clear_shift(pin);
+    m_switchState[index] = false;
   }
 
   String switchStates;
-  for (int i = 0; i < switchButtons; i++) {
+  for (int i = 0; i < k_switchButtons; i++) {
     switchStates += "S";
     switchStates += i;
     switchStates += "=";
-    switchStates += switchState[i] ? "On" : "Off";
-    if (i != (switchButtons - 1)) {
+    switchStates += m_switchState[i] ? "On" : "Off";
+    if (i != (k_switchButtons - 1)) {
       switchStates += ", ";
     }
   }
   Blynk.virtualWrite(V33, switchStates);
 }
 
-void toggleSwitch(int i)
+void GreenhouseArduino::ToggleActiveSwitch()
 {
-
-  if (!switchState[i]) {
-    Serial.print("Toggle switch on: ");
-    Serial.println(i);
-    setSwitch(i, true);
+  if (!m_switchState[m_activeSwitch]) {
+    Log().Trace("Toggle switch on: %d", m_activeSwitch);
+    SetSwitch(m_activeSwitch, true);
   }
   else {
-    Serial.print("Toggle switch off: ");
-    Serial.println(i);
-    setSwitch(i, false);
+    Log().Trace("Toggle switch off: %d", m_activeSwitch);
+    SetSwitch(m_activeSwitch, false);
   }
 }
 
-void relayCallback()
+void GreenhouseArduino::RelayCallback()
 {
-  measureVoltage();
+  MeasureVoltage();
 
-  if (forceRelay) {
-    if (!pvPowerSource) {
-      switchPower(true);
+  if (m_forceRelay) {
+    if (!m_pvPowerSource) {
+      SwitchPower(true);
     }
     return;
   }
 
-  if (pvPowerSource && (pvVoltageOutput <= pvVoltageMin)) {
-    Serial.println("PV voltage drop detected");
-    switchPower(false);
-    pvVoltageAverage = k_unknown;
+  if (m_pvPowerSource && (m_pvVoltageOutput <= k_pvVoltageMin)) {
+    Log().Trace("PV voltage drop detected");
+    SwitchPower(false);
+    m_pvVoltageAverage = k_unknown;
   }
-  else if (pvVoltageAverage != k_unknown) {
+  else if (m_pvVoltageAverage != k_unknown) {
 
     if (
-      !pvPowerSource && (pvVoltageSwitchOn != k_unknown) &&
-      (pvVoltageAverage >= pvVoltageSwitchOn)) {
-      switchPower(true);
+      !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
+      (m_pvVoltageAverage >= m_pvVoltageSwitchOn)) {
+      SwitchPower(true);
     }
     else if (
-      pvPowerSource && (pvVoltageSwitchOff != k_unknown) &&
-      (pvVoltageAverage <= pvVoltageSwitchOff)) {
-      switchPower(false);
+      m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
+      (m_pvVoltageAverage <= m_pvVoltageSwitchOff)) {
+      SwitchPower(false);
     }
   }
 }
 
-float readAdc(ADC &adc, ADS1115_MUX channel)
+float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
-    Serial.printf("%s, not ready\n", adc.name.c_str());
+    Log().Trace("%s, not ready", adc.name.c_str());
     return k_unknown;
   }
 
@@ -675,7 +471,7 @@ float readAdc(ADC &adc, ADS1115_MUX channel)
   while (adc.ads.isBusy()) {
     delay(10);
     if (times++ > 10) {
-      Serial.printf("%s, busy\n", adc.name.c_str());
+      Log().Trace("%s, busy", adc.name.c_str());
       return k_unknown;
     }
   }
@@ -683,127 +479,76 @@ float readAdc(ADC &adc, ADS1115_MUX channel)
   return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 }
 
-void measureVoltage()
+void GreenhouseArduino::MeasureVoltage()
 {
-  if (!adc2.ready || pvVoltageSensorMax == k_unknown || pvVoltageOutputMax == k_unknown) {
+  if (!s_adc2.ready || m_pvVoltageSensorMax == k_unknown || m_pvVoltageOutputMax == k_unknown) {
     return;
   }
 
-  pvVoltageSensor = readAdc(adc2, k_voltagePin);
-  pvVoltageOutput = mapFloat(
-    pvVoltageSensor,
-    pvVoltageSensorMin,
-    pvVoltageSensorMax,
-    pvVoltageOutputMin,
-    pvVoltageOutputMax);
+  m_pvVoltageSensor = ReadAdc(s_adc2, k_voltagePin);
+  m_pvVoltageOutput = mapFloat(
+    m_pvVoltageSensor,
+    m_pvVoltageSensorMin,
+    m_pvVoltageSensorMax,
+    m_pvVoltageOutputMin,
+    m_pvVoltageOutputMax);
 
-  pvVoltageSum += pvVoltageOutput;
-  pvVoltageCount++;
+  m_pvVoltageSum += m_pvVoltageOutput;
+  m_pvVoltageCount++;
 
-  if (pvVoltageCount >= voltAverageCountMax) {
+  if (m_pvVoltageCount >= k_voltAverageCountMax) {
 
-    pvVoltageAverage = (pvVoltageSum / pvVoltageCount);
+    m_pvVoltageAverage = (m_pvVoltageSum / m_pvVoltageCount);
 
-    pvVoltageCount = 0;
-    pvVoltageSum = 0;
+    m_pvVoltageCount = 0;
+    m_pvVoltageSum = 0;
   }
 }
 
-void measureCurrent()
+void GreenhouseArduino::MeasureCurrent()
 {
-  if (!adc2.ready || pvCurrentSensorMax == k_unknown || pvCurrentOutputMax == k_unknown) {
+  if (!s_adc2.ready || m_pvCurrentSensorMax == k_unknown || m_pvCurrentOutputMax == k_unknown) {
     return;
   }
 
-  pvCurrentSensor = readAdc(adc2, k_currentPin);
-  pvCurrentOutput = mapFloat(
-    pvCurrentSensor,
-    pvCurrentSensorMin,
-    pvCurrentSensorMax,
-    pvCurrentOutputMin,
-    pvCurrentOutputMax);
+  m_pvCurrentSensor = ReadAdc(s_adc2, k_currentPin);
+  m_pvCurrentOutput = mapFloat(
+    m_pvCurrentSensor,
+    m_pvCurrentSensorMin,
+    m_pvCurrentSensorMax,
+    m_pvCurrentOutputMin,
+    m_pvCurrentOutputMax);
 }
 
-void switchPower(bool pv)
+void GreenhouseArduino::SwitchPower(bool pv)
 {
-  Serial.println("----");
+  Log().Trace("----");
 
   if (pv) {
-    msr.set_shift(relayPin);
+    s_shiftRegisters.set_shift(k_relayPin);
   }
   else {
-    msr.clear_shift(relayPin);
+    s_shiftRegisters.clear_shift(k_relayPin);
   }
 
-  Serial.println(pv ? "PV on" : "PV off");
-  pvPowerSource = pv;
+  Log().Trace(pv ? "PV on" : "PV off");
+  m_pvPowerSource = pv;
 
-  Serial.print("Source: ");
-  Serial.println(pv ? "PV" : "PSU");
+  Log().Trace("Source: %s", pv ? "PV" : "PSU");
 
-  Blynk.virtualWrite(V28, pvPowerSource);
+  Blynk.virtualWrite(V28, m_pvPowerSource);
 
-  Serial.println("----");
+  Log().Trace("----");
 }
 
-void beginSensor(Adafruit_SHT31 &sht31, uint8_t addr, String shtName)
+void GreenhouseArduino::BeginSensor(Adafruit_SHT31 &sht31, uint8_t addr, String shtName)
 {
-
   if (!sht31.begin(addr)) {
-    Serial.println("Couldn't find " + shtName);
-  }
-  /*
-  Serial.print(shtName + " heater is ");
-  if (sht31.isHeaterEnabled())
-    Serial.println("on");
-  else
-    Serial.println("off");*/
-}
-
-void printValues(Adafruit_SHT31 &sht31, String shtName)
-{
-
-  float t = sht31.readTemperature();
-  float h = sht31.readHumidity();
-
-  Serial.print(shtName);
-
-  if (!isnan(t)) {
-    Serial.print(": Temp ºC = ");
-    Serial.print(t);
-  }
-  else {
-    Serial.println("\nFailed to read temperature of " + shtName);
-  }
-
-  if (!isnan(h)) {
-    Serial.print(" / Humidity % = ");
-    Serial.println(h);
-  }
-  else {
-    Serial.println("\nFailed to read humidity of " + shtName);
-  }
-
-  // Toggle heater enabled state every 30 seconds
-  // An ~3.0 degC temperature increase can be noted when heater is enabled
-  if (++loopCnt == 30) {
-    enableHeater = !enableHeater;
-    sht31.heater(enableHeater);
-    if (sht31.isHeaterEnabled())
-      Serial.println(shtName + " heater turned on");
-    else
-      Serial.println(shtName + " heater turned off");
-
-    loopCnt = 0;
+    Log().Trace("Couldn't find %s", shtName.c_str());
   }
 }
 
-void testCallback()
-{
-  //
-}
-
-int GreenhouseArduino::CurrentHour() const { return timeClient.getHours(); }
+int GreenhouseArduino::CurrentHour() const { return s_timeClient.getHours(); }
 
 void GreenhouseArduino::ReportInfo(const char *format, ...)
 {
@@ -811,10 +556,10 @@ void GreenhouseArduino::ReportInfo(const char *format, ...)
 
   va_list args;
   va_start(args, format);
-  vsprintf(reportBuffer, format, args);
+  vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Blynk.logEvent("log_info", reportBuffer);
+  Blynk.logEvent("log_info", s_reportBuffer);
 }
 
 void GreenhouseArduino::ReportWarning(const char *format, ...)
@@ -823,10 +568,10 @@ void GreenhouseArduino::ReportWarning(const char *format, ...)
 
   va_list args;
   va_start(args, format);
-  vsprintf(reportBuffer, format, args);
+  vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Blynk.logEvent("log_warning", reportBuffer);
+  Blynk.logEvent("log_warning", s_reportBuffer);
 }
 
 void GreenhouseArduino::ReportCritical(const char *format, ...)
@@ -835,10 +580,10 @@ void GreenhouseArduino::ReportCritical(const char *format, ...)
 
   va_list args;
   va_start(args, format);
-  vsprintf(reportBuffer, format, args);
+  vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Blynk.logEvent("log_critical", reportBuffer);
+  Blynk.logEvent("log_critical", s_reportBuffer);
 }
 
 void GreenhouseArduino::ReportSensorValues()
@@ -864,7 +609,7 @@ void GreenhouseArduino::ReportSystemInfo()
   FlashLed(k_ledSend);
 
   // current time
-  Blynk.virtualWrite(V10, timeClient.getFormattedTime() + " UTC");
+  Blynk.virtualWrite(V10, s_timeClient.getFormattedTime() + " UTC");
 
   // uptime
   int seconds, minutes, hours, days;
@@ -966,10 +711,10 @@ void GreenhouseArduino::HandleRefreshRate(int refreshRate)
 
   if (m_timerId != k_unknown) {
     Log().Trace("Deleting old timer: %d", m_timerId);
-    timer.deleteTimer(m_timerId);
+    s_timer.deleteTimer(m_timerId);
   }
 
-  m_timerId = timer.setInterval(refreshRate * 1000L, refreshTimer);
+  m_timerId = s_timer.setInterval(refreshRate * 1000L, refreshTimer);
   Log().Trace("New refresh timer: %d", m_timerId);
 }
 
@@ -1043,7 +788,7 @@ void GreenhouseArduino::HandleTestMode(int testMode)
 void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
 {
   FlashLed(k_ledRecieve);
-  s_instance->Log().Trace("Handle open day minimum: %d", openDayMinimum);
+  Log().Trace("Handle open day minimum: %d", openDayMinimum);
 
   OpenDayMinimum(openDayMinimum);
 }
@@ -1051,7 +796,7 @@ void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
 void GreenhouseArduino::HandleInsideHumidityWarning(float insideHumidityWarning)
 {
   FlashLed(k_ledRecieve);
-  s_instance->Log().Trace("Handle inside humidity warning: %d", insideHumidityWarning);
+  Log().Trace("Handle inside humidity warning: %d", insideHumidityWarning);
 
   InsideHumidityWarning(insideHumidityWarning);
 }
@@ -1059,9 +804,27 @@ void GreenhouseArduino::HandleInsideHumidityWarning(float insideHumidityWarning)
 void GreenhouseArduino::HandleSoilMostureWarning(float soilMostureWarning)
 {
   FlashLed(k_ledRecieve);
-  s_instance->Log().Trace("Handle soil moisture warning: %d", soilMostureWarning);
+  Log().Trace("Handle soil moisture warning: %d", soilMostureWarning);
 
   SoilMostureWarning(soilMostureWarning);
+}
+
+void GreenhouseArduino::HandleActiveSwitch(int activeSwitch)
+{
+  FlashLed(k_ledRecieve);
+  Log().Trace("Handle toggle switch");
+
+  m_activeSwitch = activeSwitch;
+}
+
+void GreenhouseArduino::HandleToggleSwitch(int toggleSwitch)
+{
+  FlashLed(k_ledRecieve);
+  Log().Trace("Handle toggle switch");
+
+  if (toggleSwitch == 1) {
+    ToggleActiveSwitch();
+  }
 }
 
 BLYNK_CONNECTED()
@@ -1186,87 +949,85 @@ BLYNK_WRITE(V23)
 BLYNK_WRITE(V24)
 {
   s_instance->TraceFlash(F("Blynk write V24"));
-  activeSwitch = param.asInt();
+  s_instance->HandleActiveSwitch(param.asInt());
 }
 
 BLYNK_WRITE(V25)
 {
   s_instance->TraceFlash(F("Blynk write V25"));
-  if (param.asInt() == 1) {
-    toggleSwitch(activeSwitch);
-  }
+  s_instance->HandleToggleSwitch(param.asInt());
 }
 
 BLYNK_WRITE(V31)
 {
   s_instance->TraceFlash(F("Blynk write V31"));
-  waterBatteryOn = param.asInt();
+  s_instance->HandleWaterBatteryOn(param.asInt());
 }
 
 BLYNK_WRITE(V32)
 {
   s_instance->TraceFlash(F("Blynk write V32"));
-  waterBatteryOff = param.asInt();
+  s_instance->HandleWaterBatteryOff(param.asInt());
 }
 
 BLYNK_WRITE(V34)
 {
   s_instance->TraceFlash(F("Blynk write V34"));
-  pvVoltageSensorMin = param.asFloat();
+  s_instance->HandlePvVoltageSensorMin(param.asFloat());
 }
 
 BLYNK_WRITE(V35)
 {
   s_instance->TraceFlash(F("Blynk write V35"));
-  pvVoltageSensorMax = param.asFloat();
+  s_instance->HandlePvVoltageSensorMax(param.asFloat());
 }
 
 BLYNK_WRITE(V36)
 {
   s_instance->TraceFlash(F("Blynk write V36"));
-  pvVoltageOutputMin = param.asFloat();
+  s_instance->HandlePvVoltageOutputMin(param.asFloat());
 }
 
 BLYNK_WRITE(V37)
 {
   s_instance->TraceFlash(F("Blynk write V37"));
-  pvVoltageOutputMax = param.asFloat();
+  s_instance->HandlePvVoltageOutputMax(param.asFloat());
 }
 
 BLYNK_WRITE(V38)
 {
   s_instance->TraceFlash(F("Blynk write V38"));
-  pvCurrentSensorMin = param.asFloat();
+  s_instance->HandlePvCurrentSensorMin(param.asFloat());
 }
 
 BLYNK_WRITE(V39)
 {
   s_instance->TraceFlash(F("Blynk write V39"));
-  pvCurrentSensorMax = param.asFloat();
+  s_instance->HandlePvCurrentSensorMax(param.asFloat());
 }
 
 BLYNK_WRITE(V40)
 {
   s_instance->TraceFlash(F("Blynk write V40"));
-  pvCurrentOutputMin = param.asFloat();
+  s_instance->HandlePvCurrentOutputMin(param.asFloat());
 }
 
 BLYNK_WRITE(V41)
 {
   s_instance->TraceFlash(F("Blynk write V41"));
-  pvCurrentOutputMax = param.asFloat();
+  s_instance->HandlePvCurrentOutputMax(param.asFloat());
 }
 
 BLYNK_WRITE(V44)
 {
   s_instance->TraceFlash(F("Blynk write V44"));
-  pvVoltageSwitchOn = param.asFloat();
+  s_instance->HandlePvVoltageSwitchOn(param.asFloat());
 }
 
 BLYNK_WRITE(V45)
 {
   s_instance->TraceFlash(F("Blynk write V45"));
-  pvVoltageSwitchOff = param.asFloat();
+  s_instance->HandlePvVoltageSwitchOff(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
