@@ -205,3 +205,13 @@ float Greenhouse::CalculateMoisture(float analogValue) const
   }
   return percent;
 }
+
+void Greenhouse::UpdateWaterBattery()
+{
+  if (CurrentHour() == m_waterBatteryOn) {
+    SwitchWaterBattery(true);
+  }
+  else if (CurrentHour() == m_waterBatteryOff) {
+    SwitchWaterBattery(false);
+  }
+}

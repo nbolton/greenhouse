@@ -164,9 +164,9 @@ void GreenhouseArduino::Loop()
   }
 }
 
-void GreenhouseArduino::UpdateWaterBattery()
+void GreenhouseArduino::SwitchWaterBattery(bool on)
 {
-  if (s_timeClient.getHours() == m_waterBatteryOn) {
+  if (on) {
     SetSwitch(k_fanSwitch, true);
 
     // HACK: wait for fan to spool up. otherwise, this drains the caps and
@@ -178,7 +178,7 @@ void GreenhouseArduino::UpdateWaterBattery()
     SetSwitch(k_pumpSwitch1, true);
     SetSwitch(k_pumpSwitch2, true);
   }
-  else if (s_timeClient.getHours() == m_waterBatteryOff) {
+  else {
     SetSwitch(k_fanSwitch, false);
     SetSwitch(k_pumpSwitch1, false);
     SetSwitch(k_pumpSwitch2, false);

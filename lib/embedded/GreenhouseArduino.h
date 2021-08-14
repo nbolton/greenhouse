@@ -45,8 +45,8 @@ public:
   void HandleSoilMostureWarning(float);
   void HandleActiveSwitch(int);
   void HandleToggleSwitch(int);
-  void HandleWaterBatteryOn(int param) { m_waterBatteryOn = param; }
-  void HandleWaterBatteryOff(int param) { m_waterBatteryOff = param; }
+  void HandleWaterBatteryOn(int param) { WaterBatteryOn(param); }
+  void HandleWaterBatteryOff(int param) { WaterBatteryOff(param); }
   void HandlePvVoltageSensorMin(int param) { m_pvVoltageSensorMin = param; }
   void HandlePvVoltageSensorMax(int param) { m_pvVoltageSensorMax = param; }
   void HandlePvVoltageOutputMin(int param) { m_pvVoltageOutputMin = param; }
@@ -70,6 +70,7 @@ protected:
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
   void Reset();
+  void SwitchWaterBattery(bool on);
 
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
@@ -96,7 +97,6 @@ private:
   void MeasureCurrent();
   float ReadAdc(ADC &adc, ADS1115_MUX channel);
   void InitSensors();
-  void UpdateWaterBattery();
 
 private:
   ArduinoLog m_log;
@@ -118,8 +118,6 @@ private:
   bool m_soilMoistureWarningSent;
   int m_activeSwitch;
   int m_switchState[k_switchCount];
-  int m_waterBatteryOn = k_unknown;
-  int m_waterBatteryOff = k_unknown;
   int m_forceRelay = false;
   bool m_pvPowerSource;
   float m_pvVoltageSwitchOn = k_unknown;

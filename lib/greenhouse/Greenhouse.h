@@ -38,6 +38,8 @@ protected:
   virtual float CalculateMoisture(float analogValue) const;
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
+  virtual void SwitchWaterBattery(bool on) {}
+  virtual void UpdateWaterBattery();
 
   // getters & setters
   virtual int CurrentHour() const { return k_unknown; }
@@ -64,6 +66,10 @@ protected:
   virtual float InsideHumidityWarning() const { return m_insideHumidityWarning; }
   virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
   virtual float SoilMostureWarning() const { return m_soilMostureWarning; }
+  virtual void WaterBatteryOn(int value) { m_waterBatteryOn = value; }
+  virtual int WaterBatteryOn() { return m_waterBatteryOn; }
+  virtual void WaterBatteryOff(int value) { m_waterBatteryOff = value; }
+  virtual int WaterBatteryOff() { return m_waterBatteryOff; }
 
 private:
   ::Log m_log;
@@ -76,6 +82,8 @@ private:
   int m_openDayMinimum;
   float m_insideHumidityWarning;
   float m_soilMostureWarning;
+  int m_waterBatteryOn = k_unknown;
+  int m_waterBatteryOff = k_unknown;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
