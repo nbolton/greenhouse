@@ -17,7 +17,9 @@ Greenhouse::Greenhouse() :
   m_windowProgress(k_unknown),
   m_openDayMinimum(k_unknown),
   m_insideHumidityWarning(k_unknown),
-  m_soilMostureWarning(k_unknown)
+  m_soilMostureWarning(k_unknown),
+  m_waterBatteryOnHour(k_unknown),
+  m_waterBatteryOffHour(k_unknown)
 {
 }
 
@@ -208,10 +210,10 @@ float Greenhouse::CalculateMoisture(float analogValue) const
 
 void Greenhouse::UpdateWaterBattery()
 {
-  if (CurrentHour() == m_waterBatteryOn) {
+  if ((CurrentHour() >= m_waterBatteryOnHour) && (CurrentHour() < m_waterBatteryOffHour)) {
     SwitchWaterBattery(true);
   }
-  else if (CurrentHour() == m_waterBatteryOff) {
+  else if ((CurrentHour() < m_waterBatteryOnHour) || (CurrentHour() >= m_waterBatteryOffHour)) {
     SwitchWaterBattery(false);
   }
 }

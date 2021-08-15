@@ -166,6 +166,12 @@ void GreenhouseArduino::Loop()
 
 void GreenhouseArduino::SwitchWaterBattery(bool on)
 {
+  // if no state change, do nothing.
+  if (m_waterBatteryOn == on) {
+    return;
+  }
+
+  m_waterBatteryOn = on;
   if (on) {
     SetSwitch(k_fanSwitch, true);
 

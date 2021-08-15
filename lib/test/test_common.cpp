@@ -11,6 +11,7 @@ public:
     m_mock_CurrentHour(k_unknown),
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
+    m_calls_SwitchWaterBattery(0),
     m_lastArg_OpenWindow_delta(k_unknown),
     m_lastArg_CloseWindow_delta(k_unknown)
   {
@@ -46,6 +47,10 @@ public:
   int WindowProgress() { return Greenhouse::WindowProgress(); }
   void OpenDayMinimum(int openDayMinimum) { Greenhouse::OpenDayMinimum(openDayMinimum); }
   float CalculateMoisture(float analogValue) const { return Greenhouse::CalculateMoisture(analogValue); }
+  void UpdateWaterBattery() { Greenhouse::UpdateWaterBattery(); }
+  void SwitchWaterBattery(bool on) { m_calls_SwitchWaterBattery++; m_lastArg_SwitchWaterBattery_on = on; }
+  void WaterBatteryOnHour(int value) { Greenhouse::WaterBatteryOnHour(value); }
+  void WaterBatteryOffHour(int value) { Greenhouse::WaterBatteryOffHour(value); }
 
   bool ApplyWindowProgress(float expectedProgress)
   {
@@ -58,8 +63,11 @@ public:
 
   int m_calls_OpenWindow;
   int m_calls_CloseWindow;
+  int m_calls_SwitchWaterBattery;
+
   float m_lastArg_OpenWindow_delta;
   float m_lastArg_CloseWindow_delta;
+  bool m_lastArg_SwitchWaterBattery_on;
 };
 
 // void setUp(void) {
@@ -332,6 +340,71 @@ void Test_CalculateMoisture_InBounds_ReturnsPercent()
   TEST_ASSERT_FLOAT_WITHIN(.1, 46.34, percent);
 }
 
+void Test_UpdateWaterBattery_CurrentHourBeforeOnHour_SwitchOffCalled()
+{
+  GreenhouseTest greenhouse;
+  
+  greenhouse.m_mock_CurrentHour = 1;
+  greenhouse.WaterBatteryOnHour(2);
+  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
+void Test_UpdateWaterBattery_CurrentHourIsOnHour_SwitchOnCalled()
+{
+  GreenhouseTest greenhouse;
+  
+  greenhouse.m_mock_CurrentHour = 2;
+  greenhouse.WaterBatteryOnHour(2);
+  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
+void Test_UpdateWaterBattery_CurrentHourBetweenOnAndOffHours_SwitchOnCalled()
+{
+  GreenhouseTest greenhouse;
+  
+  greenhouse.m_mock_CurrentHour = 3;
+  greenhouse.WaterBatteryOnHour(2);
+  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
+void Test_UpdateWaterBattery_CurrentHourAtOffHour_SwitchOffCalled()
+{
+  GreenhouseTest greenhouse;
+  
+  greenhouse.m_mock_CurrentHour = 4;
+  greenhouse.WaterBatteryOnHour(2);
+  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
+void Test_UpdateWaterBattery_CurrentHourAfterOffHour_SwitchOffCalled()
+{
+  GreenhouseTest greenhouse;
+  
+  greenhouse.m_mock_CurrentHour = 5;
+  greenhouse.WaterBatteryOnHour(2);
+  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -352,4 +425,9 @@ void testCommon()
   RUN_TEST(Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero);
   RUN_TEST(Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred);
   RUN_TEST(Test_CalculateMoisture_InBounds_ReturnsPercent);
+  RUN_TEST(Test_UpdateWaterBattery_CurrentHourBeforeOnHour_SwitchOffCalled);
+  RUN_TEST(Test_UpdateWaterBattery_CurrentHourIsOnHour_SwitchOnCalled);
+  RUN_TEST(Test_UpdateWaterBattery_CurrentHourBetweenOnAndOffHours_SwitchOnCalled);
+  RUN_TEST(Test_UpdateWaterBattery_CurrentHourAtOffHour_SwitchOffCalled);
+  RUN_TEST(Test_UpdateWaterBattery_CurrentHourAfterOffHour_SwitchOffCalled);
 }

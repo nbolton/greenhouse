@@ -45,8 +45,8 @@ public:
   void HandleSoilMostureWarning(float);
   void HandleActiveSwitch(int);
   void HandleToggleSwitch(int);
-  void HandleWaterBatteryOn(int param) { WaterBatteryOn(param); }
-  void HandleWaterBatteryOff(int param) { WaterBatteryOff(param); }
+  void HandleWaterBatteryOn(int param) { WaterBatteryOnHour(param); }
+  void HandleWaterBatteryOff(int param) { WaterBatteryOffHour(param); }
   void HandlePvVoltageSensorMin(float param) { m_pvVoltageSensorMin = param; }
   void HandlePvVoltageSensorMax(float param) { m_pvVoltageSensorMax = param; }
   void HandlePvVoltageOutputMin(float param) { m_pvVoltageOutputMin = param; }
@@ -138,4 +138,5 @@ private:
   float m_pvCurrentOutputMin = 0;
   float m_pvCurrentOutputMax = k_unknown;
   bool m_pvForceOn = false;
+  bool m_waterBatteryOn = false;
 };
