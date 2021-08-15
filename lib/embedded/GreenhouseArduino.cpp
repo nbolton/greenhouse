@@ -53,8 +53,6 @@ const int k_pvVoltageMin = 5; // V, in case of sudden voltage drop
 const int k_fanSwitch = 0;
 const int k_pumpSwitch1 = 1;
 const int k_pumpSwitch2 = 2;
-const int k_actuatorSpeed = 255;
-const int k_actuatorRuntimeSec = 12;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
@@ -330,55 +328,27 @@ bool GreenhouseArduino::ReadSensors()
   return failures == 0;
 }
 
-void GreenhouseArduino::SystemDigitalWrite(int pin, int val) { s_io1.digitalWrite(pin, val); }
+void GreenhouseArduino::SetWindowActuatorSpeed(int speed) { analogWrite(k_actuatorPinA, speed); }
+
+void GreenhouseArduino::RunWindowActuator(bool forward)
+{
+  if (forward) {
+    s_io1.digitalWrite(k_actuatorPin1, HIGH);
+    s_io1.digitalWrite(k_actuatorPin2, LOW);
+  }
+  else {
+    s_io1.digitalWrite(k_actuatorPin1, LOW);
+    s_io1.digitalWrite(k_actuatorPin2, HIGH);
+  }
+}
+
+void GreenhouseArduino::StopActuator()
+{
+  s_io1.digitalWrite(k_actuatorPin1, LOW);
+  s_io1.digitalWrite(k_actuatorPin2, LOW);
+}
 
 void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
-
-void GreenhouseArduino::CloseWindow(float delta)
-{
-  TraceFlash(F("Closing window..."));
-  Log().Trace("Delta: %.2f", delta);
-
-  Greenhouse::CloseWindow(delta);
-
-  analogWrite(k_actuatorPinA, k_actuatorSpeed);
-
-  SystemDigitalWrite(k_actuatorPin1, LOW);
-  SystemDigitalWrite(k_actuatorPin2, HIGH);
-
-  int runtime = (k_actuatorRuntimeSec * 1000) * delta;
-  Log().Trace("Close runtime: %dms", runtime);
-  SystemDelay(runtime);
-
-  SystemDigitalWrite(k_actuatorPin1, LOW);
-  SystemDigitalWrite(k_actuatorPin2, LOW);
-
-  float percent = delta * 100;
-  Log().Trace("Window closed %.1f%%", percent);
-}
-
-void GreenhouseArduino::OpenWindow(float delta)
-{
-  TraceFlash(F("Opening window..."));
-  Log().Trace("Delta: %.2f", delta);
-
-  Greenhouse::OpenWindow(delta);
-
-  analogWrite(k_actuatorPinA, k_actuatorSpeed);
-
-  SystemDigitalWrite(k_actuatorPin1, HIGH);
-  SystemDigitalWrite(k_actuatorPin2, LOW);
-
-  int runtime = (k_actuatorRuntimeSec * 1000) * delta;
-  Log().Trace("Open runtime: %dms", runtime);
-  SystemDelay(runtime);
-
-  SystemDigitalWrite(k_actuatorPin1, LOW);
-  SystemDigitalWrite(k_actuatorPin2, LOW);
-
-  float percent = delta * 100;
-  Log().Trace("Window opened %.1f%%", percent);
-}
 
 void GreenhouseArduino::Reset()
 {
@@ -875,7 +845,9 @@ BLYNK_CONNECTED()
     V41,
     V44,
     V45,
-    V47);
+    V47,
+    V48,
+    V49);
 }
 
 BLYNK_WRITE(V0)
@@ -1050,6 +1022,18 @@ BLYNK_WRITE(V47)
 {
   s_instance->TraceFlash(F("Blynk write V47"));
   s_instance->HandlePvForceOn(param.asInt());
+}
+
+BLYNK_WRITE(V48)
+{
+  s_instance->TraceFlash(F("Blynk write V48"));
+  s_instance->HandleWindowOpenSpeed(param.asInt());
+}
+
+BLYNK_WRITE(V49)
+{
+  s_instance->TraceFlash(F("Blynk write V49"));
+  s_instance->HandleWindowOpenRuntime(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.

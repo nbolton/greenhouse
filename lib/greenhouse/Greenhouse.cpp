@@ -8,6 +8,7 @@ const int k_dayStartHour = 8;       // 8am
 const int k_dayEndHour = 20;        // 8pm
 const float k_soilSensorDry = 3.95; // V, in air
 const float k_soilSensorWet = 1.9;  // V, in water
+const int k_windowActuatorSpeedMax = 255;
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -180,14 +181,43 @@ void Greenhouse::AddWindowProgressDelta(float delta)
 
 void Greenhouse::OpenWindow(float delta)
 {
+  Log().Trace("Opening window...");
+  Log().Trace("Delta: %.2f", delta);
+
   AddWindowProgressDelta(delta);
   ReportWindowProgress();
+  AdjustWindow(true, delta);
+
+  float percent = delta * 100;
+  Log().Trace("Window opened %.1f%%", percent);
 }
 
 void Greenhouse::CloseWindow(float delta)
 {
+  Log().Trace("Closing window...");
+  Log().Trace("Delta: %.2f", delta);
+
   AddWindowProgressDelta(delta * -1);
   ReportWindowProgress();
+  AdjustWindow(false, delta);
+
+  float percent = delta * 100;
+  Log().Trace("Window closed %.1f%%", percent);
+}
+
+void Greenhouse::AdjustWindow(bool open, float delta)
+{
+  int speed = m_windowActuatorSpeedPercent * ((float)k_windowActuatorSpeedMax / 100);
+  Log().Trace("Actuator speed: %dms", speed);
+  SetWindowActuatorSpeed(speed);
+
+  RunWindowActuator(open);
+
+  int runtime = (m_windowActuatorRuntimeSec * 1000) * delta;
+  Log().Trace("Actuator runtime: %dms", runtime);
+  SystemDelay(runtime);
+
+  StopActuator();
 }
 
 // float version of Arduino map()

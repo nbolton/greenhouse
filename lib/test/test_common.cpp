@@ -11,7 +11,11 @@ public:
     m_mock_CurrentHour(k_unknown),
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
+    m_calls_RunWindowActuator(0),
     m_calls_SwitchWaterBattery(0),
+    m_calls_StopActuator(0),
+    m_calls_SetWindowActuatorSpeed(0),
+    m_calls_SystemDelay(0),
     m_lastArg_OpenWindow_delta(k_unknown),
     m_lastArg_CloseWindow_delta(k_unknown)
   {
@@ -39,23 +43,53 @@ public:
     Greenhouse::CloseWindow(delta);
   }
 
+  void RunWindowActuator(bool forward)
+  {
+    Log().Trace("Mock RunWindowActuator, forward=%s", forward ? "true" : "false");
+    m_lastArg_RunWindowActuator_forward = forward;
+    m_calls_RunWindowActuator++;
+  }
+
+  void StopActuator()
+  {
+    Log().Trace("Mock StopActuator");
+    m_calls_StopActuator++;
+  }
+
+  void SetWindowActuatorSpeed(int speed)
+  {
+    Log().Trace("Mock SetWindowActuatorSpeed, forward=%d", speed);
+    m_lastArg_SetWindowActuatorSpeed_speed = speed;
+    m_calls_SetWindowActuatorSpeed++;
+  }
+
+  void SystemDelay(unsigned long ms)
+  {
+    Log().Trace("Mock SystemDelay, forward=%d", ms);
+    m_lastArg_SystemDelay_ms = ms;
+    m_calls_SystemDelay++;
+  }
+
+  void SwitchWaterBattery(bool on)
+  {
+    m_calls_SwitchWaterBattery++;
+    m_lastArg_SwitchWaterBattery_on = on;
+  }
+
   // expose protected members to public
-  void AutoMode(bool autoMode) { Greenhouse::AutoMode(autoMode); }
-  void OpenStart(float openStart) { Greenhouse::OpenStart(openStart); }
-  void OpenFinish(float openFinish) { Greenhouse::OpenFinish(openFinish); }
-  void WindowProgress(int windowProgress) { Greenhouse::WindowProgress(windowProgress); }
+  void AutoMode(bool value) { Greenhouse::AutoMode(value); }
+  void OpenStart(float value) { Greenhouse::OpenStart(value); }
+  void OpenFinish(float value) { Greenhouse::OpenFinish(value); }
+  void WindowProgress(int value) { Greenhouse::WindowProgress(value); }
   int WindowProgress() { return Greenhouse::WindowProgress(); }
-  void OpenDayMinimum(int openDayMinimum) { Greenhouse::OpenDayMinimum(openDayMinimum); }
-  float CalculateMoisture(float analogValue) const { return Greenhouse::CalculateMoisture(analogValue); }
+  void OpenDayMinimum(int value) { Greenhouse::OpenDayMinimum(value); }
+  float CalculateMoisture(float value) const { return Greenhouse::CalculateMoisture(value); }
   void UpdateWaterBattery() { Greenhouse::UpdateWaterBattery(); }
-  void SwitchWaterBattery(bool on) { m_calls_SwitchWaterBattery++; m_lastArg_SwitchWaterBattery_on = on; }
   void WaterBatteryOnHour(int value) { Greenhouse::WaterBatteryOnHour(value); }
   void WaterBatteryOffHour(int value) { Greenhouse::WaterBatteryOffHour(value); }
-
-  bool ApplyWindowProgress(float expectedProgress)
-  {
-    return Greenhouse::ApplyWindowProgress(expectedProgress);
-  }
+  void WindowActuatorSpeedPercent(int value) { Greenhouse::WindowActuatorSpeedPercent(value); }
+  void WindowActuatorRuntimeSec(float value) { Greenhouse::WindowActuatorRuntimeSec(value); }
+  bool ApplyWindowProgress(float value) { return Greenhouse::ApplyWindowProgress(value); }
 
   bool m_mock_ReadDhtSensor;
   float m_mock_SoilTemperature;
@@ -64,10 +98,17 @@ public:
   int m_calls_OpenWindow;
   int m_calls_CloseWindow;
   int m_calls_SwitchWaterBattery;
+  int m_calls_RunWindowActuator;
+  int m_calls_StopActuator;
+  int m_calls_SetWindowActuatorSpeed;
+  int m_calls_SystemDelay;
 
   float m_lastArg_OpenWindow_delta;
   float m_lastArg_CloseWindow_delta;
   bool m_lastArg_SwitchWaterBattery_on;
+  bool m_lastArg_RunWindowActuator_forward;
+  float m_lastArg_SetWindowActuatorSpeed_speed;
+  unsigned long m_lastArg_SystemDelay_ms;
 };
 
 // void setUp(void) {
@@ -405,6 +446,42 @@ void Test_UpdateWaterBattery_CurrentHourAfterOffHour_SwitchOffCalled()
   TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
 }
 
+void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowActuatorSpeedPercent(90);
+  greenhouse.WindowActuatorRuntimeSec(1.1);
+
+  greenhouse.OpenWindow(.5);
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_RunWindowActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_StopActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SetWindowActuatorSpeed);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SystemDelay);
+
+  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_RunWindowActuator_forward);
+  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, greenhouse.m_lastArg_SetWindowActuatorSpeed_speed);
+  TEST_ASSERT_EQUAL_UINT64(550, greenhouse.m_lastArg_SystemDelay_ms);
+}
+
+void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowActuatorSpeedPercent(90);
+  greenhouse.WindowActuatorRuntimeSec(1.1);
+
+  greenhouse.CloseWindow(.5);
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_RunWindowActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_StopActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SetWindowActuatorSpeed);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SystemDelay);
+
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_RunWindowActuator_forward);
+  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, greenhouse.m_lastArg_SetWindowActuatorSpeed_speed);
+  TEST_ASSERT_EQUAL_UINT64(550, greenhouse.m_lastArg_SystemDelay_ms);
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -430,4 +507,6 @@ void testCommon()
   RUN_TEST(Test_UpdateWaterBattery_CurrentHourBetweenOnAndOffHours_SwitchOnCalled);
   RUN_TEST(Test_UpdateWaterBattery_CurrentHourAtOffHour_SwitchOffCalled);
   RUN_TEST(Test_UpdateWaterBattery_CurrentHourAfterOffHour_SwitchOffCalled);
+  RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
+  RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
 }

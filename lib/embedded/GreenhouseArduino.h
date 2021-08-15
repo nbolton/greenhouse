@@ -58,6 +58,8 @@ public:
   void HandlePvVoltageSwitchOn(float param) { m_pvVoltageSwitchOn = param; }
   void HandlePvVoltageSwitchOff(float param) { m_pvVoltageSwitchOff = param; }
   void HandlePvForceOn(int param) { m_pvForceOn = param; }
+  void HandleWindowOpenSpeed(int value) { WindowActuatorSpeedPercent(value); }
+  void HandleWindowOpenRuntime(float value) { WindowActuatorRuntimeSec(value); }
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -72,11 +74,10 @@ protected:
   bool ReadSensors();
   void Reset();
   void SwitchWaterBattery(bool on);
-
-  virtual void OpenWindow(float delta);
-  virtual void CloseWindow(float delta);
-  virtual void SystemDigitalWrite(int pin, int val);
-  virtual void SystemDelay(unsigned long ms);
+  void RunWindowActuator(bool forward);
+  void StopActuator();
+  void SetWindowActuatorSpeed(int speed);
+  void SystemDelay(unsigned long ms);
 
   // getters & setters
   int CurrentHour() const;

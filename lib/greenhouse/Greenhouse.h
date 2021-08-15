@@ -40,6 +40,11 @@ protected:
   virtual void AddWindowProgressDelta(float delta);
   virtual void SwitchWaterBattery(bool on) {}
   virtual void UpdateWaterBattery();
+  virtual void AdjustWindow(bool open, float delta);
+  virtual void RunWindowActuator(bool forward) {}
+  virtual void StopActuator() {}
+  virtual void SetWindowActuatorSpeed(int speed) {}
+  virtual void SystemDelay(unsigned long ms) {}
 
   // getters & setters
   virtual int CurrentHour() const { return k_unknown; }
@@ -70,6 +75,10 @@ protected:
   virtual int WaterBatteryOnHour() { return m_waterBatteryOnHour; }
   virtual void WaterBatteryOffHour(int value) { m_waterBatteryOffHour = value; }
   virtual int WaterBatteryOffHour() { return m_waterBatteryOffHour; }
+  virtual void WindowActuatorSpeedPercent(int value) { m_windowActuatorSpeedPercent = value; }
+  virtual int WindowActuatorSpeedPercent() { return m_windowActuatorSpeedPercent; }
+  virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
+  virtual int WindowActuatorRuntimeSec() { return m_windowActuatorRuntimeSec; }
 
 private:
   ::Log m_log;
@@ -84,6 +93,8 @@ private:
   float m_soilMostureWarning;
   int m_waterBatteryOnHour;
   int m_waterBatteryOffHour;
+  int m_windowActuatorSpeedPercent;
+  float m_windowActuatorRuntimeSec;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
