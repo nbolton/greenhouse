@@ -343,7 +343,7 @@ void Test_CalculateMoisture_InBounds_ReturnsPercent()
 void Test_UpdateWaterBattery_CurrentHourBeforeOnHour_SwitchOffCalled()
 {
   GreenhouseTest greenhouse;
-  
+
   greenhouse.m_mock_CurrentHour = 1;
   greenhouse.WaterBatteryOnHour(2);
   greenhouse.WaterBatteryOffHour(4);
@@ -356,7 +356,7 @@ void Test_UpdateWaterBattery_CurrentHourBeforeOnHour_SwitchOffCalled()
 void Test_UpdateWaterBattery_CurrentHourIsOnHour_SwitchOnCalled()
 {
   GreenhouseTest greenhouse;
-  
+
   greenhouse.m_mock_CurrentHour = 2;
   greenhouse.WaterBatteryOnHour(2);
   greenhouse.WaterBatteryOffHour(4);
@@ -369,7 +369,7 @@ void Test_UpdateWaterBattery_CurrentHourIsOnHour_SwitchOnCalled()
 void Test_UpdateWaterBattery_CurrentHourBetweenOnAndOffHours_SwitchOnCalled()
 {
   GreenhouseTest greenhouse;
-  
+
   greenhouse.m_mock_CurrentHour = 3;
   greenhouse.WaterBatteryOnHour(2);
   greenhouse.WaterBatteryOffHour(4);
@@ -382,7 +382,7 @@ void Test_UpdateWaterBattery_CurrentHourBetweenOnAndOffHours_SwitchOnCalled()
 void Test_UpdateWaterBattery_CurrentHourAtOffHour_SwitchOffCalled()
 {
   GreenhouseTest greenhouse;
-  
+
   greenhouse.m_mock_CurrentHour = 4;
   greenhouse.WaterBatteryOnHour(2);
   greenhouse.WaterBatteryOffHour(4);
@@ -395,7 +395,7 @@ void Test_UpdateWaterBattery_CurrentHourAtOffHour_SwitchOffCalled()
 void Test_UpdateWaterBattery_CurrentHourAfterOffHour_SwitchOffCalled()
 {
   GreenhouseTest greenhouse;
-  
+
   greenhouse.m_mock_CurrentHour = 5;
   greenhouse.WaterBatteryOnHour(2);
   greenhouse.WaterBatteryOffHour(4);

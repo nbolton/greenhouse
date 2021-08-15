@@ -4,10 +4,10 @@
 #include <stdio.h>
 
 const float k_windowAdjustThreshold = 0.05;
-const int k_dayStartHour = 8; // 8am
-const int k_dayEndHour = 20;  // 8pm
+const int k_dayStartHour = 8;       // 8am
+const int k_dayEndHour = 20;        // 8pm
 const float k_soilSensorDry = 3.95; // V, in air
-const float k_soilSensorWet = 1.9; // V, in water
+const float k_soilSensorWet = 1.9;  // V, in water
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -76,8 +76,7 @@ bool Greenhouse::Refresh()
       openFinish);
 
     if (
-      (soilTemperature != k_unknown) && (m_openStart != k_unknown) &&
-      (m_openFinish != k_unknown)) {
+      (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown)) {
 
       float expectedProgress = 0;
 

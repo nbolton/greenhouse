@@ -4,8 +4,8 @@
 
 #include "ArduinoLog.h"
 
-#include <Arduino.h>
 #include <ADS1115_WE.h>
+#include <Arduino.h>
 
 const int k_switchCount = 4;
 
