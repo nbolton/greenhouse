@@ -8,4 +8,4 @@ const char k_auth[] = "Auth token"; // Device -> Device info
 const char k_ssid[] = "WiFi SSID";
 const char k_pass[] = "WiFi password";
 
-const bool k_trace;
+const bool k_trace = true;
