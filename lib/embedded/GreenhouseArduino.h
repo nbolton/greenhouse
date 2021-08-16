@@ -45,8 +45,8 @@ public:
   void HandleSoilMostureWarning(float);
   void HandleActiveSwitch(int);
   void HandleToggleSwitch(int);
-  void HandleWaterBatteryOn(int param) { WaterBatteryOnHour(param); }
-  void HandleWaterBatteryOff(int param) { WaterBatteryOffHour(param); }
+  void HandleDayStartHour(int param) { DayStartHour(param); }
+  void HandleDayEndHour(int param) { DayEndHour(param); }
   void HandlePvVoltageSensorMin(float param) { m_pvVoltageSensorMin = param; }
   void HandlePvVoltageSensorMax(float param) { m_pvVoltageSensorMax = param; }
   void HandlePvVoltageOutputMin(float param) { m_pvVoltageOutputMin = param; }
@@ -60,6 +60,8 @@ public:
   void HandlePvForceOn(int param) { m_pvForceOn = param; }
   void HandleWindowOpenSpeed(int value) { WindowActuatorSpeedPercent(value); }
   void HandleWindowOpenRuntime(float value) { WindowActuatorRuntimeSec(value); }
+  void HandleDaySoilTemperature(float value) { DaySoilTemperature(value); }
+  void HandleNightSoilTemperature(float value) { NightSoilTemperature(value); }
 
 protected:
   void ReportInfo(const char *m, ...);

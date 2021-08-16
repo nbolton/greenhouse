@@ -71,14 +71,18 @@ protected:
   virtual float InsideHumidityWarning() const { return m_insideHumidityWarning; }
   virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
   virtual float SoilMostureWarning() const { return m_soilMostureWarning; }
-  virtual void WaterBatteryOnHour(int value) { m_waterBatteryOnHour = value; }
-  virtual int WaterBatteryOnHour() { return m_waterBatteryOnHour; }
-  virtual void WaterBatteryOffHour(int value) { m_waterBatteryOffHour = value; }
-  virtual int WaterBatteryOffHour() { return m_waterBatteryOffHour; }
+  virtual void DayStartHour(int value) { m_dayStartHour = value; }
+  virtual int DayStartHour() const { return m_dayStartHour; }
+  virtual void DayEndHour(int value) { m_dayEndHour = value; }
+  virtual int DayEndHour() const { return m_dayEndHour; }
   virtual void WindowActuatorSpeedPercent(int value) { m_windowActuatorSpeedPercent = value; }
   virtual int WindowActuatorSpeedPercent() const { return m_windowActuatorSpeedPercent; }
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
   virtual int WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
+  virtual void DaySoilTemperature(float value) { m_daySoilTemperature = value; }
+  virtual float DaySoilTemperature() const { return m_daySoilTemperature; }
+  virtual void NightSoilTemperature(float value) { m_nightSoilTemperature = value; }
+  virtual float NightSoilTemperature() const { return m_nightSoilTemperature; }
 
 private:
   ::Log m_log;
@@ -91,10 +95,12 @@ private:
   int m_openDayMinimum;
   float m_insideHumidityWarning;
   float m_soilMostureWarning;
-  int m_waterBatteryOnHour;
-  int m_waterBatteryOffHour;
+  int m_dayStartHour;
+  int m_dayEndHour;
   int m_windowActuatorSpeedPercent;
   float m_windowActuatorRuntimeSec;
+  float m_daySoilTemperature;
+  float m_nightSoilTemperature;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

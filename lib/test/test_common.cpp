@@ -85,11 +85,13 @@ public:
   void OpenDayMinimum(int value) { Greenhouse::OpenDayMinimum(value); }
   float CalculateMoisture(float value) const { return Greenhouse::CalculateMoisture(value); }
   void UpdateWaterBattery() { Greenhouse::UpdateWaterBattery(); }
-  void WaterBatteryOnHour(int value) { Greenhouse::WaterBatteryOnHour(value); }
-  void WaterBatteryOffHour(int value) { Greenhouse::WaterBatteryOffHour(value); }
+  void DayStartHour(int value) { Greenhouse::DayStartHour(value); }
+  void DayEndHour(int value) { Greenhouse::DayEndHour(value); }
   void WindowActuatorSpeedPercent(int value) { Greenhouse::WindowActuatorSpeedPercent(value); }
   void WindowActuatorRuntimeSec(float value) { Greenhouse::WindowActuatorRuntimeSec(value); }
   bool ApplyWindowProgress(float value) { return Greenhouse::ApplyWindowProgress(value); }
+  void DaySoilTemperature(float value) { Greenhouse::DaySoilTemperature(value); }
+  void NightSoilTemperature(float value) { Greenhouse::NightSoilTemperature(value); }
 
   bool m_mock_ReadDhtSensor;
   float m_mock_SoilTemperature;
@@ -381,65 +383,102 @@ void Test_CalculateMoisture_InBounds_ReturnsPercent()
   TEST_ASSERT_FLOAT_WITHIN(.1, 46.34, percent);
 }
 
-void Test_UpdateWaterBattery_CurrentHourBeforeOnHour_SwitchOffCalled()
-{
-  GreenhouseTest greenhouse;
-
-  greenhouse.m_mock_CurrentHour = 1;
-  greenhouse.WaterBatteryOnHour(2);
-  greenhouse.WaterBatteryOffHour(4);
-  greenhouse.UpdateWaterBattery();
-
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
-  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
-}
-
-void Test_UpdateWaterBattery_CurrentHourIsOnHour_SwitchOnCalled()
-{
-  GreenhouseTest greenhouse;
-
-  greenhouse.m_mock_CurrentHour = 2;
-  greenhouse.WaterBatteryOnHour(2);
-  greenhouse.WaterBatteryOffHour(4);
-  greenhouse.UpdateWaterBattery();
-
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
-  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchWaterBattery_on);
-}
-
-void Test_UpdateWaterBattery_CurrentHourBetweenOnAndOffHours_SwitchOnCalled()
+void Test_UpdateWaterBattery_DaytimeBelowDayTemp_SwitchOnCalled(void)
 {
   GreenhouseTest greenhouse;
 
   greenhouse.m_mock_CurrentHour = 3;
-  greenhouse.WaterBatteryOnHour(2);
-  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.m_mock_SoilTemperature = 1;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.DaySoilTemperature(2);
+
   greenhouse.UpdateWaterBattery();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
   TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchWaterBattery_on);
 }
 
-void Test_UpdateWaterBattery_CurrentHourAtOffHour_SwitchOffCalled()
+void Test_UpdateWaterBattery_DaytimeAboveDayTemp_SwitchOffCalled(void)
 {
   GreenhouseTest greenhouse;
 
-  greenhouse.m_mock_CurrentHour = 4;
-  greenhouse.WaterBatteryOnHour(2);
-  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.m_mock_CurrentHour = 3;
+  greenhouse.m_mock_SoilTemperature = 2;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.DaySoilTemperature(1);
+
   greenhouse.UpdateWaterBattery();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
   TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
 }
 
-void Test_UpdateWaterBattery_CurrentHourAfterOffHour_SwitchOffCalled()
+void Test_UpdateWaterBattery_BeforeDaytimeBelowNightTemp_SwitchOnCalled(void)
 {
   GreenhouseTest greenhouse;
 
-  greenhouse.m_mock_CurrentHour = 5;
-  greenhouse.WaterBatteryOnHour(2);
-  greenhouse.WaterBatteryOffHour(4);
+  greenhouse.m_mock_CurrentHour = 1;
+  greenhouse.m_mock_SoilTemperature = 1;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.NightSoilTemperature(2);
+
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
+void Test_UpdateWaterBattery_BeforeDaytimeAboveNightTemp_SwitchOffCalled(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_CurrentHour = 1;
+  greenhouse.m_mock_SoilTemperature = 2;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.NightSoilTemperature(1);
+
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
+void Test_UpdateWaterBattery_AfterDaytimeBelowNightTemp_SwitchOnCalled(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_CurrentHour = 4;
+  greenhouse.m_mock_SoilTemperature = 1;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.NightSoilTemperature(2);
+
+  greenhouse.UpdateWaterBattery();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
+  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchWaterBattery_on);
+}
+
+void Test_UpdateWaterBattery_AfterDaytimeAboveNightTemp_SwitchOffCalled(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_CurrentHour = 4;
+  greenhouse.m_mock_SoilTemperature = 2;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.NightSoilTemperature(1);
+
   greenhouse.UpdateWaterBattery();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterBattery);
@@ -502,11 +541,12 @@ void testCommon()
   RUN_TEST(Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero);
   RUN_TEST(Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred);
   RUN_TEST(Test_CalculateMoisture_InBounds_ReturnsPercent);
-  RUN_TEST(Test_UpdateWaterBattery_CurrentHourBeforeOnHour_SwitchOffCalled);
-  RUN_TEST(Test_UpdateWaterBattery_CurrentHourIsOnHour_SwitchOnCalled);
-  RUN_TEST(Test_UpdateWaterBattery_CurrentHourBetweenOnAndOffHours_SwitchOnCalled);
-  RUN_TEST(Test_UpdateWaterBattery_CurrentHourAtOffHour_SwitchOffCalled);
-  RUN_TEST(Test_UpdateWaterBattery_CurrentHourAfterOffHour_SwitchOffCalled);
+  RUN_TEST(Test_UpdateWaterBattery_DaytimeBelowDayTemp_SwitchOnCalled);
+  RUN_TEST(Test_UpdateWaterBattery_DaytimeAboveDayTemp_SwitchOffCalled);
+  RUN_TEST(Test_UpdateWaterBattery_BeforeDaytimeBelowNightTemp_SwitchOnCalled);
+  RUN_TEST(Test_UpdateWaterBattery_BeforeDaytimeAboveNightTemp_SwitchOffCalled);
+  RUN_TEST(Test_UpdateWaterBattery_AfterDaytimeBelowNightTemp_SwitchOnCalled);
+  RUN_TEST(Test_UpdateWaterBattery_AfterDaytimeAboveNightTemp_SwitchOffCalled);
   RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
   RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
 }
