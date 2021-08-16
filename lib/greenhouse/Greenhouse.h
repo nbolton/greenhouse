@@ -76,9 +76,9 @@ protected:
   virtual void WaterBatteryOffHour(int value) { m_waterBatteryOffHour = value; }
   virtual int WaterBatteryOffHour() { return m_waterBatteryOffHour; }
   virtual void WindowActuatorSpeedPercent(int value) { m_windowActuatorSpeedPercent = value; }
-  virtual int WindowActuatorSpeedPercent() { return m_windowActuatorSpeedPercent; }
+  virtual int WindowActuatorSpeedPercent() const { return m_windowActuatorSpeedPercent; }
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
-  virtual int WindowActuatorRuntimeSec() { return m_windowActuatorRuntimeSec; }
+  virtual int WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
 
 private:
   ::Log m_log;
