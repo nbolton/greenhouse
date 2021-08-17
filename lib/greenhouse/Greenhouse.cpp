@@ -106,6 +106,8 @@ bool Greenhouse::Refresh()
     }
   }
 
+  UpdateWaterAndHeating();
+
   // Window state is only reported back when a window opens or closes;
   // Blynk doesn't show the latest switch values that were changed while the
   // app was out of focus, so if window isn't opened or closed, report the

@@ -155,8 +155,6 @@ void GreenhouseArduino::Loop()
   Blynk.run();
   s_timer.run();
 
-  UpdateWaterAndHeating();
-
   if (s_relayThread.shouldRun()) {
     s_relayThread.run();
   }
