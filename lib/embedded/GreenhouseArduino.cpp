@@ -155,7 +155,7 @@ void GreenhouseArduino::Loop()
   Blynk.run();
   s_timer.run();
 
-  UpdateWaterBattery();
+  UpdateWaterAndHeating();
 
   if (s_relayThread.shouldRun()) {
     s_relayThread.run();
@@ -171,6 +171,22 @@ void GreenhouseArduino::SwitchWaterBattery(bool on)
 
   m_waterBatteryOn = on;
   if (on) {
+    SetSwitch(k_pumpSwitch1, true);
+  }
+  else {
+    SetSwitch(k_pumpSwitch1, false);
+  }
+}
+
+void GreenhouseArduino::SwitchHeatingSystem(bool on)
+{
+  // if no state change, do nothing.
+  if (m_heatingSystemOn == on) {
+    return;
+  }
+
+  m_heatingSystemOn = on;
+  if (on) {
     SetSwitch(k_fanSwitch, true);
 
     // HACK: wait for fan to spool up. otherwise, this drains the caps and
@@ -179,12 +195,10 @@ void GreenhouseArduino::SwitchWaterBattery(bool on)
     // power components from stealing the power.
     delay(5000);
 
-    SetSwitch(k_pumpSwitch1, true);
     SetSwitch(k_pumpSwitch2, true);
   }
   else {
     SetSwitch(k_fanSwitch, false);
-    SetSwitch(k_pumpSwitch1, false);
     SetSwitch(k_pumpSwitch2, false);
   }
 }

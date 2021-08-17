@@ -21,8 +21,8 @@ Greenhouse::Greenhouse() :
   m_soilMostureWarning(k_unknown),
   m_dayStartHour(k_unknown),
   m_dayEndHour(k_unknown),
-  m_daySoilTemperature(k_unknown),
-  m_nightSoilTemperature(k_unknown)
+  m_dayWaterTemperature(k_unknown),
+  m_nightWaterTemperature(k_unknown)
 {
 }
 
@@ -239,10 +239,13 @@ float Greenhouse::CalculateMoisture(float analogValue) const
   return percent;
 }
 
-void Greenhouse::UpdateWaterBattery()
+void Greenhouse::UpdateWaterAndHeating()
 {
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
-    if (SoilTemperature() < DaySoilTemperature()) {
+
+    SwitchHeatingSystem(true);
+
+    if (WaterTemperature() < DayWaterTemperature()) {
       SwitchWaterBattery(true);
     }
     else {
@@ -250,7 +253,10 @@ void Greenhouse::UpdateWaterBattery()
     }
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
-    if (SoilTemperature() < NightSoilTemperature()) {
+
+    SwitchHeatingSystem(false);
+
+    if (WaterTemperature() < NightWaterTemperature()) {
       SwitchWaterBattery(true);
     }
     else {

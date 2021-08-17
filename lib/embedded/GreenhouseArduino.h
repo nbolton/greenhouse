@@ -60,8 +60,8 @@ public:
   void HandlePvForceOn(int param) { m_pvForceOn = param; }
   void HandleWindowOpenSpeed(int value) { WindowActuatorSpeedPercent(value); }
   void HandleWindowOpenRuntime(float value) { WindowActuatorRuntimeSec(value); }
-  void HandleDaySoilTemperature(float value) { DaySoilTemperature(value); }
-  void HandleNightSoilTemperature(float value) { NightSoilTemperature(value); }
+  void HandleDayWaterTemperature(float value) { DayWaterTemperature(value); }
+  void HandleNightWaterTemperature(float value) { NightWaterTemperature(value); }
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -76,6 +76,7 @@ protected:
   bool ReadSensors();
   void Reset();
   void SwitchWaterBattery(bool on);
+  void SwitchHeatingSystem(bool on);
   void RunWindowActuator(bool forward);
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);
@@ -142,4 +143,5 @@ private:
   float m_pvCurrentOutputMax = k_unknown;
   bool m_pvForceOn = false;
   bool m_waterBatteryOn = false;
+  bool m_heatingSystemOn = false;
 };

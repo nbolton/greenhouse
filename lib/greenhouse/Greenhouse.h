@@ -39,7 +39,8 @@ protected:
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
   virtual void SwitchWaterBattery(bool on) {}
-  virtual void UpdateWaterBattery();
+  virtual void SwitchHeatingSystem(bool on) {}
+  virtual void UpdateWaterAndHeating();
   virtual void AdjustWindow(bool open, float delta);
   virtual void RunWindowActuator(bool forward) {}
   virtual void StopActuator() {}
@@ -79,10 +80,10 @@ protected:
   virtual int WindowActuatorSpeedPercent() const { return m_windowActuatorSpeedPercent; }
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
   virtual int WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
-  virtual void DaySoilTemperature(float value) { m_daySoilTemperature = value; }
-  virtual float DaySoilTemperature() const { return m_daySoilTemperature; }
-  virtual void NightSoilTemperature(float value) { m_nightSoilTemperature = value; }
-  virtual float NightSoilTemperature() const { return m_nightSoilTemperature; }
+  virtual void DayWaterTemperature(float value) { m_dayWaterTemperature = value; }
+  virtual float DayWaterTemperature() const { return m_dayWaterTemperature; }
+  virtual void NightWaterTemperature(float value) { m_nightWaterTemperature = value; }
+  virtual float NightWaterTemperature() const { return m_nightWaterTemperature; }
 
 private:
   ::Log m_log;
@@ -99,8 +100,8 @@ private:
   int m_dayEndHour;
   int m_windowActuatorSpeedPercent;
   float m_windowActuatorRuntimeSec;
-  float m_daySoilTemperature;
-  float m_nightSoilTemperature;
+  float m_dayWaterTemperature;
+  float m_nightWaterTemperature;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
