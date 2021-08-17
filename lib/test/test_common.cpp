@@ -20,14 +20,32 @@ public:
     m_lastArg_CloseWindow_delta(k_unknown)
   {
   }
+  
+  // mocks
 
-  bool ReadSensors() { return m_mock_ReadDhtSensor; }
-  float SoilTemperature() const { return m_mock_SoilTemperature; }
-  int CurrentHour() const { return m_mock_CurrentHour; }
+  bool ReadSensors()
+  {
+    Log().Trace("Mock: ReadSensors, value=%s", m_mock_ReadDhtSensor ? "true" : "false");
+    return m_mock_ReadDhtSensor;
+  }
+
+  float SoilTemperature() const
+  {
+    Log().Trace("Mock: SoilTemperature, value=%.2f", m_mock_SoilTemperature);
+    return m_mock_SoilTemperature;
+  }
+
+  int CurrentHour() const
+  {
+    Log().Trace("Mock: CurrentHour, value=%d", m_mock_CurrentHour);
+    return m_mock_CurrentHour;
+  }
+
+  // stubs
 
   void OpenWindow(float delta)
   {
-    Log().Trace("Mock OpenWindow, delta=%.2f", delta);
+    Log().Trace("Stub: OpenWindow, delta=%.2f", delta);
     m_calls_OpenWindow++;
     m_lastArg_OpenWindow_delta = delta;
 
@@ -36,7 +54,7 @@ public:
 
   void CloseWindow(float delta)
   {
-    Log().Trace("Mock CloseWindow, delta=%.2f", delta);
+    Log().Trace("Stub: CloseWindow, delta=%.2f", delta);
     m_calls_CloseWindow++;
     m_lastArg_CloseWindow_delta = delta;
 
@@ -45,33 +63,34 @@ public:
 
   void RunWindowActuator(bool forward)
   {
-    Log().Trace("Mock RunWindowActuator, forward=%s", forward ? "true" : "false");
+    Log().Trace("Stub: RunWindowActuator, forward=%s", forward ? "true" : "false");
     m_lastArg_RunWindowActuator_forward = forward;
     m_calls_RunWindowActuator++;
   }
 
   void StopActuator()
   {
-    Log().Trace("Mock StopActuator");
+    Log().Trace("Stub: StopActuator");
     m_calls_StopActuator++;
   }
 
   void SetWindowActuatorSpeed(int speed)
   {
-    Log().Trace("Mock SetWindowActuatorSpeed, forward=%d", speed);
+    Log().Trace("Stub: SetWindowActuatorSpeed, forward=%d", speed);
     m_lastArg_SetWindowActuatorSpeed_speed = speed;
     m_calls_SetWindowActuatorSpeed++;
   }
 
   void SystemDelay(unsigned long ms)
   {
-    Log().Trace("Mock SystemDelay, forward=%d", ms);
+    Log().Trace("Stub: SystemDelay, forward=%d", ms);
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }
 
   void SwitchWaterBattery(bool on)
   {
+    Log().Trace("Stub: SwitchWaterBattery, on=%s", on ? "true" : "false");
     m_calls_SwitchWaterBattery++;
     m_lastArg_SwitchWaterBattery_on = on;
   }
