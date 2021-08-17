@@ -62,7 +62,8 @@ public:
   void HandleWindowOpenRuntime(float value) { WindowActuatorRuntimeSec(value); }
   void HandleDayWaterTemperature(float value) { DayWaterTemperature(value); }
   void HandleNightWaterTemperature(float value) { NightWaterTemperature(value); }
-  void HandleMaximumSoilWaterDelta(float value) { MaximumSoilWaterDelta(value); }
+  void HandleDaySoilTemperature(float value) { DaySoilTemperature(value); }
+  void HandleNightSoilTemperature(float value) { NightSoilTemperature(value); }
 
 protected:
   void ReportInfo(const char *m, ...);
