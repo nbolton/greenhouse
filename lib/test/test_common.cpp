@@ -314,6 +314,42 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
   TEST_ASSERT_EQUAL_INT(100, greenhouse.WindowProgress());
 }
 
+void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowActuatorSpeedPercent(90);
+  greenhouse.WindowActuatorRuntimeSec(1.1);
+
+  greenhouse.OpenWindow(.5);
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_RunWindowActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_StopActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SetWindowActuatorSpeed);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SystemDelay);
+
+  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_RunWindowActuator_forward);
+  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, greenhouse.m_lastArg_SetWindowActuatorSpeed_speed);
+  TEST_ASSERT_EQUAL_UINT64(550, greenhouse.m_lastArg_SystemDelay_ms);
+}
+
+void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.WindowActuatorSpeedPercent(90);
+  greenhouse.WindowActuatorRuntimeSec(1.1);
+
+  greenhouse.CloseWindow(.5);
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_RunWindowActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_StopActuator);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SetWindowActuatorSpeed);
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SystemDelay);
+
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_RunWindowActuator_forward);
+  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, greenhouse.m_lastArg_SetWindowActuatorSpeed_speed);
+  TEST_ASSERT_EQUAL_UINT64(550, greenhouse.m_lastArg_SystemDelay_ms);
+}
+
 void Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed()
 {
   GreenhouseTest greenhouse;
@@ -485,42 +521,6 @@ void Test_UpdateWaterBattery_AfterDaytimeAboveNightTemp_SwitchOffCalled(void)
   TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
 }
 
-void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
-{
-  GreenhouseTest greenhouse;
-  greenhouse.WindowActuatorSpeedPercent(90);
-  greenhouse.WindowActuatorRuntimeSec(1.1);
-
-  greenhouse.OpenWindow(.5);
-
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_RunWindowActuator);
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_StopActuator);
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SetWindowActuatorSpeed);
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SystemDelay);
-
-  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_RunWindowActuator_forward);
-  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, greenhouse.m_lastArg_SetWindowActuatorSpeed_speed);
-  TEST_ASSERT_EQUAL_UINT64(550, greenhouse.m_lastArg_SystemDelay_ms);
-}
-
-void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
-{
-  GreenhouseTest greenhouse;
-  greenhouse.WindowActuatorSpeedPercent(90);
-  greenhouse.WindowActuatorRuntimeSec(1.1);
-
-  greenhouse.CloseWindow(.5);
-
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_RunWindowActuator);
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_StopActuator);
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SetWindowActuatorSpeed);
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SystemDelay);
-
-  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_RunWindowActuator_forward);
-  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, greenhouse.m_lastArg_SetWindowActuatorSpeed_speed);
-  TEST_ASSERT_EQUAL_UINT64(550, greenhouse.m_lastArg_SystemDelay_ms);
-}
-
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -534,6 +534,8 @@ void testCommon()
   RUN_TEST(Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice);
   RUN_TEST(Test_Refresh_AutoModeBelowBounds_WindowClosedFully);
   RUN_TEST(Test_Refresh_AutoModeAboveBounds_WindowOpenedFully);
+  RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
+  RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
   RUN_TEST(Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed);
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed);
   RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed);
@@ -547,6 +549,4 @@ void testCommon()
   RUN_TEST(Test_UpdateWaterBattery_BeforeDaytimeAboveNightTemp_SwitchOffCalled);
   RUN_TEST(Test_UpdateWaterBattery_AfterDaytimeBelowNightTemp_SwitchOnCalled);
   RUN_TEST(Test_UpdateWaterBattery_AfterDaytimeAboveNightTemp_SwitchOffCalled);
-  RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
-  RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
 }
