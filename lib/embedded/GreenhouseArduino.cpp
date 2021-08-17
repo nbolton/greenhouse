@@ -167,6 +167,8 @@ void GreenhouseArduino::SwitchWaterBattery(bool on)
     return;
   }
 
+  Blynk.virtualWrite(V55, on);
+
   m_waterBatteryOn = on;
   if (on) {
     SetSwitch(k_pumpSwitch1, true);
@@ -182,6 +184,8 @@ void GreenhouseArduino::SwitchHeatingSystem(bool on)
   if (m_heatingSystemOn == on) {
     return;
   }
+  
+  Blynk.virtualWrite(V56, on);
 
   m_heatingSystemOn = on;
   if (on) {
