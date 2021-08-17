@@ -22,7 +22,8 @@ Greenhouse::Greenhouse() :
   m_dayStartHour(k_unknown),
   m_dayEndHour(k_unknown),
   m_dayWaterTemperature(k_unknown),
-  m_nightWaterTemperature(k_unknown)
+  m_nightWaterTemperature(k_unknown),
+  m_maximumSoilWaterDelta(k_unknown)
 {
 }
 
@@ -239,11 +240,26 @@ float Greenhouse::CalculateMoisture(float analogValue) const
   return percent;
 }
 
+double fabs(double value)
+{
+  return (value > 0) ? value : (value *= -1);
+}
+
 void Greenhouse::UpdateWaterAndHeating()
 {
-  if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
+  float soilWaterDifference = fabs(SoilTemperature() - WaterTemperature());
+  Log().Trace("Soil/water delta: %.2f°C", soilWaterDifference);
 
+  // turn on heating system only if water and soil are different temps
+  if (soilWaterDifference > MaximumSoilWaterDelta()) {
     SwitchHeatingSystem(true);
+  }
+  else {
+    SwitchHeatingSystem(false);
+  }
+
+  // heat water to different temperature depending on if day or night
+  if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
     if (WaterTemperature() < DayWaterTemperature()) {
       SwitchWaterBattery(true);
@@ -253,8 +269,6 @@ void Greenhouse::UpdateWaterAndHeating()
     }
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
-
-    SwitchHeatingSystem(false);
 
     if (WaterTemperature() < NightWaterTemperature()) {
       SwitchWaterBattery(true);

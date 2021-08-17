@@ -121,6 +121,7 @@ public:
   bool ApplyWindowProgress(float value) { return Greenhouse::ApplyWindowProgress(value); }
   void DayWaterTemperature(float value) { Greenhouse::DayWaterTemperature(value); }
   void NightWaterTemperature(float value) { Greenhouse::NightWaterTemperature(value); }
+  void MaximumSoilWaterDelta(float value) { Greenhouse::MaximumSoilWaterDelta(value); }
 
   // mock values (leave undefined)
 
@@ -559,49 +560,34 @@ void Test_UpdateWaterAndHeating_AfterDaytimeAboveNightTemp_SwitchOffWaterBattery
   TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterBattery_on);
 }
 
-void Test_UpdateWaterAndHeating_Daytime_SwitchOnHeatingSystem(void)
+void Test_UpdateWaterAndHeating_SoilWaterDeltaInBounds_SwitchOffHeatingSystem(void)
 {
   GreenhouseTest greenhouse;
 
-  greenhouse.m_mock_CurrentHour = 3;
+  greenhouse.m_mock_WaterTemperature = 1.2f;
+  greenhouse.m_mock_SoilTemperature = 0.8f;
 
-  greenhouse.DayStartHour(2);
-  greenhouse.DayEndHour(4);
+  greenhouse.MaximumSoilWaterDelta(0.5f);
+
+  greenhouse.UpdateWaterAndHeating();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchHeatingSystem);
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchHeatingSystem_on);
+}
+
+void Test_UpdateWaterAndHeating_SoilWaterDeltaOutOfBounds_SwitchOnHeatingSystem(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_WaterTemperature = 0.7f;
+  greenhouse.m_mock_SoilTemperature = 1.3f;
+
+  greenhouse.MaximumSoilWaterDelta(0.5f);
 
   greenhouse.UpdateWaterAndHeating();
 
   TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchHeatingSystem);
   TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchHeatingSystem_on);
-}
-
-void Test_UpdateWaterAndHeating_BeforeDaytime_SwitchOffHeatingSystem(void)
-{
-  GreenhouseTest greenhouse;
-
-  greenhouse.m_mock_CurrentHour = 1;
-
-  greenhouse.DayStartHour(2);
-  greenhouse.DayEndHour(4);
-
-  greenhouse.UpdateWaterAndHeating();
-
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchHeatingSystem);
-  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchHeatingSystem_on);
-}
-
-void Test_UpdateWaterAndHeating_AfterDaytime_SwitchOffHeatingSystem(void)
-{
-  GreenhouseTest greenhouse;
-
-  greenhouse.m_mock_CurrentHour = 4;
-
-  greenhouse.DayStartHour(2);
-  greenhouse.DayEndHour(4);
-
-  greenhouse.UpdateWaterAndHeating();
-
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchHeatingSystem);
-  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchHeatingSystem_on);
 }
 
 void testCommon()
@@ -632,7 +618,6 @@ void testCommon()
   RUN_TEST(Test_UpdateWaterAndHeating_BeforeDaytimeAboveNightTemp_SwitchOffWaterBattery);
   RUN_TEST(Test_UpdateWaterAndHeating_AfterDaytimeBelowNightTemp_SwitchOnWaterBattery);
   RUN_TEST(Test_UpdateWaterAndHeating_AfterDaytimeAboveNightTemp_SwitchOffWaterBattery);
-  RUN_TEST(Test_UpdateWaterAndHeating_Daytime_SwitchOnHeatingSystem);
-  RUN_TEST(Test_UpdateWaterAndHeating_BeforeDaytime_SwitchOffHeatingSystem);
-  RUN_TEST(Test_UpdateWaterAndHeating_AfterDaytime_SwitchOffHeatingSystem);
+  RUN_TEST(Test_UpdateWaterAndHeating_SoilWaterDeltaInBounds_SwitchOffHeatingSystem);
+  RUN_TEST(Test_UpdateWaterAndHeating_SoilWaterDeltaOutOfBounds_SwitchOnHeatingSystem);
 }

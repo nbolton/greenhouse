@@ -863,7 +863,8 @@ BLYNK_CONNECTED()
     V48,
     V49,
     V50,
-    V51);
+    V51,
+    V52);
 }
 
 BLYNK_WRITE(V0)
@@ -1055,13 +1056,19 @@ BLYNK_WRITE(V49)
 BLYNK_WRITE(V50)
 {
   s_instance->TraceFlash(F("Blynk write V50"));
-  s_instance->HandleDaySoilTemperature(param.asFloat());
+  s_instance->HandleDayWaterTemperature(param.asFloat());
 }
 
 BLYNK_WRITE(V51)
 {
   s_instance->TraceFlash(F("Blynk write V51"));
-  s_instance->HandleNightSoilTemperature(param.asFloat());
+  s_instance->HandleNightWaterTemperature(param.asFloat());
+}
+
+BLYNK_WRITE(V52)
+{
+  s_instance->TraceFlash(F("Blynk write V52"));
+  s_instance->HandleMaximumSoilWaterDelta(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.

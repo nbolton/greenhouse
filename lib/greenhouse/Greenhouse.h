@@ -84,6 +84,8 @@ protected:
   virtual float DayWaterTemperature() const { return m_dayWaterTemperature; }
   virtual void NightWaterTemperature(float value) { m_nightWaterTemperature = value; }
   virtual float NightWaterTemperature() const { return m_nightWaterTemperature; }
+  virtual void MaximumSoilWaterDelta(float value) { m_maximumSoilWaterDelta = value; }
+  virtual float MaximumSoilWaterDelta() const { return m_maximumSoilWaterDelta; }
 
 private:
   ::Log m_log;
@@ -102,6 +104,7 @@ private:
   float m_windowActuatorRuntimeSec;
   float m_dayWaterTemperature;
   float m_nightWaterTemperature;
+  float m_maximumSoilWaterDelta;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
