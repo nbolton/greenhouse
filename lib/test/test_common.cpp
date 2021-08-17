@@ -395,6 +395,8 @@ void Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed()
   GreenhouseTest greenhouse;
   greenhouse.WindowProgress(20);
   greenhouse.OpenDayMinimum(0);
+  greenhouse.DayStartHour(8);
+  greenhouse.DayEndHour(20);
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);
@@ -407,6 +409,8 @@ void Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed()
   GreenhouseTest greenhouse;
   greenhouse.WindowProgress(20);
   greenhouse.OpenDayMinimum(10);
+  greenhouse.DayStartHour(8);
+  greenhouse.DayEndHour(20);
   greenhouse.m_mock_CurrentHour = 0; // 12am
 
   greenhouse.ApplyWindowProgress(0);
@@ -419,6 +423,8 @@ void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
   GreenhouseTest greenhouse;
   greenhouse.WindowProgress(20);
   greenhouse.OpenDayMinimum(10);
+  greenhouse.DayStartHour(8);
+  greenhouse.DayEndHour(20);
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);
@@ -431,6 +437,8 @@ void Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened()
   GreenhouseTest greenhouse;
   greenhouse.WindowProgress(5);
   greenhouse.OpenDayMinimum(10);
+  greenhouse.DayStartHour(8);
+  greenhouse.DayEndHour(20);
   greenhouse.m_mock_CurrentHour = 12; // 12pm
 
   greenhouse.ApplyWindowProgress(0);

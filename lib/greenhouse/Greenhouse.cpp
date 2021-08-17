@@ -4,8 +4,6 @@
 #include <stdio.h>
 
 const float k_windowAdjustThreshold = 0.05;
-const int k_dayStartHour = 8;       // 8am
-const int k_dayEndHour = 20;        // 8pm
 const float k_soilSensorDry = 3.95; // V, in air
 const float k_soilSensorWet = 1.9;  // V, in water
 const int k_windowActuatorSpeedMax = 255;
@@ -144,7 +142,7 @@ bool Greenhouse::ApplyWindowProgress(float expectedProgress)
       closeDelta,
       OpenDayMinimum());
 
-    bool isDayPeriod = (CurrentHour() >= k_dayStartHour) && (CurrentHour() <= k_dayEndHour);
+    bool isDayPeriod = (CurrentHour() >= DayStartHour()) && (CurrentHour() <= DayEndHour());
 
     // if open day minimum is set and it's day:
     // - don't allow window to be closed less than open day minimum.
