@@ -87,16 +87,44 @@ GreenhouseArduino::GreenhouseArduino() :
   m_insideHumidity(k_unknown),
   m_outsideTemperature(k_unknown),
   m_outsideHumidity(k_unknown),
+  m_soilTemperature(k_unknown),
+  m_waterTemperature(k_unknown),
   m_timerId(k_unknown),
   m_led(LOW),
   m_fakeInsideHumidity(k_unknown),
   m_fakeSoilTemperature(k_unknown),
   m_fakeSoilMoisture(k_unknown),
   m_refreshBusy(false),
+  m_lastWriteDone(false),
   m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
-  m_soilMoistureWarningSent(false)
+  m_soilMoistureWarningSent(false),
+  m_activeSwitch(k_unknown),
+  m_pvPowerSource(false),
+  m_pvVoltageSwitchOn(k_unknown),
+  m_pvVoltageSwitchOff(k_unknown),
+  m_pvVoltageCount(0),
+  m_pvVoltageAverage(0),
+  m_pvVoltageSum(0),
+  m_pvVoltageSensor(k_unknown),
+  m_pvVoltageOutput(k_unknown),
+  m_pvVoltageSensorMin(0),
+  m_pvVoltageSensorMax(k_unknown),
+  m_pvVoltageOutputMin(0),
+  m_pvVoltageOutputMax(k_unknown),
+  m_pvCurrentSensor(k_unknown),
+  m_pvCurrentOutput(k_unknown),
+  m_pvCurrentSensorMin(0),
+  m_pvCurrentSensorMax(k_unknown),
+  m_pvCurrentOutputMin(0),
+  m_pvCurrentOutputMax(k_unknown),
+  m_pvForceOn(false),
+  m_waterHeatingOn(false),
+  m_soilHeatingOn(false)
 {
+  for (int i = 0; i < k_switchCount; i++) {
+    m_switchState[i] = false;
+  }
 }
 
 void GreenhouseArduino::Setup()
@@ -160,16 +188,14 @@ void GreenhouseArduino::Loop()
   }
 }
 
-void GreenhouseArduino::SwitchWaterBattery(bool on)
+void GreenhouseArduino::SwitchWaterHeating(bool on)
 {
   // if no state change, do nothing.
-  if (m_waterBatteryOn == on) {
+  if (m_waterHeatingOn == on) {
     return;
   }
 
-  Blynk.virtualWrite(V55, on);
-
-  m_waterBatteryOn = on;
+  m_waterHeatingOn = on;
   if (on) {
     SetSwitch(k_pumpSwitch1, true);
   }
@@ -178,20 +204,20 @@ void GreenhouseArduino::SwitchWaterBattery(bool on)
   }
 }
 
-void GreenhouseArduino::SwitchHeatingSystem(bool on)
+void GreenhouseArduino::SwitchSoilHeating(bool on)
 {
   // if no state change, do nothing.
-  if (m_heatingSystemOn == on) {
+  if (m_soilHeatingOn == on) {
     return;
   }
-  
-  Blynk.virtualWrite(V56, on);
 
-  m_heatingSystemOn = on;
+  m_soilHeatingOn = on;
   if (on) {
+    // TODO: this is actually for air heating, which should be a separate system.
     SetSwitch(k_fanSwitch, true);
 
-    // HACK: wait for fan to spool up. otherwise, this drains the caps and
+    // HACK: wait for fan to spool up before starting the pump. otherwise, 
+    // powering everything on at the same time drains the caps and
     // causes the microcontroller to lose power. perhaps this can be fixed
     // by having a cap for the microcontroller and a diode to prevent the
     // power components from stealing the power.
@@ -252,6 +278,8 @@ bool GreenhouseArduino::Refresh()
   Blynk.virtualWrite(V30, m_pvVoltageOutput);
   Blynk.virtualWrite(V42, m_pvCurrentSensor);
   Blynk.virtualWrite(V43, m_pvCurrentOutput);
+  Blynk.virtualWrite(V55, m_waterHeatingOn);
+  Blynk.virtualWrite(V56, m_soilHeatingOn);
 
   return ok;
 }

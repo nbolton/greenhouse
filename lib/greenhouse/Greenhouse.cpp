@@ -7,6 +7,7 @@ const float k_windowAdjustThreshold = 0.05;
 const float k_soilSensorDry = 3.95; // V, in air
 const float k_soilSensorWet = 1.9;  // V, in water
 const int k_windowActuatorSpeedMax = 255;
+const int k_waterTempMargin = 1;
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -14,11 +15,14 @@ Greenhouse::Greenhouse() :
   m_openStart(k_unknown),
   m_openFinish(k_unknown),
   m_windowProgress(k_unknown),
+  m_testMode(false),
   m_openDayMinimum(k_unknown),
   m_insideHumidityWarning(k_unknown),
   m_soilMostureWarning(k_unknown),
   m_dayStartHour(k_unknown),
   m_dayEndHour(k_unknown),
+  m_windowActuatorSpeedPercent(0),
+  m_windowActuatorRuntimeSec(0),
   m_dayWaterTemperature(k_unknown),
   m_nightWaterTemperature(k_unknown),
   m_daySoilTemperature(k_unknown),
@@ -105,7 +109,7 @@ bool Greenhouse::Refresh()
     }
   }
 
-  UpdateWaterAndHeating();
+  UpdateHeatingSystems();
 
   // Window state is only reported back when a window opens or closes;
   // Blynk doesn't show the latest switch values that were changed while the
@@ -241,39 +245,39 @@ float Greenhouse::CalculateMoisture(float analogValue) const
   return percent;
 }
 
-void Greenhouse::UpdateWaterAndHeating()
+void Greenhouse::UpdateHeatingSystems()
 {
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
-    if (WaterTemperature() < DayWaterTemperature()) {
-      SwitchWaterBattery(true);
+    if (WaterTemperature() < (DayWaterTemperature() - k_waterTempMargin)) {
+      SwitchWaterHeating(true);
     }
-    else {
-      SwitchWaterBattery(false);
+    else if (WaterTemperature() > (DayWaterTemperature() + k_waterTempMargin)) {
+      SwitchWaterHeating(false);
     }
 
     if (SoilTemperature() < DaySoilTemperature()) {
-      SwitchHeatingSystem(true);
+      SwitchSoilHeating(true);
     }
     else {
-      SwitchHeatingSystem(false);
+      SwitchSoilHeating(false);
     }
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
 
-    if (WaterTemperature() < NightWaterTemperature()) {
-      SwitchWaterBattery(true);
+    if (WaterTemperature() < (NightWaterTemperature() - k_waterTempMargin)) {
+      SwitchWaterHeating(true);
     }
-    else {
-      SwitchWaterBattery(false);
+    else if (WaterTemperature() > (NightWaterTemperature() + k_waterTempMargin)) {
+      SwitchWaterHeating(false);
     }
 
     if (SoilTemperature() < NightSoilTemperature()) {
-      SwitchHeatingSystem(true);
+      SwitchSoilHeating(true);
     }
     else {
-      SwitchHeatingSystem(false);
+      SwitchSoilHeating(false);
     }
   }
 }
