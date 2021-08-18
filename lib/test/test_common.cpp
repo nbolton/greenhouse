@@ -472,7 +472,7 @@ void Test_UpdateHeatingSystems_DaytimeBelowDayTemp_SwitchOnWaterHeating(void)
   GreenhouseTest greenhouse;
 
   greenhouse.m_mock_CurrentHour = 3;
-  greenhouse.m_mock_WaterTemperature = 1;
+  greenhouse.m_mock_WaterTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);
@@ -489,7 +489,7 @@ void Test_UpdateHeatingSystems_DaytimeAboveDayTemp_SwitchOffWaterHeating(void)
   GreenhouseTest greenhouse;
 
   greenhouse.m_mock_CurrentHour = 3;
-  greenhouse.m_mock_WaterTemperature = 2;
+  greenhouse.m_mock_WaterTemperature = 3; // remember margin
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);
@@ -506,7 +506,7 @@ void Test_UpdateHeatingSystems_BeforeDaytimeBelowNightTemp_SwitchOnWaterHeating(
   GreenhouseTest greenhouse;
 
   greenhouse.m_mock_CurrentHour = 1;
-  greenhouse.m_mock_WaterTemperature = 1;
+  greenhouse.m_mock_WaterTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);
@@ -523,7 +523,7 @@ void Test_UpdateHeatingSystems_BeforeDaytimeAboveNightTemp_SwitchOffWaterHeating
   GreenhouseTest greenhouse;
 
   greenhouse.m_mock_CurrentHour = 1;
-  greenhouse.m_mock_WaterTemperature = 2;
+  greenhouse.m_mock_WaterTemperature = 3; // remember margin
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);
@@ -540,7 +540,7 @@ void Test_UpdateHeatingSystems_AfterDaytimeBelowNightTemp_SwitchOnWaterHeating(v
   GreenhouseTest greenhouse;
 
   greenhouse.m_mock_CurrentHour = 4;
-  greenhouse.m_mock_WaterTemperature = 1;
+  greenhouse.m_mock_WaterTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);
@@ -557,7 +557,7 @@ void Test_UpdateHeatingSystems_AfterDaytimeAboveNightTemp_SwitchOffWaterHeating(
   GreenhouseTest greenhouse;
 
   greenhouse.m_mock_CurrentHour = 4;
-  greenhouse.m_mock_WaterTemperature = 2;
+  greenhouse.m_mock_WaterTemperature = 3; // remember margin
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);

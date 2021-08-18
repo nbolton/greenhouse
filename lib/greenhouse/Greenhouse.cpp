@@ -7,6 +7,7 @@ const float k_windowAdjustThreshold = 0.05;
 const float k_soilSensorDry = 3.95; // V, in air
 const float k_soilSensorWet = 1.9;  // V, in water
 const int k_windowActuatorSpeedMax = 255;
+const int k_waterTempMargin = 1;
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -246,10 +247,10 @@ void Greenhouse::UpdateHeatingSystems()
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
-    if (WaterTemperature() < DayWaterTemperature()) {
+    if (WaterTemperature() < (DayWaterTemperature() - k_waterTempMargin)) {
       SwitchWaterHeating(true);
     }
-    else {
+    else if (WaterTemperature() > (DayWaterTemperature() + k_waterTempMargin)) {
       SwitchWaterHeating(false);
     }
 
@@ -262,10 +263,10 @@ void Greenhouse::UpdateHeatingSystems()
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
 
-    if (WaterTemperature() < NightWaterTemperature()) {
+    if (WaterTemperature() < (NightWaterTemperature() - k_waterTempMargin)) {
       SwitchWaterHeating(true);
     }
-    else {
+    else if (WaterTemperature() > (NightWaterTemperature() + k_waterTempMargin)) {
       SwitchWaterHeating(false);
     }
 
