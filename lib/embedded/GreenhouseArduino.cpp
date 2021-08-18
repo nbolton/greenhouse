@@ -160,16 +160,16 @@ void GreenhouseArduino::Loop()
   }
 }
 
-void GreenhouseArduino::SwitchWaterBattery(bool on)
+void GreenhouseArduino::SwitchWaterHeating(bool on)
 {
   // if no state change, do nothing.
-  if (m_waterBatteryOn == on) {
+  if (m_waterHeatingOn == on) {
     return;
   }
 
   Blynk.virtualWrite(V55, on);
 
-  m_waterBatteryOn = on;
+  m_waterHeatingOn = on;
   if (on) {
     SetSwitch(k_pumpSwitch1, true);
   }
@@ -178,20 +178,22 @@ void GreenhouseArduino::SwitchWaterBattery(bool on)
   }
 }
 
-void GreenhouseArduino::SwitchHeatingSystem(bool on)
+void GreenhouseArduino::SwitchSoilHeating(bool on)
 {
   // if no state change, do nothing.
-  if (m_heatingSystemOn == on) {
+  if (m_soilHeatingOn == on) {
     return;
   }
   
   Blynk.virtualWrite(V56, on);
 
-  m_heatingSystemOn = on;
+  m_soilHeatingOn = on;
   if (on) {
+    // TODO: this is actually for air heating, which should be a separate system.
     SetSwitch(k_fanSwitch, true);
 
-    // HACK: wait for fan to spool up. otherwise, this drains the caps and
+    // HACK: wait for fan to spool up before starting the pump. otherwise, 
+    // powering everything on at the same time drains the caps and
     // causes the microcontroller to lose power. perhaps this can be fixed
     // by having a cap for the microcontroller and a diode to prevent the
     // power components from stealing the power.

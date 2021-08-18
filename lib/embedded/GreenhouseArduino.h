@@ -77,8 +77,8 @@ protected:
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
   void Reset();
-  void SwitchWaterBattery(bool on);
-  void SwitchHeatingSystem(bool on);
+  void SwitchWaterHeating(bool on);
+  void SwitchSoilHeating(bool on);
   void RunWindowActuator(bool forward);
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);
@@ -144,6 +144,6 @@ private:
   float m_pvCurrentOutputMin = 0;
   float m_pvCurrentOutputMax = k_unknown;
   bool m_pvForceOn = false;
-  bool m_waterBatteryOn = false;
-  bool m_heatingSystemOn = false;
+  bool m_waterHeatingOn = false;
+  bool m_soilHeatingOn = false;
 };

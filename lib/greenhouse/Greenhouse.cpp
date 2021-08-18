@@ -105,7 +105,7 @@ bool Greenhouse::Refresh()
     }
   }
 
-  UpdateWaterAndHeating();
+  UpdateHeatingSystems();
 
   // Window state is only reported back when a window opens or closes;
   // Blynk doesn't show the latest switch values that were changed while the
@@ -241,39 +241,39 @@ float Greenhouse::CalculateMoisture(float analogValue) const
   return percent;
 }
 
-void Greenhouse::UpdateWaterAndHeating()
+void Greenhouse::UpdateHeatingSystems()
 {
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
     if (WaterTemperature() < DayWaterTemperature()) {
-      SwitchWaterBattery(true);
+      SwitchWaterHeating(true);
     }
     else {
-      SwitchWaterBattery(false);
+      SwitchWaterHeating(false);
     }
 
     if (SoilTemperature() < DaySoilTemperature()) {
-      SwitchHeatingSystem(true);
+      SwitchSoilHeating(true);
     }
     else {
-      SwitchHeatingSystem(false);
+      SwitchSoilHeating(false);
     }
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
 
     if (WaterTemperature() < NightWaterTemperature()) {
-      SwitchWaterBattery(true);
+      SwitchWaterHeating(true);
     }
     else {
-      SwitchWaterBattery(false);
+      SwitchWaterHeating(false);
     }
 
     if (SoilTemperature() < NightSoilTemperature()) {
-      SwitchHeatingSystem(true);
+      SwitchSoilHeating(true);
     }
     else {
-      SwitchHeatingSystem(false);
+      SwitchSoilHeating(false);
     }
   }
 }
