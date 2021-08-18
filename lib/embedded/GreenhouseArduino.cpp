@@ -401,6 +401,10 @@ void GreenhouseArduino::Restart()
   ReportWarning("System restarting");
   Blynk.virtualWrite(V52, "Restarting");
 
+  for (int i = 0; i < k_switchCount; i++) {
+    SetSwitch(i, false);
+  }
+
   Blynk.disconnect();
   wdt_disable();
   wdt_enable(WDTO_15MS);
