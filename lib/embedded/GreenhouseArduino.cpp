@@ -397,7 +397,7 @@ void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
 void GreenhouseArduino::Restart()
 {
   FlashLed(k_ledReset);
-  ReportWarning("System rebooting");
+  ReportWarning("System restarting");
 
   Blynk.disconnect();
   wdt_disable();
