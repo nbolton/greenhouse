@@ -8,6 +8,7 @@ const float k_soilSensorDry = 3.95; // V, in air
 const float k_soilSensorWet = 1.9;  // V, in water
 const int k_windowActuatorSpeedMax = 255;
 const int k_waterTempMargin = 1;
+const int k_soilTempMargin = 1;
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -257,10 +258,10 @@ void Greenhouse::UpdateHeatingSystems()
       SwitchWaterHeating(false);
     }
 
-    if (SoilTemperature() < DaySoilTemperature()) {
+    if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
       SwitchSoilHeating(true);
     }
-    else {
+    else if (SoilTemperature() > (DaySoilTemperature() + k_soilTempMargin)) {
       SwitchSoilHeating(false);
     }
   }
@@ -273,10 +274,10 @@ void Greenhouse::UpdateHeatingSystems()
       SwitchWaterHeating(false);
     }
 
-    if (SoilTemperature() < NightSoilTemperature()) {
+    if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
       SwitchSoilHeating(true);
     }
-    else {
+    else if (SoilTemperature() > (NightSoilTemperature() + k_soilTempMargin)) {
       SwitchSoilHeating(false);
     }
   }
