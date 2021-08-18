@@ -560,7 +560,7 @@ void GreenhouseArduino::ReportInfo(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Blynk.logEvent("log_info", s_reportBuffer);
+  Blynk.logEvent("info", s_reportBuffer);
 }
 
 void GreenhouseArduino::ReportWarning(const char *format, ...)
@@ -572,7 +572,7 @@ void GreenhouseArduino::ReportWarning(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Blynk.logEvent("log_warning", s_reportBuffer);
+  Blynk.logEvent("warning", s_reportBuffer);
 }
 
 void GreenhouseArduino::ReportCritical(const char *format, ...)
@@ -584,7 +584,7 @@ void GreenhouseArduino::ReportCritical(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Blynk.logEvent("log_critical", s_reportBuffer);
+  Blynk.logEvent("critical", s_reportBuffer);
 }
 
 void GreenhouseArduino::ReportSensorValues()
