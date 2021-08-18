@@ -394,7 +394,7 @@ void GreenhouseArduino::StopActuator()
 
 void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
 
-void GreenhouseArduino::Reset()
+void GreenhouseArduino::Restart()
 {
   FlashLed(k_ledReset);
   ReportWarning("System rebooting");
@@ -762,13 +762,13 @@ void GreenhouseArduino::HandleWindowProgress(int windowProgress)
   WindowProgress(windowProgress);
 }
 
-void GreenhouseArduino::HandleReset(int reset)
+void GreenhouseArduino::HandleRestart(int restart)
 {
   FlashLed(k_ledRecieve);
-  Log().Trace("Handle reset: %d", reset);
+  Log().Trace("Handle restart: %d", restart);
 
-  if (reset == 1) {
-    Reset();
+  if (restart == 1) {
+    Restart();
   }
 }
 
@@ -919,7 +919,7 @@ BLYNK_WRITE(V5)
 BLYNK_WRITE(V6)
 {
   s_instance->TraceFlash(F("Blynk write V6"));
-  s_instance->HandleReset(param.asInt());
+  s_instance->HandleRestart(param.asInt());
 }
 
 BLYNK_WRITE(V7)

@@ -34,7 +34,7 @@ public:
   void HandleOpenFinish(float);
   void HandleRefreshRate(int);
   void HandleWindowProgress(int);
-  void HandleReset(int);
+  void HandleRestart(int);
   void HandleRefresh(int);
   void HandleFakeInsideHumidity(float);
   void HandleFakeSoilTemperature(float);
@@ -76,7 +76,7 @@ protected:
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
-  void Reset();
+  void Restart();
   void SwitchWaterHeating(bool on);
   void SwitchSoilHeating(bool on);
   void RunWindowActuator(bool forward);
