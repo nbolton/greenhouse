@@ -87,16 +87,44 @@ GreenhouseArduino::GreenhouseArduino() :
   m_insideHumidity(k_unknown),
   m_outsideTemperature(k_unknown),
   m_outsideHumidity(k_unknown),
+  m_soilTemperature(k_unknown),
+  m_waterTemperature(k_unknown),
   m_timerId(k_unknown),
   m_led(LOW),
   m_fakeInsideHumidity(k_unknown),
   m_fakeSoilTemperature(k_unknown),
   m_fakeSoilMoisture(k_unknown),
   m_refreshBusy(false),
+  m_lastWriteDone(false),
   m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
-  m_soilMoistureWarningSent(false)
+  m_soilMoistureWarningSent(false),
+  m_activeSwitch(k_unknown),
+  m_pvPowerSource(false),
+  m_pvVoltageSwitchOn(k_unknown),
+  m_pvVoltageSwitchOff(k_unknown),
+  m_pvVoltageCount(0),
+  m_pvVoltageAverage(0),
+  m_pvVoltageSum(0),
+  m_pvVoltageSensor(k_unknown),
+  m_pvVoltageOutput(k_unknown),
+  m_pvVoltageSensorMin(0),
+  m_pvVoltageSensorMax(k_unknown),
+  m_pvVoltageOutputMin(0),
+  m_pvVoltageOutputMax(k_unknown),
+  m_pvCurrentSensor(k_unknown),
+  m_pvCurrentOutput(k_unknown),
+  m_pvCurrentSensorMin(0),
+  m_pvCurrentSensorMax(k_unknown),
+  m_pvCurrentOutputMin(0),
+  m_pvCurrentOutputMax(k_unknown),
+  m_pvForceOn(false),
+  m_waterHeatingOn(false),
+  m_soilHeatingOn(false)
 {
+  for (int i = 0; i < k_switchCount; i++) {
+    m_switchState[i] = false;
+  }
 }
 
 void GreenhouseArduino::Setup()
