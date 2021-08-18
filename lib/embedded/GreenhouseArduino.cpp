@@ -167,8 +167,6 @@ void GreenhouseArduino::SwitchWaterHeating(bool on)
     return;
   }
 
-  Blynk.virtualWrite(V55, on);
-
   m_waterHeatingOn = on;
   if (on) {
     SetSwitch(k_pumpSwitch1, true);
@@ -184,8 +182,6 @@ void GreenhouseArduino::SwitchSoilHeating(bool on)
   if (m_soilHeatingOn == on) {
     return;
   }
-  
-  Blynk.virtualWrite(V56, on);
 
   m_soilHeatingOn = on;
   if (on) {
@@ -254,6 +250,8 @@ bool GreenhouseArduino::Refresh()
   Blynk.virtualWrite(V30, m_pvVoltageOutput);
   Blynk.virtualWrite(V42, m_pvCurrentSensor);
   Blynk.virtualWrite(V43, m_pvCurrentOutput);
+  Blynk.virtualWrite(V55, m_waterHeatingOn);
+  Blynk.virtualWrite(V56, m_soilHeatingOn);
 
   return ok;
 }
