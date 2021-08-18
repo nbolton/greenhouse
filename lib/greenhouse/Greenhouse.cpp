@@ -251,34 +251,39 @@ void Greenhouse::UpdateHeatingSystems()
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
-    if (WaterTemperature() < (DayWaterTemperature() - k_waterTempMargin)) {
-      SwitchWaterHeating(true);
-    }
-    else if (WaterTemperature() > (DayWaterTemperature() + k_waterTempMargin)) {
-      SwitchWaterHeating(false);
-    }
 
     if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
+     
       SwitchSoilHeating(true);
+
+      if (WaterTemperature() < (DayWaterTemperature() - k_waterTempMargin)) {
+        SwitchWaterHeating(true);
+      }
+      else if (WaterTemperature() > (DayWaterTemperature() + k_waterTempMargin)) {
+        SwitchWaterHeating(false);
+      }
     }
     else if (SoilTemperature() > (DaySoilTemperature() + k_soilTempMargin)) {
       SwitchSoilHeating(false);
+      SwitchWaterHeating(false);
     }
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
 
-    if (WaterTemperature() < (NightWaterTemperature() - k_waterTempMargin)) {
-      SwitchWaterHeating(true);
-    }
-    else if (WaterTemperature() > (NightWaterTemperature() + k_waterTempMargin)) {
-      SwitchWaterHeating(false);
-    }
-
     if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
+      
       SwitchSoilHeating(true);
+
+      if (WaterTemperature() < (NightWaterTemperature() - k_waterTempMargin)) {
+        SwitchWaterHeating(true);
+      }
+      else if (WaterTemperature() > (NightWaterTemperature() + k_waterTempMargin)) {
+        SwitchWaterHeating(false);
+      }
     }
     else if (SoilTemperature() > (NightSoilTemperature() + k_soilTempMargin)) {
       SwitchSoilHeating(false);
+      SwitchWaterHeating(false);
     }
   }
 }
