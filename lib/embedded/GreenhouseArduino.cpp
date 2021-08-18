@@ -172,6 +172,7 @@ void GreenhouseArduino::Setup()
   Blynk.begin(k_auth, k_ssid, k_pass);
 
   Log().Trace("System ready");
+  Blynk.virtualWrite(V52, "Ready");
   StartBeep(2);
 }
 
@@ -398,6 +399,7 @@ void GreenhouseArduino::Restart()
 {
   FlashLed(k_ledReset);
   ReportWarning("System restarting");
+  Blynk.virtualWrite(V52, "Restarting");
 
   Blynk.disconnect();
   wdt_disable();
