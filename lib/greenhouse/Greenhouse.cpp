@@ -289,12 +289,16 @@ void Greenhouse::UpdateHeatingSystems()
 
 void Greenhouse::WindowProgress(int value)
 {
-  if (Greenhouse::WindowProgress() != k_unknown) {
+  // HACK: commenting out this code as I'm not sure what it does
+  // and it causes infinite recursion.
+  /*
+  if (m_windowProgress != k_unknown) {
     // only apply window progress if it's not the 1st time;
     // otherwise the window will always open from 0 on start,
     // and the position might be something else.
     ApplyWindowProgress((float)value / 100);
   }
+  */
 
   m_windowProgress = value;
 }
