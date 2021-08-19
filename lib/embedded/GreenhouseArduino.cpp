@@ -723,6 +723,18 @@ void GreenhouseArduino::RefreshRate(int refreshRate)
   Log().Trace("New refresh timer: %d", m_timerId);
 }
 
+void GreenhouseArduino::HandleWindowProgress(int value)
+{
+  if (WindowProgress() != k_unknown) {
+    // only apply window progress if it's not the 1st time;
+    // otherwise the window will always open from 0 on start,
+    // and the position might be something else.
+    ApplyWindowProgress((float)value / 100);
+  }
+
+  WindowProgress(value);
+}
+
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
@@ -803,7 +815,7 @@ BLYNK_WRITE(V8)
 
 BLYNK_WRITE(V9)
 {
-  s_instance->WindowProgress(param.asInt());
+  s_instance->HandleWindowProgress(param.asInt());
 }
 
 BLYNK_WRITE(V14)

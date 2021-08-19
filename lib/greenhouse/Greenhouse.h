@@ -52,7 +52,7 @@ public:
   virtual float SoilTemperature() const { return k_unknown; }
   virtual float WaterTemperature() const { return k_unknown; }
   virtual float SoilMoisture() const { return k_unknown; }
-  virtual void WindowProgress(int value);
+  virtual void WindowProgress(int value) { m_windowProgress = value; }
   virtual int WindowProgress() const { return m_windowProgress; }
   virtual void AutoMode(bool value) { m_autoMode = value; }
   virtual bool AutoMode() const { return m_autoMode; }
