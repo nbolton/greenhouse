@@ -12,6 +12,14 @@ const int k_switchCount = 4;
 class Adafruit_SHT31;
 struct ADC;
 
+enum LedFlashTimes {
+  k_ledRefresh = 1,
+  k_ledSend = 2,
+  k_ledRecieve = 3,
+  k_ledStarted = 4,
+  k_ledRestart = 5
+};
+
 class GreenhouseArduino : public Greenhouse {
 public:
   static GreenhouseArduino &Instance();
@@ -23,47 +31,13 @@ public:
   void Loop();
   bool Refresh();
   void RelayCallback();
+  void LastWrite();
+  void SystemStarted();
+  void Restart();
+  void ToggleActiveSwitch();
 
   const ArduinoLog &Log() const { return m_log; }
   void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
-
-  void HandleLastWrite();
-  void HandleSystemStarted();
-  void HandleAutoMode(bool);
-  void HandleOpenStart(float);
-  void HandleOpenFinish(float);
-  void HandleRefreshRate(int);
-  void HandleWindowProgress(int);
-  void HandleRestart(int);
-  void HandleRefresh(int);
-  void HandleFakeInsideHumidity(float);
-  void HandleFakeSoilTemperature(float);
-  void HandleFakeSoilMoisture(float);
-  void HandleTestMode(int);
-  void HandleOpenDayMinimum(int);
-  void HandleInsideHumidityWarning(float);
-  void HandleSoilMostureWarning(float);
-  void HandleActiveSwitch(int);
-  void HandleToggleSwitch(int);
-  void HandleDayStartHour(int param) { DayStartHour(param); }
-  void HandleDayEndHour(int param) { DayEndHour(param); }
-  void HandlePvVoltageSensorMin(float param) { m_pvVoltageSensorMin = param; }
-  void HandlePvVoltageSensorMax(float param) { m_pvVoltageSensorMax = param; }
-  void HandlePvVoltageOutputMin(float param) { m_pvVoltageOutputMin = param; }
-  void HandlePvVoltageOutputMax(float param) { m_pvVoltageOutputMax = param; }
-  void HandlePvCurrentSensorMin(float param) { m_pvCurrentSensorMin = param; }
-  void HandlePvCurrentSensorMax(float param) { m_pvCurrentSensorMax = param; }
-  void HandlePvCurrentOutputMin(float param) { m_pvCurrentOutputMin = param; }
-  void HandlePvCurrentOutputMax(float param) { m_pvCurrentOutputMax = param; }
-  void HandlePvVoltageSwitchOn(float param) { m_pvVoltageSwitchOn = param; }
-  void HandlePvVoltageSwitchOff(float param) { m_pvVoltageSwitchOff = param; }
-  void HandlePvForceOn(int param) { m_pvForceOn = param; }
-  void HandleWindowOpenSpeed(int value) { WindowActuatorSpeedPercent(value); }
-  void HandleWindowOpenRuntime(float value) { WindowActuatorRuntimeSec(value); }
-  void HandleDayWaterTemperature(float value) { DayWaterTemperature(value); }
-  void HandleNightWaterTemperature(float value) { NightWaterTemperature(value); }
-  void HandleDaySoilTemperature(float value) { DaySoilTemperature(value); }
-  void HandleNightSoilTemperature(float value) { NightSoilTemperature(value); }
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -76,7 +50,6 @@ protected:
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors();
-  void Restart();
   void SwitchWaterHeating(bool on);
   void SwitchSoilHeating(bool on);
   void RunWindowActuator(bool forward);
@@ -84,6 +57,7 @@ protected:
   void SetWindowActuatorSpeed(int speed);
   void SystemDelay(unsigned long ms);
 
+public:
   // getters & setters
   int CurrentHour() const;
   float InsideTemperature() const { return m_insideTemperature; }
@@ -93,12 +67,27 @@ protected:
   float SoilTemperature() const;
   float SoilMoisture() const;
   float WaterTemperature() const { return m_waterTemperature; }
+  void RefreshRate(int value);
+  void FakeInsideHumidity(float value) { m_fakeInsideHumidity = value; }
+  void FakeSoilTemperature(float value) { m_fakeSoilTemperature = value; }
+  void FakeSoilMoisture(float value){ m_fakeSoilMoisture = value; }
+  void ActiveSwitch(int value) { m_activeSwitch = value; }
+  void PvVoltageSensorMin(float value) { m_pvVoltageSensorMin = value; }
+  void PvVoltageSensorMax(float value) { m_pvVoltageSensorMax = value; }
+  void PvVoltageOutputMin(float value) { m_pvVoltageOutputMin = value; }
+  void PvVoltageOutputMax(float value) { m_pvVoltageOutputMax = value; }
+  void PvCurrentSensorMin(float value) { m_pvCurrentSensorMin = value; }
+  void PvCurrentSensorMax(float value) { m_pvCurrentSensorMax = value; }
+  void PvCurrentOutputMin(float value) { m_pvCurrentOutputMin = value; }
+  void PvCurrentOutputMax(float value) { m_pvCurrentOutputMax = value; }
+  void PvVoltageSwitchOn(float value) { m_pvVoltageSwitchOn = value; }
+  void PvVoltageSwitchOff(float value) { m_pvVoltageSwitchOff = value; }
+  void PvForceOn(int value) { m_pvForceOn = value; }
 
 private:
   void StartBeep(int times);
   void Actuator(bool forward, int s, int t);
   void SetSwitch(int i, bool on);
-  void ToggleActiveSwitch();
   void SwitchPower(bool pv);
   void MeasureVoltage();
   void MeasureCurrent();

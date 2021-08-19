@@ -4,14 +4,6 @@
 
 const int k_unknown = -1;
 
-enum LedFlashTimes {
-  k_ledRefresh = 1,
-  k_ledSend = 2,
-  k_ledRecieve = 3,
-  k_ledStarted = 4,
-  k_ledReset = 5
-};
-
 class Greenhouse {
 public:
   Greenhouse();
@@ -31,7 +23,6 @@ protected:
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
 
-  virtual void FlashLed(LedFlashTimes times) {}
   virtual bool ReadSensors() { return false; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
@@ -47,6 +38,7 @@ protected:
   virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void SystemDelay(unsigned long ms) {}
 
+public:
   // getters & setters
   virtual int CurrentHour() const { return k_unknown; }
   virtual float InsideTemperature() const { return k_unknown; }
@@ -56,7 +48,7 @@ protected:
   virtual float SoilTemperature() const { return k_unknown; }
   virtual float WaterTemperature() const { return k_unknown; }
   virtual float SoilMoisture() const { return k_unknown; }
-  virtual void WindowProgress(int value) { m_windowProgress = value; }
+  virtual void WindowProgress(int value);
   virtual int WindowProgress() const { return m_windowProgress; }
   virtual void AutoMode(bool value) { m_autoMode = value; }
   virtual bool AutoMode() const { return m_autoMode; }
@@ -89,7 +81,6 @@ protected:
   virtual void NightSoilTemperature(float value) { m_nightSoilTemperature = value; }
   virtual float NightSoilTemperature() const { return m_nightSoilTemperature; }
   
-
 private:
   ::Log m_log;
   bool m_sensorWarningSent;

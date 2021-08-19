@@ -37,7 +37,6 @@ void Greenhouse::Loop() {}
 
 bool Greenhouse::Refresh()
 {
-  FlashLed(k_ledRefresh);
   Log().Trace("Refreshing");
 
   bool sensorsOk = ReadSensors();
@@ -286,4 +285,16 @@ void Greenhouse::UpdateHeatingSystems()
       SwitchWaterHeating(false);
     }
   }
+}
+
+void Greenhouse::WindowProgress(int value)
+{
+  if (Greenhouse::WindowProgress() != k_unknown) {
+    // only apply window progress if it's not the 1st time;
+    // otherwise the window will always open from 0 on start,
+    // and the position might be something else.
+    ApplyWindowProgress((float)value / 100);
+  }
+
+  m_windowProgress = value;
 }

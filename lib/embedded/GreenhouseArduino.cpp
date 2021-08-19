@@ -266,6 +266,8 @@ bool GreenhouseArduino::Refresh()
     return false;
   }
 
+  FlashLed(k_ledRefresh);
+  
   // TODO: this isn't an ideal mutex lock because the two threads could
   // hit this line at the same time.
   m_refreshBusy = true;
@@ -397,7 +399,7 @@ void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
 
 void GreenhouseArduino::Restart()
 {
-  FlashLed(k_ledReset);
+  FlashLed(k_ledRestart);
   ReportWarning("System restarting");
   Blynk.virtualWrite(V52, "Restarting");
 
@@ -564,8 +566,6 @@ void GreenhouseArduino::MeasureCurrent()
 
 void GreenhouseArduino::SwitchPower(bool pv)
 {
-  Log().Trace("----");
-
   if (pv) {
     s_shiftRegisters.set_shift(k_relayPin);
   }
@@ -573,14 +573,9 @@ void GreenhouseArduino::SwitchPower(bool pv)
     s_shiftRegisters.clear_shift(k_relayPin);
   }
 
-  Log().Trace(pv ? "PV on" : "PV off");
   m_pvPowerSource = pv;
-
   Log().Trace("Source: %s", pv ? "PV" : "PSU");
-
   Blynk.virtualWrite(V28, m_pvPowerSource);
-
-  Log().Trace("----");
 }
 
 int GreenhouseArduino::CurrentHour() const { return s_timeClient.getHours(); }
@@ -678,7 +673,7 @@ void GreenhouseArduino::ReportWarnings()
   }
 }
 
-void GreenhouseArduino::HandleLastWrite()
+void GreenhouseArduino::LastWrite()
 {
   if (m_lastWriteDone) {
     return;
@@ -690,10 +685,10 @@ void GreenhouseArduino::HandleLastWrite()
 
   // if this is the first time that the last write was done,
   // this means that the system has started.
-  HandleSystemStarted();
+  SystemStarted();
 }
 
-void GreenhouseArduino::HandleSystemStarted()
+void GreenhouseArduino::SystemStarted()
 {
   // run the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -706,39 +701,8 @@ void GreenhouseArduino::HandleSystemStarted()
   ReportInfo("System started");
 }
 
-void GreenhouseArduino::HandleAutoMode(bool autoMode)
+void GreenhouseArduino::RefreshRate(int refreshRate)
 {
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle auto mode: %s", (autoMode ? "Auto" : "Manual"));
-
-  AutoMode(autoMode == 1);
-
-  // light on for manual mode
-  m_led = !autoMode ? LOW : HIGH;
-  digitalWrite(LED_BUILTIN, m_led);
-}
-
-void GreenhouseArduino::HandleOpenStart(float openStart)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle open start temperature: %.2fC", openStart);
-
-  OpenStart(openStart);
-}
-
-void GreenhouseArduino::HandleOpenFinish(float openFinish)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle open finish temperature: %.2fC", openFinish);
-
-  OpenFinish(openFinish);
-}
-
-void GreenhouseArduino::HandleRefreshRate(int refreshRate)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle refresh rate: %ds", refreshRate);
-
   if (refreshRate <= 0) {
     Log().Trace("Invalid refresh rate: %ds", refreshRate);
     return;
@@ -751,115 +715,6 @@ void GreenhouseArduino::HandleRefreshRate(int refreshRate)
 
   m_timerId = s_timer.setInterval(refreshRate * 1000L, refreshTimer);
   Log().Trace("New refresh timer: %d", m_timerId);
-}
-
-void GreenhouseArduino::HandleWindowProgress(int windowProgress)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle window progress: %ds", windowProgress);
-
-  if (WindowProgress() != k_unknown) {
-    // only apply window progress if it's not the 1st time;
-    // otherwise the window will always open from 0 on start,
-    // and the position might be something else.
-    ApplyWindowProgress((float)windowProgress / 100);
-  }
-
-  WindowProgress(windowProgress);
-}
-
-void GreenhouseArduino::HandleRestart(int restart)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle restart: %d", restart);
-
-  if (restart == 1) {
-    Restart();
-  }
-}
-
-void GreenhouseArduino::HandleRefresh(int refresh)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle refresh: %d", refresh);
-
-  if (refresh == 1) {
-    Refresh();
-  }
-}
-
-void GreenhouseArduino::HandleFakeInsideHumidity(float fakeInsideHumidity)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle fake inside humidity: %.2f%%", fakeInsideHumidity);
-
-  m_fakeInsideHumidity = fakeInsideHumidity;
-}
-
-void GreenhouseArduino::HandleFakeSoilTemperature(float fakeSoilTemperature)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle fake soil temperature: %.2fC", fakeSoilTemperature);
-
-  m_fakeSoilTemperature = fakeSoilTemperature;
-}
-
-void GreenhouseArduino::HandleFakeSoilMoisture(float fakeSoilMoisture)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle fake soil moisture: %.2f%%", fakeSoilMoisture);
-
-  m_fakeSoilMoisture = fakeSoilMoisture;
-}
-
-void GreenhouseArduino::HandleTestMode(int testMode)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle test mode: %s", testMode == 1 ? "On" : "Off");
-
-  TestMode(testMode == 1);
-}
-
-void GreenhouseArduino::HandleOpenDayMinimum(int openDayMinimum)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle open day minimum: %d", openDayMinimum);
-
-  OpenDayMinimum(openDayMinimum);
-}
-
-void GreenhouseArduino::HandleInsideHumidityWarning(float insideHumidityWarning)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle inside humidity warning: %d", insideHumidityWarning);
-
-  InsideHumidityWarning(insideHumidityWarning);
-}
-
-void GreenhouseArduino::HandleSoilMostureWarning(float soilMostureWarning)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle soil moisture warning: %d", soilMostureWarning);
-
-  SoilMostureWarning(soilMostureWarning);
-}
-
-void GreenhouseArduino::HandleActiveSwitch(int activeSwitch)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle toggle switch");
-
-  m_activeSwitch = activeSwitch;
-}
-
-void GreenhouseArduino::HandleToggleSwitch(int toggleSwitch)
-{
-  FlashLed(k_ledRecieve);
-  Log().Trace("Handle toggle switch");
-
-  if (toggleSwitch == 1) {
-    ToggleActiveSwitch();
-  }
 }
 
 BLYNK_CONNECTED()
@@ -906,215 +761,185 @@ BLYNK_CONNECTED()
 
 BLYNK_WRITE(V0)
 {
-  s_instance->TraceFlash(F("Blynk write V0"));
-  s_instance->HandleAutoMode(param.asInt());
+  s_instance->AutoMode(param.asInt() == 1);
 }
 
 BLYNK_WRITE(V3)
 {
-  s_instance->TraceFlash(F("Blynk write V3"));
-  s_instance->HandleRefreshRate(param.asInt());
+  s_instance->RefreshRate(param.asInt());
 }
 
 BLYNK_WRITE(V5)
 {
-  s_instance->TraceFlash(F("Blynk write V5"));
-  s_instance->HandleOpenStart(param.asFloat());
+  s_instance->OpenStart(param.asFloat());
 }
 
 BLYNK_WRITE(V6)
 {
-  s_instance->TraceFlash(F("Blynk write V6"));
-  s_instance->HandleRestart(param.asInt());
+  if (param.asInt() == 1) {
+    s_instance->Restart();
+  }
 }
 
 BLYNK_WRITE(V7)
 {
-  s_instance->TraceFlash(F("Blynk write V7"));
-  s_instance->HandleRefresh(param.asInt());
+  if (param.asInt() == 1) {
+    s_instance->Refresh();
+  }
 }
 
 BLYNK_WRITE(V8)
 {
-  s_instance->TraceFlash(F("Blynk write V8"));
-  s_instance->HandleOpenFinish(param.asFloat());
+  s_instance->OpenFinish(param.asFloat());
 }
 
 BLYNK_WRITE(V9)
 {
-  s_instance->TraceFlash(F("Blynk write V9"));
-  s_instance->HandleWindowProgress(param.asInt());
+  s_instance->WindowProgress(param.asInt());
 }
 
 BLYNK_WRITE(V14)
 {
-  s_instance->TraceFlash(F("Blynk write V14"));
-  s_instance->HandleTestMode(param.asInt());
+  s_instance->TestMode(param.asInt() == 1);
 }
 
 BLYNK_WRITE(V15)
 {
-  s_instance->TraceFlash(F("Blynk write V15"));
-  s_instance->HandleOpenDayMinimum(param.asInt());
+  s_instance->OpenDayMinimum(param.asInt());
 }
 
 BLYNK_WRITE(V16)
 {
-  s_instance->TraceFlash(F("Blynk write V16"));
-  s_instance->HandleInsideHumidityWarning(param.asFloat());
+  s_instance->InsideHumidityWarning(param.asFloat());
 }
 
 BLYNK_WRITE(V17)
 {
-  s_instance->TraceFlash(F("Blynk write V17"));
-  s_instance->HandleSoilMostureWarning(param.asFloat());
+  s_instance->SoilMostureWarning(param.asFloat());
 }
 
 BLYNK_WRITE(V18)
 {
-  s_instance->TraceFlash(F("Blynk write V18"));
-  s_instance->HandleFakeSoilTemperature(param.asFloat());
+  s_instance->FakeSoilTemperature(param.asFloat());
 }
 
 BLYNK_WRITE(V22)
 {
-  s_instance->TraceFlash(F("Blynk write V22"));
-  s_instance->HandleFakeSoilMoisture(param.asFloat());
+  s_instance->FakeSoilMoisture(param.asFloat());
 }
 
 BLYNK_WRITE(V23)
 {
-  s_instance->TraceFlash(F("Blynk write V23"));
-  s_instance->HandleFakeInsideHumidity(param.asFloat());
+  s_instance->FakeInsideHumidity(param.asFloat());
 }
 
 BLYNK_WRITE(V24)
 {
-  s_instance->TraceFlash(F("Blynk write V24"));
-  s_instance->HandleActiveSwitch(param.asInt());
+  s_instance->ActiveSwitch(param.asInt());
 }
 
 BLYNK_WRITE(V25)
 {
-  s_instance->TraceFlash(F("Blynk write V25"));
-  s_instance->HandleToggleSwitch(param.asInt());
+  if (param.asInt() == 1) {
+    s_instance->ToggleActiveSwitch();
+  }
 }
 
 BLYNK_WRITE(V31)
 {
-  s_instance->TraceFlash(F("Blynk write V31"));
-  s_instance->HandleDayStartHour(param.asInt());
+  s_instance->DayStartHour(param.asInt());
 }
 
 BLYNK_WRITE(V32)
 {
-  s_instance->TraceFlash(F("Blynk write V32"));
-  s_instance->HandleDayEndHour(param.asInt());
+  s_instance->DayEndHour(param.asInt());
 }
 
 BLYNK_WRITE(V34)
 {
-  s_instance->TraceFlash(F("Blynk write V34"));
-  s_instance->HandlePvVoltageSensorMin(param.asFloat());
+  s_instance->PvVoltageSensorMin(param.asFloat());
 }
 
 BLYNK_WRITE(V35)
 {
-  s_instance->TraceFlash(F("Blynk write V35"));
-  s_instance->HandlePvVoltageSensorMax(param.asFloat());
+  s_instance->PvVoltageSensorMax(param.asFloat());
 }
 
 BLYNK_WRITE(V36)
 {
-  s_instance->TraceFlash(F("Blynk write V36"));
-  s_instance->HandlePvVoltageOutputMin(param.asFloat());
+  s_instance->PvVoltageOutputMin(param.asFloat());
 }
 
 BLYNK_WRITE(V37)
 {
-  s_instance->TraceFlash(F("Blynk write V37"));
-  s_instance->HandlePvVoltageOutputMax(param.asFloat());
+  s_instance->PvVoltageOutputMax(param.asFloat());
 }
 
 BLYNK_WRITE(V38)
 {
-  s_instance->TraceFlash(F("Blynk write V38"));
-  s_instance->HandlePvCurrentSensorMin(param.asFloat());
+  s_instance->PvCurrentSensorMin(param.asFloat());
 }
 
 BLYNK_WRITE(V39)
 {
-  s_instance->TraceFlash(F("Blynk write V39"));
-  s_instance->HandlePvCurrentSensorMax(param.asFloat());
+  s_instance->PvCurrentSensorMax(param.asFloat());
 }
 
 BLYNK_WRITE(V40)
 {
-  s_instance->TraceFlash(F("Blynk write V40"));
-  s_instance->HandlePvCurrentOutputMin(param.asFloat());
+  s_instance->PvCurrentOutputMin(param.asFloat());
 }
 
 BLYNK_WRITE(V41)
 {
-  s_instance->TraceFlash(F("Blynk write V41"));
-  s_instance->HandlePvCurrentOutputMax(param.asFloat());
+  s_instance->PvCurrentOutputMax(param.asFloat());
 }
 
 BLYNK_WRITE(V44)
 {
-  s_instance->TraceFlash(F("Blynk write V44"));
-  s_instance->HandlePvVoltageSwitchOn(param.asFloat());
+  s_instance->PvVoltageSwitchOn(param.asFloat());
 }
 
 BLYNK_WRITE(V45)
 {
-  s_instance->TraceFlash(F("Blynk write V45"));
-  s_instance->HandlePvVoltageSwitchOff(param.asFloat());
+  s_instance->PvVoltageSwitchOff(param.asFloat());
 }
 
 BLYNK_WRITE(V47)
 {
-  s_instance->TraceFlash(F("Blynk write V47"));
-  s_instance->HandlePvForceOn(param.asInt());
+  s_instance->PvForceOn(param.asInt());
 }
 
 BLYNK_WRITE(V48)
 {
-  s_instance->TraceFlash(F("Blynk write V48"));
-  s_instance->HandleWindowOpenSpeed(param.asInt());
+  s_instance->WindowActuatorSpeedPercent(param.asInt());
 }
 
 BLYNK_WRITE(V49)
 {
-  s_instance->TraceFlash(F("Blynk write V49"));
-  s_instance->HandleWindowOpenRuntime(param.asFloat());
+  s_instance->WindowActuatorRuntimeSec(param.asFloat());
 }
 
 BLYNK_WRITE(V50)
 {
-  s_instance->TraceFlash(F("Blynk write V50"));
-  s_instance->HandleDayWaterTemperature(param.asFloat());
+  s_instance->DayWaterTemperature(param.asFloat());
 }
 
 BLYNK_WRITE(V51)
 {
-  s_instance->TraceFlash(F("Blynk write V51"));
-  s_instance->HandleNightWaterTemperature(param.asFloat());
+  s_instance->NightWaterTemperature(param.asFloat());
 }
 
 BLYNK_WRITE(V53)
 {
-  s_instance->TraceFlash(F("Blynk write V53"));
-  s_instance->HandleDaySoilTemperature(param.asFloat());
+  s_instance->DaySoilTemperature(param.asFloat());
 }
-
 
 BLYNK_WRITE(V54)
 {
-  s_instance->TraceFlash(F("Blynk write V54"));
-  s_instance->HandleNightSoilTemperature(param.asFloat());
+  s_instance->NightSoilTemperature(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
-  s_instance->HandleLastWrite();
+  s_instance->LastWrite();
 }
