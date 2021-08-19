@@ -11,6 +11,7 @@ public:
     m_calls_RunWindowActuator(0),
     m_calls_SwitchWaterHeating(0),
     m_calls_SwitchSoilHeating(0),
+    m_calls_SwitchAirHeating(0),
     m_calls_StopActuator(0),
     m_calls_SetWindowActuatorSpeed(0),
     m_calls_SystemDelay(0)
