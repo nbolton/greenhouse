@@ -31,6 +31,7 @@ protected:
   virtual void AddWindowProgressDelta(float delta);
   virtual void SwitchWaterHeating(bool on) {}
   virtual void SwitchSoilHeating(bool on) {}
+  virtual void SwitchAirHeating(bool on) {}
   virtual void UpdateHeatingSystems();
   virtual void AdjustWindow(bool open, float delta);
   virtual void RunWindowActuator(bool forward) {}
@@ -41,10 +42,10 @@ protected:
 public:
   // getters & setters
   virtual int CurrentHour() const { return k_unknown; }
-  virtual float InsideTemperature() const { return k_unknown; }
-  virtual float InsideHumidity() const { return k_unknown; }
-  virtual float OutsideTemperature() const { return k_unknown; }
-  virtual float OutsideHumidity() const { return k_unknown; }
+  virtual float InsideAirTemperature() const { return k_unknown; }
+  virtual float InsideAirHumidity() const { return k_unknown; }
+  virtual float OutsideAirTemperature() const { return k_unknown; }
+  virtual float OutsideAirHumidity() const { return k_unknown; }
   virtual float SoilTemperature() const { return k_unknown; }
   virtual float WaterTemperature() const { return k_unknown; }
   virtual float SoilMoisture() const { return k_unknown; }
@@ -80,7 +81,21 @@ public:
   virtual float DaySoilTemperature() const { return m_daySoilTemperature; }
   virtual void NightSoilTemperature(float value) { m_nightSoilTemperature = value; }
   virtual float NightSoilTemperature() const { return m_nightSoilTemperature; }
+  virtual void DayAirTemperature(float value) { m_dayAirTemperature = value; }
+  virtual float DayAirTemperature() const { return m_dayAirTemperature; }
+  virtual void NightAirTemperature(float value) { m_nightAirTemperature = value; }
+  virtual float NightAirTemperature() const { return m_nightAirTemperature; }
+  virtual void WaterHeatingOn(bool value) { m_waterHeatingOn = value; }
+  virtual bool WaterHeatingOn() const { return m_waterHeatingOn; }
+  virtual void SoilHeatingOn(bool value) { m_soilHeatingOn = value; }
+  virtual bool SoilHeatingOn() const { return m_soilHeatingOn; }
+  virtual void AirHeatingOn(bool value) { m_airHeatingOn = value; }
+  virtual bool AirHeatingOn() const { return m_airHeatingOn; }
   
+private:
+  void UpdateDayWaterHeating();
+  void UpdateNightWaterHeating();
+
 private:
   ::Log m_log;
   bool m_sensorWarningSent;
@@ -100,6 +115,11 @@ private:
   float m_nightWaterTemperature;
   float m_daySoilTemperature;
   float m_nightSoilTemperature;
+  float m_dayAirTemperature;
+  float m_nightAirTemperature;
+  bool m_waterHeatingOn;
+  bool m_soilHeatingOn;
+  bool m_airHeatingOn;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

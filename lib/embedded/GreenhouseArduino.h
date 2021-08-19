@@ -52,6 +52,7 @@ protected:
   bool ReadSensors();
   void SwitchWaterHeating(bool on);
   void SwitchSoilHeating(bool on);
+  void SwitchAirHeating(bool on);
   void RunWindowActuator(bool forward);
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);
@@ -60,10 +61,10 @@ protected:
 public:
   // getters & setters
   int CurrentHour() const;
-  float InsideTemperature() const { return m_insideTemperature; }
-  float InsideHumidity() const;
-  float OutsideTemperature() const { return m_outsideTemperature; }
-  float OutsideHumidity() const { return m_outsideHumidity; }
+  float InsideAirTemperature() const { return m_insideAirTemperature; }
+  float InsideAirHumidity() const;
+  float OutsideAirTemperature() const { return m_outsideAirTemperature; }
+  float OutsideAirHumidity() const { return m_outsideAirHumidity; }
   float SoilTemperature() const;
   float SoilMoisture() const;
   float WaterTemperature() const { return m_waterTemperature; }
@@ -96,10 +97,10 @@ private:
 
 private:
   ArduinoLog m_log;
-  float m_insideTemperature;
-  float m_insideHumidity;
-  float m_outsideTemperature;
-  float m_outsideHumidity;
+  float m_insideAirTemperature;
+  float m_insideAirHumidity;
+  float m_outsideAirTemperature;
+  float m_outsideAirHumidity;
   float m_soilTemperature;
   float m_waterTemperature;
   int m_timerId;
@@ -133,6 +134,4 @@ private:
   float m_pvCurrentOutputMin;
   float m_pvCurrentOutputMax;
   bool m_pvForceOn;
-  bool m_waterHeatingOn;
-  bool m_soilHeatingOn;
 };

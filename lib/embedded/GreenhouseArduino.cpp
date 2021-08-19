@@ -83,10 +83,10 @@ void refreshTimer() { s_instance->Refresh(); }
 
 GreenhouseArduino::GreenhouseArduino() :
   m_log(),
-  m_insideTemperature(k_unknown),
-  m_insideHumidity(k_unknown),
-  m_outsideTemperature(k_unknown),
-  m_outsideHumidity(k_unknown),
+  m_insideAirTemperature(k_unknown),
+  m_insideAirHumidity(k_unknown),
+  m_outsideAirTemperature(k_unknown),
+  m_outsideAirHumidity(k_unknown),
   m_soilTemperature(k_unknown),
   m_waterTemperature(k_unknown),
   m_timerId(k_unknown),
@@ -118,9 +118,7 @@ GreenhouseArduino::GreenhouseArduino() :
   m_pvCurrentSensorMax(k_unknown),
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
-  m_pvForceOn(false),
-  m_waterHeatingOn(false),
-  m_soilHeatingOn(false)
+  m_pvForceOn(false)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -192,11 +190,11 @@ void GreenhouseArduino::Loop()
 void GreenhouseArduino::SwitchWaterHeating(bool on)
 {
   // if no state change, do nothing.
-  if (m_waterHeatingOn == on) {
+  if (WaterHeatingOn() == on) {
     return;
   }
 
-  m_waterHeatingOn = on;
+  WaterHeatingOn(on);
   if (on) {
     SetSwitch(k_pumpSwitch1, true);
   }
@@ -208,27 +206,52 @@ void GreenhouseArduino::SwitchWaterHeating(bool on)
 void GreenhouseArduino::SwitchSoilHeating(bool on)
 {
   // if no state change, do nothing.
-  if (m_soilHeatingOn == on) {
+  if (SoilHeatingOn() == on) {
     return;
   }
 
-  m_soilHeatingOn = on;
+  SoilHeatingOn(on);
   if (on) {
-    // TODO: this is actually for air heating, which should be a separate system.
-    SetSwitch(k_fanSwitch, true);
+    SetSwitch(k_pumpSwitch2, true);
+  }
+  else {
+    // HACK: until the fan pump arrives, we're sharing the soil heating pump,
+    // so only turn off if not in use
+    if (!AirHeatingOn()) {
+      SetSwitch(k_pumpSwitch2, false);
+    }
+  }
+}
 
-    // HACK: wait for fan to spool up before starting the pump. otherwise, 
+void GreenhouseArduino::SwitchAirHeating(bool on)
+{
+  // if no state change, do nothing.
+  if (AirHeatingOn() == on) {
+    return;
+  }
+
+  AirHeatingOn(on);
+  if (on) {
+    SetSwitch(k_fanSwitch, true);
+    SetSwitch(k_pumpSwitch2, true);
+
+    // TODO: figure out if this HACK is still needed (we added another cap since)
+    // ----
+    // HACK: delay spool up before starting the pump. otherwise, 
     // powering everything on at the same time drains the caps and
     // causes the microcontroller to lose power. perhaps this can be fixed
     // by having a cap for the microcontroller and a diode to prevent the
     // power components from stealing the power.
-    delay(5000);
-
-    SetSwitch(k_pumpSwitch2, true);
+    //delay(5000);
   }
   else {
     SetSwitch(k_fanSwitch, false);
-    SetSwitch(k_pumpSwitch2, false);
+
+    // HACK: until the fan pump arrives, we're sharing the soil heating pump,
+    // so only turn off if not in use
+    if (!SoilHeatingOn()) {
+      SetSwitch(k_pumpSwitch2, false);
+    }
   }
 }
 
@@ -267,7 +290,7 @@ bool GreenhouseArduino::Refresh()
   }
 
   FlashLed(k_ledRefresh);
-  
+
   // TODO: this isn't an ideal mutex lock because the two threads could
   // hit this line at the same time.
   m_refreshBusy = true;
@@ -281,8 +304,9 @@ bool GreenhouseArduino::Refresh()
   Blynk.virtualWrite(V30, m_pvVoltageOutput);
   Blynk.virtualWrite(V42, m_pvCurrentSensor);
   Blynk.virtualWrite(V43, m_pvCurrentOutput);
-  Blynk.virtualWrite(V55, m_waterHeatingOn);
-  Blynk.virtualWrite(V56, m_soilHeatingOn);
+  Blynk.virtualWrite(V55, WaterHeatingOn());
+  Blynk.virtualWrite(V56, SoilHeatingOn());
+  Blynk.virtualWrite(V59, AirHeatingOn());
 
   return ok;
 }
@@ -300,12 +324,12 @@ void GreenhouseArduino::FlashLed(LedFlashTimes times)
   }
 }
 
-float GreenhouseArduino::InsideHumidity() const
+float GreenhouseArduino::InsideAirHumidity() const
 {
   if (TestMode()) {
     return m_fakeInsideHumidity;
   }
-  return m_insideHumidity;
+  return m_insideAirHumidity;
 }
 
 float GreenhouseArduino::SoilTemperature() const
@@ -332,27 +356,27 @@ bool GreenhouseArduino::ReadSensors()
 
   int failures = 0;
 
-  m_insideTemperature = s_temperatureSensor1.readTemperature();
-  if (isnan(m_insideTemperature)) {
-    m_insideTemperature = k_unknown;
+  m_insideAirTemperature = s_temperatureSensor1.readTemperature();
+  if (isnan(m_insideAirTemperature)) {
+    m_insideAirTemperature = k_unknown;
     failures++;
   }
 
-  m_insideHumidity = s_temperatureSensor1.readHumidity();
-  if (isnan(m_insideHumidity)) {
-    m_insideHumidity = k_unknown;
+  m_insideAirHumidity = s_temperatureSensor1.readHumidity();
+  if (isnan(m_insideAirHumidity)) {
+    m_insideAirHumidity = k_unknown;
     failures++;
   }
 
-  m_outsideTemperature = s_temperatureSensor2.readTemperature();
-  if (isnan(m_outsideTemperature)) {
-    m_outsideTemperature = k_unknown;
+  m_outsideAirTemperature = s_temperatureSensor2.readTemperature();
+  if (isnan(m_outsideAirTemperature)) {
+    m_outsideAirTemperature = k_unknown;
     failures++;
   }
 
-  m_outsideHumidity = s_temperatureSensor2.readHumidity();
-  if (isnan(m_outsideHumidity)) {
-    m_outsideHumidity = k_unknown;
+  m_outsideAirHumidity = s_temperatureSensor2.readHumidity();
+  if (isnan(m_outsideAirHumidity)) {
+    m_outsideAirHumidity = k_unknown;
     failures++;
   }
 
@@ -619,10 +643,10 @@ void GreenhouseArduino::ReportCritical(const char *format, ...)
 void GreenhouseArduino::ReportSensorValues()
 {
   FlashLed(k_ledSend);
-  Blynk.virtualWrite(V1, InsideTemperature());
-  Blynk.virtualWrite(V2, InsideHumidity());
-  Blynk.virtualWrite(V19, OutsideTemperature());
-  Blynk.virtualWrite(V20, OutsideHumidity());
+  Blynk.virtualWrite(V1, InsideAirTemperature());
+  Blynk.virtualWrite(V2, InsideAirHumidity());
+  Blynk.virtualWrite(V19, OutsideAirTemperature());
+  Blynk.virtualWrite(V20, OutsideAirHumidity());
   Blynk.virtualWrite(V11, SoilTemperature());
   Blynk.virtualWrite(V21, SoilMoisture());
   Blynk.virtualWrite(V46, WaterTemperature());
@@ -667,8 +691,8 @@ void GreenhouseArduino::ReportWarnings()
     m_soilMoistureWarningSent = true;
   }
 
-  if (!m_insideHumidityWarningSent && (m_insideHumidity >= InsideHumidityWarning())) {
-    ReportWarning("Inside humidity high (%d%%)", m_insideHumidity);
+  if (!m_insideHumidityWarningSent && (m_insideAirHumidity >= InsideHumidityWarning())) {
+    ReportWarning("Inside humidity high (%d%%)", m_insideAirHumidity);
     m_insideHumidityWarningSent = true;
   }
 }
@@ -756,7 +780,9 @@ BLYNK_CONNECTED()
     V50,
     V51,
     V53,
-    V54);
+    V54,
+    V57,
+    V58);
 }
 
 BLYNK_WRITE(V0)
@@ -938,6 +964,16 @@ BLYNK_WRITE(V53)
 BLYNK_WRITE(V54)
 {
   s_instance->NightSoilTemperature(param.asFloat());
+}
+
+BLYNK_WRITE(V57)
+{
+  s_instance->DayAirTemperature(param.asFloat());
+}
+
+BLYNK_WRITE(V58)
+{
+  s_instance->NightAirTemperature(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
