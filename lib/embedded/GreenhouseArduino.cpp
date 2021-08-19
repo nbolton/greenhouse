@@ -189,12 +189,6 @@ void GreenhouseArduino::Loop()
 
 void GreenhouseArduino::SwitchWaterHeating(bool on)
 {
-  // if no state change, do nothing.
-  if (WaterHeatingOn() == on) {
-    return;
-  }
-
-  WaterHeatingOn(on);
   if (on) {
     SetSwitch(k_pumpSwitch1, true);
   }
@@ -205,19 +199,13 @@ void GreenhouseArduino::SwitchWaterHeating(bool on)
 
 void GreenhouseArduino::SwitchSoilHeating(bool on)
 {
-  // if no state change, do nothing.
-  if (SoilHeatingOn() == on) {
-    return;
-  }
-
-  SoilHeatingOn(on);
   if (on) {
     SetSwitch(k_pumpSwitch2, true);
   }
   else {
     // HACK: until the fan pump arrives, we're sharing the soil heating pump,
     // so only turn off if not in use
-    if (!AirHeatingOn()) {
+    if (!AirHeatingIsOn()) {
       SetSwitch(k_pumpSwitch2, false);
     }
   }
@@ -225,12 +213,6 @@ void GreenhouseArduino::SwitchSoilHeating(bool on)
 
 void GreenhouseArduino::SwitchAirHeating(bool on)
 {
-  // if no state change, do nothing.
-  if (AirHeatingOn() == on) {
-    return;
-  }
-
-  AirHeatingOn(on);
   if (on) {
     SetSwitch(k_fanSwitch, true);
     SetSwitch(k_pumpSwitch2, true);
@@ -249,7 +231,7 @@ void GreenhouseArduino::SwitchAirHeating(bool on)
 
     // HACK: until the fan pump arrives, we're sharing the soil heating pump,
     // so only turn off if not in use
-    if (!SoilHeatingOn()) {
+    if (!SoilHeatingIsOn()) {
       SetSwitch(k_pumpSwitch2, false);
     }
   }
@@ -304,9 +286,9 @@ bool GreenhouseArduino::Refresh()
   Blynk.virtualWrite(V30, m_pvVoltageOutput);
   Blynk.virtualWrite(V42, m_pvCurrentSensor);
   Blynk.virtualWrite(V43, m_pvCurrentOutput);
-  Blynk.virtualWrite(V55, WaterHeatingOn());
-  Blynk.virtualWrite(V56, SoilHeatingOn());
-  Blynk.virtualWrite(V59, AirHeatingOn());
+  Blynk.virtualWrite(V55, WaterHeatingIsOn());
+  Blynk.virtualWrite(V56, SoilHeatingIsOn());
+  Blynk.virtualWrite(V59, AirHeatingIsOn());
 
   return ok;
 }

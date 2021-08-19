@@ -31,9 +31,9 @@ Greenhouse::Greenhouse() :
   m_nightSoilTemperature(k_unknown),
   m_dayAirTemperature(k_unknown),
   m_nightAirTemperature(k_unknown),
-  m_waterHeatingOn(false),
-  m_soilHeatingOn(false),
-  m_airHeatingOn(false)
+  m_waterHeatingIsOn(false),
+  m_soilHeatingIsOn(false),
+  m_airHeatingIsOn(false)
 {
 }
 
@@ -251,23 +251,59 @@ float Greenhouse::CalculateMoisture(float analogValue) const
   return percent;
 }
 
+void Greenhouse::SwitchWaterHeatingIfChanged(bool on)
+{
+  if (WaterHeatingIsOn() != on) {
+    WaterHeatingIsOn(on);
+    SwitchWaterHeating(on);
+  }
+}
+
+void Greenhouse::SwitchSoilHeatingIfChanged(bool on)
+{
+  if (SoilHeatingIsOn() != on) {
+    SoilHeatingIsOn(on);
+    SwitchSoilHeating(on);
+  }
+}
+
+void Greenhouse::SwitchAirHeatingIfChanged(bool on)
+{
+  if (AirHeatingIsOn() != on) {
+    AirHeatingIsOn(on);
+    SwitchAirHeating(on);
+  }
+}
+
 void Greenhouse::UpdateDayWaterHeating()
 {
   if (WaterTemperature() < (DayWaterTemperature() - k_waterTempMargin)) {
-    SwitchWaterHeating(true);
+
+    // only switch water heating on if needed
+    if (AirHeatingIsOn() || SoilHeatingIsOn()) {
+      SwitchWaterHeatingIfChanged(true);
+    }
   }
   else if (WaterTemperature() > (DayWaterTemperature() + k_waterTempMargin)) {
-    SwitchWaterHeating(false);
+    
+    // always switch off, even if soil/air heating on
+    SwitchWaterHeatingIfChanged(false);
   }
 }
 
 void Greenhouse::UpdateNightWaterHeating()
 {
   if (WaterTemperature() < (NightWaterTemperature() - k_waterTempMargin)) {
-    SwitchWaterHeating(true);
+    
+    // only switch water heating on if needed
+    if (AirHeatingIsOn() || SoilHeatingIsOn()) {
+      SwitchWaterHeatingIfChanged(true);
+    }
   }
   else if (WaterTemperature() > (NightWaterTemperature() + k_waterTempMargin)) {
-    SwitchWaterHeating(false);
+
+    // always switch water off if above limit, even if soil/air heating on
+    SwitchWaterHeatingIfChanged(false);
   }
 }
 
@@ -276,67 +312,59 @@ void Greenhouse::UpdateHeatingSystems()
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
+    Log().Trace("Update heating daytime");
+
     if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
-      SwitchSoilHeating(true);
-      UpdateDayWaterHeating();
+
+      Log().Trace("Day soil temp below");
+      SwitchSoilHeatingIfChanged(true);
     }
     else if (SoilTemperature() > (DaySoilTemperature() + k_soilTempMargin)) {
       
-      SwitchSoilHeating(false);
-
-      // HACK: until the fan pump arrives, we're sharing the soil heating pump,
-      // so only turn off if not in use
-      if (!AirHeatingOn()) {
-        SwitchWaterHeating(false);
-      }
+      Log().Trace("Day soil temp above");
+      SwitchSoilHeatingIfChanged(false);
     }
 
     if (InsideAirTemperature() < (DayAirTemperature() - k_airTempMargin)) {
-      SwitchAirHeating(true);
-      UpdateDayWaterHeating();
+      
+      Log().Trace("Day air temp below");
+      SwitchAirHeatingIfChanged(true);
     }
     else if (InsideAirTemperature() > (DayAirTemperature() + k_airTempMargin)) {
       
-      SwitchAirHeating(false);
-
-      // HACK: until the fan pump arrives, we're sharing the soil heating pump,
-      // so only turn off if not in use
-      if (!SoilHeatingOn()) {
-        SwitchWaterHeating(false);
-      }
+      Log().Trace("Day air temp above");
+      SwitchAirHeatingIfChanged(false);
     }
+    
+    UpdateDayWaterHeating();
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
 
+    Log().Trace("Update heating nighttime");
+
     if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
-      SwitchSoilHeating(true);
-      UpdateNightWaterHeating();
+      
+      Log().Trace("Night soil temp below");
+      SwitchSoilHeatingIfChanged(true);
     }
     else if (SoilTemperature() > (NightSoilTemperature() + k_soilTempMargin)) {
       
-      SwitchSoilHeating(false);
-      
-      // HACK: until the fan pump arrives, we're sharing the soil heating pump,
-      // so only turn off if not in use
-      if (!AirHeatingOn()) {
-        SwitchWaterHeating(false);
-      }
+      Log().Trace("Night soil temp above");
+      SwitchSoilHeatingIfChanged(false);
     }
 
     if (InsideAirTemperature() < (NightAirTemperature() - k_airTempMargin)) {
+      
+      Log().Trace("Night air temp below");
       SwitchAirHeating(true);
-      UpdateNightWaterHeating();
     }
     else if (InsideAirTemperature() > (NightAirTemperature() + k_airTempMargin)) {
       
+      Log().Trace("Night soil temp above");
       SwitchAirHeating(false);
-
-      // HACK: until the fan pump arrives, we're sharing the soil heating pump,
-      // so only turn off if not in use
-      if (!SoilHeatingOn()) {
-        SwitchWaterHeating(false);
-      }
     }
+    
+    UpdateNightWaterHeating();
   }
 }
 
