@@ -49,8 +49,9 @@ const ADS1115_MUX k_currentPin = ADS1115_COMP_1_GND;
 
 const int k_shiftRegisterTotal = 2;
 const int k_voltAverageCountMax = 100;
-const int k_pvOnboardVoltageMin = 5; // V, in case of sudden voltage drop
-const int k_pvOnboardVoltageReadMax = 24;
+const int k_pvOnboardVoltageMin = 7; // V, in case of sudden voltage drop
+const int k_pvOnboardVoltageMapIn = 698;
+const float k_pvOnboardVoltageMapOut = 12.1;
 const int k_fanSwitch = 0;
 const int k_pumpSwitch1 = 1;
 const int k_pumpSwitch2 = 2;
@@ -509,19 +510,19 @@ void GreenhouseArduino::ToggleActiveSwitch()
   }
 }
 
-float onboardPvVoltage()
+float readPvOnboardVoltage()
 {
   // reads the onboard PV voltage (as opposed to measuring at the battery).
   // this is after any potential breaks in the circuit (eg if the battery
   // is disconnected or if the battery case switch is off).
   int analogValue = analogRead(A0);
-  return mapFloat(analogValue, 0, 1024, 0, k_pvOnboardVoltageReadMax);
+  return mapFloat(analogValue, 0, k_pvOnboardVoltageMapIn, 0, k_pvOnboardVoltageMapOut);
 }
 
 void GreenhouseArduino::RelayCallback()
 {
   MeasureVoltage();
-  float onboardVoltage = onboardPvVoltage();
+  float onboardVoltage = readPvOnboardVoltage();
 
   if (m_pvForceOn) {
     if (!m_pvPowerSource) {
