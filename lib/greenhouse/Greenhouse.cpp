@@ -315,10 +315,12 @@ void Greenhouse::UpdateNightWaterHeating()
 
 void Greenhouse::UpdateHeatingSystems()
 {
+  Log().Trace("Update heating systems, hour=%d", CurrentHour());
+
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
-    Log().Trace("Update heating daytime");
+    Log().Trace("Daytime heating mode");
 
     if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
 
@@ -346,7 +348,7 @@ void Greenhouse::UpdateHeatingSystems()
   }
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
 
-    Log().Trace("Update heating nighttime");
+    Log().Trace("Nighttime heating mode");
 
     if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
       

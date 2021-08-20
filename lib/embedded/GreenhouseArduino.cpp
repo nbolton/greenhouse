@@ -746,6 +746,10 @@ void GreenhouseArduino::LastWrite()
 
 void GreenhouseArduino::SystemStarted()
 {
+  // loop() will not have run yet, so make sure the time is updated
+  // before running the refresh function.
+  s_timeClient.update();
+
   // run the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
