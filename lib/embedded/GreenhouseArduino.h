@@ -50,7 +50,7 @@ protected:
   void ReportWarnings();
 
   void FlashLed(LedFlashTimes times);
-  bool ReadSensors();
+  bool ReadSensors(int& failures);
   void SwitchWaterHeating(bool on);
   void SwitchSoilHeating(bool on);
   void SwitchAirHeating(bool on);
@@ -95,6 +95,9 @@ private:
   void MeasureCurrent();
   float ReadAdc(ADC &adc, ADS1115_MUX channel);
   void InitSensors();
+  void InitADCs();
+  void InitActuators();
+  void InitShiftRegisters();
 
 private:
   ArduinoLog m_log;

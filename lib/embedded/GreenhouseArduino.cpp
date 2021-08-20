@@ -56,8 +56,10 @@ const int k_pumpSwitch2 = 2;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
-const byte k_tempSensorAddr1 = 0x44;
-const byte k_tempSensorAddr2 = 0x45;
+const uint8_t k_insideAirSensorAddress = 0x44;
+const uint8_t k_outsideAirSensorAddress = 0x45;
+const int k_adcAddress1 = 0x48;
+const int k_adcAddress2 = 0x48;
 
 static PCF8574 s_io1(0x20);
 static MultiShiftRegister s_shiftRegisters(
@@ -69,8 +71,8 @@ static WiFiUDP s_ntpUdp;
 static NTPClient s_timeClient(s_ntpUdp);
 static char s_reportBuffer[80];
 static BlynkTimer s_timer;
-static Adafruit_SHT31 s_temperatureSensor1;
-static Adafruit_SHT31 s_temperatureSensor2;
+static Adafruit_SHT31 s_insideAirSensor;
+static Adafruit_SHT31 s_outsideAirSensor;
 static ADC s_adc1, s_adc2;
 static GreenhouseArduino *s_instance = nullptr;
 
@@ -138,23 +140,13 @@ void GreenhouseArduino::Setup()
 
   Log().Trace("\n\nStarting system: %s", BLYNK_DEVICE_NAME);
 
-  pinMode(k_shiftRegisterLatchPin, OUTPUT);
-  pinMode(k_shiftRegisterClockPin, OUTPUT);
-  pinMode(k_shiftRegisterDataPin, OUTPUT);
-  s_shiftRegisters.shift();
+  InitShiftRegisters();
 
   StartBeep(1);
 
   Wire.begin();
 
-  pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(k_actuatorPinA, OUTPUT);
-
-  s_io1.pinMode(k_actuatorPin1, OUTPUT);
-  s_io1.pinMode(k_actuatorPin2, OUTPUT);
-
-  s_io1.digitalWrite(k_actuatorPin1, LOW);
-  s_io1.digitalWrite(k_actuatorPin2, LOW);
+  InitActuators();
 
   // 10ms seems to be the minimum switch time to stop the relay coil "buzzing"
   // when it has insufficient power.
@@ -166,6 +158,7 @@ void GreenhouseArduino::Setup()
 
   MeasureVoltage();
   InitSensors();
+  InitADCs();
 
   Blynk.begin(k_auth, k_ssid, k_pass);
 
@@ -184,6 +177,62 @@ void GreenhouseArduino::Loop()
 
   if (s_relayThread.shouldRun()) {
     s_relayThread.run();
+  }
+}
+
+void GreenhouseArduino::InitShiftRegisters()
+{
+  pinMode(k_shiftRegisterLatchPin, OUTPUT);
+  pinMode(k_shiftRegisterClockPin, OUTPUT);
+  pinMode(k_shiftRegisterDataPin, OUTPUT);
+
+  try {
+    s_shiftRegisters.shift();
+  }
+  catch (...) {
+    ReportCritical("Shift register init failed");
+    throw;
+  }
+}
+
+void GreenhouseArduino::InitActuators()
+{
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(k_actuatorPinA, OUTPUT);
+
+  s_io1.pinMode(k_actuatorPin1, OUTPUT);
+  s_io1.pinMode(k_actuatorPin2, OUTPUT);
+
+  s_io1.digitalWrite(k_actuatorPin1, LOW);
+  s_io1.digitalWrite(k_actuatorPin2, LOW);
+}
+
+void GreenhouseArduino::InitSensors()
+{
+  if (!s_insideAirSensor.begin(k_insideAirSensorAddress)) {
+    ReportWarning("Inside air sensor not found");
+  }
+
+  if (!s_outsideAirSensor.begin(k_outsideAirSensorAddress)) {
+    ReportWarning("Inside air sensor not found");
+  }
+}
+
+void GreenhouseArduino::InitADCs()
+{
+  s_adc1.name = "ADS1115 #1";
+  s_adc2.name = "ADS1115 #2";
+  s_adc1.ads = ADS1115_WE(k_adcAddress1);
+  s_adc2.ads = ADS1115_WE(k_adcAddress2);
+  s_adc1.ready = s_adc1.ads.init();
+  s_adc2.ready = s_adc2.ads.init();
+
+  if (!s_adc1.ready) {
+    ReportWarning("ADC not ready, init failed: %s", s_adc1.name.c_str());
+  }
+
+  if (!s_adc2.ready) {
+    ReportWarning("ADC not ready, init failed: %s", s_adc2.name.c_str());
   }
 }
 
@@ -225,32 +274,6 @@ void GreenhouseArduino::SwitchAirHeating(bool on)
     if (!SoilHeatingIsOn()) {
       SetSwitch(k_pumpSwitch2, false);
     }
-  }
-}
-
-void GreenhouseArduino::InitSensors()
-{
-  if (!s_temperatureSensor1.begin(k_tempSensorAddr1)) {
-    Log().Trace("Couldn't find SHT31 #1");
-  }
-
-  if (!s_temperatureSensor2.begin(k_tempSensorAddr2)) {
-    Log().Trace("Couldn't find SHT31 #2");
-  }
-
-  s_adc1.name = "ADS1115 #1";
-  s_adc2.name = "ADS1115 #2";
-  s_adc1.ads = ADS1115_WE(0x48);
-  s_adc2.ads = ADS1115_WE(0x49);
-  s_adc1.ready = s_adc1.ads.init();
-  s_adc2.ready = s_adc2.ads.init();
-
-  if (!s_adc1.ready) {
-    Log().Trace("%s, not connected", s_adc1.name.c_str());
-  }
-
-  if (!s_adc2.ready) {
-    Log().Trace("%s, not connected", s_adc2.name.c_str());
   }
 }
 
@@ -321,33 +344,31 @@ float GreenhouseArduino::SoilMoisture() const
   return m_soilMoisture;
 }
 
-bool GreenhouseArduino::ReadSensors()
+bool GreenhouseArduino::ReadSensors(int& failures)
 {
   if (TestMode()) {
     return true;
   }
 
-  int failures = 0;
-
-  m_insideAirTemperature = s_temperatureSensor1.readTemperature();
+  m_insideAirTemperature = s_insideAirSensor.readTemperature();
   if (isnan(m_insideAirTemperature)) {
     m_insideAirTemperature = k_unknown;
     failures++;
   }
 
-  m_insideAirHumidity = s_temperatureSensor1.readHumidity();
+  m_insideAirHumidity = s_insideAirSensor.readHumidity();
   if (isnan(m_insideAirHumidity)) {
     m_insideAirHumidity = k_unknown;
     failures++;
   }
 
-  m_outsideAirTemperature = s_temperatureSensor2.readTemperature();
+  m_outsideAirTemperature = s_outsideAirSensor.readTemperature();
   if (isnan(m_outsideAirTemperature)) {
     m_outsideAirTemperature = k_unknown;
     failures++;
   }
 
-  m_outsideAirHumidity = s_temperatureSensor2.readHumidity();
+  m_outsideAirHumidity = s_outsideAirSensor.readHumidity();
   if (isnan(m_outsideAirHumidity)) {
     m_outsideAirHumidity = k_unknown;
     failures++;
@@ -367,7 +388,16 @@ bool GreenhouseArduino::ReadSensors()
   }
 
   float moistureAnalog = ReadAdc(s_adc1, k_moisturePin);
-  m_soilMoisture = CalculateMoisture(moistureAnalog);
+  if (moistureAnalog == k_unknown) {
+    m_soilMoisture = k_unknown;
+    failures++;
+  }
+  else {
+    m_soilMoisture = CalculateMoisture(moistureAnalog);
+    if (m_soilMoisture == k_unknown) {
+      failures++;
+    }
+  }
 
   return failures == 0;
 }
@@ -429,13 +459,27 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
   if (on) {
     Log().Trace("SR pin set: %d", pin);
 
-    s_shiftRegisters.set_shift(pin);
+    try {
+      s_shiftRegisters.set_shift(pin);
+    }
+    catch (...) {
+      ReportCritical("Switch on failed: %d", index);
+      throw;
+    }
+
     m_switchState[index] = true;
   }
   else {
     Log().Trace("SR pin clear: %d", pin);
 
-    s_shiftRegisters.clear_shift(pin);
+    try {
+      s_shiftRegisters.clear_shift(pin);
+    }
+    catch (...) {
+      ReportCritical("Switch off failed: %d", index);
+      throw;
+    }
+
     m_switchState[index] = false;
   }
 
@@ -474,7 +518,7 @@ void GreenhouseArduino::RelayCallback()
     }
   }
   else if (m_pvPowerSource && (m_pvVoltageOutput <= k_pvVoltageMin)) {
-    Log().Trace("PV voltage drop detected");
+    ReportWarning("PV voltage drop detected");
     SwitchPower(false);
     m_pvVoltageAverage = k_unknown;
   }
@@ -496,7 +540,7 @@ void GreenhouseArduino::RelayCallback()
 float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
-    Log().Trace("%s, not ready", adc.name.c_str());
+    Log().Trace("ADC not ready: %s", adc.name.c_str());
     return k_unknown;
   }
 
@@ -512,7 +556,7 @@ float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
   while (adc.ads.isBusy()) {
     delay(10);
     if (times++ > 10) {
-      Log().Trace("%s, busy", adc.name.c_str());
+      Log().Trace("ADC is busy: %s", adc.name.c_str());
       return k_unknown;
     }
   }
@@ -564,10 +608,22 @@ void GreenhouseArduino::MeasureCurrent()
 void GreenhouseArduino::SwitchPower(bool pv)
 {
   if (pv) {
-    s_shiftRegisters.set_shift(k_relayPin);
+    try {
+      s_shiftRegisters.set_shift(k_relayPin);
+    }
+    catch (...) {
+      ReportCritical("Switch power on failed");
+      throw;
+    }
   }
   else {
-    s_shiftRegisters.clear_shift(k_relayPin);
+    try {
+      s_shiftRegisters.clear_shift(k_relayPin);
+    }
+    catch (...) {
+      ReportCritical("Switch power off failed");
+      throw;
+    }
   }
 
   m_pvPowerSource = pv;
@@ -586,6 +642,7 @@ void GreenhouseArduino::ReportInfo(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
+  Log().Trace(s_reportBuffer);
   Blynk.logEvent("info", s_reportBuffer);
 }
 
@@ -598,6 +655,7 @@ void GreenhouseArduino::ReportWarning(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
+  Log().Trace(s_reportBuffer);
   Blynk.logEvent("warning", s_reportBuffer);
 }
 
@@ -610,6 +668,7 @@ void GreenhouseArduino::ReportCritical(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
+  Log().Trace(s_reportBuffer);
   Blynk.logEvent("critical", s_reportBuffer);
 }
 

@@ -23,7 +23,7 @@ protected:
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
 
-  virtual bool ReadSensors() { return false; }
+  virtual bool ReadSensors(int& failures) { return false; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual float CalculateMoisture(float analogValue) const;

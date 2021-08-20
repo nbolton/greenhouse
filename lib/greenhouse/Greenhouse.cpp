@@ -45,15 +45,17 @@ bool Greenhouse::Refresh()
 {
   Log().Trace("Refreshing");
 
-  bool sensorsOk = ReadSensors();
+  int sensorFailures = 0;
+  bool sensorsOk = ReadSensors(sensorFailures);
 
   if (!sensorsOk) {
-    Log().Trace("Sensors unavailable");
-
     // only send once per reboot (don't spam the timeline)
     if (!m_sensorWarningSent) {
-      ReportWarning("Sensors unavailable");
+      ReportWarning("Sensors unavailable, failures: %d", sensorFailures);
       m_sensorWarningSent = true;
+    }
+    else {
+      Log().Trace("Sensors unavailable, failures: %d", sensorFailures);
     }
   }
 
