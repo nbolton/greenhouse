@@ -753,7 +753,6 @@ void GreenhouseArduino::SystemStarted()
   Refresh();
 
   FlashLed(k_ledStarted);
-  Log().TraceFlash(F("System started"));
   ReportInfo("System started");
 }
 
