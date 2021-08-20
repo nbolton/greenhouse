@@ -855,6 +855,28 @@ void Test_UpdateHeatingSystems_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_
   TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterHeating_on);
 }
 
+void Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeating(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_CurrentHour = 3;
+  greenhouse.m_mock_SoilTemperature = 3;
+  greenhouse.m_mock_WaterTemperature = 0;
+  greenhouse.m_mock_InsideAirTemperature = 3;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.DayWaterTemperature(2);
+  greenhouse.DaySoilTemperature(2);
+  greenhouse.DayAirTemperature(2);
+  greenhouse.WaterHeatingIsOn(true);
+
+  greenhouse.UpdateHeatingSystems();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterHeating);
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterHeating_on);
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -896,4 +918,5 @@ void testCommon()
   RUN_TEST(Test_UpdateHeatingSystems_AfterDaytimeBelowNightTemp_SwitchOnAirHeating);
   RUN_TEST(Test_UpdateHeatingSystems_AfterDaytimeAboveNightTemp_SwitchOffAirHeating);
   RUN_TEST(Test_UpdateHeatingSystems_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_SwitchOffWaterHeatingAfterSwitchedOn);
+  RUN_TEST(Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeating);
 }

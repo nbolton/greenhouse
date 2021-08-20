@@ -279,9 +279,13 @@ void Greenhouse::UpdateDayWaterHeating()
 {
   if (WaterTemperature() < (DayWaterTemperature() - k_waterTempMargin)) {
 
-    // only switch water heating on if needed
     if (AirHeatingIsOn() || SoilHeatingIsOn()) {
+      // only switch water heating on if needed
       SwitchWaterHeatingIfChanged(true);
+    }
+    else {
+      // otherwise, turn water heating off (not needed)
+      SwitchWaterHeatingIfChanged(false);
     }
   }
   else if (WaterTemperature() > (DayWaterTemperature() + k_waterTempMargin)) {
