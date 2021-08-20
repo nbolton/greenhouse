@@ -59,7 +59,7 @@ const int k_waterProbeIndex = 1;
 const uint8_t k_insideAirSensorAddress = 0x44;
 const uint8_t k_outsideAirSensorAddress = 0x45;
 const int k_adcAddress1 = 0x48;
-const int k_adcAddress2 = 0x48;
+const int k_adcAddress2 = 0x49;
 
 static PCF8574 s_io1(0x20);
 static MultiShiftRegister s_shiftRegisters(
