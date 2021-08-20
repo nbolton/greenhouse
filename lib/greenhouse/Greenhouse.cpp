@@ -366,7 +366,7 @@ void Greenhouse::UpdateHeatingSystems()
     }
     else if (InsideAirTemperature() > (NightAirTemperature() + k_airTempMargin)) {
       
-      Log().Trace("Night soil temp above");
+      Log().Trace("Night air temp above");
       SwitchAirHeating(false);
     }
     
