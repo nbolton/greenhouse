@@ -216,15 +216,6 @@ void GreenhouseArduino::SwitchAirHeating(bool on)
   if (on) {
     SetSwitch(k_fanSwitch, true);
     SetSwitch(k_pumpSwitch2, true);
-
-    // TODO: figure out if this HACK is still needed (we added another cap since)
-    // ----
-    // HACK: delay spool up before starting the pump. otherwise, 
-    // powering everything on at the same time drains the caps and
-    // causes the microcontroller to lose power. perhaps this can be fixed
-    // by having a cap for the microcontroller and a diode to prevent the
-    // power components from stealing the power.
-    //delay(5000);
   }
   else {
     SetSwitch(k_fanSwitch, false);
