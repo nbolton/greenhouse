@@ -844,9 +844,24 @@ void GreenhouseArduino::UpdateWeatherForecast()
   deserializeJson(jsonDoc, response);
   Log().Trace("Deserialized weather JSON");
 
-  WeatherCode(jsonDoc["weather"][0]["id"]);
-  WeatherInfo(jsonDoc["weather"][0]["main"]);
-  Log().Trace("Weather: code=%d, info=%s", WeatherCode(), WeatherInfo().c_str());
+  int id = jsonDoc["weather"][0]["id"];
+  std::string main = jsonDoc["weather"][0]["main"];
+  int dt = jsonDoc["dt"];
+  std::string location = jsonDoc["name"];
+
+  int hours = (int)((dt % 86400L) / 3600);
+  int minutes = (int)((dt % 3600) / 60);
+
+  String hoursString = hours < 10 ? "0" + String(hours) : String(hours);
+  String minuteString = minutes < 10 ? "0" + String(minutes) : String(minutes);
+
+  char info[50];
+  sprintf(info, "%s @ %s:%s UTC (%s)", main.c_str(), hoursString.c_str(), minuteString.c_str(), location.c_str());
+
+  WeatherCode(id);
+  WeatherInfo(info);
+
+  Log().Trace("Weather forecast: code=%d, info='%s'", WeatherCode(), WeatherInfo().c_str());
 
   ReportWeather();
 }
