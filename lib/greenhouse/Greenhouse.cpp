@@ -87,8 +87,6 @@ bool Greenhouse::Refresh()
   float openStart = m_openStart;
   float openFinish = m_openFinish;
 
-  UpdateWeatherForecast();
-
   if ((WeatherCode() != k_unknown) && IsRaining() && (WindowProgress() > 0)) {
     // close windows on rain even if in manual mode (it may get left on by accident)
     ReportInfo("Weather forecast is rain, closing window");
