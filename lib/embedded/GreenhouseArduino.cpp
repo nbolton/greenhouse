@@ -861,6 +861,14 @@ void GreenhouseArduino::ReportWaterHeatingRuntime()
   Blynk.virtualWrite(V62, WaterHeatingRuntimeSeconds());
 }
 
+void GreenhouseArduino::ManualRefresh()
+{
+  Log().TraceFlash(F("Manual refresh"));
+  s_timeClient.update();
+  UpdateWeatherForecast();
+  Refresh();
+}
+
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
@@ -932,7 +940,7 @@ BLYNK_WRITE(V6)
 BLYNK_WRITE(V7)
 {
   if (param.asInt() == 1) {
-    s_instance->Refresh();
+    s_instance->ManualRefresh();
   }
 }
 

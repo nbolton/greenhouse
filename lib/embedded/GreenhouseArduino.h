@@ -37,6 +37,7 @@ public:
   void Restart();
   void ToggleActiveSwitch();
   void HandleWindowProgress(int value);
+  void ManualRefresh();
 
   const ArduinoLog &Log() const { return m_log; }
   void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
