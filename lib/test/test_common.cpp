@@ -141,7 +141,6 @@ public:
   float m_mock_SoilTemperature;
   float m_mock_InsideAirTemperature;
   int m_mock_CurrentHour;
-  std::string m_mock_FetchWeatherForecastJson;
 
   // call counters (init to 0)
 
