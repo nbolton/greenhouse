@@ -6,6 +6,8 @@
 class GreenhouseTest : public Greenhouse {
 public:
   GreenhouseTest() :
+
+    // calls
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
     m_calls_RunWindowActuator(0),
@@ -14,7 +16,15 @@ public:
     m_calls_SwitchAirHeating(0),
     m_calls_StopActuator(0),
     m_calls_SetWindowActuatorSpeed(0),
-    m_calls_SystemDelay(0)
+    m_calls_SystemDelay(0),
+
+    // mocks
+    m_mock_ReadDhtSensor(false),
+    m_mock_WaterTemperature(0),
+    m_mock_SoilTemperature(0),
+    m_mock_InsideAirTemperature(0),
+    m_mock_CurrentHour(0),
+    m_mock_UptimeSeconds(0)
   {
   }
 
