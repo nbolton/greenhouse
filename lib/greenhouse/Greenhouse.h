@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Log.h"
+#include <string>
 
 const int k_unknown = -1;
 
@@ -22,6 +23,7 @@ protected:
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
+  virtual void ReportWeather() {}
 
   virtual bool ReadSensors(int& failures) { return false; }
   virtual void OpenWindow(float delta);
@@ -41,6 +43,7 @@ protected:
   virtual void StopActuator() {}
   virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void SystemDelay(unsigned long ms) {}
+  virtual void UpdateWeatherForecast() {};
 
 public:
   // getters & setters
@@ -94,10 +97,16 @@ public:
   virtual bool SoilHeatingIsOn() const { return m_soilHeatingIsOn; }
   virtual void AirHeatingIsOn(bool value) { m_airHeatingIsOn = value; }
   virtual bool AirHeatingIsOn() const { return m_airHeatingIsOn; }
+  virtual void WeatherCode(int value) { m_weatherCode = value; }
+  virtual int WeatherCode() const { return m_weatherCode; }
+  virtual void WeatherInfo(std::string value) { m_weatherInfo = value; }
+  virtual std::string WeatherInfo() const { return m_weatherInfo; }
   
 private:
   void UpdateDayWaterHeating();
   void UpdateNightWaterHeating();
+  std::string GetWeatherUri() const;
+  bool IsRaining() const;
 
 private:
   ::Log m_log;
@@ -123,6 +132,9 @@ private:
   bool m_waterHeatingIsOn;
   bool m_soilHeatingIsOn;
   bool m_airHeatingIsOn;
+  int m_weatherCode;
+  std::string m_weatherInfo;
+  bool m_isRaining;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

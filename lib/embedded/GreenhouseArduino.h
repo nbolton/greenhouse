@@ -48,6 +48,7 @@ protected:
   void ReportWindowProgress();
   void ReportSystemInfo();
   void ReportWarnings();
+  void ReportWeather();
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int& failures);
@@ -58,6 +59,7 @@ protected:
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);
   void SystemDelay(unsigned long ms);
+  void UpdateWeatherForecast();
 
 public:
   // getters & setters

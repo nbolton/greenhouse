@@ -17,6 +17,8 @@
 #include <Thread.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
+#include <ArduinoHttpClient.h>
+#include <ArduinoJson.h>
 
 struct ADC {
   String name;
@@ -62,6 +64,11 @@ const uint8_t k_insideAirSensorAddress = 0x44;
 const uint8_t k_outsideAirSensorAddress = 0x45;
 const int k_adcAddress1 = 0x48;
 const int k_adcAddress2 = 0x49;
+const float k_weatherLat = 54.203;
+const float k_weatherLon = -4.408;
+const char* k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
+const char* k_weatherHost = "api.openweathermap.org";
+const char* k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 
 static PCF8574 s_io1(0x20);
 static MultiShiftRegister s_shiftRegisters(
@@ -77,6 +84,7 @@ static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
 static ADC s_adc1, s_adc2;
 static GreenhouseArduino *s_instance = nullptr;
+static WiFiClient s_wifiClient;
 
 GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 
@@ -792,6 +800,39 @@ void GreenhouseArduino::HandleWindowProgress(int value)
   }
 
   WindowProgress(value);
+}
+
+void GreenhouseArduino::UpdateWeatherForecast()
+{
+  char uri[100];
+  sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
+  
+  Log().Trace("Connecting to weather host: %s", k_weatherHost);
+  HttpClient httpClient(s_wifiClient, k_weatherHost, 80);
+
+  Log().Trace("Weather host get: %s", uri);
+  httpClient.get(uri);
+  
+  int statusCode = httpClient.responseStatusCode();
+  Log().Trace("Weather host status: %d", statusCode);
+
+  String response = httpClient.responseBody();
+  Log().Trace("Weather host response length: %d", strlen(response.c_str()));
+
+  DynamicJsonDocument jsonDoc(1024);
+  deserializeJson(jsonDoc, response);
+  Log().Trace("Deserialized weather JSON");
+
+  WeatherCode(jsonDoc["weather"][0]["id"]);
+  WeatherInfo(jsonDoc["weather"][0]["main"]);
+  Log().Trace("Weather: code=%d, info=%s", WeatherCode(), WeatherInfo().c_str());
+
+  ReportWeather();
+}
+
+void GreenhouseArduino::ReportWeather()
+{
+  Blynk.virtualWrite(V60, WeatherInfo().c_str());
 }
 
 BLYNK_CONNECTED()

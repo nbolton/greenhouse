@@ -10,6 +10,7 @@ const int k_windowActuatorSpeedMax = 255;
 const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
 const float k_airTempMargin = 1;
+const int k_dryWeatherCode = 701; // anything less is snow/rain
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -33,7 +34,10 @@ Greenhouse::Greenhouse() :
   m_nightAirTemperature(k_unknown),
   m_waterHeatingIsOn(false),
   m_soilHeatingIsOn(false),
-  m_airHeatingIsOn(false)
+  m_airHeatingIsOn(false),
+  m_weatherCode(k_unknown),
+  m_weatherInfo(),
+  m_isRaining(false)
 {
 }
 
@@ -80,7 +84,14 @@ bool Greenhouse::Refresh()
   float openStart = m_openStart;
   float openFinish = m_openFinish;
 
-  if (m_autoMode) {
+  // close windows on rain even if in manual mode (it may get left on by accident)
+  UpdateWeatherForecast();
+
+  if ((WeatherCode() != k_unknown) && IsRaining()) {
+    Log().Trace("Weather forecast is rain, closing window");
+    CloseWindow(WindowProgress() / 100);
+  }
+  else if (m_autoMode) {
     float soilTemperature = SoilTemperature();
 
     Log().Trace(
@@ -375,3 +386,5 @@ void Greenhouse::UpdateHeatingSystems()
     UpdateNightWaterHeating();
   }
 }
+
+bool Greenhouse::IsRaining() const { return WeatherCode() < k_dryWeatherCode; }
