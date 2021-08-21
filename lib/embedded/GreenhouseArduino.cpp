@@ -87,6 +87,8 @@ static Adafruit_SHT31 s_outsideAirSensor;
 static ADC s_adc1, s_adc2;
 static GreenhouseArduino *s_instance = nullptr;
 static WiFiClient s_wifiClient;
+static char s_weatherInfo[50];
+static DynamicJsonDocument s_weatherJson(1024);
 
 GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 
@@ -806,9 +808,6 @@ void GreenhouseArduino::HandleWindowProgress(int value)
   WindowProgress(value);
 }
 
-char s_weatherInfo[50];
-DynamicJsonDocument s_jsonDoc(1024);
-
 void GreenhouseArduino::UpdateWeatherForecast()
 {
   char uri[100];
@@ -831,19 +830,17 @@ void GreenhouseArduino::UpdateWeatherForecast()
   String response = httpClient.responseBody();
   Log().Trace("Weather host response length: %d", strlen(response.c_str()));
 
-  DynamicJsonDocument& jsonDoc = s_jsonDoc;
-
-  DeserializationError error = deserializeJson(jsonDoc, response);
+  DeserializationError error = deserializeJson(s_weatherJson, response);
   if (error != DeserializationError::Ok) {
     ReportWarning("Weather data error: %s", error.c_str());
     return;
   }
 
   Log().Trace("Deserialized weather JSON");
-  int id = jsonDoc["weather"][0]["id"];
-  const char* main = jsonDoc["weather"][0]["main"];
-  int dt = jsonDoc["dt"];
-  const char* location = jsonDoc["name"];
+  int id = s_weatherJson["weather"][0]["id"];
+  const char* main = s_weatherJson["weather"][0]["main"];
+  int dt = s_weatherJson["dt"];
+  const char* location = s_weatherJson["name"];
 
   int hours = (int)((dt % 86400L) / 3600);
   int minutes = (int)((dt % 3600) / 60);
