@@ -69,6 +69,7 @@ const float k_weatherLon = -4.408;
 const char* k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char* k_weatherHost = "api.openweathermap.org";
 const char* k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
+const int s_relayThreadInterval = 10; // high frequency in case of voltage drop
 const uint8_t k_ioAddress = 0x20;
 
 static PCF8574 s_io1(k_ioAddress);
@@ -159,10 +160,8 @@ void GreenhouseArduino::Setup()
 
   InitActuators();
 
-  // 10ms seems to be the minimum switch time to stop the relay coil "buzzing"
-  // when it has insufficient power.
   s_relayThread.onRun(relayCallback);
-  s_relayThread.setInterval(10);
+  s_relayThread.setInterval(s_relayThreadInterval);
 
   s_dallas.begin();
   s_timeClient.begin();
