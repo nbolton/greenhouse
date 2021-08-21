@@ -70,14 +70,12 @@ const char* k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char* k_weatherHost = "api.openweathermap.org";
 const char* k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const int s_relayThreadInterval = 10; // 10 ms, high frequency in case of voltage drop
-const int s_weatherThreadInterval = 1 * 60 * 1000; // 1 min, ran can come out of nowhere
 const uint8_t k_ioAddress = 0x20;
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
   k_shiftRegisterTotal, k_shiftRegisterLatchPin, k_shiftRegisterClockPin, k_shiftRegisterDataPin);
 static Thread s_relayThread = Thread();
-static Thread s_weatherThread = Thread();
 static OneWire s_oneWire(k_oneWirePin);
 static DallasTemperature s_dallas(&s_oneWire);
 static WiFiUDP s_ntpUdp;
@@ -95,7 +93,6 @@ GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 void GreenhouseArduino::Instance(GreenhouseArduino &ga) { s_instance = &ga; }
 
 void relayCallback() { s_instance->RelayCallback(); }
-void weatherCallback() { s_instance->WeatherCallback(); }
 void refreshTimer() { s_instance->Refresh(); }
 
 GreenhouseArduino::GreenhouseArduino() :
@@ -166,9 +163,6 @@ void GreenhouseArduino::Setup()
   s_relayThread.onRun(relayCallback);
   s_relayThread.setInterval(s_relayThreadInterval);
 
-  s_weatherThread.onRun(weatherCallback);
-  s_weatherThread.setInterval(s_weatherThreadInterval);
-
   s_dallas.begin();
   s_timeClient.begin();
 
@@ -193,10 +187,6 @@ void GreenhouseArduino::Loop()
 
   if (s_relayThread.shouldRun()) {
     s_relayThread.run();
-  }
-
-  if (s_weatherThread.shouldRun()) {
-    s_weatherThread.run();
   }
 }
 
@@ -569,11 +559,6 @@ void GreenhouseArduino::RelayCallback()
   }
 }
 
-void GreenhouseArduino::WeatherCallback()
-{
-  UpdateWeatherForecast();
-}
-
 float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
@@ -783,8 +768,6 @@ void GreenhouseArduino::SystemStarted()
   // before running the refresh function.
   s_timeClient.update();
 
-  UpdateWeatherForecast();
-
   // run the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
@@ -823,6 +806,9 @@ void GreenhouseArduino::HandleWindowProgress(int value)
   WindowProgress(value);
 }
 
+char s_weatherInfo[50];
+DynamicJsonDocument s_jsonDoc(1024);
+
 void GreenhouseArduino::UpdateWeatherForecast()
 {
   char uri[100];
@@ -837,17 +823,27 @@ void GreenhouseArduino::UpdateWeatherForecast()
   int statusCode = httpClient.responseStatusCode();
   Log().Trace("Weather host status: %d", statusCode);
 
+  if (statusCode != 200) {
+    ReportWarning("Weather host error: %d", statusCode);
+    return;
+  }
+
   String response = httpClient.responseBody();
   Log().Trace("Weather host response length: %d", strlen(response.c_str()));
 
-  DynamicJsonDocument jsonDoc(1024);
-  deserializeJson(jsonDoc, response);
-  Log().Trace("Deserialized weather JSON");
+  DynamicJsonDocument& jsonDoc = s_jsonDoc;
 
+  DeserializationError error = deserializeJson(jsonDoc, response);
+  if (error != DeserializationError::Ok) {
+    ReportWarning("Weather data error: %s", error.c_str());
+    return;
+  }
+
+  Log().Trace("Deserialized weather JSON");
   int id = jsonDoc["weather"][0]["id"];
-  std::string main = jsonDoc["weather"][0]["main"];
+  const char* main = jsonDoc["weather"][0]["main"];
   int dt = jsonDoc["dt"];
-  std::string location = jsonDoc["name"];
+  const char* location = jsonDoc["name"];
 
   int hours = (int)((dt % 86400L) / 3600);
   int minutes = (int)((dt % 3600) / 60);
@@ -855,11 +851,10 @@ void GreenhouseArduino::UpdateWeatherForecast()
   String hoursString = hours < 10 ? "0" + String(hours) : String(hours);
   String minuteString = minutes < 10 ? "0" + String(minutes) : String(minutes);
 
-  char info[50];
-  sprintf(info, "%s @ %s:%s UTC (%s)", main.c_str(), hoursString.c_str(), minuteString.c_str(), location.c_str());
+  sprintf(s_weatherInfo, "%s @ %s:%s UTC (%s)", main, hoursString.c_str(), minuteString.c_str(), location);
 
   WeatherCode(id);
-  WeatherInfo(info);
+  WeatherInfo(s_weatherInfo);
 
   Log().Trace("Weather forecast: code=%d, info='%s'", WeatherCode(), WeatherInfo().c_str());
 
@@ -880,7 +875,6 @@ void GreenhouseArduino::ManualRefresh()
 {
   Log().TraceFlash(F("Manual refresh"));
   s_timeClient.update();
-  UpdateWeatherForecast();
   Refresh();
 }
 

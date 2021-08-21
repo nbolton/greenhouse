@@ -82,8 +82,8 @@ bool Greenhouse::Refresh()
     SoilMoisture());
 
   ReportSensorValues();
-
   ReportWarnings();
+  UpdateWeatherForecast();
 
   bool windowMoved = false;
   float openStart = m_openStart;
