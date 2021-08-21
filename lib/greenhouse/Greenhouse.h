@@ -4,6 +4,7 @@
 #include <string>
 
 const int k_unknown = -1;
+const unsigned long k_unknownUL = -1;
 
 class Greenhouse {
 public:

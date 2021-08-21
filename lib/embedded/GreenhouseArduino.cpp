@@ -895,7 +895,8 @@ BLYNK_CONNECTED()
     V53,
     V54,
     V57,
-    V58);
+    V58,
+    V61);
 }
 
 BLYNK_WRITE(V0)

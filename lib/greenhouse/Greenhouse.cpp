@@ -39,7 +39,7 @@ Greenhouse::Greenhouse() :
   m_weatherInfo(),
   m_isRaining(false),
   m_waterHeaterLimitMinutes(k_unknown),
-  m_waterHeatingStartSeconds(k_unknown),
+  m_waterHeatingStartSeconds(k_unknownUL),
   m_waterHeatingRuntimeSeconds(0)
 {
 }
@@ -270,9 +270,9 @@ float Greenhouse::CalculateMoisture(float analogValue) const
 void Greenhouse::SwitchWaterHeatingIfChanged(bool on)
 {
   if (on && 
-    (m_waterHeatingStartSeconds != k_unknown) &&
-    ((m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes)) {
-      
+    (m_waterHeatingStartSeconds != k_unknownUL) &&
+    ((int)(m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes)) {
+
     Log().Trace("Blocking water heating switch on, runtime=%ds limit=%dm", 
       m_waterHeatingRuntimeSeconds, m_waterHeaterLimitMinutes);
     return;
@@ -341,12 +341,12 @@ void Greenhouse::UpdateHeatingSystems()
 {
   Log().Trace("Update heating systems, hour=%d", CurrentHour());
 
-  if (m_waterHeatingStartSeconds != k_unknown) {
+  if (WaterHeatingIsOn() && (m_waterHeatingStartSeconds != k_unknownUL)) {
     int period = (UptimeSeconds() - m_waterHeatingStartSeconds);
     m_waterHeatingRuntimeSeconds += period;
     Log().Trace("Advancing water heating runtime, period=%ds, total=%ds", period, m_waterHeatingRuntimeSeconds);
 
-    if (WaterHeatingIsOn() && ((m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes)) {
+    if ((int)(m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes) {
       ReportInfo("Water heater runtime limit reached (%dm), switching off", m_waterHeaterLimitMinutes);
       SwitchWaterHeatingIfChanged(false);
     }
