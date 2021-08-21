@@ -16,9 +16,9 @@ public:
   virtual const ::Log &Log() const { return m_log; }
 
 protected:
-  virtual void ReportInfo(const char *m, ...) {}
-  virtual void ReportWarning(const char *m, ...) {}
-  virtual void ReportCritical(const char *m, ...) {}
+  virtual void ReportInfo(const char *m, ...) const {}
+  virtual void ReportWarning(const char *m, ...) const {}
+  virtual void ReportCritical(const char *m, ...) const {}
   virtual void ReportSensorValues() {}
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}

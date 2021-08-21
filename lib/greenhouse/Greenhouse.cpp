@@ -84,12 +84,12 @@ bool Greenhouse::Refresh()
   float openStart = m_openStart;
   float openFinish = m_openFinish;
 
-  // close windows on rain even if in manual mode (it may get left on by accident)
   UpdateWeatherForecast();
 
-  if ((WeatherCode() != k_unknown) && IsRaining()) {
-    Log().Trace("Weather forecast is rain, closing window");
-    CloseWindow(WindowProgress() / 100);
+  if ((WeatherCode() != k_unknown) && IsRaining() && (WindowProgress() > 0)) {
+    // close windows on rain even if in manual mode (it may get left on by accident)
+    ReportInfo("Weather forecast is rain, closing window");
+    CloseWindow((float)WindowProgress() / 100);
   }
   else if (m_autoMode) {
     float soilTemperature = SoilTemperature();

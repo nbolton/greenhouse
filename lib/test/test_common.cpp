@@ -878,10 +878,23 @@ void Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHea
   TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterHeating_on);
 }
 
-void Test_Refresh_RainDetected_WindowClosed(void)
+void Test_Refresh_RainDetectedInAutoMode_WindowClosed(void)
 {
   GreenhouseTest greenhouse;
   greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(50);
+  greenhouse.WeatherCode(700);
+
+  greenhouse.Refresh();
+  
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL(.5, greenhouse.m_lastArg_CloseWindow_delta);
+}
+
+void Test_Refresh_RainDetectedInManualMode_WindowClosed(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.AutoMode(false);
   greenhouse.WindowProgress(50);
   greenhouse.WeatherCode(700);
 
@@ -933,5 +946,6 @@ void testCommon()
   RUN_TEST(Test_UpdateHeatingSystems_AfterDaytimeAboveNightTemp_SwitchOffAirHeating);
   RUN_TEST(Test_UpdateHeatingSystems_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_SwitchOffWaterHeatingAfterSwitchedOn);
   RUN_TEST(Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeating);
-  RUN_TEST(Test_Refresh_RainDetected_WindowClosed);
+  RUN_TEST(Test_Refresh_RainDetectedInAutoMode_WindowClosed);
+  RUN_TEST(Test_Refresh_RainDetectedInManualMode_WindowClosed);
 }
