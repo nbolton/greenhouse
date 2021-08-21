@@ -31,6 +31,7 @@ public:
   void Loop();
   bool Refresh();
   void RelayCallback();
+  void WeatherCallback();
   void LastWrite();
   void SystemStarted();
   void Restart();

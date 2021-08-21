@@ -70,12 +70,14 @@ const char* k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char* k_weatherHost = "api.openweathermap.org";
 const char* k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const int s_relayThreadInterval = 10; // 10 ms, high frequency in case of voltage drop
+const int s_weatherThreadInterval = 10 * 60 * 1000; // 10 mins
 const uint8_t k_ioAddress = 0x20;
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
   k_shiftRegisterTotal, k_shiftRegisterLatchPin, k_shiftRegisterClockPin, k_shiftRegisterDataPin);
 static Thread s_relayThread = Thread();
+static Thread s_weatherThread = Thread();
 static OneWire s_oneWire(k_oneWirePin);
 static DallasTemperature s_dallas(&s_oneWire);
 static WiFiUDP s_ntpUdp;
@@ -93,6 +95,7 @@ GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
 void GreenhouseArduino::Instance(GreenhouseArduino &ga) { s_instance = &ga; }
 
 void relayCallback() { s_instance->RelayCallback(); }
+void weatherCallback() { s_instance->WeatherCallback(); }
 void refreshTimer() { s_instance->Refresh(); }
 
 GreenhouseArduino::GreenhouseArduino() :
@@ -163,6 +166,9 @@ void GreenhouseArduino::Setup()
   s_relayThread.onRun(relayCallback);
   s_relayThread.setInterval(s_relayThreadInterval);
 
+  s_weatherThread.onRun(weatherCallback);
+  s_weatherThread.setInterval(s_weatherThreadInterval);
+
   s_dallas.begin();
   s_timeClient.begin();
 
@@ -187,6 +193,10 @@ void GreenhouseArduino::Loop()
 
   if (s_relayThread.shouldRun()) {
     s_relayThread.run();
+  }
+
+  if (s_weatherThread.shouldRun()) {
+    s_weatherThread.run();
   }
 }
 
@@ -557,6 +567,11 @@ void GreenhouseArduino::RelayCallback()
   }
 }
 
+void GreenhouseArduino::WeatherCallback()
+{
+  UpdateWeatherForecast();
+}
+
 float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
@@ -765,6 +780,8 @@ void GreenhouseArduino::SystemStarted()
   // loop() will not have run yet, so make sure the time is updated
   // before running the refresh function.
   s_timeClient.update();
+
+  UpdateWeatherForecast();
 
   // run the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
