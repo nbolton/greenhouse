@@ -542,15 +542,17 @@ void GreenhouseArduino::RelayCallback()
   MeasureVoltage();
   float onboardVoltage = readPvOnboardVoltage();
 
-  if (m_pvForceOn) {
+  if (onboardVoltage <= k_pvOnboardVoltageMin) {
+    if (m_pvPowerSource) {
+      ReportWarning("PV voltage drop detected: %.2fV", onboardVoltage);
+      SwitchPower(false);
+      m_pvVoltageAverage = k_unknown;
+    }
+  }
+  else if (m_pvForceOn) {
     if (!m_pvPowerSource) {
       SwitchPower(true);
     }
-  }
-  else if (m_pvPowerSource && (onboardVoltage <= k_pvOnboardVoltageMin)) {
-    ReportWarning("PV voltage drop detected: %.2fV", onboardVoltage);
-    SwitchPower(false);
-    m_pvVoltageAverage = k_unknown;
   }
   else if (m_pvVoltageAverage != k_unknown) {
 
