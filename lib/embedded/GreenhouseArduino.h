@@ -64,6 +64,7 @@ protected:
 public:
   // getters & setters
   int CurrentHour() const;
+  unsigned long UptimeSeconds() const;
   float InsideAirTemperature() const { return m_insideAirTemperature; }
   float InsideAirHumidity() const;
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }

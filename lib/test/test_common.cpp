@@ -60,6 +60,12 @@ public:
     return m_mock_CurrentHour;
   }
 
+  unsigned long UptimeSeconds() const
+  {
+    Log().Trace("Mock: UptimeSeconds, value=%d", m_mock_UptimeSeconds);
+    return m_mock_UptimeSeconds;
+  }
+
   // stubs
 
   void OpenWindow(float delta)
@@ -141,6 +147,7 @@ public:
   float m_mock_SoilTemperature;
   float m_mock_InsideAirTemperature;
   int m_mock_CurrentHour;
+  unsigned long m_mock_UptimeSeconds;
 
   // call counters (init to 0)
 
@@ -913,6 +920,43 @@ void Test_Refresh_RainDetectedInManualMode_WindowClosed(void)
   TEST_ASSERT_EQUAL(.5, greenhouse.m_lastArg_CloseWindow_delta);
 }
 
+void Test_UpdateHeatingSystems_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeating(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_CurrentHour = 3;
+  greenhouse.m_mock_SoilTemperature = 0;
+  greenhouse.m_mock_WaterTemperature = 0;
+  greenhouse.m_mock_InsideAirTemperature = 0;
+  greenhouse.m_mock_UptimeSeconds = 0;
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.DayWaterTemperature(2);
+  greenhouse.DaySoilTemperature(2);
+  greenhouse.DayAirTemperature(2);
+  greenhouse.WaterHeaterLimitMinutes(1);
+
+  greenhouse.UpdateHeatingSystems();
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_SwitchWaterHeating);
+  TEST_ASSERT_EQUAL(true, greenhouse.m_lastArg_SwitchWaterHeating_on);
+
+  greenhouse.m_mock_UptimeSeconds = 60;
+
+  greenhouse.UpdateHeatingSystems();
+
+  TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_SwitchWaterHeating);
+  TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterHeating_on);
+  
+  greenhouse.m_mock_UptimeSeconds = 120;
+
+  greenhouse.UpdateHeatingSystems();
+
+  // ensure water heating switch on is blocked
+  TEST_ASSERT_EQUAL_INT(2, greenhouse.m_calls_SwitchWaterHeating);
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -957,4 +1001,5 @@ void testCommon()
   RUN_TEST(Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeating);
   RUN_TEST(Test_Refresh_RainDetectedInAutoMode_WindowClosed);
   RUN_TEST(Test_Refresh_RainDetectedInManualMode_WindowClosed);
+  RUN_TEST(Test_UpdateHeatingSystems_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeating);
 }

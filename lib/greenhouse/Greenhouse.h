@@ -48,6 +48,7 @@ protected:
 public:
   // getters & setters
   virtual int CurrentHour() const { return k_unknown; }
+  virtual unsigned long UptimeSeconds() const { return k_unknown; }
   virtual float InsideAirTemperature() const { return k_unknown; }
   virtual float InsideAirHumidity() const { return k_unknown; }
   virtual float OutsideAirTemperature() const { return k_unknown; }
@@ -101,6 +102,8 @@ public:
   virtual int WeatherCode() const { return m_weatherCode; }
   virtual void WeatherInfo(std::string value) { m_weatherInfo = value; }
   virtual std::string WeatherInfo() const { return m_weatherInfo; }
+  virtual void WaterHeaterLimitMinutes(int value) { m_waterHeaterLimitMinutes = value; }
+  virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
   
 private:
   void UpdateDayWaterHeating();
@@ -135,6 +138,9 @@ private:
   int m_weatherCode;
   std::string m_weatherInfo;
   bool m_isRaining;
+  int m_waterHeaterLimitMinutes;
+  unsigned long m_waterHeatingStartSeconds;
+  unsigned long m_waterHeatingRuntimeSeconds;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

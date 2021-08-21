@@ -653,6 +653,8 @@ void GreenhouseArduino::SwitchPower(bool pv)
 
 int GreenhouseArduino::CurrentHour() const { return s_timeClient.getHours(); }
 
+unsigned long GreenhouseArduino::UptimeSeconds() const { return millis() / 1000; }
+
 void GreenhouseArduino::ReportInfo(const char *format, ...) const
 {
   va_list args;
@@ -713,7 +715,7 @@ void GreenhouseArduino::ReportSystemInfo()
 
   // uptime
   int seconds, minutes, hours, days;
-  long uptime = millis() / 1000;
+  long uptime = UptimeSeconds();
   minutes = uptime / 60;
   seconds = uptime % 60;
   hours = minutes / 60;
@@ -1068,6 +1070,11 @@ BLYNK_WRITE(V57)
 BLYNK_WRITE(V58)
 {
   s_instance->NightAirTemperature(param.asFloat());
+}
+
+BLYNK_WRITE(V61)
+{
+  s_instance->WaterHeaterLimitMinutes(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
