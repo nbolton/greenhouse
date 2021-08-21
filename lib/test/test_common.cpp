@@ -374,6 +374,32 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
   TEST_ASSERT_EQUAL_INT(100, greenhouse.WindowProgress());
 }
 
+void Test_Refresh_RainDetectedInAutoMode_WindowClosed(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.AutoMode(true);
+  greenhouse.WindowProgress(50);
+  greenhouse.WeatherCode(700);
+
+  greenhouse.Refresh();
+  
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL(.5, greenhouse.m_lastArg_CloseWindow_delta);
+}
+
+void Test_Refresh_RainDetectedInManualMode_WindowClosed(void)
+{
+  GreenhouseTest greenhouse;
+  greenhouse.AutoMode(false);
+  greenhouse.WindowProgress(50);
+  greenhouse.WeatherCode(700);
+
+  greenhouse.Refresh();
+  
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
+  TEST_ASSERT_EQUAL(.5, greenhouse.m_lastArg_CloseWindow_delta);
+}
+
 void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
 {
   GreenhouseTest greenhouse;
@@ -894,32 +920,6 @@ void Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHea
   TEST_ASSERT_EQUAL(false, greenhouse.m_lastArg_SwitchWaterHeating_on);
 }
 
-void Test_Refresh_RainDetectedInAutoMode_WindowClosed(void)
-{
-  GreenhouseTest greenhouse;
-  greenhouse.AutoMode(true);
-  greenhouse.WindowProgress(50);
-  greenhouse.WeatherCode(700);
-
-  greenhouse.Refresh();
-  
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
-  TEST_ASSERT_EQUAL(.5, greenhouse.m_lastArg_CloseWindow_delta);
-}
-
-void Test_Refresh_RainDetectedInManualMode_WindowClosed(void)
-{
-  GreenhouseTest greenhouse;
-  greenhouse.AutoMode(false);
-  greenhouse.WindowProgress(50);
-  greenhouse.WeatherCode(700);
-
-  greenhouse.Refresh();
-  
-  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_CloseWindow);
-  TEST_ASSERT_EQUAL(.5, greenhouse.m_lastArg_CloseWindow_delta);
-}
-
 void Test_UpdateHeatingSystems_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeating(void)
 {
   GreenhouseTest greenhouse;
@@ -1006,6 +1006,8 @@ void testCommon()
   RUN_TEST(Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice);
   RUN_TEST(Test_Refresh_AutoModeBelowBounds_WindowClosedFully);
   RUN_TEST(Test_Refresh_AutoModeAboveBounds_WindowOpenedFully);
+  RUN_TEST(Test_Refresh_RainDetectedInAutoMode_WindowClosed);
+  RUN_TEST(Test_Refresh_RainDetectedInManualMode_WindowClosed);
   RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
   RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
   RUN_TEST(Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed);
@@ -1035,8 +1037,6 @@ void testCommon()
   RUN_TEST(Test_UpdateHeatingSystems_AfterDaytimeAboveNightTemp_SwitchOffAirHeating);
   RUN_TEST(Test_UpdateHeatingSystems_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_SwitchOffWaterHeatingAfterSwitchedOn);
   RUN_TEST(Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeating);
-  RUN_TEST(Test_Refresh_RainDetectedInAutoMode_WindowClosed);
-  RUN_TEST(Test_Refresh_RainDetectedInManualMode_WindowClosed);
   RUN_TEST(Test_UpdateHeatingSystems_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeating);
   RUN_TEST(Test_UpdateHeatingSystems_DaytimeTransition_WaterHeaterRuntimeLimitIsReset);
 }
