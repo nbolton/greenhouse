@@ -854,6 +854,11 @@ void GreenhouseArduino::ReportWeather()
   Blynk.virtualWrite(V60, WeatherInfo().c_str());
 }
 
+void GreenhouseArduino::ReportWaterHeatingRuntime()
+{
+  Blynk.virtualWrite(V62, WaterHeatingRuntimeSeconds());
+}
+
 BLYNK_CONNECTED()
 {
   // read all last known values from Blynk server
@@ -896,7 +901,8 @@ BLYNK_CONNECTED()
     V54,
     V57,
     V58,
-    V61);
+    V61,
+    V62);
 }
 
 BLYNK_WRITE(V0)
@@ -1093,6 +1099,11 @@ BLYNK_WRITE(V58)
 BLYNK_WRITE(V61)
 {
   s_instance->WaterHeaterLimitMinutes(param.asFloat());
+}
+
+BLYNK_WRITE(V62)
+{
+  s_instance->WaterHeatingRuntimeSeconds(param.asInt());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.

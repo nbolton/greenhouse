@@ -25,6 +25,7 @@ protected:
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
   virtual void ReportWeather() {}
+  virtual void ReportWaterHeatingRuntime() {}
 
   virtual bool ReadSensors(int& failures) { return false; }
   virtual void OpenWindow(float delta);
@@ -105,6 +106,8 @@ public:
   virtual std::string WeatherInfo() const { return m_weatherInfo; }
   virtual void WaterHeaterLimitMinutes(int value) { m_waterHeaterLimitMinutes = value; }
   virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
+  virtual void WaterHeatingRuntimeSeconds(int value) { m_waterHeatingRuntimeSeconds = value; }
+  virtual int WaterHeatingRuntimeSeconds() const { return m_waterHeatingRuntimeSeconds; }
   
 private:
   void UpdateDayWaterHeating();
@@ -141,7 +144,9 @@ private:
   bool m_isRaining;
   int m_waterHeaterLimitMinutes;
   unsigned long m_waterHeatingStartSeconds;
-  unsigned long m_waterHeatingRuntimeSeconds;
+  int m_waterHeatingRuntimeSeconds;
+  bool m_waterHeatingWasDaytimeLastUpdate;
+  bool m_waterHeatingHasRun;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

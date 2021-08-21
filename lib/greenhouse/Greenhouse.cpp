@@ -40,7 +40,9 @@ Greenhouse::Greenhouse() :
   m_isRaining(false),
   m_waterHeaterLimitMinutes(k_unknown),
   m_waterHeatingStartSeconds(k_unknownUL),
-  m_waterHeatingRuntimeSeconds(0)
+  m_waterHeatingRuntimeSeconds(0),
+  m_waterHeatingWasDaytime(false),
+  m_waterHeatingHasRun(false)
 {
 }
 
@@ -268,7 +270,7 @@ float Greenhouse::CalculateMoisture(float analogValue) const
 void Greenhouse::SwitchWaterHeatingIfChanged(bool on)
 {
   if (on && 
-    (m_waterHeatingStartSeconds != k_unknownUL) &&
+    (m_waterHeatingRuntimeSeconds > 0) &&
     ((int)(m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes)) {
 
     Log().Trace("Blocking water heating switch on, runtime=%ds limit=%dm", 
@@ -353,7 +355,18 @@ void Greenhouse::UpdateHeatingSystems()
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
+    // detect transition from night to day
+    if (m_waterHeatingHasRun && !m_waterHeatingWasDaytime) {
+
+      // reset runtime back to 0
+      WaterHeatingRuntimeSeconds(0);
+      ReportWaterHeatingRuntime();
+      m_waterHeatingStartSeconds = k_unknownUL;
+      Log().Trace("Water heater runtime reset");
+    }
+
     Log().Trace("Daytime heating mode");
+    m_waterHeatingWasDaytime = true;
 
     if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
 
@@ -382,6 +395,7 @@ void Greenhouse::UpdateHeatingSystems()
   else if ((CurrentHour() < DayStartHour()) || (CurrentHour() >= DayEndHour())) {
 
     Log().Trace("Nighttime heating mode");
+    m_waterHeatingWasDaytime = false;
 
     if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
       
@@ -407,6 +421,8 @@ void Greenhouse::UpdateHeatingSystems()
     
     UpdateNightWaterHeating();
   }
+
+  m_waterHeatingHasRun = true;
 }
 
 bool Greenhouse::IsRaining() const { return WeatherCode() < k_dryWeatherCode; }
