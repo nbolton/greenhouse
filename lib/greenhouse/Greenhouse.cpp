@@ -342,9 +342,11 @@ void Greenhouse::UpdateHeatingSystems()
   Log().Trace("Update heating systems, hour=%d", CurrentHour());
 
   if (WaterHeatingIsOn() && (m_waterHeatingStartSeconds != k_unknownUL)) {
+    
     int period = (UptimeSeconds() - m_waterHeatingStartSeconds);
     m_waterHeatingRuntimeSeconds += period;
-    Log().Trace("Advancing water heating runtime, period=%ds, total=%ds", period, m_waterHeatingRuntimeSeconds);
+    ReportWaterHeatingRuntime();
+    Log().Trace("Advanced water heating runtime, period=%ds, total=%ds", period, m_waterHeatingRuntimeSeconds);
 
     if ((int)(m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes) {
       ReportInfo("Water heater runtime limit reached (%dm), switching off", m_waterHeaterLimitMinutes);

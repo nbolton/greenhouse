@@ -145,7 +145,7 @@ private:
   int m_waterHeaterLimitMinutes;
   unsigned long m_waterHeatingStartSeconds;
   int m_waterHeatingRuntimeSeconds;
-  bool m_waterHeatingWasDaytimeLastUpdate;
+  bool m_waterHeatingWasDaytime;
   bool m_waterHeatingHasRun;
 };
 
