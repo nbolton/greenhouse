@@ -41,9 +41,9 @@ public:
   void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
 
 protected:
-  void ReportInfo(const char *m, ...);
-  void ReportWarning(const char *m, ...);
-  void ReportCritical(const char *m, ...);
+  void ReportInfo(const char *m, ...) const;
+  void ReportWarning(const char *m, ...) const;
+  void ReportCritical(const char *m, ...) const;
   void ReportSensorValues();
   void ReportWindowProgress();
   void ReportSystemInfo();

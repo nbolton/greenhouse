@@ -645,10 +645,8 @@ void GreenhouseArduino::SwitchPower(bool pv)
 
 int GreenhouseArduino::CurrentHour() const { return s_timeClient.getHours(); }
 
-void GreenhouseArduino::ReportInfo(const char *format, ...)
+void GreenhouseArduino::ReportInfo(const char *format, ...) const
 {
-  FlashLed(k_ledSend);
-
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
@@ -658,10 +656,8 @@ void GreenhouseArduino::ReportInfo(const char *format, ...)
   Blynk.logEvent("info", s_reportBuffer);
 }
 
-void GreenhouseArduino::ReportWarning(const char *format, ...)
+void GreenhouseArduino::ReportWarning(const char *format, ...) const
 {
-  FlashLed(k_ledSend);
-
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
@@ -671,10 +667,8 @@ void GreenhouseArduino::ReportWarning(const char *format, ...)
   Blynk.logEvent("warning", s_reportBuffer);
 }
 
-void GreenhouseArduino::ReportCritical(const char *format, ...)
+void GreenhouseArduino::ReportCritical(const char *format, ...) const
 {
-  FlashLed(k_ledSend);
-
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
