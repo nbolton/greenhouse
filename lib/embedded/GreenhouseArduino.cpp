@@ -91,12 +91,16 @@ static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(1024);
 
-GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
-
-void GreenhouseArduino::Instance(GreenhouseArduino &ga) { s_instance = &ga; }
+// free-function declarations
 
 void relayCallback() { s_instance->RelayCallback(); }
 void refreshTimer() { s_instance->Refresh(); }
+
+// member functions
+
+GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
+
+void GreenhouseArduino::Instance(GreenhouseArduino &ga) { s_instance = &ga; }
 
 GreenhouseArduino::GreenhouseArduino() :
   m_log(),
