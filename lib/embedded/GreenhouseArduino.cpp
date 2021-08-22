@@ -178,7 +178,6 @@ void GreenhouseArduino::Setup()
   s_dallas.begin();
   s_timeClient.begin();
 
-  MeasureVoltage();
   InitSensors();
   InitADCs();
 
@@ -771,6 +770,8 @@ void GreenhouseArduino::LastWrite()
 
 void GreenhouseArduino::SystemStarted()
 {
+  InitPowerSource();
+  
   // loop() will not have run yet, so make sure the time is updated
   // before running the refresh function.
   s_timeClient.update();
@@ -878,6 +879,23 @@ void GreenhouseArduino::ManualRefresh()
   Log().Trace(F("Manual refresh"));
   s_timeClient.update();
   Refresh();
+}
+
+void GreenhouseArduino::InitPowerSource()
+{
+  MeasureVoltage();
+  float onboardVoltage = readPvOnboardVoltage();
+
+  if ((m_pvVoltageSwitchOn != k_unknown) && 
+    (m_pvVoltageOutput >= m_pvVoltageSwitchOn) && 
+    (onboardVoltage > k_pvOnboardVoltageMin)) {
+
+    Log().Trace(F("Using PV on start"));
+    SwitchPower(true);
+  }
+  else {
+    Log().Trace(F("Using PSU on start"));
+  }
 }
 
 // free-functions

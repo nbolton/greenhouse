@@ -103,6 +103,7 @@ private:
   void InitADCs();
   void InitActuators();
   void InitShiftRegisters();
+  void InitPowerSource();
 
 private:
   ArduinoLog m_log;
