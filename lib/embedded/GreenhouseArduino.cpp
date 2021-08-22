@@ -49,6 +49,7 @@ const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
 const ADS1115_MUX k_voltagePin = ADS1115_COMP_0_GND;
 const ADS1115_MUX k_currentPin = ADS1115_COMP_1_GND;
 
+const bool k_enableLed = false;
 const int k_shiftRegisterTotal = 2;
 const int k_voltAverageCountMax = 100;
 const int k_pvOnboardVoltageMin = 7; // V, in case of sudden voltage drop
@@ -151,6 +152,10 @@ void GreenhouseArduino::Setup()
     // wait for serial to connect before first trace
     delay(1000);
   }
+  
+  if (k_enableLed) {
+    pinMode(LED_BUILTIN, OUTPUT);
+  }
 
   Log().Trace("\n\nStarting system: %s", BLYNK_DEVICE_NAME);
 
@@ -209,7 +214,6 @@ void GreenhouseArduino::InitShiftRegisters()
 
 void GreenhouseArduino::InitActuators()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(k_actuatorPinA, OUTPUT);
 
   s_io1.pinMode(k_actuatorPin1, OUTPUT);
@@ -321,9 +325,14 @@ bool GreenhouseArduino::Refresh()
 
 void GreenhouseArduino::FlashLed(LedFlashTimes times)
 {
-  // disable flashing LED until after the last write is done
-  if (!m_lastWriteDone)
+  if (!k_enableLed) {
     return;
+  }
+
+  // disable flashing LED until after the last write is done
+  if (!m_lastWriteDone) {
+    return;
+  }
 
   for (int i = 0; i < (int)times * 2; i++) {
     m_led = (m_led == LOW) ? HIGH : LOW;
