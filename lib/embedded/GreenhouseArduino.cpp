@@ -6,6 +6,8 @@
 
 #include <Adafruit_SHT31.h>
 #include <Arduino.h>
+#include <ArduinoHttpClient.h>
+#include <ArduinoJson.h>
 #include <BlynkSimpleEsp8266.h>
 #include <DallasTemperature.h>
 #include <ESP8266WiFi.h>
@@ -17,8 +19,6 @@
 #include <Thread.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
-#include <ArduinoHttpClient.h>
-#include <ArduinoJson.h>
 
 struct ADC {
   String name;
@@ -67,9 +67,9 @@ const int k_adcAddress1 = 0x48;
 const int k_adcAddress2 = 0x49;
 const float k_weatherLat = 54.203;
 const float k_weatherLon = -4.408;
-const char* k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
-const char* k_weatherHost = "api.openweathermap.org";
-const char* k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
+const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
+const char *k_weatherHost = "api.openweathermap.org";
+const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const int s_relayThreadInterval = 10; // 10 ms, high frequency in case of voltage drop
 const uint8_t k_ioAddress = 0x20;
 
@@ -157,7 +157,7 @@ void GreenhouseArduino::Setup()
     // wait for serial to connect before first trace
     delay(1000);
   }
-  
+
   if (k_enableLed) {
     pinMode(LED_BUILTIN, OUTPUT);
   }
@@ -209,8 +209,7 @@ void GreenhouseArduino::InitShiftRegisters()
 
   try {
     s_shiftRegisters.shift();
-  }
-  catch (...) {
+  } catch (...) {
     ReportCritical("Shift register init failed");
     throw;
   }
@@ -369,7 +368,7 @@ float GreenhouseArduino::SoilMoisture() const
   return m_soilMoisture;
 }
 
-bool GreenhouseArduino::ReadSensors(int& failures)
+bool GreenhouseArduino::ReadSensors(int &failures)
 {
   if (TestMode()) {
     return true;
@@ -486,8 +485,7 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
 
     try {
       s_shiftRegisters.set_shift(pin);
-    }
-    catch (...) {
+    } catch (...) {
       ReportCritical("Switch on failed: %d", index);
       throw;
     }
@@ -499,8 +497,7 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
 
     try {
       s_shiftRegisters.clear_shift(pin);
-    }
-    catch (...) {
+    } catch (...) {
       ReportCritical("Switch off failed: %d", index);
       throw;
     }
@@ -638,8 +635,7 @@ void GreenhouseArduino::SwitchPower(bool pv)
   if (pv) {
     try {
       s_shiftRegisters.set_shift(k_relayPin);
-    }
-    catch (...) {
+    } catch (...) {
       ReportCritical("Switch power on failed");
       throw;
     }
@@ -647,8 +643,7 @@ void GreenhouseArduino::SwitchPower(bool pv)
   else {
     try {
       s_shiftRegisters.clear_shift(k_relayPin);
-    }
-    catch (...) {
+    } catch (...) {
       ReportCritical("Switch power off failed");
       throw;
     }
@@ -818,13 +813,13 @@ void GreenhouseArduino::UpdateWeatherForecast()
 {
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
-  
+
   Log().Trace(F("Connecting to weather host: %s"), k_weatherHost);
   HttpClient httpClient(s_wifiClient, k_weatherHost, 80);
 
   Log().Trace(F("Weather host get: %s"), uri);
   httpClient.get(uri);
-  
+
   int statusCode = httpClient.responseStatusCode();
   Log().Trace(F("Weather host status: %d"), statusCode);
 
@@ -844,9 +839,9 @@ void GreenhouseArduino::UpdateWeatherForecast()
 
   Log().Trace(F("Deserialized weather JSON"));
   int id = s_weatherJson["weather"][0]["id"];
-  const char* main = s_weatherJson["weather"][0]["main"];
+  const char *main = s_weatherJson["weather"][0]["main"];
   int dt = s_weatherJson["dt"];
-  const char* location = s_weatherJson["name"];
+  const char *location = s_weatherJson["name"];
 
   int hours = (int)((dt % 86400L) / 3600);
   int minutes = (int)((dt % 3600) / 60);
@@ -854,7 +849,13 @@ void GreenhouseArduino::UpdateWeatherForecast()
   String hoursString = hours < 10 ? "0" + String(hours) : String(hours);
   String minuteString = minutes < 10 ? "0" + String(minutes) : String(minutes);
 
-  sprintf(s_weatherInfo, "%s @ %s:%s UTC (%s)", main, hoursString.c_str(), minuteString.c_str(), location);
+  sprintf(
+    s_weatherInfo,
+    "%s @ %s:%s UTC (%s)",
+    main,
+    hoursString.c_str(),
+    minuteString.c_str(),
+    location);
 
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
@@ -864,10 +865,7 @@ void GreenhouseArduino::UpdateWeatherForecast()
   ReportWeather();
 }
 
-void GreenhouseArduino::ReportWeather()
-{
-  Blynk.virtualWrite(V60, WeatherInfo().c_str());
-}
+void GreenhouseArduino::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
 
 void GreenhouseArduino::ReportWaterHeatingInfo()
 {
@@ -887,8 +885,8 @@ void GreenhouseArduino::InitPowerSource()
   MeasureVoltage();
   float onboardVoltage = readPvOnboardVoltage();
 
-  if ((m_pvVoltageSwitchOn != k_unknown) && 
-    (m_pvVoltageOutput >= m_pvVoltageSwitchOn) && 
+  if (
+    (m_pvVoltageSwitchOn != k_unknown) && (m_pvVoltageOutput >= m_pvVoltageSwitchOn) &&
     (onboardVoltage > k_pvOnboardVoltageMin)) {
 
     Log().Trace(F("Using PV on start"));
@@ -958,20 +956,11 @@ BLYNK_CONNECTED()
     V62);
 }
 
-BLYNK_WRITE(V0)
-{
-  s_instance->AutoMode(param.asInt() == 1);
-}
+BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
 
-BLYNK_WRITE(V3)
-{
-  s_instance->RefreshRate(param.asInt());
-}
+BLYNK_WRITE(V3) { s_instance->RefreshRate(param.asInt()); }
 
-BLYNK_WRITE(V5)
-{
-  s_instance->OpenStart(param.asFloat());
-}
+BLYNK_WRITE(V5) { s_instance->OpenStart(param.asFloat()); }
 
 BLYNK_WRITE(V6)
 {
@@ -987,55 +976,25 @@ BLYNK_WRITE(V7)
   }
 }
 
-BLYNK_WRITE(V8)
-{
-  s_instance->OpenFinish(param.asFloat());
-}
+BLYNK_WRITE(V8) { s_instance->OpenFinish(param.asFloat()); }
 
-BLYNK_WRITE(V9)
-{
-  s_instance->HandleWindowProgress(param.asInt());
-}
+BLYNK_WRITE(V9) { s_instance->HandleWindowProgress(param.asInt()); }
 
-BLYNK_WRITE(V14)
-{
-  s_instance->TestMode(param.asInt() == 1);
-}
+BLYNK_WRITE(V14) { s_instance->TestMode(param.asInt() == 1); }
 
-BLYNK_WRITE(V15)
-{
-  s_instance->OpenDayMinimum(param.asInt());
-}
+BLYNK_WRITE(V15) { s_instance->OpenDayMinimum(param.asInt()); }
 
-BLYNK_WRITE(V16)
-{
-  s_instance->InsideHumidityWarning(param.asFloat());
-}
+BLYNK_WRITE(V16) { s_instance->InsideHumidityWarning(param.asFloat()); }
 
-BLYNK_WRITE(V17)
-{
-  s_instance->SoilMostureWarning(param.asFloat());
-}
+BLYNK_WRITE(V17) { s_instance->SoilMostureWarning(param.asFloat()); }
 
-BLYNK_WRITE(V18)
-{
-  s_instance->FakeSoilTemperature(param.asFloat());
-}
+BLYNK_WRITE(V18) { s_instance->FakeSoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V22)
-{
-  s_instance->FakeSoilMoisture(param.asFloat());
-}
+BLYNK_WRITE(V22) { s_instance->FakeSoilMoisture(param.asFloat()); }
 
-BLYNK_WRITE(V23)
-{
-  s_instance->FakeInsideHumidity(param.asFloat());
-}
+BLYNK_WRITE(V23) { s_instance->FakeInsideHumidity(param.asFloat()); }
 
-BLYNK_WRITE(V24)
-{
-  s_instance->ActiveSwitch(param.asInt());
-}
+BLYNK_WRITE(V24) { s_instance->ActiveSwitch(param.asInt()); }
 
 BLYNK_WRITE(V25)
 {
@@ -1044,115 +1003,49 @@ BLYNK_WRITE(V25)
   }
 }
 
-BLYNK_WRITE(V31)
-{
-  s_instance->DayStartHour(param.asInt());
-}
+BLYNK_WRITE(V31) { s_instance->DayStartHour(param.asInt()); }
 
-BLYNK_WRITE(V32)
-{
-  s_instance->DayEndHour(param.asInt());
-}
+BLYNK_WRITE(V32) { s_instance->DayEndHour(param.asInt()); }
 
-BLYNK_WRITE(V34)
-{
-  s_instance->PvVoltageSensorMin(param.asFloat());
-}
+BLYNK_WRITE(V34) { s_instance->PvVoltageSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V35)
-{
-  s_instance->PvVoltageSensorMax(param.asFloat());
-}
+BLYNK_WRITE(V35) { s_instance->PvVoltageSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V36)
-{
-  s_instance->PvVoltageOutputMin(param.asFloat());
-}
+BLYNK_WRITE(V36) { s_instance->PvVoltageOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V37)
-{
-  s_instance->PvVoltageOutputMax(param.asFloat());
-}
+BLYNK_WRITE(V37) { s_instance->PvVoltageOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V38)
-{
-  s_instance->PvCurrentSensorMin(param.asFloat());
-}
+BLYNK_WRITE(V38) { s_instance->PvCurrentSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V39)
-{
-  s_instance->PvCurrentSensorMax(param.asFloat());
-}
+BLYNK_WRITE(V39) { s_instance->PvCurrentSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V40)
-{
-  s_instance->PvCurrentOutputMin(param.asFloat());
-}
+BLYNK_WRITE(V40) { s_instance->PvCurrentOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V41)
-{
-  s_instance->PvCurrentOutputMax(param.asFloat());
-}
+BLYNK_WRITE(V41) { s_instance->PvCurrentOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V44)
-{
-  s_instance->PvVoltageSwitchOn(param.asFloat());
-}
+BLYNK_WRITE(V44) { s_instance->PvVoltageSwitchOn(param.asFloat()); }
 
-BLYNK_WRITE(V45)
-{
-  s_instance->PvVoltageSwitchOff(param.asFloat());
-}
+BLYNK_WRITE(V45) { s_instance->PvVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47)
-{
-  s_instance->PvForceOn(param.asInt());
-}
+BLYNK_WRITE(V47) { s_instance->PvForceOn(param.asInt()); }
 
-BLYNK_WRITE(V48)
-{
-  s_instance->WindowActuatorSpeedPercent(param.asInt());
-}
+BLYNK_WRITE(V48) { s_instance->WindowActuatorSpeedPercent(param.asInt()); }
 
-BLYNK_WRITE(V49)
-{
-  s_instance->WindowActuatorRuntimeSec(param.asFloat());
-}
+BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 
-BLYNK_WRITE(V50)
-{
-  s_instance->DayWaterTemperature(param.asFloat());
-}
+BLYNK_WRITE(V50) { s_instance->DayWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V51)
-{
-  s_instance->NightWaterTemperature(param.asFloat());
-}
+BLYNK_WRITE(V51) { s_instance->NightWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V53)
-{
-  s_instance->DaySoilTemperature(param.asFloat());
-}
+BLYNK_WRITE(V53) { s_instance->DaySoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V54)
-{
-  s_instance->NightSoilTemperature(param.asFloat());
-}
+BLYNK_WRITE(V54) { s_instance->NightSoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V57)
-{
-  s_instance->DayAirTemperature(param.asFloat());
-}
+BLYNK_WRITE(V57) { s_instance->DayAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V58)
-{
-  s_instance->NightAirTemperature(param.asFloat());
-}
+BLYNK_WRITE(V58) { s_instance->NightAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V61)
-{
-  s_instance->WaterHeaterLimitMinutes(param.asFloat());
-}
+BLYNK_WRITE(V61) { s_instance->WaterHeaterLimitMinutes(param.asFloat()); }
 
 BLYNK_WRITE(V62)
 {

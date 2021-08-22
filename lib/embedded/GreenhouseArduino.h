@@ -53,7 +53,7 @@ protected:
   void ReportWaterHeatingInfo();
 
   void FlashLed(LedFlashTimes times);
-  bool ReadSensors(int& failures);
+  bool ReadSensors(int &failures);
   void SwitchWaterHeating(bool on);
   void SwitchSoilHeating(bool on);
   void SwitchAirHeating(bool on);
@@ -77,7 +77,7 @@ public:
   void RefreshRate(int value);
   void FakeInsideHumidity(float value) { m_fakeInsideHumidity = value; }
   void FakeSoilTemperature(float value) { m_fakeSoilTemperature = value; }
-  void FakeSoilMoisture(float value){ m_fakeSoilMoisture = value; }
+  void FakeSoilMoisture(float value) { m_fakeSoilMoisture = value; }
   void ActiveSwitch(int value) { m_activeSwitch = value; }
   void PvVoltageSensorMin(float value) { m_pvVoltageSensorMin = value; }
   void PvVoltageSensorMax(float value) { m_pvVoltageSensorMax = value; }

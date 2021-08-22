@@ -27,7 +27,7 @@ protected:
   virtual void ReportWeather() {}
   virtual void ReportWaterHeatingInfo() {}
 
-  virtual bool ReadSensors(int& failures) { return false; }
+  virtual bool ReadSensors(int &failures) { return false; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual float CalculateMoisture(float analogValue) const;
@@ -45,7 +45,7 @@ protected:
   virtual void StopActuator() {}
   virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void SystemDelay(unsigned long ms) {}
-  virtual void UpdateWeatherForecast() {};
+  virtual void UpdateWeatherForecast(){};
 
 public:
   // getters & setters
@@ -110,7 +110,7 @@ public:
   virtual float WaterHeatingRuntimeMinutes() const { return m_waterHeatingRuntimeMinutes; }
   virtual void WaterHeatingCostDaily(float value) { m_waterHeatingCostDaily = value; }
   virtual float WaterHeatingCostDaily() const { return m_waterHeatingCostDaily; }
-  
+
 private:
   void UpdateDayWaterHeating();
   void UpdateNightWaterHeating();
