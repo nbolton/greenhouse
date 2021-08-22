@@ -976,21 +976,21 @@ void Test_UpdateHeatingSystems_DaytimeTransition_WaterHeaterRuntimeLimitIsReset(
 
   greenhouse.UpdateHeatingSystems();
   
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.WaterHeatingRuntimeSeconds());
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WaterHeatingRuntimeMinutes());
 
   greenhouse.m_mock_UptimeSeconds = 60;
   greenhouse.m_mock_CurrentHour = 5;
 
   greenhouse.UpdateHeatingSystems();
 
-  TEST_ASSERT_EQUAL_INT(60, greenhouse.WaterHeatingRuntimeSeconds());
+  TEST_ASSERT_FLOAT_WITHIN(.1f, 1, greenhouse.WaterHeatingRuntimeMinutes());
 
   greenhouse.m_mock_UptimeSeconds = 3;
   greenhouse.m_mock_CurrentHour = 3;
 
   greenhouse.UpdateHeatingSystems();
 
-  TEST_ASSERT_EQUAL_INT(0, greenhouse.WaterHeatingRuntimeSeconds());
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.WaterHeatingRuntimeMinutes());
 }
 
 void testCommon()

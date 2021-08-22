@@ -40,7 +40,7 @@ Greenhouse::Greenhouse() :
   m_isRaining(false),
   m_waterHeaterLimitMinutes(k_unknown),
   m_waterHeatingStartSeconds(k_unknownUL),
-  m_waterHeatingRuntimeSeconds(0),
+  m_waterHeatingRuntimeMinutes(0),
   m_waterHeatingWasDaytime(false),
   m_waterHeatingHasRun(false)
 {
@@ -272,11 +272,11 @@ float Greenhouse::CalculateMoisture(float analogValue) const
 void Greenhouse::SwitchWaterHeatingIfChanged(bool on)
 {
   if (on && 
-    (m_waterHeatingRuntimeSeconds > 0) &&
-    ((int)(m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes)) {
+    (m_waterHeatingRuntimeMinutes > 0) &&
+    (m_waterHeatingRuntimeMinutes >= m_waterHeaterLimitMinutes)) {
 
-    Log().Trace("Blocking water heating switch on, runtime=%ds limit=%dm", 
-      m_waterHeatingRuntimeSeconds, m_waterHeaterLimitMinutes);
+    Log().Trace("Blocking water heating switch on, runtime=%dm limit=%dm", 
+      m_waterHeatingRuntimeMinutes, m_waterHeaterLimitMinutes);
     return;
   }
 
@@ -345,12 +345,12 @@ void Greenhouse::UpdateHeatingSystems()
 
   if (WaterHeatingIsOn() && (m_waterHeatingStartSeconds != k_unknownUL)) {
     
-    int period = (UptimeSeconds() - m_waterHeatingStartSeconds);
-    m_waterHeatingRuntimeSeconds += period;
+    int addSeconds = (UptimeSeconds() - m_waterHeatingStartSeconds);
+    m_waterHeatingRuntimeMinutes += (float)addSeconds / 60;
     ReportWaterHeatingRuntime();
-    Log().Trace("Advanced water heating runtime, period=%ds, total=%ds", period, m_waterHeatingRuntimeSeconds);
+    Log().Trace("Advanced water heating runtime, add=%ds, total=%dm", addSeconds, m_waterHeatingRuntimeMinutes);
 
-    if ((int)(m_waterHeatingRuntimeSeconds / 60) >= m_waterHeaterLimitMinutes) {
+    if (m_waterHeatingRuntimeMinutes >= m_waterHeaterLimitMinutes) {
       ReportInfo("Water heater runtime limit reached (%dm), switching off", m_waterHeaterLimitMinutes);
       SwitchWaterHeatingIfChanged(false);
     }
@@ -363,7 +363,7 @@ void Greenhouse::UpdateHeatingSystems()
     if (m_waterHeatingHasRun && !m_waterHeatingWasDaytime) {
 
       // reset runtime back to 0
-      WaterHeatingRuntimeSeconds(0);
+      WaterHeatingRuntimeMinutes(0);
       ReportWaterHeatingRuntime();
       m_waterHeatingStartSeconds = k_unknownUL;
       Log().Trace("Water heater runtime reset");

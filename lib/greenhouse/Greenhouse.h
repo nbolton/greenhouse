@@ -106,8 +106,8 @@ public:
   virtual std::string WeatherInfo() const { return m_weatherInfo; }
   virtual void WaterHeaterLimitMinutes(int value) { m_waterHeaterLimitMinutes = value; }
   virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
-  virtual void WaterHeatingRuntimeSeconds(int value) { m_waterHeatingRuntimeSeconds = value; }
-  virtual int WaterHeatingRuntimeSeconds() const { return m_waterHeatingRuntimeSeconds; }
+  virtual void WaterHeatingRuntimeMinutes(float value) { m_waterHeatingRuntimeMinutes = value; }
+  virtual float WaterHeatingRuntimeMinutes() const { return m_waterHeatingRuntimeMinutes; }
   
 private:
   void UpdateDayWaterHeating();
@@ -144,7 +144,7 @@ private:
   bool m_isRaining;
   int m_waterHeaterLimitMinutes;
   unsigned long m_waterHeatingStartSeconds;
-  int m_waterHeatingRuntimeSeconds;
+  float m_waterHeatingRuntimeMinutes;
   bool m_waterHeatingWasDaytime;
   bool m_waterHeatingHasRun;
 };

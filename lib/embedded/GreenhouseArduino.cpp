@@ -771,7 +771,7 @@ void GreenhouseArduino::LastWrite()
 void GreenhouseArduino::SystemStarted()
 {
   InitPowerSource();
-  
+
   // loop() will not have run yet, so make sure the time is updated
   // before running the refresh function.
   s_timeClient.update();
@@ -871,7 +871,7 @@ void GreenhouseArduino::ReportWeather()
 
 void GreenhouseArduino::ReportWaterHeatingRuntime()
 {
-  Blynk.virtualWrite(V62, WaterHeatingRuntimeSeconds());
+  Blynk.virtualWrite(V62, WaterHeatingRuntimeMinutes());
 }
 
 void GreenhouseArduino::ManualRefresh()
@@ -1155,7 +1155,7 @@ BLYNK_WRITE(V61)
 
 BLYNK_WRITE(V62)
 {
-  s_instance->WaterHeatingRuntimeSeconds(param.asInt());
+  s_instance->WaterHeatingRuntimeMinutes(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
