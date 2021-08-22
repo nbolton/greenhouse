@@ -869,9 +869,10 @@ void GreenhouseArduino::ReportWeather()
   Blynk.virtualWrite(V60, WeatherInfo().c_str());
 }
 
-void GreenhouseArduino::ReportWaterHeatingRuntime()
+void GreenhouseArduino::ReportWaterHeatingInfo()
 {
   Blynk.virtualWrite(V62, WaterHeatingRuntimeMinutes());
+  Blynk.virtualWrite(V63, WaterHeatingCostDaily());
 }
 
 void GreenhouseArduino::ManualRefresh()

@@ -25,7 +25,7 @@ protected:
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
   virtual void ReportWeather() {}
-  virtual void ReportWaterHeatingRuntime() {}
+  virtual void ReportWaterHeatingInfo() {}
 
   virtual bool ReadSensors(int& failures) { return false; }
   virtual void OpenWindow(float delta);
@@ -108,6 +108,8 @@ public:
   virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
   virtual void WaterHeatingRuntimeMinutes(float value) { m_waterHeatingRuntimeMinutes = value; }
   virtual float WaterHeatingRuntimeMinutes() const { return m_waterHeatingRuntimeMinutes; }
+  virtual void WaterHeatingCostDaily(float value) { m_waterHeatingCostDaily = value; }
+  virtual float WaterHeatingCostDaily() const { return m_waterHeatingCostDaily; }
   
 private:
   void UpdateDayWaterHeating();
@@ -147,6 +149,7 @@ private:
   float m_waterHeatingRuntimeMinutes;
   bool m_waterHeatingWasDaytime;
   bool m_waterHeatingHasRun;
+  float m_waterHeatingCostDaily;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

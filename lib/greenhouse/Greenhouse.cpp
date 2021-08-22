@@ -11,6 +11,7 @@ const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
 const float k_airTempMargin = 1;
 const int k_dryWeatherCode = 701; // anything less is snow/rain
+const float k_waterHeaterCostPerKwh = .20f * 3; // 3kWh @ 20p/kWh
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
@@ -42,7 +43,8 @@ Greenhouse::Greenhouse() :
   m_waterHeatingStartSeconds(k_unknownUL),
   m_waterHeatingRuntimeMinutes(0),
   m_waterHeatingWasDaytime(false),
-  m_waterHeatingHasRun(false)
+  m_waterHeatingHasRun(false),
+  m_waterHeatingCostDaily(0)
 {
 }
 
@@ -347,8 +349,9 @@ void Greenhouse::UpdateHeatingSystems()
     
     int addSeconds = (UptimeSeconds() - m_waterHeatingStartSeconds);
     m_waterHeatingRuntimeMinutes += (float)addSeconds / 60;
-    ReportWaterHeatingRuntime();
-    Log().Trace("Advanced water heating runtime, add=%ds, total=%dm", addSeconds, m_waterHeatingRuntimeMinutes);
+    m_waterHeatingCostDaily += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
+    ReportWaterHeatingInfo();
+    Log().Trace("Advanced water heating runtime, add=%ds, total=%dm, cost=%.2f", addSeconds, m_waterHeatingRuntimeMinutes, m_waterHeatingCostDaily);
 
     if (m_waterHeatingRuntimeMinutes >= m_waterHeaterLimitMinutes) {
       ReportInfo("Water heater runtime limit reached (%dm), switching off", m_waterHeaterLimitMinutes);
@@ -362,9 +365,10 @@ void Greenhouse::UpdateHeatingSystems()
     // detect transition from night to day
     if (m_waterHeatingHasRun && !m_waterHeatingWasDaytime) {
 
-      // reset runtime back to 0
+      // reset daily runtime and cost back to 0
       WaterHeatingRuntimeMinutes(0);
-      ReportWaterHeatingRuntime();
+      WaterHeatingCostDaily(0);
+      ReportWaterHeatingInfo();
       m_waterHeatingStartSeconds = k_unknownUL;
       Log().Trace("Water heater runtime reset");
     }
