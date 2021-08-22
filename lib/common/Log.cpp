@@ -5,7 +5,7 @@
 #include <cstdarg>
 #include <iostream>
 
-static char s_buffer[80];
+static char s_buffer[200];
 
 void Log::Trace(const char *format, ...) const
 {

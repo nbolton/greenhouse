@@ -6,6 +6,6 @@
 
 class ArduinoLog : public Log {
 public:
-  void TraceFlash(const __FlashStringHelper *f) const;
-  void Trace(const char *m, ...) const;
+  void Trace(const char *format, ...) const;
+  void Trace(const __FlashStringHelper *format, ...) const;
 };

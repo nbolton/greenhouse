@@ -2,5 +2,5 @@
 
 class Log {
 public:
-  virtual void Trace(const char *m, ...) const;
+  virtual void Trace(const char *format, ...) const;
 };

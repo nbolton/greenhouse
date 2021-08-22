@@ -40,7 +40,6 @@ public:
   void ManualRefresh();
 
   const ArduinoLog &Log() const { return m_log; }
-  void TraceFlash(const __FlashStringHelper *f) const { m_log.TraceFlash(f); }
 
 protected:
   void ReportInfo(const char *m, ...) const;

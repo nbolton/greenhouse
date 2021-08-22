@@ -81,7 +81,7 @@ static OneWire s_oneWire(k_oneWirePin);
 static DallasTemperature s_dallas(&s_oneWire);
 static WiFiUDP s_ntpUdp;
 static NTPClient s_timeClient(s_ntpUdp);
-static char s_reportBuffer[80];
+static char s_reportBuffer[200];
 static BlynkTimer s_timer;
 static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
@@ -157,7 +157,7 @@ void GreenhouseArduino::Setup()
     pinMode(LED_BUILTIN, OUTPUT);
   }
 
-  Log().Trace("\n\nStarting system: %s", BLYNK_DEVICE_NAME);
+  Log().Trace(F("\n\nStarting system: %s"), BLYNK_DEVICE_NAME);
 
   InitShiftRegisters();
 
@@ -179,7 +179,7 @@ void GreenhouseArduino::Setup()
 
   Blynk.begin(k_auth, k_ssid, k_pass);
 
-  Log().Trace("System ready");
+  Log().Trace(F("System ready"));
   Blynk.virtualWrite(V52, "Ready");
   StartBeep(2);
 }
@@ -297,7 +297,7 @@ bool GreenhouseArduino::Refresh()
 {
   // TODO: use mutex lock?
   if (m_refreshBusy) {
-    Log().Trace("Refresh busy, skipping");
+    Log().Trace(F("Refresh busy, skipping"));
     return false;
   }
 
@@ -478,7 +478,7 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
   int pin = k_switchPins[index];
 
   if (on) {
-    Log().Trace("SR pin set: %d", pin);
+    Log().Trace(F("SR pin set: %d"), pin);
 
     try {
       s_shiftRegisters.set_shift(pin);
@@ -491,7 +491,7 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
     m_switchState[index] = true;
   }
   else {
-    Log().Trace("SR pin clear: %d", pin);
+    Log().Trace(F("SR pin clear: %d"), pin);
 
     try {
       s_shiftRegisters.clear_shift(pin);
@@ -520,11 +520,11 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
 void GreenhouseArduino::ToggleActiveSwitch()
 {
   if (!m_switchState[m_activeSwitch]) {
-    Log().Trace("Toggle switch on: %d", m_activeSwitch);
+    Log().Trace(F("Toggle switch on: %d"), m_activeSwitch);
     SetSwitch(m_activeSwitch, true);
   }
   else {
-    Log().Trace("Toggle switch off: %d", m_activeSwitch);
+    Log().Trace(F("Toggle switch off: %d"), m_activeSwitch);
     SetSwitch(m_activeSwitch, false);
   }
 }
@@ -573,7 +573,7 @@ void GreenhouseArduino::RelayCallback()
 float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
-    Log().Trace("ADC not ready: %s", adc.name.c_str());
+    Log().Trace(F("ADC not ready: %s"), adc.name.c_str());
     return k_unknown;
   }
 
@@ -589,7 +589,7 @@ float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
   while (adc.ads.isBusy()) {
     delay(10);
     if (times++ > 10) {
-      Log().Trace("ADC is busy: %s", adc.name.c_str());
+      Log().Trace(F("ADC is busy: %s"), adc.name.c_str());
       return k_unknown;
     }
   }
@@ -660,7 +660,7 @@ void GreenhouseArduino::SwitchPower(bool pv)
   }
 
   m_pvPowerSource = pv;
-  Log().Trace("Source: %s", pv ? "PV" : "PSU");
+  Log().Trace(F("Source: %s"), pv ? "PV" : "PSU");
   Blynk.virtualWrite(V28, m_pvPowerSource);
 }
 
@@ -741,7 +741,7 @@ void GreenhouseArduino::ReportSystemInfo()
 
   // free heap
   int freeHeap = ESP.getFreeHeap();
-  Log().Trace("Free heap: %d bytes", freeHeap);
+  Log().Trace(F("Free heap: %d bytes"), freeHeap);
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
@@ -766,7 +766,7 @@ void GreenhouseArduino::LastWrite()
 
   m_lastWriteDone = true;
 
-  s_instance->TraceFlash(F("Handling last Blynk write"));
+  s_instance->Log().Trace(F("Handling last Blynk write"));
 
   // if this is the first time that the last write was done,
   // this means that the system has started.
@@ -792,17 +792,17 @@ void GreenhouseArduino::SystemStarted()
 void GreenhouseArduino::RefreshRate(int refreshRate)
 {
   if (refreshRate <= 0) {
-    Log().Trace("Invalid refresh rate: %ds", refreshRate);
+    Log().Trace(F("Invalid refresh rate: %ds"), refreshRate);
     return;
   }
 
   if (m_timerId != k_unknown) {
-    Log().Trace("Deleting old timer: %d", m_timerId);
+    Log().Trace(F("Deleting old timer: %d"), m_timerId);
     s_timer.deleteTimer(m_timerId);
   }
 
   m_timerId = s_timer.setInterval(refreshRate * 1000L, refreshTimer);
-  Log().Trace("New refresh timer: %d", m_timerId);
+  Log().Trace(F("New refresh timer: %d"), m_timerId);
 }
 
 void GreenhouseArduino::HandleWindowProgress(int value)
@@ -822,14 +822,14 @@ void GreenhouseArduino::UpdateWeatherForecast()
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
   
-  Log().Trace("Connecting to weather host: %s", k_weatherHost);
+  Log().Trace(F("Connecting to weather host: %s"), k_weatherHost);
   HttpClient httpClient(s_wifiClient, k_weatherHost, 80);
 
-  Log().Trace("Weather host get: %s", uri);
+  Log().Trace(F("Weather host get: %s"), uri);
   httpClient.get(uri);
   
   int statusCode = httpClient.responseStatusCode();
-  Log().Trace("Weather host status: %d", statusCode);
+  Log().Trace(F("Weather host status: %d"), statusCode);
 
   if (statusCode != 200) {
     ReportWarning("Weather host error: %d", statusCode);
@@ -837,7 +837,7 @@ void GreenhouseArduino::UpdateWeatherForecast()
   }
 
   String response = httpClient.responseBody();
-  Log().Trace("Weather host response length: %d", strlen(response.c_str()));
+  Log().Trace(F("Weather host response length: %d"), strlen(response.c_str()));
 
   DeserializationError error = deserializeJson(s_weatherJson, response);
   if (error != DeserializationError::Ok) {
@@ -845,7 +845,7 @@ void GreenhouseArduino::UpdateWeatherForecast()
     return;
   }
 
-  Log().Trace("Deserialized weather JSON");
+  Log().Trace(F("Deserialized weather JSON"));
   int id = s_weatherJson["weather"][0]["id"];
   const char* main = s_weatherJson["weather"][0]["main"];
   int dt = s_weatherJson["dt"];
@@ -862,7 +862,7 @@ void GreenhouseArduino::UpdateWeatherForecast()
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
 
-  Log().Trace("Weather forecast: code=%d, info='%s'", WeatherCode(), WeatherInfo().c_str());
+  Log().Trace(F("Weather forecast: code=%d, info='%s'"), WeatherCode(), WeatherInfo().c_str());
 
   ReportWeather();
 }
@@ -879,7 +879,7 @@ void GreenhouseArduino::ReportWaterHeatingRuntime()
 
 void GreenhouseArduino::ManualRefresh()
 {
-  Log().TraceFlash(F("Manual refresh"));
+  Log().Trace(F("Manual refresh"));
   s_timeClient.update();
   Refresh();
 }
