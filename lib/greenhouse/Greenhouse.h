@@ -145,7 +145,7 @@ private:
   std::string m_weatherInfo;
   bool m_isRaining;
   int m_waterHeaterLimitMinutes;
-  unsigned long m_waterHeatingStartSeconds;
+  unsigned long m_waterHeatingLastUpdate;
   float m_waterHeatingRuntimeMinutes;
   bool m_waterHeatingWasDaytime;
   bool m_waterHeatingHasRun;

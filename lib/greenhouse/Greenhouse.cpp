@@ -40,7 +40,7 @@ Greenhouse::Greenhouse() :
   m_weatherInfo(),
   m_isRaining(false),
   m_waterHeaterLimitMinutes(k_unknown),
-  m_waterHeatingStartSeconds(k_unknownUL),
+  m_waterHeatingLastUpdate(k_unknownUL),
   m_waterHeatingRuntimeMinutes(0),
   m_waterHeatingWasDaytime(false),
   m_waterHeatingHasRun(false),
@@ -287,7 +287,6 @@ void Greenhouse::SwitchWaterHeatingIfChanged(bool on)
   if (WaterHeatingIsOn() != on) {
     WaterHeatingIsOn(on);
     SwitchWaterHeating(on);
-    m_waterHeatingStartSeconds = UptimeSeconds();
   }
 }
 
@@ -347,11 +346,12 @@ void Greenhouse::UpdateHeatingSystems()
 {
   Log().Trace("Update heating systems, hour=%d", CurrentHour());
 
-  if (WaterHeatingIsOn() && (m_waterHeatingStartSeconds != k_unknownUL)) {
+  if (WaterHeatingIsOn() && (m_waterHeatingLastUpdate != k_unknownUL)) {
 
-    int addSeconds = (UptimeSeconds() - m_waterHeatingStartSeconds);
+    int addSeconds = (UptimeSeconds() - m_waterHeatingLastUpdate);
     m_waterHeatingRuntimeMinutes += (float)addSeconds / 60;
     m_waterHeatingCostDaily += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
+
     ReportWaterHeatingInfo();
     Log().Trace(
       "Advanced water heating runtime, add=%ds, total=%.2fm, cost=£%.2f",
@@ -366,6 +366,8 @@ void Greenhouse::UpdateHeatingSystems()
     }
   }
 
+  m_waterHeatingLastUpdate = UptimeSeconds();
+
   // heat water to different temperature depending on if day or night
   if ((CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour())) {
 
@@ -376,7 +378,7 @@ void Greenhouse::UpdateHeatingSystems()
       WaterHeatingRuntimeMinutes(0);
       WaterHeatingCostDaily(0);
       ReportWaterHeatingInfo();
-      m_waterHeatingStartSeconds = k_unknownUL;
+      m_waterHeatingLastUpdate = k_unknownUL;
       Log().Trace("Water heater runtime reset");
     }
 
