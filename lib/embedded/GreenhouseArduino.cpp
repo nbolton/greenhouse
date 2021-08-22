@@ -125,9 +125,6 @@ GreenhouseArduino::GreenhouseArduino() :
   m_pvPowerSource(false),
   m_pvVoltageSwitchOn(k_unknown),
   m_pvVoltageSwitchOff(k_unknown),
-  m_pvVoltageCount(0),
-  m_pvVoltageAverage(0),
-  m_pvVoltageSum(0),
   m_pvVoltageSensor(k_unknown),
   m_pvVoltageOutput(k_unknown),
   m_pvVoltageSensorMin(0),
@@ -539,7 +536,6 @@ void GreenhouseArduino::RelayCallback()
     if (m_pvPowerSource) {
       ReportWarning("PV voltage drop detected: %.2fV", onboardVoltage);
       SwitchPower(false);
-      m_pvVoltageAverage = k_unknown;
     }
   }
   else if (m_pvForceOn) {
@@ -547,16 +543,16 @@ void GreenhouseArduino::RelayCallback()
       SwitchPower(true);
     }
   }
-  else if (m_pvVoltageAverage != k_unknown) {
+  else if (m_pvVoltageOutput != k_unknown) {
 
     if (
       !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
-      (m_pvVoltageAverage >= m_pvVoltageSwitchOn)) {
+      (m_pvVoltageOutput >= m_pvVoltageSwitchOn)) {
       SwitchPower(true);
     }
     else if (
       m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
-      (m_pvVoltageAverage <= m_pvVoltageSwitchOff)) {
+      (m_pvVoltageOutput <= m_pvVoltageSwitchOff)) {
       SwitchPower(false);
     }
   }
@@ -602,17 +598,6 @@ void GreenhouseArduino::MeasureVoltage()
     m_pvVoltageSensorMax,
     m_pvVoltageOutputMin,
     m_pvVoltageOutputMax);
-
-  m_pvVoltageSum += m_pvVoltageOutput;
-  m_pvVoltageCount++;
-
-  if (m_pvVoltageCount >= k_voltAverageCountMax) {
-
-    m_pvVoltageAverage = (m_pvVoltageSum / m_pvVoltageCount);
-
-    m_pvVoltageCount = 0;
-    m_pvVoltageSum = 0;
-  }
 }
 
 void GreenhouseArduino::MeasureCurrent()
@@ -882,11 +867,18 @@ void GreenhouseArduino::ManualRefresh()
 
 void GreenhouseArduino::InitPowerSource()
 {
+  const float sensorMin = m_pvVoltageSwitchOff;
+
   MeasureVoltage();
   float onboardVoltage = readPvOnboardVoltage();
+  Log().Trace(
+    F("Init power source, onboard=%.2fV, sensor=%.2fV, min=%.2fV"),
+    onboardVoltage,
+    m_pvVoltageOutput,
+    sensorMin);
 
   if (
-    (m_pvVoltageSwitchOn != k_unknown) && (m_pvVoltageOutput >= m_pvVoltageSwitchOn) &&
+    (m_pvVoltageSwitchOn != k_unknown) && (m_pvVoltageOutput >= sensorMin) &&
     (onboardVoltage > k_pvOnboardVoltageMin)) {
 
     Log().Trace(F("Using PV on start"));
@@ -953,7 +945,8 @@ BLYNK_CONNECTED()
     V57,
     V58,
     V61,
-    V62);
+    V62,
+    V63);
 }
 
 BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
@@ -1047,9 +1040,11 @@ BLYNK_WRITE(V58) { s_instance->NightAirTemperature(param.asFloat()); }
 
 BLYNK_WRITE(V61) { s_instance->WaterHeaterLimitMinutes(param.asFloat()); }
 
-BLYNK_WRITE(V62)
+BLYNK_WRITE(V62) { s_instance->WaterHeatingRuntimeMinutes(param.asFloat()); }
+
+BLYNK_WRITE(V63)
 {
-  s_instance->WaterHeatingRuntimeMinutes(param.asFloat());
+  s_instance->WaterHeatingCostDaily(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.

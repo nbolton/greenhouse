@@ -354,7 +354,7 @@ void Greenhouse::UpdateHeatingSystems()
     m_waterHeatingCostDaily += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
     ReportWaterHeatingInfo();
     Log().Trace(
-      "Advanced water heating runtime, add=%ds, total=%dm, cost=%.2f",
+      "Advanced water heating runtime, add=%ds, total=%.2fm, cost=£%.2f",
       addSeconds,
       m_waterHeatingRuntimeMinutes,
       m_waterHeatingCostDaily);

@@ -128,9 +128,6 @@ private:
   bool m_pvPowerSource;
   float m_pvVoltageSwitchOn;
   float m_pvVoltageSwitchOff;
-  int m_pvVoltageCount;
-  float m_pvVoltageAverage;
-  float m_pvVoltageSum;
   float m_pvVoltageSensor;
   float m_pvVoltageOutput;
   float m_pvVoltageSensorMin;
