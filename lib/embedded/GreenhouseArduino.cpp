@@ -93,6 +93,7 @@ static DynamicJsonDocument s_weatherJson(1024);
 
 // free-function declarations
 
+float readPvOnboardVoltage();
 void relayCallback() { s_instance->RelayCallback(); }
 void refreshTimer() { s_instance->Refresh(); }
 
@@ -533,15 +534,6 @@ void GreenhouseArduino::ToggleActiveSwitch()
   }
 }
 
-float readPvOnboardVoltage()
-{
-  // reads the onboard PV voltage (as opposed to measuring at the battery).
-  // this is after any potential breaks in the circuit (eg if the battery
-  // is disconnected or if the battery case switch is off).
-  int analogValue = analogRead(A0);
-  return mapFloat(analogValue, 0, k_pvOnboardVoltageMapIn, 0, k_pvOnboardVoltageMapOut);
-}
-
 void GreenhouseArduino::RelayCallback()
 {
   MeasureVoltage();
@@ -887,6 +879,19 @@ void GreenhouseArduino::ManualRefresh()
   s_timeClient.update();
   Refresh();
 }
+
+// free-functions
+
+float readPvOnboardVoltage()
+{
+  // reads the onboard PV voltage (as opposed to measuring at the battery).
+  // this is after any potential breaks in the circuit (eg if the battery
+  // is disconnected or if the battery case switch is off).
+  int analogValue = analogRead(A0);
+  return mapFloat(analogValue, 0, k_pvOnboardVoltageMapIn, 0, k_pvOnboardVoltageMapOut);
+}
+
+// blynk
 
 BLYNK_CONNECTED()
 {
