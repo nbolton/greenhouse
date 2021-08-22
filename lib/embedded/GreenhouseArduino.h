@@ -32,8 +32,8 @@ public:
   bool Refresh();
   void RelayCallback();
   void WeatherCallback();
-  void LastWrite();
-  void SystemStarted();
+  void OnLastWrite();
+  void OnSystemStarted();
   void Restart();
   void ToggleActiveSwitch();
   void HandleWindowProgress(int value);

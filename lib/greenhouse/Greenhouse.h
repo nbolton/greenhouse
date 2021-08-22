@@ -110,6 +110,8 @@ public:
   virtual float WaterHeatingRuntimeMinutes() const { return m_waterHeatingRuntimeMinutes; }
   virtual void WaterHeatingCostDaily(float value) { m_waterHeatingCostDaily = value; }
   virtual float WaterHeatingCostDaily() const { return m_waterHeatingCostDaily; }
+  virtual void SystemStarted(bool value) { m_systemStarted = value; }
+  virtual bool SystemStarted() const { return m_systemStarted; }
 
 private:
   void UpdateDayWaterHeating();
@@ -150,6 +152,7 @@ private:
   bool m_waterHeatingWasDaytime;
   bool m_waterHeatingHasRun;
   float m_waterHeatingCostDaily;
+  bool m_systemStarted;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

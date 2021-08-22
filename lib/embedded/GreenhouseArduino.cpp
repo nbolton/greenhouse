@@ -722,6 +722,10 @@ void GreenhouseArduino::ReportSystemInfo()
 
 void GreenhouseArduino::ReportWarnings()
 {
+  if (!SystemStarted()) {
+    return;
+  }
+
   if (!m_soilMoistureWarningSent && (m_soilMoisture <= SoilMostureWarning())) {
     ReportWarning("Soil moisture low (%d%%)", m_soilMoisture);
     m_soilMoistureWarningSent = true;
@@ -733,7 +737,7 @@ void GreenhouseArduino::ReportWarnings()
   }
 }
 
-void GreenhouseArduino::LastWrite()
+void GreenhouseArduino::OnLastWrite()
 {
   if (m_lastWriteDone) {
     return;
@@ -745,10 +749,10 @@ void GreenhouseArduino::LastWrite()
 
   // if this is the first time that the last write was done,
   // this means that the system has started.
-  SystemStarted();
+  OnSystemStarted();
 }
 
-void GreenhouseArduino::SystemStarted()
+void GreenhouseArduino::OnSystemStarted()
 {
   InitPowerSource();
 
@@ -764,6 +768,7 @@ void GreenhouseArduino::SystemStarted()
 
   FlashLed(k_ledStarted);
   ReportInfo("System started");
+  SystemStarted(true);
 }
 
 void GreenhouseArduino::RefreshRate(int refreshRate)
@@ -1048,5 +1053,5 @@ BLYNK_WRITE(V63)
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
-  s_instance->LastWrite();
+  s_instance->OnLastWrite();
 }

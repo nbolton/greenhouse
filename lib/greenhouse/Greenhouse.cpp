@@ -44,7 +44,8 @@ Greenhouse::Greenhouse() :
   m_waterHeatingRuntimeMinutes(0),
   m_waterHeatingWasDaytime(false),
   m_waterHeatingHasRun(false),
-  m_waterHeatingCostDaily(0)
+  m_waterHeatingCostDaily(0),
+  m_systemStarted(false)
 {
 }
 
@@ -61,7 +62,7 @@ bool Greenhouse::Refresh()
 
   if (!sensorsOk) {
     // only send once per reboot (don't spam the timeline)
-    if (!m_sensorWarningSent) {
+    if (!m_sensorWarningSent && SystemStarted()) {
       ReportWarning("Sensors unavailable, failures: %d", sensorFailures);
       m_sensorWarningSent = true;
     }
