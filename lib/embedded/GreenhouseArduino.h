@@ -54,9 +54,9 @@ protected:
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
-  void SwitchWaterHeating(bool on);
-  void SwitchSoilHeating(bool on);
-  void SwitchAirHeating(bool on);
+  bool SwitchWaterHeating(bool on);
+  bool SwitchSoilHeating(bool on);
+  bool SwitchAirHeating(bool on);
   void RunWindowActuator(bool forward);
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);

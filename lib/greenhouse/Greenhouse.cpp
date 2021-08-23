@@ -272,7 +272,7 @@ float Greenhouse::CalculateMoisture(float analogValue) const
   return percent;
 }
 
-void Greenhouse::SwitchWaterHeatingIfChanged(bool on)
+bool Greenhouse::SwitchWaterHeating(bool on)
 {
   if (
     on && (m_waterHeatingRuntimeMinutes > 0) &&
@@ -282,29 +282,35 @@ void Greenhouse::SwitchWaterHeatingIfChanged(bool on)
       "Blocking water heating switch on, runtime=%dm limit=%dm",
       m_waterHeatingRuntimeMinutes,
       m_waterHeaterLimitMinutes);
-    return;
+    return false;
   }
 
   if (WaterHeatingIsOn() != on) {
     WaterHeatingIsOn(on);
-    SwitchWaterHeating(on);
+    return true;
   }
+
+  return false;
 }
 
-void Greenhouse::SwitchSoilHeatingIfChanged(bool on)
+bool Greenhouse::SwitchSoilHeating(bool on)
 {
   if (SoilHeatingIsOn() != on) {
     SoilHeatingIsOn(on);
-    SwitchSoilHeating(on);
+    return true;
   }
+
+  return false;
 }
 
-void Greenhouse::SwitchAirHeatingIfChanged(bool on)
+bool Greenhouse::SwitchAirHeating(bool on)
 {
   if (AirHeatingIsOn() != on) {
     AirHeatingIsOn(on);
-    SwitchAirHeating(on);
+    return true;
   }
+
+  return false;
 }
 
 void Greenhouse::UpdateDayWaterHeating()
@@ -313,17 +319,17 @@ void Greenhouse::UpdateDayWaterHeating()
 
     if (AirHeatingIsOn() || SoilHeatingIsOn()) {
       // only switch water heating on if needed
-      SwitchWaterHeatingIfChanged(true);
+      SwitchWaterHeating(true);
     }
     else {
       // otherwise, turn water heating off (not needed)
-      SwitchWaterHeatingIfChanged(false);
+      SwitchWaterHeating(false);
     }
   }
   else if (WaterTemperature() > (DayWaterTemperature() + k_waterTempMargin)) {
 
     // always switch off, even if soil/air heating on
-    SwitchWaterHeatingIfChanged(false);
+    SwitchWaterHeating(false);
   }
 }
 
@@ -333,13 +339,13 @@ void Greenhouse::UpdateNightWaterHeating()
 
     // only switch water heating on if needed
     if (AirHeatingIsOn() || SoilHeatingIsOn()) {
-      SwitchWaterHeatingIfChanged(true);
+      SwitchWaterHeating(true);
     }
   }
   else if (WaterTemperature() > (NightWaterTemperature() + k_waterTempMargin)) {
 
     // always switch water off if above limit, even if soil/air heating on
-    SwitchWaterHeatingIfChanged(false);
+    SwitchWaterHeating(false);
   }
 }
 
@@ -363,7 +369,7 @@ void Greenhouse::UpdateHeatingSystems()
     if (m_waterHeatingRuntimeMinutes >= m_waterHeaterLimitMinutes) {
       ReportInfo(
         "Water heater runtime limit reached (%dm), switching off", m_waterHeaterLimitMinutes);
-      SwitchWaterHeatingIfChanged(false);
+      SwitchWaterHeating(false);
     }
   }
 
@@ -389,23 +395,23 @@ void Greenhouse::UpdateHeatingSystems()
     if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
 
       Log().Trace("Day soil temp below");
-      SwitchSoilHeatingIfChanged(true);
+      SwitchSoilHeating(true);
     }
     else if (SoilTemperature() > (DaySoilTemperature() + k_soilTempMargin)) {
 
       Log().Trace("Day soil temp above");
-      SwitchSoilHeatingIfChanged(false);
+      SwitchSoilHeating(false);
     }
 
     if (InsideAirTemperature() < (DayAirTemperature() - k_airTempMargin)) {
 
       Log().Trace("Day air temp below");
-      SwitchAirHeatingIfChanged(true);
+      SwitchAirHeating(true);
     }
     else if (InsideAirTemperature() > (DayAirTemperature() + k_airTempMargin)) {
 
       Log().Trace("Day air temp above");
-      SwitchAirHeatingIfChanged(false);
+      SwitchAirHeating(false);
     }
 
     UpdateDayWaterHeating();
@@ -418,12 +424,12 @@ void Greenhouse::UpdateHeatingSystems()
     if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
 
       Log().Trace("Night soil temp below");
-      SwitchSoilHeatingIfChanged(true);
+      SwitchSoilHeating(true);
     }
     else if (SoilTemperature() > (NightSoilTemperature() + k_soilTempMargin)) {
 
       Log().Trace("Night soil temp above");
-      SwitchSoilHeatingIfChanged(false);
+      SwitchSoilHeating(false);
     }
 
     if (InsideAirTemperature() < (NightAirTemperature() - k_airTempMargin)) {

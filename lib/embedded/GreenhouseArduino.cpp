@@ -252,18 +252,28 @@ void GreenhouseArduino::InitADCs()
   }
 }
 
-void GreenhouseArduino::SwitchWaterHeating(bool on)
+bool GreenhouseArduino::SwitchWaterHeating(bool on)
 {
+  if (!Greenhouse::SwitchWaterHeating(on)) {
+    return false;
+  }
+
   if (on) {
     SetSwitch(k_pumpSwitch1, true);
   }
   else {
     SetSwitch(k_pumpSwitch1, false);
   }
+
+  return true;
 }
 
-void GreenhouseArduino::SwitchSoilHeating(bool on)
+bool GreenhouseArduino::SwitchSoilHeating(bool on)
 {
+  if (!Greenhouse::SwitchSoilHeating(on)) {
+    return false;
+  }
+
   if (on) {
     SetSwitch(k_pumpSwitch2, true);
   }
@@ -274,10 +284,16 @@ void GreenhouseArduino::SwitchSoilHeating(bool on)
       SetSwitch(k_pumpSwitch2, false);
     }
   }
+
+  return true;
 }
 
-void GreenhouseArduino::SwitchAirHeating(bool on)
+bool GreenhouseArduino::SwitchAirHeating(bool on)
 {
+  if (!Greenhouse::SwitchAirHeating(on)) {
+    return false;
+  }
+
   if (on) {
     SetSwitch(k_fanSwitch, true);
     SetSwitch(k_pumpSwitch2, true);
@@ -291,6 +307,8 @@ void GreenhouseArduino::SwitchAirHeating(bool on)
       SetSwitch(k_pumpSwitch2, false);
     }
   }
+
+  return true;
 }
 
 bool GreenhouseArduino::Refresh()

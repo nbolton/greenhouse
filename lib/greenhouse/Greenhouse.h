@@ -33,12 +33,9 @@ protected:
   virtual float CalculateMoisture(float analogValue) const;
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
-  virtual void SwitchWaterHeating(bool on) {}
-  virtual void SwitchSoilHeating(bool on) {}
-  virtual void SwitchAirHeating(bool on) {}
-  virtual void SwitchWaterHeatingIfChanged(bool on);
-  virtual void SwitchSoilHeatingIfChanged(bool on);
-  virtual void SwitchAirHeatingIfChanged(bool on);
+  virtual bool SwitchWaterHeating(bool on);
+  virtual bool SwitchSoilHeating(bool on);
+  virtual bool SwitchAirHeating(bool on);
   virtual void UpdateHeatingSystems();
   virtual void AdjustWindow(bool open, float delta);
   virtual void RunWindowActuator(bool forward) {}
