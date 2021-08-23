@@ -1061,7 +1061,7 @@ BLYNK_WRITE(V57) { s_instance->DayAirTemperature(param.asFloat()); }
 
 BLYNK_WRITE(V58) { s_instance->NightAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V61) { s_instance->WaterHeaterLimitMinutes(param.asFloat()); }
+BLYNK_WRITE(V61) { s_instance->WaterHeaterLimitMinutes(param.asInt()); }
 
 BLYNK_WRITE(V62) { s_instance->WaterHeatingRuntimeMinutes(param.asFloat()); }
 

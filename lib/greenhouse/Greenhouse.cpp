@@ -279,9 +279,9 @@ bool Greenhouse::SwitchWaterHeating(bool on)
     (m_waterHeatingRuntimeMinutes >= m_waterHeaterLimitMinutes)) {
 
     Log().Trace(
-      "Blocking water heating switch on, runtime=%dm limit=%dm",
+      "Blocking water heating switch on, runtime=%.2fm, limit=%dm",
       m_waterHeatingRuntimeMinutes,
-      m_waterHeaterLimitMinutes);
+      WaterHeaterLimitMinutes());
     return false;
   }
 
