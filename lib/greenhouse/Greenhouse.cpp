@@ -10,8 +10,10 @@ const int k_windowActuatorSpeedMax = 255;
 const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
 const float k_airTempMargin = 1;
-const int k_dryWeatherCode = 701;               // anything less is snow/rain
-const float k_waterHeaterCostPerKwh = .20f * 3; // 3kWh @ 20p/kWh
+const int k_dryWeatherCode = 701; // anything less is snow/rain
+
+const float k_waterHeaterPowerUse = 3.3;                            // kW
+const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
 
 Greenhouse::Greenhouse() :
   m_sensorWarningSent(false),
