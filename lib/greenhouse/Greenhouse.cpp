@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 const float k_windowAdjustThreshold = 0.05;
-const float k_soilSensorDry = 3.95; // V, in air
-const float k_soilSensorWet = 1.9;  // V, in water
+const float k_soilSensorDry = 2.98; // V, in air
+const float k_soilSensorWet = 1;  // V, in water
 const int k_windowActuatorSpeedMax = 255;
 const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
