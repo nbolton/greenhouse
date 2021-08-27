@@ -36,6 +36,7 @@ const int k_actuatorPinA = D8;
 // msr pins
 const int k_relayPin = 0;
 const int k_startBeepPin = 1;
+const int k_caseFanPin = 2;
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // io1 pins
@@ -480,6 +481,16 @@ void GreenhouseArduino::Restart()
   }
 }
 
+void GreenhouseArduino::CaseFan(bool on)
+{
+  if (on) {
+    s_shiftRegisters.set_shift(k_caseFanPin);
+  }
+  else {
+    s_shiftRegisters.clear_shift(k_caseFanPin);
+  }
+}
+
 void GreenhouseArduino::StartBeep(int times)
 {
   for (int i = 0; i < times; i++) {
@@ -521,16 +532,24 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
   }
 
   String switchStates;
+  int onCount = 0;
   for (int i = 0; i < k_switchCount; i++) {
+    bool on = m_switchState[i];
+    if (on) {
+      onCount++;
+    }
     switchStates += "S";
     switchStates += i;
     switchStates += "=";
-    switchStates += m_switchState[i] ? "On" : "Off";
+    switchStates += on ? "On" : "Off";
     if (i != (k_switchCount - 1)) {
       switchStates += ", ";
     }
   }
   Blynk.virtualWrite(V33, switchStates);
+
+  // turn case fan on when any switch is on
+  CaseFan(onCount > 0);
 }
 
 void GreenhouseArduino::ToggleActiveSwitch()

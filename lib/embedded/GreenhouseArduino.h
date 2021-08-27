@@ -93,6 +93,7 @@ public:
 
 private:
   void StartBeep(int times);
+  void CaseFan(bool on);
   void Actuator(bool forward, int s, int t);
   void SetSwitch(int i, bool on);
   void SwitchPower(bool pv);
