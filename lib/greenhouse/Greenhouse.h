@@ -111,8 +111,8 @@ public:
   virtual bool SystemStarted() const { return m_systemStarted; }
 
 private:
-  void UpdateDayWaterHeating();
-  void UpdateNightWaterHeating();
+  void UpdateDayWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
+  void UpdateNightWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
   std::string GetWeatherUri() const;
   bool IsRaining() const;
 

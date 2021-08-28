@@ -606,7 +606,7 @@ void Test_UpdateHeatingSystems_DaytimeBelowDayTemp_SwitchOnSoilHeating(void)
 
   greenhouse.m_mock_CurrentHour = 3;
   greenhouse.m_mock_SoilTemperature = 0; // remember margin
-  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin
   greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
@@ -624,7 +624,7 @@ void Test_UpdateHeatingSystems_DaytimeAboveDayTemp_SwitchOffSoilHeating(void)
 
   greenhouse.m_mock_CurrentHour = 3;
   greenhouse.m_mock_SoilTemperature = 3; // remember margin
-  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin + min water delta
   greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
@@ -643,7 +643,7 @@ void Test_UpdateHeatingSystems_BeforeDaytimeBelowNightTemp_SwitchOnSoilHeating(v
 
   greenhouse.m_mock_CurrentHour = 1;
   greenhouse.m_mock_SoilTemperature = 0; // remember margin
-  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin + min water delta
   greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
@@ -680,7 +680,7 @@ void Test_UpdateHeatingSystems_AfterDaytimeBelowNightTemp_SwitchOnSoilHeating(vo
 
   greenhouse.m_mock_CurrentHour = 4;
   greenhouse.m_mock_SoilTemperature = 0; // remember margin
-  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin + min water delta
   greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
@@ -717,7 +717,7 @@ void Test_UpdateHeatingSystems_DaytimeBelowDayTemp_SwitchOnAirHeating(void)
 
   greenhouse.m_mock_CurrentHour = 3;
   greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
-  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin + min water delta
   greenhouse.m_mock_SoilTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
@@ -754,7 +754,7 @@ void Test_UpdateHeatingSystems_BeforeDaytimeBelowNightTemp_SwitchOnAirHeating(vo
 
   greenhouse.m_mock_CurrentHour = 1;
   greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
-  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin + min water delta
   greenhouse.m_mock_SoilTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
@@ -791,7 +791,7 @@ void Test_UpdateHeatingSystems_AfterDaytimeBelowNightTemp_SwitchOnAirHeating(voi
 
   greenhouse.m_mock_CurrentHour = 4;
   greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
-  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin + min water delta
   greenhouse.m_mock_SoilTemperature = 0; // remember margin
 
   greenhouse.DayStartHour(2);
@@ -828,12 +828,12 @@ void Test_UpdateHeatingSystems_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_
 
   greenhouse.m_mock_CurrentHour = 3;
   greenhouse.m_mock_SoilTemperature = 0;
-  greenhouse.m_mock_WaterTemperature = 0;
+  greenhouse.m_mock_WaterTemperature = 5; // remember margin + min water delta
   greenhouse.m_mock_InsideAirTemperature = 2;
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);
-  greenhouse.DayWaterTemperature(2);
+  greenhouse.DayWaterTemperature(7);
   greenhouse.DaySoilTemperature(2);
   greenhouse.DayAirTemperature(2);
 
@@ -843,7 +843,7 @@ void Test_UpdateHeatingSystems_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_
   TEST_ASSERT_EQUAL(true, greenhouse.WaterHeatingIsOn());
   
   greenhouse.m_mock_SoilTemperature = 2; // on target, but not above/below margin
-  greenhouse.m_mock_WaterTemperature = 4;
+  greenhouse.m_mock_WaterTemperature = 6;
   greenhouse.UpdateHeatingSystems();
 
   TEST_ASSERT_EQUAL(false, greenhouse.WaterHeatingIsOn());
@@ -882,7 +882,7 @@ void Test_UpdateHeatingSystems_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeat
 
   greenhouse.DayStartHour(2);
   greenhouse.DayEndHour(4);
-  greenhouse.DayWaterTemperature(2);
+  greenhouse.DayWaterTemperature(8);
   greenhouse.DaySoilTemperature(2);
   greenhouse.DayAirTemperature(2);
   greenhouse.WaterHeaterLimitMinutes(1);
@@ -941,6 +941,56 @@ void Test_UpdateHeatingSystems_DaytimeTransition_WaterHeaterRuntimeLimitIsReset(
   TEST_ASSERT_EQUAL_INT(0, greenhouse.WaterHeatingRuntimeMinutes());
 }
 
+void Test_UpdateHeatingSystems_DaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_CurrentHour = 3;
+  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_SoilTemperature = 0; // remember margin
+  greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.DayWaterTemperature(2);
+  greenhouse.DaySoilTemperature(2);
+  greenhouse.DayAirTemperature(2);
+  greenhouse.WaterHeatingIsOn(false);
+  greenhouse.SoilHeatingIsOn(true);
+  greenhouse.AirHeatingIsOn(true);
+
+  greenhouse.UpdateHeatingSystems();
+
+  TEST_ASSERT_EQUAL(true, greenhouse.WaterHeatingIsOn());
+  TEST_ASSERT_EQUAL(false, greenhouse.SoilHeatingIsOn());
+  TEST_ASSERT_EQUAL(false, greenhouse.AirHeatingIsOn());
+}
+
+void Test_UpdateHeatingSystems_BeforeDaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating(void)
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.m_mock_CurrentHour = 1;
+  greenhouse.m_mock_WaterTemperature = 0; // remember margin
+  greenhouse.m_mock_SoilTemperature = 0; // remember margin
+  greenhouse.m_mock_InsideAirTemperature = 0; // remember margin
+
+  greenhouse.DayStartHour(2);
+  greenhouse.DayEndHour(4);
+  greenhouse.NightWaterTemperature(2);
+  greenhouse.NightSoilTemperature(2);
+  greenhouse.NightAirTemperature(2);
+  greenhouse.WaterHeatingIsOn(false);
+  greenhouse.SoilHeatingIsOn(true);
+  greenhouse.AirHeatingIsOn(true);
+
+  greenhouse.UpdateHeatingSystems();
+
+  TEST_ASSERT_EQUAL(true, greenhouse.WaterHeatingIsOn());
+  TEST_ASSERT_EQUAL(false, greenhouse.SoilHeatingIsOn());
+  TEST_ASSERT_EQUAL(false, greenhouse.AirHeatingIsOn());
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -987,4 +1037,6 @@ void testCommon()
   RUN_TEST(Test_UpdateHeatingSystems_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeating);
   RUN_TEST(Test_UpdateHeatingSystems_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeating);
   RUN_TEST(Test_UpdateHeatingSystems_DaytimeTransition_WaterHeaterRuntimeLimitIsReset);
+  RUN_TEST(Test_UpdateHeatingSystems_DaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating);
+  RUN_TEST(Test_UpdateHeatingSystems_BeforeDaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating);
 }
