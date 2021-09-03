@@ -857,6 +857,11 @@ void GreenhouseArduino::UpdateWeatherForecast()
   httpClient.get(uri);
 
   int statusCode = httpClient.responseStatusCode();
+  if (isnan(statusCode)) {
+    Log().Trace(F("Weather host status is invalid"));
+    return;
+  }
+
   Log().Trace(F("Weather host status: %d"), statusCode);
 
   if (statusCode != 200) {
@@ -878,6 +883,16 @@ void GreenhouseArduino::UpdateWeatherForecast()
   const char *main = s_weatherJson["weather"][0]["main"];
   int dt = s_weatherJson["dt"];
   const char *location = s_weatherJson["name"];
+
+  if (isnan(id)) {
+    Log().Trace(F("Weather ID is invalid"));
+    return;
+  }
+
+  if (isnan(dt)) {
+    Log().Trace(F("Weather Unix date time is invalid"));
+    return;
+  }
 
   int hours = (int)((dt % 86400L) / 3600);
   int minutes = (int)((dt % 3600) / 60);
