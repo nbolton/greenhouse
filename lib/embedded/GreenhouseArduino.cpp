@@ -489,6 +489,8 @@ void GreenhouseArduino::Restart()
 
 void GreenhouseArduino::CaseFan(bool on)
 {
+  Log().Trace("Case fan %s", on ? "on" : "off");
+
   if (on) {
     s_shiftRegisters.set_shift(k_caseFanPin);
   }
