@@ -191,7 +191,13 @@ void GreenhouseArduino::Loop()
   Greenhouse::Loop();
 
   s_timeClient.update();
-  Blynk.run();
+  
+  if (!Blynk.run()) {
+    Log().Trace("Blynk failed, restarting...");
+    Restart();
+    return;
+  }
+  
   s_timer.run();
 
   if (s_relayThread.shouldRun()) {
