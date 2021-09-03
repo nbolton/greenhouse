@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 const float k_windowAdjustThreshold = 0.05;
-const float k_soilSensorDry = 2.98; // V, in air
-const float k_soilSensorWet = 1;  // V, in water
+const float k_soilSensorDry = 3.93; // V, in air
+const float k_soilSensorWet = 1.89;  // V, in water
 const int k_windowActuatorSpeedMax = 255;
 const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
@@ -267,7 +267,7 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 float Greenhouse::CalculateMoisture(float analogValue) const
 {
   float percent = mapFloat(analogValue, k_soilSensorDry, k_soilSensorWet, 0, 100);
-  Log().Trace("Soil moisture, analog=%.2fV, percent=%.2f%%", analogValue, percent);
+  Log().Trace("Soil moisture, analog=%.4fV, percent=%.2f%%", analogValue, percent);
   if (percent < -10 || percent > 110) {
     Log().Trace("Invalid soil moisture value");
     return k_unknown;
