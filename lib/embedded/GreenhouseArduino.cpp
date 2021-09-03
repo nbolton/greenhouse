@@ -335,6 +335,7 @@ bool GreenhouseArduino::Refresh()
   m_refreshBusy = false;
 
   MeasureCurrent();
+  Log().Trace("Onboard PV voltage: %.2fV (%d/1023)", readPvOnboardVoltage(), analogRead(A0));
 
   Blynk.virtualWrite(V28, m_pvPowerSource);
   Blynk.virtualWrite(V29, m_pvVoltageSensor);
