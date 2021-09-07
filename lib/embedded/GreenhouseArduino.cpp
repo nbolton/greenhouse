@@ -211,12 +211,8 @@ void GreenhouseArduino::InitShiftRegisters()
   pinMode(k_shiftRegisterClockPin, OUTPUT);
   pinMode(k_shiftRegisterDataPin, OUTPUT);
 
-  try {
-    s_shiftRegisters.shift();
-  } catch (...) {
-    ReportCritical("Shift register init failed");
-    throw;
-  }
+  Log().Trace(F("Init shift"));
+  s_shiftRegisters.shift();
 }
 
 void GreenhouseArduino::InitActuators()
@@ -493,19 +489,24 @@ void GreenhouseArduino::CaseFan(bool on)
   Log().Trace("Case fan %s", on ? "on" : "off");
 
   if (on) {
-    s_shiftRegisters.set_shift(k_caseFanPin);
+    s_shiftRegisters.set(k_caseFanPin);
   }
   else {
-    s_shiftRegisters.clear_shift(k_caseFanPin);
+    s_shiftRegisters.clear(k_caseFanPin);
   }
+
+  Log().Trace(F("Case fan shift"));
+  s_shiftRegisters.shift();
 }
 
 void GreenhouseArduino::StartBeep(int times)
 {
   for (int i = 0; i < times; i++) {
+    Log().Trace(F("Beep set shift"));
     s_shiftRegisters.set_shift(k_startBeepPin);
     delay(100);
 
+    Log().Trace(F("Beep clear shift"));
     s_shiftRegisters.clear_shift(k_startBeepPin);
     delay(200);
   }
@@ -516,29 +517,18 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
   int pin = k_switchPins[index];
 
   if (on) {
-    Log().Trace(F("SR pin set: %d"), pin);
-
-    try {
-      s_shiftRegisters.set_shift(pin);
-    } catch (...) {
-      ReportCritical("Switch on failed: %d", index);
-      throw;
-    }
-
+    Log().Trace(F("Switch set: %d"), pin);
+    s_shiftRegisters.set(pin);
     m_switchState[index] = true;
   }
   else {
-    Log().Trace(F("SR pin clear: %d"), pin);
-
-    try {
-      s_shiftRegisters.clear_shift(pin);
-    } catch (...) {
-      ReportCritical("Switch off failed: %d", index);
-      throw;
-    }
-
+    Log().Trace(F("Switch clear: %d"), pin);
+    s_shiftRegisters.clear(pin);
     m_switchState[index] = false;
   }
+
+  Log().Trace(F("Switch shift"));
+  s_shiftRegisters.shift();
 
   String switchStates;
   int onCount = 0;
@@ -664,21 +654,14 @@ void GreenhouseArduino::MeasureCurrent()
 void GreenhouseArduino::SwitchPower(bool pv)
 {
   if (pv) {
-    try {
-      s_shiftRegisters.set_shift(k_relayPin);
-    } catch (...) {
-      ReportCritical("Switch power on failed");
-      throw;
-    }
+    s_shiftRegisters.set(k_relayPin);
   }
   else {
-    try {
-      s_shiftRegisters.clear_shift(k_relayPin);
-    } catch (...) {
-      ReportCritical("Switch power off failed");
-      throw;
-    }
+    s_shiftRegisters.clear(k_relayPin);
   }
+
+  Log().Trace(F("Switch power shift"));
+  s_shiftRegisters.shift();
 
   m_pvPowerSource = pv;
   Log().Trace(F("Source: %s"), pv ? "PV" : "PSU");
