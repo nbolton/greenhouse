@@ -191,13 +191,13 @@ void GreenhouseArduino::Loop()
   Greenhouse::Loop();
 
   s_timeClient.update();
-  
+
   if (!Blynk.run()) {
     Log().Trace("Blynk failed, restarting...");
     Restart();
     return;
   }
-  
+
   s_timer.run();
 
   if (s_relayThread.shouldRun()) {
@@ -689,7 +689,7 @@ int GreenhouseArduino::CurrentHour() const { return s_timeClient.getHours(); }
 
 unsigned long GreenhouseArduino::UptimeSeconds() const { return millis() / 1000; }
 
-void GreenhouseArduino::ReportInfo(const char *format, ...) const
+void GreenhouseArduino::ReportInfo(const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -700,7 +700,7 @@ void GreenhouseArduino::ReportInfo(const char *format, ...) const
   Blynk.logEvent("info", s_reportBuffer);
 }
 
-void GreenhouseArduino::ReportWarning(const char *format, ...) const
+void GreenhouseArduino::ReportWarning(const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -711,7 +711,7 @@ void GreenhouseArduino::ReportWarning(const char *format, ...) const
   Blynk.logEvent("warning", s_reportBuffer);
 }
 
-void GreenhouseArduino::ReportCritical(const char *format, ...) const
+void GreenhouseArduino::ReportCritical(const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -863,9 +863,9 @@ void GreenhouseArduino::UpdateWeatherForecast()
   }
 
   Log().Trace(F("Weather host status: %d"), statusCode);
+  HandleWeatherStatusCode(statusCode);
 
   if (statusCode != 200) {
-    ReportWarning("Weather host error: %d", statusCode);
     return;
   }
 

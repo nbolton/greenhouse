@@ -17,9 +17,9 @@ public:
   virtual const ::Log &Log() const { return m_log; }
 
 protected:
-  virtual void ReportInfo(const char *m, ...) const {}
-  virtual void ReportWarning(const char *m, ...) const {}
-  virtual void ReportCritical(const char *m, ...) const {}
+  virtual void ReportInfo(const char *m, ...) {}
+  virtual void ReportWarning(const char *m, ...) {}
+  virtual void ReportCritical(const char *m, ...) {}
   virtual void ReportSensorValues() {}
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}
@@ -43,6 +43,9 @@ protected:
   virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void SystemDelay(unsigned long ms) {}
   virtual void UpdateWeatherForecast(){};
+
+protected:
+  void HandleWeatherStatusCode(int statusCode);
 
 public:
   // getters & setters
@@ -150,6 +153,8 @@ private:
   bool m_waterHeatingHasRun;
   float m_waterHeatingCostDaily;
   bool m_systemStarted;
+  int m_lastWeatherStatusCode;
+  int m_weatherStatusErrorRepeated;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);

@@ -14,6 +14,7 @@ public:
     m_calls_StopActuator(0),
     m_calls_SetWindowActuatorSpeed(0),
     m_calls_SystemDelay(0),
+    m_calls_ReportWarning(0),
 
     // mocks
     m_mock_ReadDhtSensor(false),
@@ -109,12 +110,19 @@ public:
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }
+
+  void ReportWarning(const char *m, ...)
+  {
+    Log().Trace("Stub: ReportWarning");
+    m_calls_ReportWarning++;
+  }
   
   // expose protected members to public
 
   float CalculateMoisture(float value) const { return Greenhouse::CalculateMoisture(value); }
   void UpdateHeatingSystems() { Greenhouse::UpdateHeatingSystems(); }
   bool ApplyWindowProgress(float value) { return Greenhouse::ApplyWindowProgress(value); }
+  void HandleWeatherStatusCode(int value) { return Greenhouse::HandleWeatherStatusCode(value); }
 
   // mock values (leave undefined)
 
@@ -136,6 +144,7 @@ public:
   int m_calls_StopActuator;
   int m_calls_SetWindowActuatorSpeed;
   int m_calls_SystemDelay;
+  int m_calls_ReportWarning; 
 
   // last arg (leave undefined)
 
@@ -991,6 +1000,66 @@ void Test_UpdateHeatingSystems_BeforeDaytimeBelowDayTempAndWaterNotWarmEnough_Sw
   TEST_ASSERT_EQUAL(false, greenhouse.AirHeatingIsOn());
 }
 
+void Test_HandleWeatherStatusCode_FiveFailures_ReportWarningCalledOnce()
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_ReportWarning);
+}
+
+void Test_HandleWeatherStatusCode_TenFailures_ReportWarningCalledOnce()
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+
+  TEST_ASSERT_EQUAL_INT(1, greenhouse.m_calls_ReportWarning);
+}
+
+void Test_HandleWeatherStatusCode_FourFailures_ReportWarningNotCalled()
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(1);
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_ReportWarning);
+}
+
+void Test_HandleWeatherStatusCode_SuccessFailureAlternating_ReportWarningNotCalled()
+{
+  GreenhouseTest greenhouse;
+
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(200);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(200);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(200);
+  greenhouse.HandleWeatherStatusCode(1);
+  greenhouse.HandleWeatherStatusCode(200);
+  greenhouse.HandleWeatherStatusCode(1);
+
+  TEST_ASSERT_EQUAL_INT(0, greenhouse.m_calls_ReportWarning);
+}
+
 void testCommon()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -1039,4 +1108,8 @@ void testCommon()
   RUN_TEST(Test_UpdateHeatingSystems_DaytimeTransition_WaterHeaterRuntimeLimitIsReset);
   RUN_TEST(Test_UpdateHeatingSystems_DaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating);
   RUN_TEST(Test_UpdateHeatingSystems_BeforeDaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating);
+  RUN_TEST(Test_HandleWeatherStatusCode_FiveFailures_ReportWarningCalledOnce);
+  RUN_TEST(Test_HandleWeatherStatusCode_TenFailures_ReportWarningCalledOnce);
+  RUN_TEST(Test_HandleWeatherStatusCode_FourFailures_ReportWarningNotCalled);
+  RUN_TEST(Test_HandleWeatherStatusCode_SuccessFailureAlternating_ReportWarningNotCalled);
 }

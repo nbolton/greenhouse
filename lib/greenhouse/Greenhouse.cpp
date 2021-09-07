@@ -5,13 +5,14 @@
 
 const float k_windowAdjustThreshold = 0.05;
 const float k_soilSensorDry = 3.93; // V, in air
-const float k_soilSensorWet = 1.89;  // V, in water
+const float k_soilSensorWet = 1.89; // V, in water
 const int k_windowActuatorSpeedMax = 255;
 const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
 const float k_airTempMargin = 1;
 const int k_dryWeatherCode = 701; // anything less is snow/rain
 const float k_minimumWaterDelta = 5;
+const int k_weatherErrorReportAtCount = 4;
 
 const float k_waterHeaterPowerUse = 3.3;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
@@ -48,7 +49,9 @@ Greenhouse::Greenhouse() :
   m_waterHeatingWasDaytime(false),
   m_waterHeatingHasRun(false),
   m_waterHeatingCostDaily(0),
-  m_systemStarted(false)
+  m_systemStarted(false),
+  m_lastWeatherStatusCode(0),
+  m_weatherStatusErrorRepeated(0)
 {
 }
 
@@ -499,3 +502,19 @@ void Greenhouse::UpdateHeatingSystems()
 }
 
 bool Greenhouse::IsRaining() const { return WeatherCode() < k_dryWeatherCode; }
+
+void Greenhouse::HandleWeatherStatusCode(int statusCode)
+{
+  if (statusCode == 200) {
+    m_weatherStatusErrorRepeated = 0;
+    m_lastWeatherStatusCode = 0;
+    return;
+  }
+
+  if (m_lastWeatherStatusCode == statusCode) {
+    if (++m_weatherStatusErrorRepeated == k_weatherErrorReportAtCount) {
+      ReportWarning("Weather host error: %d (%d times)", statusCode, m_weatherStatusErrorRepeated);
+    }
+  }
+  m_lastWeatherStatusCode = statusCode;
+}

@@ -42,9 +42,9 @@ public:
   const ArduinoLog &Log() const { return m_log; }
 
 protected:
-  void ReportInfo(const char *m, ...) const;
-  void ReportWarning(const char *m, ...) const;
-  void ReportCritical(const char *m, ...) const;
+  void ReportInfo(const char *m, ...);
+  void ReportWarning(const char *m, ...);
+  void ReportCritical(const char *m, ...);
   void ReportSensorValues();
   void ReportWindowProgress();
   void ReportSystemInfo();
