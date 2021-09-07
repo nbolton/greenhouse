@@ -468,14 +468,14 @@ void Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened()
 void Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero()
 {
   GreenhouseTest greenhouse;
-  float percent = greenhouse.CalculateMoisture(3.95);
+  float percent = greenhouse.CalculateMoisture(3.93);
   TEST_ASSERT_EQUAL_FLOAT(0, percent);
 }
 
 void Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred()
 {
   GreenhouseTest greenhouse;
-  float percent = greenhouse.CalculateMoisture(1.9);
+  float percent = greenhouse.CalculateMoisture(1.89);
   TEST_ASSERT_EQUAL_FLOAT(100, percent);
 }
 
@@ -483,7 +483,7 @@ void Test_CalculateMoisture_InBounds_ReturnsPercent()
 {
   GreenhouseTest greenhouse;
   float percent = greenhouse.CalculateMoisture(3);
-  TEST_ASSERT_FLOAT_WITHIN(.1, 46.34, percent);
+  TEST_ASSERT_FLOAT_WITHIN(.1, 45.5, percent);
 }
 
 void Test_UpdateHeatingSystems_DaytimeBelowDayTemp_SwitchOnWaterHeating(void)
