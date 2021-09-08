@@ -321,14 +321,20 @@ bool GreenhouseArduino::Refresh()
     Log().Trace(F("Refresh busy, skipping"));
     return false;
   }
-
-  FlashLed(k_ledRefresh);
-
+  
   // TODO: this isn't an ideal mutex lock because the two threads could
   // hit this line at the same time.
   m_refreshBusy = true;
+
+  FlashLed(k_ledRefresh);
+
   bool ok = Greenhouse::Refresh();
-  m_refreshBusy = false;
+
+  // HACK: the shift register sometimes gets stuck (maybe due to back-EMF or a surge),
+  // and shifting on every refresh will clear this. the aim is that this should keep
+  // pins on that should be on, but that's uncertain.
+  Log().Trace(F("Refresh shift"));
+  s_shiftRegisters.shift();
 
   MeasureCurrent();
   Log().Trace("Onboard PV voltage: %.2fV (%d/1023)", readPvOnboardVoltage(), analogRead(A0));
@@ -341,6 +347,8 @@ bool GreenhouseArduino::Refresh()
   Blynk.virtualWrite(V55, WaterHeatingIsOn());
   Blynk.virtualWrite(V56, SoilHeatingIsOn());
   Blynk.virtualWrite(V59, AirHeatingIsOn());
+
+  m_refreshBusy = false;
 
   return ok;
 }
