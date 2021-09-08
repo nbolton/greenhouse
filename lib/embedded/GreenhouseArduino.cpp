@@ -844,7 +844,7 @@ void GreenhouseArduino::UpdateWeatherForecast()
   Log().Trace(F("Connecting to weather host: %s"), k_weatherHost);
   HttpClient httpClient(s_wifiClient, k_weatherHost, 80);
 
-  Log().Trace(F("Weather host get: %s"), uri);
+  Log().Trace(F("Weather host get"));
   httpClient.get(uri);
 
   int statusCode = httpClient.responseStatusCode();
