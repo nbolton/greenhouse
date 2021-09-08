@@ -889,11 +889,10 @@ void GreenhouseArduino::UpdateWeatherForecast()
     minuteString.c_str(),
     location);
 
+  Log().Trace(F("Weather forecast: code=%d, info='%s'"), id, s_weatherInfo);
+
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
-
-  Log().Trace(F("Weather forecast: code=%d, info='%s'"), WeatherCode(), WeatherInfo().c_str());
-
   ReportWeather();
 }
 
