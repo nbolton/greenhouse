@@ -875,16 +875,6 @@ void GreenhouseArduino::UpdateWeatherForecast()
   int dt = s_weatherJson["dt"];
   const char *location = s_weatherJson["name"];
 
-  if (isnan(id)) {
-    Log().Trace(F("Weather ID is invalid"));
-    return;
-  }
-
-  if (isnan(dt)) {
-    Log().Trace(F("Weather Unix date time is invalid"));
-    return;
-  }
-
   int hours = (int)((dt % 86400L) / 3600);
   int minutes = (int)((dt % 3600) / 60);
 
