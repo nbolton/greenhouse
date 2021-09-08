@@ -103,7 +103,7 @@ public:
   virtual void WeatherCode(int value) { m_weatherCode = value; }
   virtual int WeatherCode() const { return m_weatherCode; }
   virtual void WeatherInfo(std::string value) { m_weatherInfo = value; }
-  virtual std::string WeatherInfo() const { return m_weatherInfo; }
+  virtual const std::string& WeatherInfo() const { return m_weatherInfo; }
   virtual void WaterHeaterLimitMinutes(int value) { m_waterHeaterLimitMinutes = value; }
   virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
   virtual void WaterHeatingRuntimeMinutes(float value) { m_waterHeatingRuntimeMinutes = value; }
