@@ -757,6 +757,13 @@ void GreenhouseArduino::ReportSystemInfo()
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
+void GreenhouseArduino::HandleNightDayTransition()
+{
+  Log().Trace(F("Night/day transition detected, resetting warnings"));
+  m_soilMoistureWarningSent = false;
+  m_insideHumidityWarningSent = false;
+}
+
 void GreenhouseArduino::ReportWarnings()
 {
   if (!SystemStarted()) {

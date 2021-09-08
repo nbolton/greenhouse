@@ -399,6 +399,8 @@ void Greenhouse::UpdateHeatingSystems()
     // detect transition from night to day
     if (m_waterHeatingHasRun && !m_waterHeatingWasDaytime) {
 
+      HandleNightDayTransition();
+
       // reset daily runtime and cost back to 0
       WaterHeatingRuntimeMinutes(0);
       WaterHeatingCostDaily(0);

@@ -43,6 +43,7 @@ protected:
   virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void SystemDelay(unsigned long ms) {}
   virtual void UpdateWeatherForecast(){};
+  virtual void HandleNightDayTransition() {}
 
 protected:
   void HandleWeatherStatusCode(int statusCode);
