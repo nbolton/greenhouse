@@ -90,7 +90,7 @@ static ADC s_adc1, s_adc2;
 static GreenhouseArduino *s_instance = nullptr;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
-static DynamicJsonDocument s_weatherJson(1024);
+static DynamicJsonDocument s_weatherJson(2048);
 
 // free-function declarations
 
