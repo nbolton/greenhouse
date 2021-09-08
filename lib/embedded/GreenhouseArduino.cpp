@@ -771,13 +771,23 @@ void GreenhouseArduino::ReportWarnings()
   }
 
   if (!m_soilMoistureWarningSent && (m_soilMoisture <= SoilMostureWarning())) {
-    ReportWarning("Soil moisture low (%d%%)", m_soilMoisture);
-    m_soilMoistureWarningSent = true;
+    if ((m_soilMoisture < 0) || (m_soilMoisture > 100)) {
+      Log().Trace(F("Invalid moisture, warning skipped"));
+    }
+    else {
+      ReportWarning("Soil moisture low (%d%%)", m_soilMoisture);
+      m_soilMoistureWarningSent = true;
+    }
   }
 
   if (!m_insideHumidityWarningSent && (m_insideAirHumidity >= InsideHumidityWarning())) {
-    ReportWarning("Inside humidity high (%d%%)", m_insideAirHumidity);
-    m_insideHumidityWarningSent = true;
+    if ((m_insideAirHumidity < 0) || (m_insideAirHumidity > 100)) {
+      Log().Trace(F("Invalid humidity, warning skipped"));
+    }
+    else {
+      ReportWarning("Inside humidity high (%d%%)", m_insideAirHumidity);
+      m_insideHumidityWarningSent = true;
+    }
   }
 }
 
