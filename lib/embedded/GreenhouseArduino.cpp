@@ -771,13 +771,8 @@ void GreenhouseArduino::ReportWarnings()
   }
 
   if (!m_soilMoistureWarningSent && (m_soilMoisture <= SoilMostureWarning())) {
-    if ((m_soilMoisture < 0) || (m_soilMoisture > 100)) {
-      Log().Trace(F("Invalid moisture, warning skipped"));
-    }
-    else {
-      ReportWarning("Soil moisture low (%.2f%%)", m_soilMoisture);
-      m_soilMoistureWarningSent = true;
-    }
+    ReportWarning("Soil moisture low (%.2f%%)", m_soilMoisture);
+    m_soilMoistureWarningSent = true;
   }
 }
 
