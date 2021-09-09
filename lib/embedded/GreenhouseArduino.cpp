@@ -779,16 +779,6 @@ void GreenhouseArduino::ReportWarnings()
       m_soilMoistureWarningSent = true;
     }
   }
-
-  if (!m_insideHumidityWarningSent && (m_insideAirHumidity >= InsideHumidityWarning())) {
-    if ((m_insideAirHumidity < 0) || (m_insideAirHumidity > 100)) {
-      Log().Trace(F("Invalid humidity, warning skipped"));
-    }
-    else {
-      ReportWarning("Inside humidity high (%d%%)", m_insideAirHumidity);
-      m_insideHumidityWarningSent = true;
-    }
-  }
 }
 
 void GreenhouseArduino::OnLastWrite()
