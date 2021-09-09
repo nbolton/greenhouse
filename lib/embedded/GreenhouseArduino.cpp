@@ -775,7 +775,7 @@ void GreenhouseArduino::ReportWarnings()
       Log().Trace(F("Invalid moisture, warning skipped"));
     }
     else {
-      ReportWarning("Soil moisture low (%d%%)", m_soilMoisture);
+      ReportWarning("Soil moisture low (%.2f%%)", m_soilMoisture);
       m_soilMoistureWarningSent = true;
     }
   }
