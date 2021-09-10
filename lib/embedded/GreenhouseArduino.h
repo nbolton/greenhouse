@@ -20,6 +20,12 @@ enum LedFlashTimes {
   k_ledRestart = 5
 };
 
+enum PvModes {
+  k_pvAuto,
+  k_pvOn,
+  k_pvOff
+};
+
 class GreenhouseArduino : public Greenhouse {
 public:
   static GreenhouseArduino &Instance();
@@ -90,7 +96,8 @@ public:
   void PvCurrentOutputMax(float value) { m_pvCurrentOutputMax = value; }
   void PvVoltageSwitchOn(float value) { m_pvVoltageSwitchOn = value; }
   void PvVoltageSwitchOff(float value) { m_pvVoltageSwitchOff = value; }
-  void PvForceOn(int value) { m_pvForceOn = value; }
+  PvModes PvMode() const { return m_pvMode; }
+  void PvMode(PvModes value) { m_pvMode = value; }
 
 private:
   void StartBeep(int times);
@@ -142,5 +149,5 @@ private:
   float m_pvCurrentSensorMax;
   float m_pvCurrentOutputMin;
   float m_pvCurrentOutputMax;
-  bool m_pvForceOn;
+  PvModes m_pvMode;
 };

@@ -139,7 +139,7 @@ GreenhouseArduino::GreenhouseArduino() :
   m_pvCurrentSensorMax(k_unknown),
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
-  m_pvForceOn(false)
+  m_pvMode(PvModes::k_pvAuto)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -586,9 +586,12 @@ void GreenhouseArduino::RelayCallback()
       SwitchPower(false);
     }
   }
-  else if (m_pvForceOn) {
-    if (!m_pvPowerSource) {
+  else if (PvMode() != PvModes::k_pvAuto) {
+    if (!m_pvPowerSource && (PvMode() == PvModes::k_pvOn)) {
       SwitchPower(true);
+    }
+    else if (m_pvPowerSource && (PvMode() == PvModes::k_pvOff)) {
+      SwitchPower(false);
     }
   }
   else if (m_pvVoltageOutput != k_unknown) {
@@ -1085,7 +1088,7 @@ BLYNK_WRITE(V44) { s_instance->PvVoltageSwitchOn(param.asFloat()); }
 
 BLYNK_WRITE(V45) { s_instance->PvVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) { s_instance->PvForceOn(param.asInt()); }
+BLYNK_WRITE(V47) { s_instance->PvMode((PvModes)param.asInt()); }
 
 BLYNK_WRITE(V48) { s_instance->WindowActuatorSpeedPercent(param.asInt()); }
 
