@@ -40,6 +40,7 @@ const int k_caseFanPin = 2;
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // io1 pins
+const int k_psuRelayPin = P0;
 const int k_actuatorPin1 = P6;
 const int k_actuatorPin2 = P7;
 
@@ -169,6 +170,9 @@ void GreenhouseArduino::Setup()
   Wire.begin();
 
   InitActuators();
+
+  s_io1.pinMode(k_psuRelayPin, OUTPUT);
+  s_io1.digitalWrite(k_psuRelayPin, LOW);
 
   s_relayThread.onRun(relayCallback);
   s_relayThread.setInterval(s_relayThreadInterval);
@@ -661,6 +665,13 @@ void GreenhouseArduino::MeasureCurrent()
 
 void GreenhouseArduino::SwitchPower(bool pv)
 {
+  if (!pv) {
+    // close the PSU relay and give the PSU time to power up
+    s_io1.digitalWrite(k_psuRelayPin, LOW);
+    Log().Trace(F("PSU AC relay closed"));
+    SystemDelay(1000);
+  }
+
   if (pv) {
     s_shiftRegisters.set(k_relayPin);
   }
@@ -670,6 +681,12 @@ void GreenhouseArduino::SwitchPower(bool pv)
 
   Log().Trace(F("Switch power shift"));
   s_shiftRegisters.shift();
+
+  if (pv) {
+    // open the PSU relay to turn off mains power when on PV
+    s_io1.digitalWrite(k_psuRelayPin, HIGH);
+    Log().Trace(F("PSU AC relay open"));
+  }
 
   m_pvPowerSource = pv;
   Log().Trace(F("Source: %s"), pv ? "PV" : "PSU");
