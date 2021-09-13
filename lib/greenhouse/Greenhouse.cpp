@@ -12,7 +12,6 @@ const float k_soilTempMargin = .2f;
 const float k_airTempMargin = 1;
 const int k_dryWeatherCode = 701; // anything less is snow/rain
 const float k_minimumWaterDelta = 5;
-const int k_weatherErrorReportAtCount = 4;
 
 const float k_waterHeaterPowerUse = 3.3;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
@@ -50,8 +49,8 @@ Greenhouse::Greenhouse() :
   m_waterHeatingHasRun(false),
   m_waterHeatingCostDaily(0),
   m_systemStarted(false),
-  m_lastWeatherStatusCode(0),
-  m_weatherStatusErrorRepeated(0)
+  m_weatherErrors(0),
+  m_weatherErrorReportSent(false)
 {
 }
 
@@ -92,7 +91,18 @@ bool Greenhouse::Refresh()
 
   ReportSensorValues();
   ReportWarnings();
-  UpdateWeatherForecast();
+
+  const int weatherErrorReportAtCount = 4;
+  if (!UpdateWeatherForecast()) {
+    if ((++m_weatherErrors >= weatherErrorReportAtCount) && !m_weatherErrorReportSent) {
+      ReportWarning("Weather update failed");
+      m_weatherErrorReportSent = true;
+    }
+  }
+  else {
+    m_weatherErrors = 0;
+    m_weatherErrorReportSent = false;
+  }
 
   bool windowMoved = false;
   float openStart = m_openStart;
@@ -513,18 +523,8 @@ void Greenhouse::UpdateHeatingSystems()
 
 bool Greenhouse::IsRaining() const { return WeatherCode() < k_dryWeatherCode; }
 
-void Greenhouse::HandleWeatherStatusCode(int statusCode)
+void Greenhouse::HandleNightDayTransition()
 {
-  if (statusCode == 200) {
-    m_weatherStatusErrorRepeated = 0;
-    m_lastWeatherStatusCode = 0;
-    return;
-  }
-
-  if (m_lastWeatherStatusCode == statusCode) {
-    if (++m_weatherStatusErrorRepeated == k_weatherErrorReportAtCount) {
-      ReportWarning("Weather host error: %d (%d times)", statusCode, m_weatherStatusErrorRepeated);
-    }
-  }
-  m_lastWeatherStatusCode = statusCode;
+  Log().Trace("Night/day transition detected, resetting warnings");
+  m_weatherErrorReportSent = false;
 }

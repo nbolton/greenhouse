@@ -795,7 +795,7 @@ void GreenhouseArduino::ReportSystemInfo()
 
 void GreenhouseArduino::HandleNightDayTransition()
 {
-  Log().Trace(F("Night/day transition detected, resetting warnings"));
+  Greenhouse::HandleNightDayTransition();
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
 }
@@ -874,7 +874,7 @@ void GreenhouseArduino::HandleWindowProgress(int value)
   WindowProgress(value);
 }
 
-void GreenhouseArduino::UpdateWeatherForecast()
+bool GreenhouseArduino::UpdateWeatherForecast()
 {
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
@@ -888,14 +888,13 @@ void GreenhouseArduino::UpdateWeatherForecast()
   int statusCode = httpClient.responseStatusCode();
   if (isnan(statusCode)) {
     Log().Trace(F("Weather host status is invalid"));
-    return;
+    return false;
   }
 
   Log().Trace(F("Weather host status: %d"), statusCode);
-  HandleWeatherStatusCode(statusCode);
-
   if (statusCode != 200) {
-    return;
+    Log().Trace(F("Weather host error status"));
+    return false;
   }
 
   String response = httpClient.responseBody();
@@ -903,8 +902,8 @@ void GreenhouseArduino::UpdateWeatherForecast()
 
   DeserializationError error = deserializeJson(s_weatherJson, response);
   if (error != DeserializationError::Ok) {
-    ReportWarning("Weather data error: %s", error.c_str());
-    return;
+    Log().Trace(F("Weather data error: %s"), error.c_str());
+    return false;
   }
 
   Log().Trace(F("Deserialized weather JSON"));
@@ -932,6 +931,7 @@ void GreenhouseArduino::UpdateWeatherForecast()
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
   ReportWeather();
+  return true;
 }
 
 void GreenhouseArduino::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }

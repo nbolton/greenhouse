@@ -67,7 +67,7 @@ protected:
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);
   void SystemDelay(unsigned long ms);
-  void UpdateWeatherForecast();
+  bool UpdateWeatherForecast();
   void HandleNightDayTransition();
 
 public:

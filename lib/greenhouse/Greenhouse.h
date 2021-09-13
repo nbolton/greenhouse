@@ -42,11 +42,8 @@ protected:
   virtual void StopActuator() {}
   virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void SystemDelay(unsigned long ms) {}
-  virtual void UpdateWeatherForecast(){};
-  virtual void HandleNightDayTransition() {}
-
-protected:
-  void HandleWeatherStatusCode(int statusCode);
+  virtual bool UpdateWeatherForecast() { return false; }
+  virtual void HandleNightDayTransition();
 
 public:
   // getters & setters
@@ -104,7 +101,7 @@ public:
   virtual void WeatherCode(int value) { m_weatherCode = value; }
   virtual int WeatherCode() const { return m_weatherCode; }
   virtual void WeatherInfo(std::string value) { m_weatherInfo = value; }
-  virtual const std::string& WeatherInfo() const { return m_weatherInfo; }
+  virtual const std::string &WeatherInfo() const { return m_weatherInfo; }
   virtual void WaterHeaterLimitMinutes(int value) { m_waterHeaterLimitMinutes = value; }
   virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
   virtual void WaterHeatingRuntimeMinutes(float value) { m_waterHeatingRuntimeMinutes = value; }
@@ -153,8 +150,8 @@ private:
   bool m_waterHeatingHasRun;
   float m_waterHeatingCostDaily;
   bool m_systemStarted;
-  int m_lastWeatherStatusCode;
-  int m_weatherStatusErrorRepeated;
+  int m_weatherErrors;
+  bool m_weatherErrorReportSent;
 };
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
