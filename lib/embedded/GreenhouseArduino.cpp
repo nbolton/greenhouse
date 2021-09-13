@@ -676,10 +676,10 @@ void GreenhouseArduino::SwitchPower(bool pv)
   }
 
   if (pv) {
-    s_shiftRegisters.set(k_relayPin);
+    s_shiftRegisters.clear(k_relayPin);
   }
   else {
-    s_shiftRegisters.clear(k_relayPin);
+    s_shiftRegisters.set(k_relayPin);
   }
 
   Log().Trace(F("Switch power shift"));
@@ -954,6 +954,7 @@ void GreenhouseArduino::InitPowerSource()
   }
   else {
     Log().Trace(F("Using PSU on start"));
+    SwitchPower(false);
   }
 }
 
