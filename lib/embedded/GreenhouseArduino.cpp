@@ -429,18 +429,34 @@ bool GreenhouseArduino::ReadSensors(int &failures)
     failures++;
   }
 
-  s_dallas.requestTemperatures();
-  m_soilTemperature = s_dallas.getTempCByIndex(k_soilProbeIndex);
-  if (isnan(m_soilTemperature)) {
-    m_soilTemperature = k_unknown;
-    failures++;
-  }
+  bool dallasOk;
+  int dallasRetry = 0;
+  const int dallasRetryMax = 5;
+  const int dallasRetryWait = 500;
+  do {
+    dallasOk = true;
 
-  m_waterTemperature = s_dallas.getTempCByIndex(k_waterProbeIndex);
-  if (isnan(m_waterTemperature)) {
-    m_waterTemperature = k_unknown;
-    failures++;
+    s_dallas.requestTemperatures();
+    m_soilTemperature = s_dallas.getTempCByIndex(k_soilProbeIndex);
+    if (isnan(m_soilTemperature)) {
+      m_soilTemperature = k_unknown;
+      failures++;
+      dallasOk = false;
+    }
+
+    m_waterTemperature = s_dallas.getTempCByIndex(k_waterProbeIndex);
+    if (isnan(m_waterTemperature)) {
+      m_waterTemperature = k_unknown;
+      failures++;
+      dallasOk = false;
+    }
+
+    if (!dallasOk) {
+      Log().Trace("Dallas read failed, retrying.");
+      delay(dallasRetryWait);
+    }
   }
+  while (!dallasOk && (++dallasRetry > dallasRetryMax));
 
   float moistureAnalog = ReadAdc(s_adc1, k_moisturePin);
   if (moistureAnalog == k_unknown) {
