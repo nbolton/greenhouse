@@ -412,44 +412,48 @@ void Greenhouse::UpdateHeatingSystems()
     Log().Trace("Daytime heating mode");
     m_waterHeatingWasDaytime = true;
 
-    if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
+    if ((int)SoilTemperature() != k_unknown) {
+      if (SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
 
-      Log().Trace("Day soil temp below");
-      soilHeatingRequired = true;
+        Log().Trace("Day soil temp below");
+        soilHeatingRequired = true;
 
-      if (soilDeltaInBounds) {
-        SwitchSoilHeating(true);
+        if (soilDeltaInBounds) {
+          SwitchSoilHeating(true);
+        }
+        else {
+          SwitchSoilHeating(false);
+        }
       }
-      else {
+      else if (SoilTemperature() > (DaySoilTemperature() + k_soilTempMargin)) {
+
+        Log().Trace("Day soil temp above");
+        soilHeatingRequired = false;
+
         SwitchSoilHeating(false);
       }
     }
-    else if (SoilTemperature() > (DaySoilTemperature() + k_soilTempMargin)) {
 
-      Log().Trace("Day soil temp above");
-      soilHeatingRequired = false;
+    if ((int)InsideAirTemperature() != k_unknown) {
+      if (InsideAirTemperature() < (DayAirTemperature() - k_airTempMargin)) {
 
-      SwitchSoilHeating(false);
-    }
+        Log().Trace("Day air temp below");
+        airHeatingRequired = true;
 
-    if (InsideAirTemperature() < (DayAirTemperature() - k_airTempMargin)) {
-
-      Log().Trace("Day air temp below");
-      airHeatingRequired = true;
-
-      if (soilDeltaInBounds) {
-        SwitchAirHeating(true);
+        if (soilDeltaInBounds) {
+          SwitchAirHeating(true);
+        }
+        else {
+          SwitchAirHeating(false);
+        }
       }
-      else {
+      else if (InsideAirTemperature() > (DayAirTemperature() + k_airTempMargin)) {
+
+        Log().Trace("Day air temp above");
+        airHeatingRequired = false;
+
         SwitchAirHeating(false);
       }
-    }
-    else if (InsideAirTemperature() > (DayAirTemperature() + k_airTempMargin)) {
-
-      Log().Trace("Day air temp above");
-      airHeatingRequired = false;
-
-      SwitchAirHeating(false);
     }
 
     UpdateDayWaterHeating(airHeatingRequired, soilHeatingRequired);
@@ -459,42 +463,46 @@ void Greenhouse::UpdateHeatingSystems()
     Log().Trace("Nighttime heating mode");
     m_waterHeatingWasDaytime = false;
 
-    if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
+    if ((int)SoilTemperature() != k_unknown) {
+      if (SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
 
-      Log().Trace("Night soil temp below");
-      soilHeatingRequired = true;
+        Log().Trace("Night soil temp below");
+        soilHeatingRequired = true;
 
-      if (soilDeltaInBounds) {
-        SwitchSoilHeating(true);
+        if (soilDeltaInBounds) {
+          SwitchSoilHeating(true);
+        }
+        else {
+          SwitchSoilHeating(false);
+        }
       }
-      else {
+      else if (SoilTemperature() > (NightSoilTemperature() + k_soilTempMargin)) {
+
+        Log().Trace("Night soil temp above");
+        soilHeatingRequired = false;
         SwitchSoilHeating(false);
       }
     }
-    else if (SoilTemperature() > (NightSoilTemperature() + k_soilTempMargin)) {
 
-      Log().Trace("Night soil temp above");
-      soilHeatingRequired = false;
-      SwitchSoilHeating(false);
-    }
+    if ((int)InsideAirTemperature() != k_unknown) {
+      if (InsideAirTemperature() < (NightAirTemperature() - k_airTempMargin)) {
 
-    if (InsideAirTemperature() < (NightAirTemperature() - k_airTempMargin)) {
+        Log().Trace("Night air temp below");
+        airHeatingRequired = true;
 
-      Log().Trace("Night air temp below");
-      airHeatingRequired = true;
-
-      if (soilDeltaInBounds) {
-        SwitchAirHeating(true);
+        if (soilDeltaInBounds) {
+          SwitchAirHeating(true);
+        }
+        else {
+          SwitchAirHeating(false);
+        }
       }
-      else {
+      else if (InsideAirTemperature() > (NightAirTemperature() + k_airTempMargin)) {
+
+        Log().Trace("Night air temp above");
+        soilHeatingRequired = false;
         SwitchAirHeating(false);
       }
-    }
-    else if (InsideAirTemperature() > (NightAirTemperature() + k_airTempMargin)) {
-
-      Log().Trace("Night air temp above");
-      soilHeatingRequired = false;
-      SwitchAirHeating(false);
     }
 
     UpdateNightWaterHeating(airHeatingRequired, soilHeatingRequired);
