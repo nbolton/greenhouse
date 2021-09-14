@@ -9,3 +9,4 @@ const char k_ssid[] = "WiFi SSID";
 const char k_pass[] = "WiFi password";
 
 const bool k_trace = true;
+const bool k_reportWarnings = true;

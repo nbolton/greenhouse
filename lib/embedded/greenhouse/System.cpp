@@ -684,6 +684,10 @@ void System::ReportInfo(const char *format, ...)
 
 void System::ReportWarning(const char *format, ...)
 {
+  if (!k_reportWarnings) {
+    return;
+  }
+  
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
