@@ -74,16 +74,20 @@ bool System::Refresh()
   ReportSensorValues();
   ReportWarnings();
 
-  const int weatherErrorReportAtCount = 4;
-  if (!UpdateWeatherForecast()) {
-    if ((++m_weatherErrors >= weatherErrorReportAtCount) && !m_weatherErrorReportSent) {
-      ReportWarning("Weather update failed");
-      m_weatherErrorReportSent = true;
+  // running weather report on startup seems to crash randomly, 
+  // so only check weather after start
+  if (SystemStarted()) {
+    const int weatherErrorReportAtCount = 4;
+    if (!UpdateWeatherForecast()) {
+      if ((++m_weatherErrors >= weatherErrorReportAtCount) && !m_weatherErrorReportSent) {
+        ReportWarning("Weather update failed");
+        m_weatherErrorReportSent = true;
+      }
     }
-  }
-  else {
-    m_weatherErrors = 0;
-    m_weatherErrorReportSent = false;
+    else {
+      m_weatherErrors = 0;
+      m_weatherErrorReportSent = false;
+    }
   }
 
   bool windowMoved = false;
