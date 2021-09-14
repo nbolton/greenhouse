@@ -208,7 +208,7 @@ void Heating::Update()
         Log().Trace("Day air temp below");
         airHeatingRequired = true;
 
-        if (soilDeltaInBounds) {
+        if (airDeltaInBounds) {
           SwitchAirHeating(true);
         }
         else {
@@ -260,7 +260,7 @@ void Heating::Update()
         Log().Trace("Night air temp below");
         airHeatingRequired = true;
 
-        if (soilDeltaInBounds) {
+        if (airDeltaInBounds) {
           SwitchAirHeating(true);
         }
         else {
@@ -270,7 +270,7 @@ void Heating::Update()
       else if (System().InsideAirTemperature() > (NightAirTemperature() + k_airTempMargin)) {
 
         Log().Trace("Night air temp above");
-        soilHeatingRequired = false;
+        airHeatingRequired = false;
         SwitchAirHeating(false);
       }
     }
