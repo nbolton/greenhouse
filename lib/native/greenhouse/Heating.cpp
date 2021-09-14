@@ -224,6 +224,14 @@ void Heating::Update()
       }
     }
 
+    if (!soilDeltaInBounds) {
+      SwitchSoilHeating(false);
+    }
+
+    if (!airDeltaInBounds) {
+      SwitchAirHeating(false);
+    }
+
     UpdateDayWaterHeating(airHeatingRequired, soilHeatingRequired);
   }
   else if (
@@ -273,6 +281,14 @@ void Heating::Update()
         airHeatingRequired = false;
         SwitchAirHeating(false);
       }
+    }
+
+    if (!soilDeltaInBounds) {
+      SwitchSoilHeating(false);
+    }
+
+    if (!airDeltaInBounds) {
+      SwitchAirHeating(false);
     }
 
     UpdateNightWaterHeating(airHeatingRequired, soilHeatingRequired);
