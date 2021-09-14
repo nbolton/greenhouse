@@ -147,7 +147,8 @@ System::System() :
   m_pvCurrentSensorMax(k_unknown),
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
-  m_pvMode(PvModes::k_pvAuto)
+  m_pvMode(PvModes::k_pvAuto),
+  m_timeClientOk(false)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -202,7 +203,7 @@ void System::Loop()
 {
   base::System::Loop();
 
-  s_timeClient.update();
+  UpdateTime();
 
   if (!Blynk.run()) {
     Log().Trace("Blynk failed, restarting...");
@@ -660,7 +661,13 @@ void System::SwitchPower(bool pv)
   Blynk.virtualWrite(V28, m_pvPowerSource);
 }
 
-int System::CurrentHour() const { return s_timeClient.getHours(); }
+int System::CurrentHour() const
+{
+  if (!m_timeClientOk) {
+    return k_unknown;
+  }
+  return s_timeClient.getHours();
+}
 
 unsigned long System::UptimeSeconds() const { return millis() / 1000; }
 
@@ -781,7 +788,7 @@ void System::OnSystemStarted()
 
   // loop() will not have run yet, so make sure the time is updated
   // before running the refresh function.
-  s_timeClient.update();
+  UpdateTime();
 
   // run the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -893,7 +900,7 @@ void System::ReportWaterHeatingInfo()
 void System::ManualRefresh()
 {
   Log().Trace(F("Manual refresh"));
-  s_timeClient.update();
+  UpdateTime();
   Refresh();
 }
 
@@ -920,6 +927,22 @@ void System::InitPowerSource()
     Log().Trace(F("Using PSU on start"));
     SwitchPower(false);
   }
+}
+
+void System::UpdateTime()
+{
+  const int retryDelay = 1000;
+  const int retryLimit = 5;
+  int retryCount = 1;
+
+  do {
+    m_timeClientOk = s_timeClient.update();
+    if (!m_timeClientOk) {
+      Log().Trace(F("Time update failed (attempt %d)"), retryCount);
+      SystemDelay(retryDelay);
+    }
+  }
+  while (!m_timeClientOk && retryCount++ < retryLimit);
 }
 
 // free-functions

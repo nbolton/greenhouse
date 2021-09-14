@@ -114,6 +114,11 @@ void Heating::UpdateNightWaterHeating(bool airHeatingRequired, bool soilHeatingR
 
 void Heating::Update()
 {
+  if (System().CurrentHour() == k_unknown) {
+    Log().Trace("Unable to update heating, time unknown");
+    return;
+  }
+
   Log().Trace("Update heating systems, hour=%d", System().CurrentHour());
 
   if (WaterHeatingIsOn() && (m_waterHeatingLastUpdate != k_unknownUL)) {
