@@ -2,7 +2,7 @@
 
 #include "../../native/greenhouse/System.h"
 
-#include "../embedded/Log.h"
+#include "../Log.h"
 #include "Heating.h"
 
 #include <ADS1115_WE.h>
