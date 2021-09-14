@@ -4,7 +4,6 @@
 
 #include "../embedded/Log.h"
 #include "Heating.h"
-#include "ISystem.h"
 
 #include <ADS1115_WE.h>
 #include <Arduino.h>
@@ -27,7 +26,7 @@ enum LedFlashTimes {
 
 enum PvModes { k_pvAuto, k_pvOn, k_pvOff };
 
-class System : public native::greenhouse::System, ISystem {
+class System : public native::greenhouse::System {
 public:
   static System &Instance();
   static void Instance(System &ga);
@@ -71,7 +70,7 @@ protected:
 
 public:
   // getters & setters
-  embedded::greenhouse::Heating &Heating() { return m_heating; }
+  native::greenhouse::Heating &Heating() { return m_heating; }
   int CurrentHour() const;
   unsigned long UptimeSeconds() const;
   float InsideAirTemperature() const { return m_insideAirTemperature; }

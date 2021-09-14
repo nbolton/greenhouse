@@ -17,6 +17,7 @@ const float k_waterHeaterPowerUse = 3.3;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
 
 Heating::Heating() :
+  m_system(nullptr),
   m_dayWaterTemperature(k_unknown),
   m_nightWaterTemperature(k_unknown),
   m_daySoilTemperature(k_unknown),
@@ -26,9 +27,9 @@ Heating::Heating() :
   m_waterHeatingIsOn(false),
   m_soilHeatingIsOn(false),
   m_airHeatingIsOn(false),
+  m_waterHeatingRuntimeMinutes(0),
   m_waterHeaterLimitMinutes(k_unknown),
   m_waterHeatingLastUpdate(k_unknownUL),
-  m_waterHeatingRuntimeMinutes(0),
   m_waterHeatingWasDaytime(false),
   m_waterHeatingHasRun(false),
   m_waterHeatingCostDaily(0)
@@ -81,6 +82,7 @@ void Heating::UpdateDayWaterHeating(bool airHeatingRequired, bool soilHeatingReq
   if (System().WaterTemperature() < (DayWaterTemperature() - k_waterTempMargin)) {
 
     if (airHeatingRequired || soilHeatingRequired) {
+
       // only switch water heating on if needed
       SwitchWaterHeating(true);
     }

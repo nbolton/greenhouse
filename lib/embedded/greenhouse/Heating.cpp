@@ -1,7 +1,5 @@
 #include "Heating.h"
 
-#include "ISystem.h"
-
 namespace embedded {
 namespace greenhouse {
 
@@ -9,7 +7,7 @@ const int k_fanSwitch = 0;
 const int k_pumpSwitch1 = 1;
 const int k_pumpSwitch2 = 2;
 
-Heating::Heating() : m_system(nullptr) {}
+Heating::Heating() {}
 
 bool Heating::SwitchWaterHeating(bool on)
 {

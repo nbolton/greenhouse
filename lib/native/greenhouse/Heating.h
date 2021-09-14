@@ -52,12 +52,12 @@ private:
 
 public:
   // getters & setters
-  ISystem &System()
-  {
-    if (m_system != 0)
-      return *m_system;
-    else
+  virtual ISystem &System() const {
+    if (m_system == nullptr) {
+      Log().Trace("System not set");
       throw std::runtime_error("System not set");
+    }
+    return *m_system;
   }
   void System(ISystem &value) { m_system = &value; }
 

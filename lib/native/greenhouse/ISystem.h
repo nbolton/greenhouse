@@ -24,6 +24,7 @@ public:
   virtual float WaterTemperature() const = 0;
   virtual int DayStartHour() const = 0;
   virtual int DayEndHour() const = 0;
+  virtual void SetSwitch(int i, bool on) = 0;
 };
 
 } // namespace greenhouse

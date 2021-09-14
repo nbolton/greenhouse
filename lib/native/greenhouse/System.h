@@ -30,6 +30,7 @@ protected:
   virtual void ReportWarnings() {}
   virtual void ReportWeather() {}
   virtual void ReportWaterHeatingInfo() {}
+  virtual void SetSwitch(int index, bool on) {}
 
   virtual bool ReadSensors(int &failures) { return false; }
   virtual void OpenWindow(float delta);
