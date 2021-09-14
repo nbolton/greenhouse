@@ -1,12 +1,15 @@
-#include "ArduinoLog.h"
+#include "../embedded/Log.h"
 
 #include "ho_config.h"
 
 #include <cstdarg>
+#include <Arduino.h>
 
+namespace embedded {
+  
 static char s_buffer[200];
 
-void ArduinoLog::Trace(const char *format, ...) const
+void Log::Trace(const char *format, ...) const
 {
   if (!k_trace) {
     return;
@@ -20,7 +23,7 @@ void ArduinoLog::Trace(const char *format, ...) const
   Serial.println(s_buffer);
 }
 
-void ArduinoLog::Trace(const __FlashStringHelper *format, ...) const
+void Log::Trace(const __FlashStringHelper *format, ...) const
 {
   if (!k_trace) {
     return;
@@ -32,4 +35,6 @@ void ArduinoLog::Trace(const __FlashStringHelper *format, ...) const
   va_end(args);
 
   Serial.println(s_buffer);
+}
+
 }

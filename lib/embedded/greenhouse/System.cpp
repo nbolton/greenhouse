@@ -1,7 +1,9 @@
-#include "GreenhouseArduino.h"
+#include "System.h"
 
 #include <cstdarg>
 
+#include "Heating.h"
+#include "common.h"
 #include "ho_config.h"
 
 #include <Adafruit_SHT31.h>
@@ -19,6 +21,15 @@
 #include <Thread.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
+
+namespace base = native::greenhouse;
+
+static embedded::greenhouse::System *s_instance = nullptr;
+
+namespace embedded {
+namespace greenhouse {
+
+using namespace common;
 
 struct ADC {
   String name;
@@ -57,9 +68,6 @@ const int k_voltAverageCountMax = 100;
 const int k_pvOnboardVoltageMin = 7; // V, in case of sudden voltage drop
 const int k_pvOnboardVoltageMapIn = 745;
 const float k_pvOnboardVoltageMapOut = 13.02;
-const int k_fanSwitch = 0;
-const int k_pumpSwitch1 = 1;
-const int k_pumpSwitch2 = 2;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
@@ -88,7 +96,6 @@ static BlynkTimer s_timer;
 static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
 static ADC s_adc1, s_adc2;
-static GreenhouseArduino *s_instance = nullptr;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
@@ -101,12 +108,13 @@ void refreshTimer() { s_instance->Refresh(); }
 
 // member functions
 
-GreenhouseArduino &GreenhouseArduino::Instance() { return *s_instance; }
+System &System::Instance() { return *s_instance; }
 
-void GreenhouseArduino::Instance(GreenhouseArduino &ga) { s_instance = &ga; }
+void System::Instance(System &ga) { s_instance = &ga; }
 
-GreenhouseArduino::GreenhouseArduino() :
+System::System() :
   m_log(),
+  m_heating(),
   m_insideAirTemperature(k_unknown),
   m_insideAirHumidity(k_unknown),
   m_outsideAirTemperature(k_unknown),
@@ -146,9 +154,9 @@ GreenhouseArduino::GreenhouseArduino() :
   }
 }
 
-void GreenhouseArduino::Setup()
+void System::Setup()
 {
-  Greenhouse::Setup();
+  base::System::Setup();
 
   if (k_trace) {
     Serial.begin(9600);
@@ -190,9 +198,9 @@ void GreenhouseArduino::Setup()
   StartBeep(2);
 }
 
-void GreenhouseArduino::Loop()
+void System::Loop()
 {
-  Greenhouse::Loop();
+  base::System::Loop();
 
   s_timeClient.update();
 
@@ -209,7 +217,7 @@ void GreenhouseArduino::Loop()
   }
 }
 
-void GreenhouseArduino::InitShiftRegisters()
+void System::InitShiftRegisters()
 {
   pinMode(k_shiftRegisterLatchPin, OUTPUT);
   pinMode(k_shiftRegisterClockPin, OUTPUT);
@@ -219,7 +227,7 @@ void GreenhouseArduino::InitShiftRegisters()
   s_shiftRegisters.shift();
 }
 
-void GreenhouseArduino::InitActuators()
+void System::InitActuators()
 {
   pinMode(k_actuatorPinA, OUTPUT);
 
@@ -230,7 +238,7 @@ void GreenhouseArduino::InitActuators()
   s_io1.digitalWrite(k_actuatorPin2, LOW);
 }
 
-void GreenhouseArduino::InitSensors()
+void System::InitSensors()
 {
   if (!s_insideAirSensor.begin(k_insideAirSensorAddress)) {
     ReportWarning("Inside air sensor not found");
@@ -241,7 +249,7 @@ void GreenhouseArduino::InitSensors()
   }
 }
 
-void GreenhouseArduino::InitADCs()
+void System::InitADCs()
 {
   s_adc1.name = "ADS1115 #1";
   s_adc2.name = "ADS1115 #2";
@@ -259,80 +267,21 @@ void GreenhouseArduino::InitADCs()
   }
 }
 
-bool GreenhouseArduino::SwitchWaterHeating(bool on)
-{
-  if (!Greenhouse::SwitchWaterHeating(on)) {
-    return false;
-  }
-
-  if (on) {
-    SetSwitch(k_pumpSwitch1, true);
-  }
-  else {
-    SetSwitch(k_pumpSwitch1, false);
-  }
-
-  return true;
-}
-
-bool GreenhouseArduino::SwitchSoilHeating(bool on)
-{
-  if (!Greenhouse::SwitchSoilHeating(on)) {
-    return false;
-  }
-
-  if (on) {
-    SetSwitch(k_pumpSwitch2, true);
-  }
-  else {
-    // HACK: until the fan pump arrives, we're sharing the soil heating pump,
-    // so only turn off if not in use
-    if (!AirHeatingIsOn()) {
-      SetSwitch(k_pumpSwitch2, false);
-    }
-  }
-
-  return true;
-}
-
-bool GreenhouseArduino::SwitchAirHeating(bool on)
-{
-  if (!Greenhouse::SwitchAirHeating(on)) {
-    return false;
-  }
-
-  if (on) {
-    SetSwitch(k_fanSwitch, true);
-    SetSwitch(k_pumpSwitch2, true);
-  }
-  else {
-    SetSwitch(k_fanSwitch, false);
-
-    // HACK: until the fan pump arrives, we're sharing the soil heating pump,
-    // so only turn off if not in use
-    if (!SoilHeatingIsOn()) {
-      SetSwitch(k_pumpSwitch2, false);
-    }
-  }
-
-  return true;
-}
-
-bool GreenhouseArduino::Refresh()
+bool System::Refresh()
 {
   // TODO: use mutex lock?
   if (m_refreshBusy) {
     Log().Trace(F("Refresh busy, skipping"));
     return false;
   }
-  
+
   // TODO: this isn't an ideal mutex lock because the two threads could
   // hit this line at the same time.
   m_refreshBusy = true;
 
   FlashLed(k_ledRefresh);
 
-  bool ok = Greenhouse::Refresh();
+  bool ok = base::System::Refresh();
 
   // HACK: the shift register sometimes gets stuck (maybe due to back-EMF or a surge),
   // and shifting on every refresh will clear this. the aim is that this should keep
@@ -348,16 +297,16 @@ bool GreenhouseArduino::Refresh()
   Blynk.virtualWrite(V30, m_pvVoltageOutput);
   Blynk.virtualWrite(V42, m_pvCurrentSensor);
   Blynk.virtualWrite(V43, m_pvCurrentOutput);
-  Blynk.virtualWrite(V55, WaterHeatingIsOn());
-  Blynk.virtualWrite(V56, SoilHeatingIsOn());
-  Blynk.virtualWrite(V59, AirHeatingIsOn());
+  Blynk.virtualWrite(V55, Heating().WaterHeatingIsOn());
+  Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
+  Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
 
   m_refreshBusy = false;
 
   return ok;
 }
 
-void GreenhouseArduino::FlashLed(LedFlashTimes times)
+void System::FlashLed(LedFlashTimes times)
 {
   if (!k_enableLed) {
     return;
@@ -375,7 +324,7 @@ void GreenhouseArduino::FlashLed(LedFlashTimes times)
   }
 }
 
-float GreenhouseArduino::InsideAirHumidity() const
+float System::InsideAirHumidity() const
 {
   if (TestMode()) {
     return m_fakeInsideHumidity;
@@ -383,7 +332,7 @@ float GreenhouseArduino::InsideAirHumidity() const
   return m_insideAirHumidity;
 }
 
-float GreenhouseArduino::SoilTemperature() const
+float System::SoilTemperature() const
 {
   if (TestMode()) {
     return m_fakeSoilTemperature;
@@ -391,7 +340,7 @@ float GreenhouseArduino::SoilTemperature() const
   return m_soilTemperature;
 }
 
-float GreenhouseArduino::SoilMoisture() const
+float System::SoilMoisture() const
 {
   if (TestMode()) {
     return m_fakeSoilMoisture;
@@ -399,7 +348,7 @@ float GreenhouseArduino::SoilMoisture() const
   return m_soilMoisture;
 }
 
-bool GreenhouseArduino::ReadSensors(int &failures)
+bool System::ReadSensors(int &failures)
 {
   if (TestMode()) {
     return true;
@@ -455,8 +404,7 @@ bool GreenhouseArduino::ReadSensors(int &failures)
       Log().Trace("Dallas read failed, retrying.");
       delay(dallasRetryWait);
     }
-  }
-  while (!dallasOk && (++dallasRetry > dallasRetryMax));
+  } while (!dallasOk && (++dallasRetry > dallasRetryMax));
 
   float moistureAnalog = ReadAdc(s_adc1, k_moisturePin);
   if (moistureAnalog == k_unknown) {
@@ -473,9 +421,9 @@ bool GreenhouseArduino::ReadSensors(int &failures)
   return failures == 0;
 }
 
-void GreenhouseArduino::SetWindowActuatorSpeed(int speed) { analogWrite(k_actuatorPinA, speed); }
+void System::SetWindowActuatorSpeed(int speed) { analogWrite(k_actuatorPinA, speed); }
 
-void GreenhouseArduino::RunWindowActuator(bool forward)
+void System::RunWindowActuator(bool forward)
 {
   if (forward) {
     s_io1.digitalWrite(k_actuatorPin1, HIGH);
@@ -487,15 +435,15 @@ void GreenhouseArduino::RunWindowActuator(bool forward)
   }
 }
 
-void GreenhouseArduino::StopActuator()
+void System::StopActuator()
 {
   s_io1.digitalWrite(k_actuatorPin1, LOW);
   s_io1.digitalWrite(k_actuatorPin2, LOW);
 }
 
-void GreenhouseArduino::SystemDelay(unsigned long ms) { delay(ms); }
+void System::SystemDelay(unsigned long ms) { delay(ms); }
 
-void GreenhouseArduino::Restart()
+void System::Restart()
 {
   FlashLed(k_ledRestart);
   ReportWarning("System restarting");
@@ -512,7 +460,7 @@ void GreenhouseArduino::Restart()
   }
 }
 
-void GreenhouseArduino::CaseFan(bool on)
+void System::CaseFan(bool on)
 {
   Log().Trace("Case fan %s", on ? "on" : "off");
 
@@ -527,7 +475,7 @@ void GreenhouseArduino::CaseFan(bool on)
   s_shiftRegisters.shift();
 }
 
-void GreenhouseArduino::StartBeep(int times)
+void System::StartBeep(int times)
 {
   for (int i = 0; i < times; i++) {
     Log().Trace(F("Beep set shift"));
@@ -540,7 +488,7 @@ void GreenhouseArduino::StartBeep(int times)
   }
 }
 
-void GreenhouseArduino::SetSwitch(int index, bool on)
+void System::SetSwitch(int index, bool on)
 {
   int pin = k_switchPins[index];
 
@@ -579,7 +527,7 @@ void GreenhouseArduino::SetSwitch(int index, bool on)
   CaseFan(onCount > 0);
 }
 
-void GreenhouseArduino::ToggleActiveSwitch()
+void System::ToggleActiveSwitch()
 {
   if (!m_switchState[m_activeSwitch]) {
     Log().Trace(F("Toggle switch on: %d"), m_activeSwitch);
@@ -591,7 +539,7 @@ void GreenhouseArduino::ToggleActiveSwitch()
   }
 }
 
-void GreenhouseArduino::RelayCallback()
+void System::RelayCallback()
 {
   MeasureVoltage();
   float onboardVoltage = readPvOnboardVoltage();
@@ -625,7 +573,7 @@ void GreenhouseArduino::RelayCallback()
   }
 }
 
-float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
+float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
     Log().Trace(F("ADC not ready: %s"), adc.name.c_str());
@@ -652,7 +600,7 @@ float GreenhouseArduino::ReadAdc(ADC &adc, ADS1115_MUX channel)
   return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 }
 
-void GreenhouseArduino::MeasureVoltage()
+void System::MeasureVoltage()
 {
   if (!s_adc2.ready || m_pvVoltageSensorMax == k_unknown || m_pvVoltageOutputMax == k_unknown) {
     return;
@@ -667,7 +615,7 @@ void GreenhouseArduino::MeasureVoltage()
     m_pvVoltageOutputMax);
 }
 
-void GreenhouseArduino::MeasureCurrent()
+void System::MeasureCurrent()
 {
   if (!s_adc2.ready || m_pvCurrentSensorMax == k_unknown || m_pvCurrentOutputMax == k_unknown) {
     return;
@@ -682,7 +630,7 @@ void GreenhouseArduino::MeasureCurrent()
     m_pvCurrentOutputMax);
 }
 
-void GreenhouseArduino::SwitchPower(bool pv)
+void System::SwitchPower(bool pv)
 {
   if (!pv) {
     // close the PSU relay and give the PSU time to power up
@@ -712,11 +660,11 @@ void GreenhouseArduino::SwitchPower(bool pv)
   Blynk.virtualWrite(V28, m_pvPowerSource);
 }
 
-int GreenhouseArduino::CurrentHour() const { return s_timeClient.getHours(); }
+int System::CurrentHour() const { return s_timeClient.getHours(); }
 
-unsigned long GreenhouseArduino::UptimeSeconds() const { return millis() / 1000; }
+unsigned long System::UptimeSeconds() const { return millis() / 1000; }
 
-void GreenhouseArduino::ReportInfo(const char *format, ...)
+void System::ReportInfo(const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -727,7 +675,7 @@ void GreenhouseArduino::ReportInfo(const char *format, ...)
   Blynk.logEvent("info", s_reportBuffer);
 }
 
-void GreenhouseArduino::ReportWarning(const char *format, ...)
+void System::ReportWarning(const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -738,7 +686,7 @@ void GreenhouseArduino::ReportWarning(const char *format, ...)
   Blynk.logEvent("warning", s_reportBuffer);
 }
 
-void GreenhouseArduino::ReportCritical(const char *format, ...)
+void System::ReportCritical(const char *format, ...)
 {
   va_list args;
   va_start(args, format);
@@ -749,7 +697,7 @@ void GreenhouseArduino::ReportCritical(const char *format, ...)
   Blynk.logEvent("critical", s_reportBuffer);
 }
 
-void GreenhouseArduino::ReportSensorValues()
+void System::ReportSensorValues()
 {
   FlashLed(k_ledSend);
   Blynk.virtualWrite(V1, InsideAirTemperature());
@@ -761,13 +709,13 @@ void GreenhouseArduino::ReportSensorValues()
   Blynk.virtualWrite(V46, WaterTemperature());
 }
 
-void GreenhouseArduino::ReportWindowProgress()
+void System::ReportWindowProgress()
 {
   FlashLed(k_ledSend);
   Blynk.virtualWrite(V9, WindowProgress());
 }
 
-void GreenhouseArduino::ReportSystemInfo()
+void System::ReportSystemInfo()
 {
   FlashLed(k_ledSend);
 
@@ -793,14 +741,14 @@ void GreenhouseArduino::ReportSystemInfo()
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
-void GreenhouseArduino::HandleNightDayTransition()
+void System::HandleNightDayTransition()
 {
-  Greenhouse::HandleNightDayTransition();
+  base::System::HandleNightDayTransition();
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
 }
 
-void GreenhouseArduino::ReportWarnings()
+void System::ReportWarnings()
 {
   if (!SystemStarted()) {
     return;
@@ -812,7 +760,7 @@ void GreenhouseArduino::ReportWarnings()
   }
 }
 
-void GreenhouseArduino::OnLastWrite()
+void System::OnLastWrite()
 {
   if (m_lastWriteDone) {
     return;
@@ -827,7 +775,7 @@ void GreenhouseArduino::OnLastWrite()
   OnSystemStarted();
 }
 
-void GreenhouseArduino::OnSystemStarted()
+void System::OnSystemStarted()
 {
   InitPowerSource();
 
@@ -846,7 +794,7 @@ void GreenhouseArduino::OnSystemStarted()
   SystemStarted(true);
 }
 
-void GreenhouseArduino::RefreshRate(int refreshRate)
+void System::RefreshRate(int refreshRate)
 {
   if (refreshRate <= 0) {
     Log().Trace(F("Invalid refresh rate: %ds"), refreshRate);
@@ -862,7 +810,7 @@ void GreenhouseArduino::RefreshRate(int refreshRate)
   Log().Trace(F("New refresh timer: %d"), m_timerId);
 }
 
-void GreenhouseArduino::HandleWindowProgress(int value)
+void System::HandleWindowProgress(int value)
 {
   if (WindowProgress() != k_unknown) {
     // only apply window progress if it's not the 1st time;
@@ -874,7 +822,7 @@ void GreenhouseArduino::HandleWindowProgress(int value)
   WindowProgress(value);
 }
 
-bool GreenhouseArduino::UpdateWeatherForecast()
+bool System::UpdateWeatherForecast()
 {
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
@@ -934,22 +882,22 @@ bool GreenhouseArduino::UpdateWeatherForecast()
   return true;
 }
 
-void GreenhouseArduino::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
+void System::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
 
-void GreenhouseArduino::ReportWaterHeatingInfo()
+void System::ReportWaterHeatingInfo()
 {
-  Blynk.virtualWrite(V62, WaterHeatingRuntimeMinutes());
-  Blynk.virtualWrite(V63, WaterHeatingCostDaily());
+  Blynk.virtualWrite(V62, Heating().WaterHeatingRuntimeMinutes());
+  Blynk.virtualWrite(V63, Heating().WaterHeatingCostDaily());
 }
 
-void GreenhouseArduino::ManualRefresh()
+void System::ManualRefresh()
 {
   Log().Trace(F("Manual refresh"));
   s_timeClient.update();
   Refresh();
 }
 
-void GreenhouseArduino::InitPowerSource()
+void System::InitPowerSource()
 {
   const float sensorMin = m_pvVoltageSwitchOff;
 
@@ -984,6 +932,9 @@ float readPvOnboardVoltage()
   int analogValue = analogRead(A0);
   return mapFloat(analogValue, 0, k_pvOnboardVoltageMapIn, 0, k_pvOnboardVoltageMapOut);
 }
+
+} // namespace greenhouse
+} // namespace embedded
 
 // blynk
 
@@ -1105,31 +1056,31 @@ BLYNK_WRITE(V44) { s_instance->PvVoltageSwitchOn(param.asFloat()); }
 
 BLYNK_WRITE(V45) { s_instance->PvVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) { s_instance->PvMode((PvModes)param.asInt()); }
+BLYNK_WRITE(V47) { s_instance->PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
 BLYNK_WRITE(V48) { s_instance->WindowActuatorSpeedPercent(param.asInt()); }
 
 BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 
-BLYNK_WRITE(V50) { s_instance->DayWaterTemperature(param.asFloat()); }
+BLYNK_WRITE(V50) { s_instance->Heating().DayWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V51) { s_instance->NightWaterTemperature(param.asFloat()); }
+BLYNK_WRITE(V51) { s_instance->Heating().NightWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V53) { s_instance->DaySoilTemperature(param.asFloat()); }
+BLYNK_WRITE(V53) { s_instance->Heating().DaySoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V54) { s_instance->NightSoilTemperature(param.asFloat()); }
+BLYNK_WRITE(V54) { s_instance->Heating().NightSoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V57) { s_instance->DayAirTemperature(param.asFloat()); }
+BLYNK_WRITE(V57) { s_instance->Heating().DayAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V58) { s_instance->NightAirTemperature(param.asFloat()); }
+BLYNK_WRITE(V58) { s_instance->Heating().NightAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V61) { s_instance->WaterHeaterLimitMinutes(param.asInt()); }
+BLYNK_WRITE(V61) { s_instance->Heating().WaterHeaterLimitMinutes(param.asInt()); }
 
-BLYNK_WRITE(V62) { s_instance->WaterHeatingRuntimeMinutes(param.asFloat()); }
+BLYNK_WRITE(V62) { s_instance->Heating().WaterHeatingRuntimeMinutes(param.asFloat()); }
 
 BLYNK_WRITE(V63)
 {
-  s_instance->WaterHeatingCostDaily(param.asFloat());
+  s_instance->Heating().WaterHeatingCostDaily(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.

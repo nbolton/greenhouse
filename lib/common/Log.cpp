@@ -5,6 +5,8 @@
 #include <cstdarg>
 #include <iostream>
 
+namespace common {
+
 static char s_buffer[200];
 
 void Log::Trace(const char *format, ...) const
@@ -20,3 +22,5 @@ void Log::Trace(const char *format, ...) const
 
   printf("%s\n", s_buffer);
 }
+
+} // namespace common

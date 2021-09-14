@@ -1,15 +1,20 @@
 #pragma once
 
-#include "Greenhouse.h"
+#include "../../native/greenhouse/System.h"
 
-#include "ArduinoLog.h"
+#include "../embedded/Log.h"
+#include "Heating.h"
+#include "ISystem.h"
 
 #include <ADS1115_WE.h>
 #include <Arduino.h>
 
-const int k_switchCount = 4;
-
 class Adafruit_SHT31;
+
+namespace embedded {
+namespace greenhouse {
+
+const int k_switchCount = 4;
 struct ADC;
 
 enum LedFlashTimes {
@@ -20,18 +25,14 @@ enum LedFlashTimes {
   k_ledRestart = 5
 };
 
-enum PvModes {
-  k_pvAuto,
-  k_pvOn,
-  k_pvOff
-};
+enum PvModes { k_pvAuto, k_pvOn, k_pvOff };
 
-class GreenhouseArduino : public Greenhouse {
+class System : public native::greenhouse::System, ISystem {
 public:
-  static GreenhouseArduino &Instance();
-  static void Instance(GreenhouseArduino &ga);
+  static System &Instance();
+  static void Instance(System &ga);
 
-  GreenhouseArduino();
+  System();
 
   void Setup();
   void Loop();
@@ -44,8 +45,9 @@ public:
   void ToggleActiveSwitch();
   void HandleWindowProgress(int value);
   void ManualRefresh();
+  void SetSwitch(int index, bool on);
 
-  const ArduinoLog &Log() const { return m_log; }
+  const embedded::Log &Log() const { return m_log; }
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -60,9 +62,6 @@ protected:
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
-  bool SwitchWaterHeating(bool on);
-  bool SwitchSoilHeating(bool on);
-  bool SwitchAirHeating(bool on);
   void RunWindowActuator(bool forward);
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);
@@ -72,6 +71,7 @@ protected:
 
 public:
   // getters & setters
+  embedded::greenhouse::Heating &Heating() { return m_heating; }
   int CurrentHour() const;
   unsigned long UptimeSeconds() const;
   float InsideAirTemperature() const { return m_insideAirTemperature; }
@@ -103,7 +103,6 @@ private:
   void StartBeep(int times);
   void CaseFan(bool on);
   void Actuator(bool forward, int s, int t);
-  void SetSwitch(int i, bool on);
   void SwitchPower(bool pv);
   void MeasureVoltage();
   void MeasureCurrent();
@@ -115,7 +114,8 @@ private:
   void InitPowerSource();
 
 private:
-  ArduinoLog m_log;
+  embedded::Log m_log;
+  embedded::greenhouse::Heating m_heating;
   float m_insideAirTemperature;
   float m_insideAirHumidity;
   float m_outsideAirTemperature;
@@ -151,3 +151,6 @@ private:
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
 };
+
+} // namespace greenhouse
+} // namespace embedded

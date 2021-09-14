@@ -1,25 +1,20 @@
-#include "GreenhouseArduino.h"
+#include "test_system.h"
+#include "test_heating.h"
 
-#include "test_common.h"
+#include "../embedded/greenhouse/System.h"
 
-#include <Arduino.h>
 #include <unity.h>
-
-class GreenhouseArduinoTest : public GreenhouseArduino {
-};
-
-GreenhouseArduinoTest greenhouse;
 
 void process()
 {
   UNITY_BEGIN();
-  testCommon();
+  testSystem();
+  testHeating();
   UNITY_END();
 }
 
 void setup()
 {
-  GreenhouseArduinoTest::Instance(greenhouse);
   process();
 }
 

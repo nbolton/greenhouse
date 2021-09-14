@@ -1,11 +1,15 @@
-#include "test_common.h"
+#include "test_system.h"
+#include "test_heating.h"
+
+#include <iostream>
 
 #include <unity.h>
 
 void process()
 {
   UNITY_BEGIN();
-  testCommon();
+  testSystem();
+  testHeating();
   UNITY_END();
 }
 

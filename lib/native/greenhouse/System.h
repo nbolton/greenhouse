@@ -1,25 +1,29 @@
 #pragma once
 
-#include "Log.h"
+#include "../common/Log.h"
+#include "../common/common.h"
+#include "Heating.h"
+
 #include <string>
 
-const int k_unknown = -1;
-const unsigned long k_unknownUL = -1;
+namespace native {
+namespace greenhouse {
 
-class Greenhouse {
+using namespace common;
+
+class System : public ISystem {
 public:
-  Greenhouse();
+  System();
 
   virtual void Setup();
   virtual void Loop();
   virtual bool Refresh();
-
-  virtual const ::Log &Log() const { return m_log; }
-
-protected:
   virtual void ReportInfo(const char *m, ...) {}
   virtual void ReportWarning(const char *m, ...) {}
   virtual void ReportCritical(const char *m, ...) {}
+  virtual const common::Log &Log() const { return m_log; }
+
+protected:
   virtual void ReportSensorValues() {}
   virtual void ReportWindowProgress() {}
   virtual void ReportSystemInfo() {}
@@ -33,10 +37,6 @@ protected:
   virtual float CalculateMoisture(float analogValue) const;
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
-  virtual bool SwitchWaterHeating(bool on);
-  virtual bool SwitchSoilHeating(bool on);
-  virtual bool SwitchAirHeating(bool on);
-  virtual void UpdateHeatingSystems();
   virtual void AdjustWindow(bool open, float delta);
   virtual void RunWindowActuator(bool forward) {}
   virtual void StopActuator() {}
@@ -47,6 +47,7 @@ protected:
 
 public:
   // getters & setters
+  virtual native::greenhouse::Heating &Heating() = 0;
   virtual int CurrentHour() const { return k_unknown; }
   virtual unsigned long UptimeSeconds() const { return k_unknown; }
   virtual float InsideAirTemperature() const { return k_unknown; }
@@ -80,44 +81,18 @@ public:
   virtual int WindowActuatorSpeedPercent() const { return m_windowActuatorSpeedPercent; }
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
   virtual int WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
-  virtual void DayWaterTemperature(float value) { m_dayWaterTemperature = value; }
-  virtual float DayWaterTemperature() const { return m_dayWaterTemperature; }
-  virtual void NightWaterTemperature(float value) { m_nightWaterTemperature = value; }
-  virtual float NightWaterTemperature() const { return m_nightWaterTemperature; }
-  virtual void DaySoilTemperature(float value) { m_daySoilTemperature = value; }
-  virtual float DaySoilTemperature() const { return m_daySoilTemperature; }
-  virtual void NightSoilTemperature(float value) { m_nightSoilTemperature = value; }
-  virtual float NightSoilTemperature() const { return m_nightSoilTemperature; }
-  virtual void DayAirTemperature(float value) { m_dayAirTemperature = value; }
-  virtual float DayAirTemperature() const { return m_dayAirTemperature; }
-  virtual void NightAirTemperature(float value) { m_nightAirTemperature = value; }
-  virtual float NightAirTemperature() const { return m_nightAirTemperature; }
-  virtual void WaterHeatingIsOn(bool value) { m_waterHeatingIsOn = value; }
-  virtual bool WaterHeatingIsOn() const { return m_waterHeatingIsOn; }
-  virtual void SoilHeatingIsOn(bool value) { m_soilHeatingIsOn = value; }
-  virtual bool SoilHeatingIsOn() const { return m_soilHeatingIsOn; }
-  virtual void AirHeatingIsOn(bool value) { m_airHeatingIsOn = value; }
-  virtual bool AirHeatingIsOn() const { return m_airHeatingIsOn; }
   virtual void WeatherCode(int value) { m_weatherCode = value; }
   virtual int WeatherCode() const { return m_weatherCode; }
   virtual void WeatherInfo(std::string value) { m_weatherInfo = value; }
   virtual const std::string &WeatherInfo() const { return m_weatherInfo; }
-  virtual void WaterHeaterLimitMinutes(int value) { m_waterHeaterLimitMinutes = value; }
-  virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
-  virtual void WaterHeatingRuntimeMinutes(float value) { m_waterHeatingRuntimeMinutes = value; }
-  virtual float WaterHeatingRuntimeMinutes() const { return m_waterHeatingRuntimeMinutes; }
-  virtual void WaterHeatingCostDaily(float value) { m_waterHeatingCostDaily = value; }
-  virtual float WaterHeatingCostDaily() const { return m_waterHeatingCostDaily; }
   virtual void SystemStarted(bool value) { m_systemStarted = value; }
   virtual bool SystemStarted() const { return m_systemStarted; }
 
 private:
-  void UpdateDayWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
-  void UpdateNightWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
   bool IsRaining() const;
 
 private:
-  ::Log m_log;
+  common::Log m_log;
   bool m_sensorWarningSent;
   bool m_autoMode;
   float m_openStart;
@@ -131,27 +106,13 @@ private:
   int m_dayEndHour;
   int m_windowActuatorSpeedPercent;
   float m_windowActuatorRuntimeSec;
-  float m_dayWaterTemperature;
-  float m_nightWaterTemperature;
-  float m_daySoilTemperature;
-  float m_nightSoilTemperature;
-  float m_dayAirTemperature;
-  float m_nightAirTemperature;
-  bool m_waterHeatingIsOn;
-  bool m_soilHeatingIsOn;
-  bool m_airHeatingIsOn;
   int m_weatherCode;
   std::string m_weatherInfo;
   bool m_isRaining;
-  int m_waterHeaterLimitMinutes;
-  unsigned long m_waterHeatingLastUpdate;
-  float m_waterHeatingRuntimeMinutes;
-  bool m_waterHeatingWasDaytime;
-  bool m_waterHeatingHasRun;
-  float m_waterHeatingCostDaily;
   bool m_systemStarted;
   int m_weatherErrors;
   bool m_weatherErrorReportSent;
 };
 
-float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
+} // namespace greenhouse
+} // namespace native

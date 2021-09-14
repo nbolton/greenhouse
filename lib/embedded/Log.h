@@ -1,11 +1,16 @@
 #pragma once
 
-#include "Log.h"
+#include "../common/Log.h"
 
-#include <Arduino.h>
+class __FlashStringHelper;
 
-class ArduinoLog : public Log {
+namespace embedded
+{
+
+class Log : public common::Log {
 public:
   void Trace(const char *format, ...) const;
   void Trace(const __FlashStringHelper *format, ...) const;
 };
+
+}
