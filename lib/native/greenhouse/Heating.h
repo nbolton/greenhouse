@@ -2,6 +2,7 @@
 
 #include "ISystem.h"
 #include <stdexcept>
+#include "Log.h"
 
 namespace native {
 namespace greenhouse {
@@ -11,6 +12,7 @@ class Heating {
 public:
   Heating();
   void Update();
+  const common::Log &Log() const { return m_log; }
 
 protected:
   virtual bool SwitchWaterHeating(bool on);
@@ -60,6 +62,7 @@ public:
   void System(ISystem &value) { m_system = &value; }
 
 private:
+  common::Log m_log;
   ISystem *m_system;
   float m_dayWaterTemperature;
   float m_nightWaterTemperature;

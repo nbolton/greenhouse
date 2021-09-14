@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../../native/greenhouse/Heating.h"
+#include "../embedded/Log.h"
+
 #include <stdexcept>
 
 namespace embedded {
@@ -12,6 +14,7 @@ class Heating : public native::greenhouse::Heating {
 
 public:
   Heating();
+  const embedded::Log &Log() const { return m_log; }
 
 protected:
   bool SwitchWaterHeating(bool on);
@@ -31,6 +34,7 @@ public:
 
 private:
   ISystem *m_system;
+  embedded::Log m_log;
 };
 
 } // namespace greenhouse
