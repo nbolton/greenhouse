@@ -180,7 +180,7 @@ void Heating::Update()
     Log().Trace("Daytime heating mode");
     m_waterHeatingWasDaytime = true;
 
-    if ((int)System().SoilTemperature() != k_unknown) {
+    if (System().SoilTemperature() != k_unknown) {
       if (System().SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
 
         Log().Trace("Day soil temp below");
@@ -202,7 +202,7 @@ void Heating::Update()
       }
     }
 
-    if ((int)System().InsideAirTemperature() != k_unknown) {
+    if (System().InsideAirTemperature() != k_unknown) {
       if (System().InsideAirTemperature() < (DayAirTemperature() - k_airTempMargin)) {
 
         Log().Trace("Day air temp below");
@@ -233,7 +233,7 @@ void Heating::Update()
     Log().Trace("Nighttime heating mode");
     m_waterHeatingWasDaytime = false;
 
-    if ((int)System().SoilTemperature() != k_unknown) {
+    if (System().SoilTemperature() != k_unknown) {
       if (System().SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
 
         Log().Trace("Night soil temp below");
@@ -254,7 +254,7 @@ void Heating::Update()
       }
     }
 
-    if ((int)System().InsideAirTemperature() != k_unknown) {
+    if (System().InsideAirTemperature() != k_unknown) {
       if (System().InsideAirTemperature() < (NightAirTemperature() - k_airTempMargin)) {
 
         Log().Trace("Night air temp below");

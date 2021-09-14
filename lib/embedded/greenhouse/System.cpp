@@ -379,33 +379,38 @@ bool System::ReadSensors(int &failures)
     failures++;
   }
 
-  bool dallasOk;
+  bool dallasOk = false;
   int dallasRetry = 0;
   const int dallasRetryMax = 5;
   const int dallasRetryWait = 500;
-  do {
-    dallasOk = true;
+
+  while (!dallasOk) {
 
     s_dallas.requestTemperatures();
+
     m_soilTemperature = s_dallas.getTempCByIndex(k_soilProbeIndex);
-    if (isnan(m_soilTemperature)) {
+    m_waterTemperature = s_dallas.getTempCByIndex(k_waterProbeIndex);
+
+    dallasOk = true;
+    if (m_soilTemperature == DEVICE_DISCONNECTED_C) {
       m_soilTemperature = k_unknown;
       failures++;
       dallasOk = false;
     }
-
-    m_waterTemperature = s_dallas.getTempCByIndex(k_waterProbeIndex);
-    if (isnan(m_waterTemperature)) {
+    
+    if (m_waterTemperature == DEVICE_DISCONNECTED_C) {
       m_waterTemperature = k_unknown;
       failures++;
       dallasOk = false;
     }
 
-    if (!dallasOk) {
-      Log().Trace("Dallas read failed, retrying.");
-      delay(dallasRetryWait);
+    if (dallasOk || (++dallasRetry > dallasRetryMax)) {
+      break;
     }
-  } while (!dallasOk && (++dallasRetry > dallasRetryMax));
+
+    Log().Trace(F("Dallas read failed, retry %d"), dallasRetry);
+    SystemDelay(dallasRetryWait);
+  }
 
   float moistureAnalog = ReadAdc(s_adc1, k_moisturePin);
   if (moistureAnalog == k_unknown) {
@@ -687,7 +692,7 @@ void System::ReportWarning(const char *format, ...)
   if (!k_reportWarnings) {
     return;
   }
-  
+
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
@@ -945,8 +950,7 @@ void System::UpdateTime()
       Log().Trace(F("Time update failed (attempt %d)"), retryCount);
       SystemDelay(retryDelay);
     }
-  }
-  while (!m_timeClientOk && retryCount++ < retryLimit);
+  } while (!m_timeClientOk && retryCount++ < retryLimit);
 }
 
 // free-functions
