@@ -382,7 +382,7 @@ bool System::ReadSensors(int &failures)
   bool dallasOk = false;
   int dallasRetry = 0;
   const int dallasRetryMax = 5;
-  const int dallasRetryWait = 500;
+  const int dallasRetryWait = 100;
 
   while (!dallasOk) {
 
@@ -408,7 +408,7 @@ bool System::ReadSensors(int &failures)
       break;
     }
 
-    Log().Trace(F("Dallas read failed, retry %d"), dallasRetry);
+    Log().Trace(F("Dallas sensor read failed, retrying (attempt %d)"), dallasRetry);
     SystemDelay(dallasRetryWait);
   }
 
