@@ -39,12 +39,12 @@ Heating::Heating() :
 bool Heating::SwitchWaterHeating(bool on)
 {
   if (
-    on && (m_waterHeatingRuntimeMinutes > 0) &&
-    (m_waterHeatingRuntimeMinutes >= m_waterHeaterLimitMinutes)) {
+    on && (WaterHeatingRuntimeMinutes() > 0) &&
+    (WaterHeatingRuntimeMinutes() >= WaterHeaterLimitMinutes())) {
 
     Log().Trace(
       "Blocking water heating switch on, runtime=%.2fm, limit=%dm",
-      m_waterHeatingRuntimeMinutes,
+      WaterHeatingRuntimeMinutes(),
       WaterHeaterLimitMinutes());
     return false;
   }
