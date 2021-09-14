@@ -138,9 +138,6 @@ public:
 
   int m_calls_OpenWindow;
   int m_calls_CloseWindow;
-  int m_calls_SwitchWaterHeating;
-  int m_calls_SwitchSoilHeating;
-  int m_calls_SwitchAirHeating;
   int m_calls_RunWindowActuator;
   int m_calls_StopActuator;
   int m_calls_SetWindowActuatorSpeed;
