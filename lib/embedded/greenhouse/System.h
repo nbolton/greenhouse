@@ -111,6 +111,7 @@ private:
   void InitActuators();
   void InitShiftRegisters();
   void InitPowerSource();
+  void UpdateTime();
 
 private:
   embedded::Log m_log;
@@ -149,6 +150,7 @@ private:
   float m_pvCurrentOutputMin;
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
+  bool m_timeClientOk;
 };
 
 } // namespace greenhouse
