@@ -1,6 +1,10 @@
 #pragma once
 
-#include "../common/Log.h"
+namespace common {
+
+class Log;
+
+}
 
 namespace native {
 namespace greenhouse {
@@ -10,7 +14,6 @@ public:
   virtual void ReportInfo(const char *m, ...) = 0;
   virtual void ReportWarning(const char *m, ...) = 0;
   virtual void ReportCritical(const char *m, ...) = 0;
-  virtual const common::Log &Log() const = 0;
   
   virtual void HandleNightDayTransition() = 0;
   virtual void ReportWaterHeatingInfo() = 0;
