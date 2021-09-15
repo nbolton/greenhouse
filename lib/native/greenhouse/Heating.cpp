@@ -160,9 +160,7 @@ void Heating::Update()
   bool airHeatingRequired = AirHeatingIsOn();
 
   // heat water to different temperature depending on if day or night
-  if (
-    (System().CurrentHour() >= System().DayStartHour()) &&
-    (System().CurrentHour() < System().DayEndHour())) {
+  if (System().IsDaytime()) {
 
     // detect transition from night to day
     if (m_waterHeatingHasRun && !m_waterHeatingWasDaytime) {
@@ -234,9 +232,7 @@ void Heating::Update()
 
     UpdateDayWaterHeating(airHeatingRequired, soilHeatingRequired);
   }
-  else if (
-    (System().CurrentHour() < System().DayStartHour()) ||
-    (System().CurrentHour() >= System().DayEndHour())) {
+  else {
 
     Log().Trace("Nighttime heating mode");
     m_waterHeatingWasDaytime = false;

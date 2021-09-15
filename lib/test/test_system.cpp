@@ -212,7 +212,7 @@ void Test_Refresh_RainDetectedInAutoMode_WindowClosed(void)
   system.WeatherCode(700);
 
   system.Refresh();
-  
+
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL(.5, system.m_lastArg_CloseWindow_delta);
 }
@@ -225,7 +225,7 @@ void Test_Refresh_RainDetectedInManualMode_WindowClosed(void)
   system.WeatherCode(700);
 
   system.Refresh();
-  
+
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_CloseWindow);
   TEST_ASSERT_EQUAL(.5, system.m_lastArg_CloseWindow_delta);
 }
@@ -343,6 +343,51 @@ void Test_CalculateMoisture_InBounds_ReturnsPercent()
   TEST_ASSERT_FLOAT_WITHIN(.1, 45.5, percent);
 }
 
+void Test_IsDaytime_CurrentHourBeforeDayStart_ReturnsFalse()
+{
+  TestSystem system;
+  system.m_mock_CurrentHour = 0;
+  system.DayStartHour(1);
+  system.DayEndHour(3);
+  TEST_ASSERT_EQUAL(false, system.IsDaytime());
+}
+
+void Test_IsDaytime_CurrentHourEqualsDayStart_ReturnsTrue()
+{
+  TestSystem system;
+  system.m_mock_CurrentHour = 1;
+  system.DayStartHour(1);
+  system.DayEndHour(3);
+  TEST_ASSERT_EQUAL(true, system.IsDaytime());
+}
+
+void Test_IsDaytime_CurrentHourInBounds_ReturnsTrue()
+{
+  TestSystem system;
+  system.m_mock_CurrentHour = 2;
+  system.DayStartHour(1);
+  system.DayEndHour(3);
+  TEST_ASSERT_EQUAL(true, system.IsDaytime());
+}
+
+void Test_IsDaytime_CurrentHourEqualsDayEnd_ReturnsFalse()
+{
+  TestSystem system;
+  system.m_mock_CurrentHour = 3;
+  system.DayStartHour(1);
+  system.DayEndHour(3);
+  TEST_ASSERT_EQUAL(false, system.IsDaytime());
+}
+
+void Test_IsDaytime_CurrentHourAfterDayEnd_ReturnsFalse()
+{
+  TestSystem system;
+  system.m_mock_CurrentHour = 4;
+  system.DayStartHour(1);
+  system.DayEndHour(3);
+  TEST_ASSERT_EQUAL(false, system.IsDaytime());
+}
+
 void testSystem()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -367,4 +412,9 @@ void testSystem()
   RUN_TEST(Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero);
   RUN_TEST(Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred);
   RUN_TEST(Test_CalculateMoisture_InBounds_ReturnsPercent);
+  RUN_TEST(Test_IsDaytime_CurrentHourBeforeDayStart_ReturnsFalse);
+  RUN_TEST(Test_IsDaytime_CurrentHourEqualsDayStart_ReturnsTrue);
+  RUN_TEST(Test_IsDaytime_CurrentHourInBounds_ReturnsTrue);
+  RUN_TEST(Test_IsDaytime_CurrentHourEqualsDayEnd_ReturnsFalse);
+  RUN_TEST(Test_IsDaytime_CurrentHourAfterDayEnd_ReturnsFalse);
 }

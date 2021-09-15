@@ -74,7 +74,7 @@ bool System::Refresh()
   ReportSensorValues();
   ReportWarnings();
 
-  // running weather report on startup seems to crash randomly, 
+  // running weather report on startup seems to crash randomly,
   // so only check weather after start
   if (SystemStarted()) {
     const int weatherErrorReportAtCount = 4;
@@ -274,6 +274,11 @@ void System::HandleNightDayTransition()
 {
   Log().Trace("Night/day transition detected, resetting warnings");
   m_weatherErrorReportSent = false;
+}
+
+bool System::IsDaytime() const
+{
+  return (CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour());
 }
 
 } // namespace greenhouse

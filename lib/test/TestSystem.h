@@ -18,13 +18,17 @@ public:
     m_calls_SystemDelay(0),
     m_calls_ReportWarning(0),
 
-    // mocks
+    // mock returns
     m_mock_ReadDhtSensor(false),
     m_mock_WaterTemperature(0),
     m_mock_SoilTemperature(0),
     m_mock_InsideAirTemperature(0),
     m_mock_CurrentHour(0),
-    m_mock_UptimeSeconds(0)
+    m_mock_UptimeSeconds(0),
+    m_mock_IsDaytime(false),
+
+    // mock enable
+    m_mockOn_IsDaytime(false)
   {
     Heating().System(*this);
   }
@@ -65,6 +69,16 @@ public:
   {
     Log().Trace("Mock: UptimeSeconds, value=%d", m_mock_UptimeSeconds);
     return m_mock_UptimeSeconds;
+  }
+
+  bool IsDaytime() const
+  {
+    if (m_mockOn_IsDaytime) {
+      Log().Trace("Mock: IsDaytime, value=%s", m_mock_IsDaytime ? "true" : "false");
+      return m_mock_IsDaytime;
+    }
+    
+    return System::IsDaytime();
   }
 
   // stubs
@@ -125,7 +139,11 @@ public:
   float CalculateMoisture(float value) const { return System::CalculateMoisture(value); }
   bool ApplyWindowProgress(float value) { return System::ApplyWindowProgress(value); }
 
-  // mock values (leave undefined)
+  // mock enable
+
+  bool m_mockOn_IsDaytime;
+
+  // mock values
 
   bool m_mock_ReadDhtSensor;
   float m_mock_WaterTemperature;
@@ -133,6 +151,7 @@ public:
   float m_mock_InsideAirTemperature;
   int m_mock_CurrentHour;
   unsigned long m_mock_UptimeSeconds;
+  bool m_mock_IsDaytime;
 
   // call counters (init to 0)
 

@@ -88,6 +88,7 @@ public:
   virtual const std::string &WeatherInfo() const { return m_weatherInfo; }
   virtual void SystemStarted(bool value) { m_systemStarted = value; }
   virtual bool SystemStarted() const { return m_systemStarted; }
+  virtual bool IsDaytime() const;
 
 private:
   bool IsRaining() const;

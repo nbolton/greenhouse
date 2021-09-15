@@ -25,6 +25,7 @@ public:
   virtual int DayStartHour() const = 0;
   virtual int DayEndHour() const = 0;
   virtual void SetSwitch(int i, bool on) = 0;
+  virtual bool IsDaytime() const = 0;
 };
 
 } // namespace greenhouse
