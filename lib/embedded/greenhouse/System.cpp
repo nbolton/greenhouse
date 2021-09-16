@@ -148,7 +148,8 @@ System::System() :
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
   m_pvMode(PvModes::k_pvAuto),
-  m_timeClientOk(false)
+  m_timeClientOk(false),
+  m_firstTimeSetDone(false)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -951,6 +952,12 @@ void System::UpdateTime()
       SystemDelay(retryDelay);
     }
   } while (!m_timeClientOk && retryCount++ < retryLimit);
+
+  if (m_timeClientOk && !m_firstTimeSetDone) {
+    m_firstTimeSetDone = true;
+    Log().Trace(F("Time was first set"));
+    HandleFirstTimeSet();
+  }
 }
 
 // free-functions

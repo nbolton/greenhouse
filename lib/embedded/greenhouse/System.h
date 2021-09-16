@@ -151,6 +151,7 @@ private:
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
   bool m_timeClientOk;
+  bool m_firstTimeSetDone;
 };
 
 } // namespace greenhouse

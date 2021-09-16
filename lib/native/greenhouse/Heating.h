@@ -13,6 +13,7 @@ public:
   Heating();
   void Update();
   const common::Log &Log() const { return m_log; }
+  void HandleDayNightTransition();
 
 protected:
   virtual bool SwitchWaterHeating(bool on);
@@ -76,8 +77,6 @@ private:
   float m_waterHeatingRuntimeMinutes;
   int m_waterHeaterLimitMinutes;
   unsigned long m_waterHeatingLastUpdate;
-  bool m_waterHeatingWasDaytime;
-  bool m_waterHeatingHasRun;
   float m_waterHeatingCostDaily;
 };
 

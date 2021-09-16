@@ -230,6 +230,82 @@ void Test_Refresh_RainDetectedInManualMode_WindowClosed(void)
   TEST_ASSERT_EQUAL(.5, system.m_lastArg_CloseWindow_delta);
 }
 
+void Test_Refresh_NightDayNightDay_DayNightTransitionedTwice(void)
+{
+  TestSystem system;
+  
+  system.m_mock_CurrentHour = 1;
+
+  system.DayStartHour(2);
+  system.DayEndHour(3);
+
+  system.HandleFirstTimeSet();
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, system.m_calls_HandleNightDayTransition);
+
+  system.m_mock_CurrentHour = 2;
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+
+  system.m_mock_CurrentHour = 1;
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+
+  system.m_mock_CurrentHour = 2;
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightDayTransition);
+}
+
+void Test_Refresh_DayNightDayNight_DayNightTransitionedTwice(void)
+{
+  TestSystem system;
+  
+  system.m_mock_CurrentHour = 2;
+
+  system.DayStartHour(2);
+  system.DayEndHour(3);
+
+  system.HandleFirstTimeSet();
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+
+  system.m_mock_CurrentHour = 1;
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+
+  system.m_mock_CurrentHour = 2;
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightDayTransition);
+
+  system.m_mock_CurrentHour = 1;
+
+  system.Refresh();
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightDayTransition);
+}
+
 void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
 {
   TestSystem system;
@@ -403,6 +479,8 @@ void testSystem()
   RUN_TEST(Test_Refresh_AutoModeAboveBounds_WindowOpenedFully);
   RUN_TEST(Test_Refresh_RainDetectedInAutoMode_WindowClosed);
   RUN_TEST(Test_Refresh_RainDetectedInManualMode_WindowClosed);
+  RUN_TEST(Test_Refresh_NightDayNightDay_DayNightTransitionedTwice);
+  RUN_TEST(Test_Refresh_DayNightDayNight_DayNightTransitionedTwice);
   RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
   RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
   RUN_TEST(Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed);

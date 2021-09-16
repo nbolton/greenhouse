@@ -31,6 +31,7 @@ protected:
   virtual void ReportWeather() {}
   virtual void ReportWaterHeatingInfo() {}
   virtual void SetSwitch(int index, bool on) {}
+  virtual void HandleFirstTimeSet();
 
   virtual bool ReadSensors(int &failures) { return false; }
   virtual void OpenWindow(float delta);
@@ -114,6 +115,7 @@ private:
   bool m_systemStarted;
   int m_weatherErrors;
   bool m_weatherErrorReportSent;
+  bool m_dayNightTransitionNextTime;
 };
 
 } // namespace greenhouse

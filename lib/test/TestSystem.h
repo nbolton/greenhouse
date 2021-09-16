@@ -17,6 +17,7 @@ public:
     m_calls_SetWindowActuatorSpeed(0),
     m_calls_SystemDelay(0),
     m_calls_ReportWarning(0),
+    m_calls_HandleNightDayTransition(0),
 
     // mock returns
     m_mock_ReadDhtSensor(false),
@@ -133,11 +134,18 @@ public:
     Log().Trace("Stub: ReportWarning");
     m_calls_ReportWarning++;
   }
+
+  void HandleNightDayTransition()
+  {
+    Log().Trace("Stub: HandleNightDayTransition");
+    m_calls_HandleNightDayTransition++;
+  }
   
   // expose protected members to public
 
   float CalculateMoisture(float value) const { return System::CalculateMoisture(value); }
   bool ApplyWindowProgress(float value) { return System::ApplyWindowProgress(value); }
+  void HandleFirstTimeSet() { return System::HandleFirstTimeSet(); }
 
   // mock enable
 
@@ -161,7 +169,8 @@ public:
   int m_calls_StopActuator;
   int m_calls_SetWindowActuatorSpeed;
   int m_calls_SystemDelay;
-  int m_calls_ReportWarning; 
+  int m_calls_ReportWarning;
+  int m_calls_HandleNightDayTransition;
 
   // last arg (leave undefined)
 

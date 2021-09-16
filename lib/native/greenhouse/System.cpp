@@ -32,7 +32,8 @@ System::System() :
   m_isRaining(false),
   m_systemStarted(false),
   m_weatherErrors(0),
-  m_weatherErrorReportSent(false)
+  m_weatherErrorReportSent(false),
+  m_dayNightTransitionNextTime(false)
 {
 }
 
@@ -43,6 +44,19 @@ void System::Loop() {}
 bool System::Refresh()
 {
   Log().Trace("Refreshing");
+
+  if (IsDaytime()) {
+
+    // detect transition from night to day
+    if (m_dayNightTransitionNextTime) {
+
+      HandleNightDayTransition();
+      m_dayNightTransitionNextTime = false;
+    }
+  }
+  else {
+    m_dayNightTransitionNextTime = true;
+  }
 
   int sensorFailures = 0;
   bool sensorsOk = ReadSensors(sensorFailures);
@@ -274,11 +288,24 @@ void System::HandleNightDayTransition()
 {
   Log().Trace("Night/day transition detected, resetting warnings");
   m_weatherErrorReportSent = false;
+
+  Heating().HandleDayNightTransition();
 }
 
 bool System::IsDaytime() const
 {
   return (CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour());
+}
+
+void System::HandleFirstTimeSet()
+{
+  // if the system starts and it's day time, then transition from night to day,
+  // which resets things like the heater runtime counter. a design flaw happens
+  // here: if the system is restarted during the day, the heater runtime counter
+  // will reset.
+  if (IsDaytime()) {
+    m_dayNightTransitionNextTime = true;
+  }
 }
 
 } // namespace greenhouse

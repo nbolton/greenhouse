@@ -30,8 +30,6 @@ Heating::Heating() :
   m_waterHeatingRuntimeMinutes(0),
   m_waterHeaterLimitMinutes(k_unknown),
   m_waterHeatingLastUpdate(k_unknownUL),
-  m_waterHeatingWasDaytime(false),
-  m_waterHeatingHasRun(false),
   m_waterHeatingCostDaily(0)
 {
 }
@@ -162,21 +160,7 @@ void Heating::Update()
   // heat water to different temperature depending on if day or night
   if (System().IsDaytime()) {
 
-    // detect transition from night to day
-    if (m_waterHeatingHasRun && !m_waterHeatingWasDaytime) {
-
-      System().HandleNightDayTransition();
-
-      // reset daily runtime and cost back to 0
-      WaterHeatingRuntimeMinutes(0);
-      WaterHeatingCostDaily(0);
-      System().ReportWaterHeatingInfo();
-      m_waterHeatingLastUpdate = k_unknownUL;
-      Log().Trace("Water heater runtime reset");
-    }
-
     Log().Trace("Daytime heating mode");
-    m_waterHeatingWasDaytime = true;
 
     if (System().SoilTemperature() != k_unknown) {
       if (System().SoilTemperature() < (DaySoilTemperature() - k_soilTempMargin)) {
@@ -235,7 +219,6 @@ void Heating::Update()
   else {
 
     Log().Trace("Nighttime heating mode");
-    m_waterHeatingWasDaytime = false;
 
     if (System().SoilTemperature() != k_unknown) {
       if (System().SoilTemperature() < (NightSoilTemperature() - k_soilTempMargin)) {
@@ -289,8 +272,16 @@ void Heating::Update()
 
     UpdateNightWaterHeating(airHeatingRequired, soilHeatingRequired);
   }
+}
 
-  m_waterHeatingHasRun = true;
+void Heating::HandleDayNightTransition()
+{
+  // reset daily runtime and cost back to 0
+  WaterHeatingRuntimeMinutes(0);
+  WaterHeatingCostDaily(0);
+  System().ReportWaterHeatingInfo();
+  m_waterHeatingLastUpdate = k_unknownUL;
+  Log().Trace("Water heater runtime was reset");
 }
 
 } // namespace greenhouse
