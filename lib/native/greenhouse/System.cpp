@@ -21,7 +21,6 @@ System::System() :
   m_openFinish(k_unknown),
   m_windowProgress(k_unknown),
   m_testMode(false),
-  m_openDayMinimum(k_unknown),
   m_insideHumidityWarning(k_unknown),
   m_soilMostureWarning(k_unknown),
   m_dayStartHour(k_unknown),
@@ -172,26 +171,11 @@ bool System::ApplyWindowProgress(float expectedProgress)
     float openDelta = expectedProgress - currentProgress;
 
     Log().Trace(
-      "Testing window progress, expected=%.2f, current=%.2f, open=%.2f, close=%.2f, min=%d%%",
+      "Testing window progress, expected=%.2f, current=%.2f, open=%.2f, close=%.2f",
       expectedProgress,
       currentProgress,
       openDelta,
-      closeDelta,
-      OpenDayMinimum());
-
-    bool isDayPeriod = (CurrentHour() >= DayStartHour()) && (CurrentHour() <= DayEndHour());
-
-    // if open day minimum is set and it's day:
-    // - don't allow window to be closed less than open day minimum.
-    // - if already closed beyond minimum, open it up to match minimum.
-    if (isDayPeriod && (OpenDayMinimum() > 0)) {
-
-      float min = (float)OpenDayMinimum() / 100;
-      closeDelta -= min;
-      openDelta += min;
-
-      Log().Trace("Deltas adjusted, open=%.2f, close=%.2f", openDelta, closeDelta);
-    }
+      closeDelta);
 
     if (openDelta > 0) {
       OpenWindow(openDelta);

@@ -68,8 +68,6 @@ public:
   virtual float OpenFinish() const { return m_openFinish; }
   virtual void TestMode(bool value) { m_testMode = value; }
   virtual bool TestMode() const { return m_testMode; }
-  virtual void OpenDayMinimum(int value) { m_openDayMinimum = value; }
-  virtual int OpenDayMinimum() const { return m_openDayMinimum; }
   virtual void InsideHumidityWarning(float value) { m_insideHumidityWarning = value; }
   virtual float InsideHumidityWarning() const { return m_insideHumidityWarning; }
   virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
@@ -104,7 +102,6 @@ private:
   float m_openFinish;
   int m_windowProgress;
   bool m_testMode;
-  int m_openDayMinimum;
   float m_insideHumidityWarning;
   float m_soilMostureWarning;
   int m_dayStartHour;

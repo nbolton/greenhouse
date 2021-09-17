@@ -342,62 +342,6 @@ void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
   TEST_ASSERT_EQUAL_UINT64(550, system.m_lastArg_SystemDelay_ms);
 }
 
-void Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed()
-{
-  TestSystem system;
-  system.WindowProgress(20);
-  system.OpenDayMinimum(0);
-  system.DayStartHour(8);
-  system.DayEndHour(20);
-  system.m_mock_CurrentHour = 12; // 12pm
-
-  system.ApplyWindowProgress(0);
-
-  TEST_ASSERT_EQUAL_INT(0, system.WindowProgress());
-}
-
-void Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed()
-{
-  TestSystem system;
-  system.WindowProgress(20);
-  system.OpenDayMinimum(10);
-  system.DayStartHour(8);
-  system.DayEndHour(20);
-  system.m_mock_CurrentHour = 0; // 12am
-
-  system.ApplyWindowProgress(0);
-
-  TEST_ASSERT_EQUAL_INT(0, system.WindowProgress());
-}
-
-void Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed()
-{
-  TestSystem system;
-  system.WindowProgress(20);
-  system.OpenDayMinimum(10);
-  system.DayStartHour(8);
-  system.DayEndHour(20);
-  system.m_mock_CurrentHour = 12; // 12pm
-
-  system.ApplyWindowProgress(0);
-
-  TEST_ASSERT_EQUAL_INT(10, system.WindowProgress());
-}
-
-void Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened()
-{
-  TestSystem system;
-  system.WindowProgress(5);
-  system.OpenDayMinimum(10);
-  system.DayStartHour(8);
-  system.DayEndHour(20);
-  system.m_mock_CurrentHour = 12; // 12pm
-
-  system.ApplyWindowProgress(0);
-
-  TEST_ASSERT_EQUAL_INT(10, system.WindowProgress());
-}
-
 void Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero()
 {
   TestSystem system;
@@ -483,10 +427,6 @@ void testSystem()
   RUN_TEST(Test_Refresh_DayNightDayNight_DayNightTransitionedTwice);
   RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
   RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
-  RUN_TEST(Test_ApplyWindowProgress_CloseNoOpenDayMinimumInDay_FullyClosed);
-  RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumAtNight_FullyClosed);
-  RUN_TEST(Test_ApplyWindowProgress_CloseWithOpenDayMinimumInDay_PartlyClosed);
-  RUN_TEST(Test_ApplyWindowProgress_OpenDayMinimumAboveProgress_PartlyOpened);
   RUN_TEST(Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero);
   RUN_TEST(Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred);
   RUN_TEST(Test_CalculateMoisture_InBounds_ReturnsPercent);

@@ -990,7 +990,6 @@ BLYNK_CONNECTED()
     V8,
     V9,
     V14,
-    V15,
     V16,
     V17,
     V18,
@@ -1053,8 +1052,6 @@ BLYNK_WRITE(V8) { s_instance->OpenFinish(param.asFloat()); }
 BLYNK_WRITE(V9) { s_instance->HandleWindowProgress(param.asInt()); }
 
 BLYNK_WRITE(V14) { s_instance->TestMode(param.asInt() == 1); }
-
-BLYNK_WRITE(V15) { s_instance->OpenDayMinimum(param.asInt()); }
 
 BLYNK_WRITE(V16) { s_instance->InsideHumidityWarning(param.asFloat()); }
 
