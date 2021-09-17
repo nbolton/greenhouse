@@ -50,6 +50,7 @@ public:
 private:
   void UpdateDayWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
   void UpdateNightWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
+  void UpdatePeriod(float waterTarget, float soilTarget, float airTarget);
 
 public:
   // getters & setters
