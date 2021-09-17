@@ -73,6 +73,7 @@ public:
   native::greenhouse::Heating &Heating() { return m_heating; }
   int CurrentHour() const;
   unsigned long UptimeSeconds() const;
+  unsigned long EpochTime() const;
   float InsideAirTemperature() const { return m_insideAirTemperature; }
   float InsideAirHumidity() const;
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }
@@ -151,7 +152,6 @@ private:
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
   bool m_timeClientOk;
-  bool m_firstTimeSetDone;
 };
 
 } // namespace greenhouse

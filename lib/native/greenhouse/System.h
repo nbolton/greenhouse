@@ -31,7 +31,6 @@ protected:
   virtual void ReportWeather() {}
   virtual void ReportWaterHeatingInfo() {}
   virtual void SetSwitch(int index, bool on) {}
-  virtual void HandleFirstTimeSet();
 
   virtual bool ReadSensors(int &failures) { return false; }
   virtual void OpenWindow(float delta);
@@ -90,9 +89,12 @@ public:
   virtual void SystemStarted(bool value) { m_systemStarted = value; }
   virtual bool SystemStarted() const { return m_systemStarted; }
   virtual bool IsDaytime() const;
+  virtual void DayNightTransitionTime(unsigned long value) { m_dayNightTransitionTime = value; }
+  virtual unsigned long DayNightTransitionTime() const { return m_dayNightTransitionTime; }
 
 private:
   bool IsRaining() const;
+  void CheckDayNightTransition();
 
 private:
   common::Log m_log;
@@ -115,7 +117,7 @@ private:
   bool m_systemStarted;
   int m_weatherErrors;
   bool m_weatherErrorReportSent;
-  bool m_dayNightTransitionNextTime;
+  unsigned long m_dayNightTransitionTime;
 };
 
 } // namespace greenhouse

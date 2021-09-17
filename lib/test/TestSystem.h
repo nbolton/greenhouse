@@ -27,6 +27,7 @@ public:
     m_mock_CurrentHour(0),
     m_mock_UptimeSeconds(0),
     m_mock_IsDaytime(false),
+    m_mock_EpochTime(0),
 
     // mock enable
     m_mockOn_IsDaytime(false)
@@ -80,6 +81,12 @@ public:
     }
     
     return System::IsDaytime();
+  }
+
+  unsigned long EpochTime() const
+  {
+    Log().Trace("Mock: EpochTime, value=%d", m_mock_EpochTime);
+    return m_mock_EpochTime;
   }
 
   // stubs
@@ -145,7 +152,6 @@ public:
 
   float CalculateMoisture(float value) const { return System::CalculateMoisture(value); }
   bool ApplyWindowProgress(float value) { return System::ApplyWindowProgress(value); }
-  void HandleFirstTimeSet() { return System::HandleFirstTimeSet(); }
 
   // mock enable
 
@@ -160,6 +166,7 @@ public:
   int m_mock_CurrentHour;
   unsigned long m_mock_UptimeSeconds;
   bool m_mock_IsDaytime;
+  unsigned long m_mock_EpochTime;
 
   // call counters (init to 0)
 

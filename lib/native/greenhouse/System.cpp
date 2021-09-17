@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <stdio.h>
+#include <time.h>
 
 namespace native {
 namespace greenhouse {
@@ -33,7 +34,7 @@ System::System() :
   m_systemStarted(false),
   m_weatherErrors(0),
   m_weatherErrorReportSent(false),
-  m_dayNightTransitionNextTime(false)
+  m_dayNightTransitionTime(k_unknownUL)
 {
 }
 
@@ -45,18 +46,7 @@ bool System::Refresh()
 {
   Log().Trace("Refreshing");
 
-  if (IsDaytime()) {
-
-    // detect transition from night to day
-    if (m_dayNightTransitionNextTime) {
-
-      HandleNightDayTransition();
-      m_dayNightTransitionNextTime = false;
-    }
-  }
-  else {
-    m_dayNightTransitionNextTime = true;
-  }
+  CheckDayNightTransition();
 
   int sensorFailures = 0;
   bool sensorsOk = ReadSensors(sensorFailures);
@@ -288,7 +278,6 @@ void System::HandleNightDayTransition()
 {
   Log().Trace("Night/day transition detected, resetting warnings");
   m_weatherErrorReportSent = false;
-
   Heating().HandleDayNightTransition();
 }
 
@@ -297,14 +286,38 @@ bool System::IsDaytime() const
   return (CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour());
 }
 
-void System::HandleFirstTimeSet()
+void System::CheckDayNightTransition()
 {
-  // if the system starts and it's day time, then transition from night to day,
-  // which resets things like the heater runtime counter. a design flaw happens
-  // here: if the system is restarted during the day, the heater runtime counter
-  // will reset.
+  // if time unknown, we can't do anything.
+  if (EpochTime() == k_unknownUL) {
+    return;
+  }
+
+  // only check transition time if there is one.
+  if (DayNightTransitionTime() != k_unknownUL) {
+    unsigned long now = EpochTime();
+    unsigned long last = DayNightTransitionTime();
+
+    struct tm *nowTm = gmtime((time_t *)&now);
+    int nowDay = nowTm->tm_mday;
+    int nowMonth = nowTm->tm_mon;
+    int nowYear = nowTm->tm_year;
+
+    struct tm *lastTm = gmtime((time_t *)&last);
+    int lastDay = lastTm->tm_mday;
+    int lastMonth = lastTm->tm_mon;
+    int lastYear = lastTm->tm_year;
+
+    // if days match, we already transitioned today.
+    if ((nowDay == lastDay) && (nowMonth == lastMonth) && (nowYear == lastYear)) {
+      return;
+    }
+  }
+
+  // wait until the start of the day to transition.
   if (IsDaytime()) {
-    m_dayNightTransitionNextTime = true;
+    HandleNightDayTransition();
+    DayNightTransitionTime(EpochTime());
   }
 }
 

@@ -148,8 +148,7 @@ System::System() :
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
   m_pvMode(PvModes::k_pvAuto),
-  m_timeClientOk(false),
-  m_firstTimeSetDone(false)
+  m_timeClientOk(false)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -398,7 +397,7 @@ bool System::ReadSensors(int &failures)
       failures++;
       dallasOk = false;
     }
-    
+
     if (m_waterTemperature == DEVICE_DISCONNECTED_C) {
       m_waterTemperature = k_unknown;
       failures++;
@@ -673,6 +672,14 @@ int System::CurrentHour() const
     return k_unknown;
   }
   return s_timeClient.getHours();
+}
+
+unsigned long System::EpochTime() const
+{
+  if (!m_timeClientOk) {
+    return k_unknown;
+  }
+  return s_timeClient.getEpochTime();
 }
 
 unsigned long System::UptimeSeconds() const { return millis() / 1000; }
@@ -952,12 +959,6 @@ void System::UpdateTime()
       SystemDelay(retryDelay);
     }
   } while (!m_timeClientOk && retryCount++ < retryLimit);
-
-  if (m_timeClientOk && !m_firstTimeSetDone) {
-    m_firstTimeSetDone = true;
-    Log().Trace(F("Time was first set"));
-    HandleFirstTimeSet();
-  }
 }
 
 // free-functions
@@ -1020,7 +1021,8 @@ BLYNK_CONNECTED()
     V58,
     V61,
     V62,
-    V63);
+    V63,
+    V64);
 }
 
 BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
@@ -1116,9 +1118,11 @@ BLYNK_WRITE(V61) { s_instance->Heating().WaterHeaterLimitMinutes(param.asInt());
 
 BLYNK_WRITE(V62) { s_instance->Heating().WaterHeatingRuntimeMinutes(param.asFloat()); }
 
-BLYNK_WRITE(V63)
+BLYNK_WRITE(V63) { s_instance->Heating().WaterHeatingCostDaily(param.asFloat()); }
+
+BLYNK_WRITE(V64)
 {
-  s_instance->Heating().WaterHeatingCostDaily(param.asFloat());
+  s_instance->DayNightTransitionTime(param.asLongLong());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.

@@ -19,6 +19,7 @@ public:
   virtual void ReportWaterHeatingInfo() = 0;
   virtual int CurrentHour() const = 0;
   virtual unsigned long UptimeSeconds() const = 0;
+  virtual unsigned long EpochTime() const = 0;
   virtual float InsideAirTemperature() const = 0;
   virtual float SoilTemperature() const = 0;
   virtual float WaterTemperature() const = 0;
