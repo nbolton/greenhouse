@@ -69,7 +69,7 @@ public:
 
   unsigned long UptimeSeconds() const
   {
-    Log().Trace("Mock: UptimeSeconds, value=%d", m_mock_UptimeSeconds);
+    Log().Trace("Mock: UptimeSeconds, value=%d", static_cast<int>(m_mock_UptimeSeconds));
     return m_mock_UptimeSeconds;
   }
 
@@ -85,7 +85,7 @@ public:
 
   unsigned long EpochTime() const
   {
-    Log().Trace("Mock: EpochTime, value=%d", m_mock_EpochTime);
+    Log().Trace("Mock: EpochTime, value=%d", static_cast<int>(m_mock_EpochTime));
     return m_mock_EpochTime;
   }
 
@@ -131,7 +131,7 @@ public:
 
   void SystemDelay(unsigned long ms)
   {
-    Log().Trace("Stub: SystemDelay, forward=%d", ms);
+    Log().Trace("Stub: SystemDelay, forward=%d", static_cast<int>(ms));
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }

@@ -872,7 +872,8 @@ bool System::UpdateWeatherForecast()
   }
 
   String response = httpClient.responseBody();
-  Log().Trace(F("Weather host response length: %d"), strlen(response.c_str()));
+  int size = static_cast<int>(strlen(response.c_str()));
+  Log().Trace(F("Weather host response length: %d"), size);
 
   DeserializationError error = deserializeJson(s_weatherJson, response);
   if (error != DeserializationError::Ok) {
