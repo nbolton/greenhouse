@@ -276,7 +276,6 @@ bool System::IsRaining() const { return WeatherCode() < k_dryWeatherCode; }
 
 void System::HandleNightDayTransition()
 {
-  Log().Trace("Night/day transition detected, resetting warnings");
   m_weatherErrorReportSent = false;
   Heating().HandleDayNightTransition();
 }
@@ -290,34 +289,50 @@ void System::CheckDayNightTransition()
 {
   // if time unknown, we can't do anything.
   if (EpochTime() == k_unknownUL) {
+    Log().Trace("Epoch unknown, can't check day night transition");
     return;
   }
 
+  time_t now = EpochTime();
+  time_t last = DayNightTransitionTime();
+
+  // HACK: cast to int to print -1 (%lld doesn't seem to print -1).
+  // this is a bad idea, and will break in 2038.
+  Log().Trace(
+    "Checking day night transition, now=%d, last=%d",
+    static_cast<int>(now),
+    static_cast<int>(last));
+
   // only check transition time if there is one.
-  if (DayNightTransitionTime() != k_unknownUL) {
-    unsigned long now = EpochTime();
-    unsigned long last = DayNightTransitionTime();
+  if (last != k_unknownUL) {
 
-    struct tm *nowTm = gmtime((time_t *)&now);
-    int nowDay = nowTm->tm_mday;
-    int nowMonth = nowTm->tm_mon;
-    int nowYear = nowTm->tm_year;
+    struct tm *ptm;
 
-    struct tm *lastTm = gmtime((time_t *)&last);
-    int lastDay = lastTm->tm_mday;
-    int lastMonth = lastTm->tm_mon;
-    int lastYear = lastTm->tm_year;
+    ptm = gmtime(&now);
+    int nowDay = ptm->tm_mday;
+    int nowMonth = ptm->tm_mon;
+    int nowYear = ptm->tm_year;
+
+    ptm = gmtime(&last);
+    int lastDay = ptm->tm_mday;
+    int lastMonth = ptm->tm_mon;
+    int lastYear = ptm->tm_year;
+
+    Log().Trace("Epoch (now), day=%d, month=%d, year=%d", nowDay, nowMonth, nowYear);
+    Log().Trace("Last transition, day=%d, month=%d, year=%d", lastDay, lastMonth, lastYear);
 
     // if days match, we already transitioned today.
     if ((nowDay == lastDay) && (nowMonth == lastMonth) && (nowYear == lastYear)) {
+      Log().Trace("Day night transition already happened today");
       return;
     }
   }
 
   // wait until the start of the day to transition.
   if (IsDaytime()) {
-    HandleNightDayTransition();
+    Log().Trace("Night/day transition detected");
     DayNightTransitionTime(EpochTime());
+    HandleNightDayTransition();
   }
 }
 

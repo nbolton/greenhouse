@@ -22,14 +22,14 @@
 #include <WiFiUdp.h>
 #include <Wire.h>
 
+using namespace common;
+
 namespace base = native::greenhouse;
 
 static embedded::greenhouse::System *s_instance = nullptr;
 
 namespace embedded {
 namespace greenhouse {
-
-using namespace common;
 
 struct ADC {
   String name;
@@ -770,6 +770,8 @@ void System::HandleNightDayTransition()
   base::System::HandleNightDayTransition();
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
+
+  Blynk.virtualWrite(V64, DayNightTransitionTime());
 }
 
 void System::ReportWarnings()
@@ -1122,7 +1124,12 @@ BLYNK_WRITE(V63) { s_instance->Heating().WaterHeatingCostDaily(param.asFloat());
 
 BLYNK_WRITE(V64)
 {
-  s_instance->DayNightTransitionTime(param.asLongLong());
+  if (!String(param.asString()).isEmpty()) {
+    s_instance->DayNightTransitionTime(param.asLongLong());
+  }
+  else {
+    s_instance->DayNightTransitionTime(k_unknownUL);
+  }
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
