@@ -13,7 +13,7 @@ const float k_soilTempMargin = .2f;
 const float k_airTempMargin = 1;
 const float k_minimumWaterDelta = 5;
 
-const float k_waterHeaterPowerUse = 3.3;                            // kW
+const float k_waterHeaterPowerUse = 3.4;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
 
 Heating::Heating() :
