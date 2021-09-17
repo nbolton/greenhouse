@@ -772,6 +772,7 @@ void System::HandleNightDayTransition()
   m_insideHumidityWarningSent = false;
 
   Blynk.virtualWrite(V64, DayNightTransitionTime());
+  Blynk.virtualWrite(V65, Heating().WaterHeatingCostCumulative());
 }
 
 void System::ReportWarnings()
