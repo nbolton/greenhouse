@@ -16,7 +16,7 @@ public:
   void HandleDayNightTransition();
 
 protected:
-  virtual bool SwitchWaterHeating(bool on);
+  virtual bool SwitchWaterHeater(bool on);
   virtual bool SwitchSoilHeating(bool on);
   virtual bool SwitchAirHeating(bool on);
 
@@ -34,22 +34,20 @@ public:
   virtual float DayAirTemperature() const { return m_dayAirTemperature; }
   virtual void NightAirTemperature(float value) { m_nightAirTemperature = value; }
   virtual float NightAirTemperature() const { return m_nightAirTemperature; }
-  virtual void WaterHeatingIsOn(bool value) { m_waterHeatingIsOn = value; }
-  virtual bool WaterHeatingIsOn() const { return m_waterHeatingIsOn; }
+  virtual void WaterHeaterIsOn(bool value) { m_waterHeaterIsOn = value; }
+  virtual bool WaterHeaterIsOn() const { return m_waterHeaterIsOn; }
   virtual void SoilHeatingIsOn(bool value) { m_soilHeatingIsOn = value; }
   virtual bool SoilHeatingIsOn() const { return m_soilHeatingIsOn; }
   virtual void AirHeatingIsOn(bool value) { m_airHeatingIsOn = value; }
   virtual bool AirHeatingIsOn() const { return m_airHeatingIsOn; }
   virtual void WaterHeaterLimitMinutes(int value) { m_waterHeaterLimitMinutes = value; }
   virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
-  virtual void WaterHeatingRuntimeMinutes(float value) { m_waterHeatingRuntimeMinutes = value; }
-  virtual float WaterHeatingRuntimeMinutes() const { return m_waterHeatingRuntimeMinutes; }
-  virtual void WaterHeatingCostCumulative(float value) { m_waterHeatingCostCumulative = value; }
-  virtual float WaterHeatingCostCumulative() const { return m_waterHeatingCostCumulative; }
+  virtual void WaterHeaterRuntimeMinutes(float value) { m_waterHeaterRuntimeMinutes = value; }
+  virtual float WaterHeaterRuntimeMinutes() const { return m_waterHeaterRuntimeMinutes; }
+  virtual void WaterHeaterCostCumulative(float value) { m_waterHeaterCostCumulative = value; }
+  virtual float WaterHeaterCostCumulative() const { return m_waterHeaterCostCumulative; }
 
 private:
-  void UpdateDayWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
-  void UpdateNightWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
   void UpdatePeriod(float waterTarget, float soilTarget, float airTarget);
 
 public:
@@ -72,13 +70,13 @@ private:
   float m_nightSoilTemperature;
   float m_dayAirTemperature;
   float m_nightAirTemperature;
-  bool m_waterHeatingIsOn;
+  bool m_waterHeaterIsOn;
   bool m_soilHeatingIsOn;
   bool m_airHeatingIsOn;
-  float m_waterHeatingRuntimeMinutes;
+  float m_waterHeaterRuntimeMinutes;
   int m_waterHeaterLimitMinutes;
-  unsigned long m_waterHeatingLastUpdate;
-  float m_waterHeatingCostCumulative;
+  unsigned long m_waterHeaterLastUpdate;
+  float m_waterHeaterCostCumulative;
 };
 
 } // namespace greenhouse

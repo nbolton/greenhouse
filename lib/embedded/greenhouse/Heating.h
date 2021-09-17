@@ -15,7 +15,7 @@ public:
   const embedded::Log &Log() const { return m_log; }
 
 protected:
-  bool SwitchWaterHeating(bool on);
+  bool SwitchWaterHeater(bool on);
   bool SwitchSoilHeating(bool on);
   bool SwitchAirHeating(bool on);
 

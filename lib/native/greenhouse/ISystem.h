@@ -16,7 +16,7 @@ public:
   virtual void ReportCritical(const char *m, ...) = 0;
   
   virtual void HandleNightDayTransition() = 0;
-  virtual void ReportWaterHeatingInfo() = 0;
+  virtual void ReportWaterHeaterInfo() = 0;
   virtual int CurrentHour() const = 0;
   virtual unsigned long UptimeSeconds() const = 0;
   virtual unsigned long EpochTime() const = 0;

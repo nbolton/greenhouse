@@ -298,7 +298,7 @@ bool System::Refresh()
   Blynk.virtualWrite(V30, m_pvVoltageOutput);
   Blynk.virtualWrite(V42, m_pvCurrentSensor);
   Blynk.virtualWrite(V43, m_pvCurrentOutput);
-  Blynk.virtualWrite(V55, Heating().WaterHeatingIsOn());
+  Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
 
@@ -772,7 +772,7 @@ void System::HandleNightDayTransition()
   m_insideHumidityWarningSent = false;
 
   Blynk.virtualWrite(V64, DayNightTransitionTime());
-  Blynk.virtualWrite(V65, Heating().WaterHeatingCostCumulative());
+  Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
 }
 
 void System::ReportWarnings()
@@ -912,10 +912,10 @@ bool System::UpdateWeatherForecast()
 
 void System::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
 
-void System::ReportWaterHeatingInfo()
+void System::ReportWaterHeaterInfo()
 {
-  Blynk.virtualWrite(V62, Heating().WaterHeatingRuntimeMinutes());
-  Blynk.virtualWrite(V63, Heating().WaterHeatingCostCumulative());
+  Blynk.virtualWrite(V62, Heating().WaterHeaterRuntimeMinutes());
+  Blynk.virtualWrite(V63, Heating().WaterHeaterCostCumulative());
 }
 
 void System::ManualRefresh()
@@ -1117,9 +1117,9 @@ BLYNK_WRITE(V58) { s_instance->Heating().NightAirTemperature(param.asFloat()); }
 
 BLYNK_WRITE(V61) { s_instance->Heating().WaterHeaterLimitMinutes(param.asInt()); }
 
-BLYNK_WRITE(V62) { s_instance->Heating().WaterHeatingRuntimeMinutes(param.asFloat()); }
+BLYNK_WRITE(V62) { s_instance->Heating().WaterHeaterRuntimeMinutes(param.asFloat()); }
 
-BLYNK_WRITE(V63) { s_instance->Heating().WaterHeatingCostCumulative(param.asFloat()); }
+BLYNK_WRITE(V63) { s_instance->Heating().WaterHeaterCostCumulative(param.asFloat()); }
 
 BLYNK_WRITE(V64)
 {

@@ -29,7 +29,7 @@ protected:
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
   virtual void ReportWeather() {}
-  virtual void ReportWaterHeatingInfo() {}
+  virtual void ReportWaterHeaterInfo() {}
   virtual void SetSwitch(int index, bool on) {}
 
   virtual bool ReadSensors(int &failures) { return false; }

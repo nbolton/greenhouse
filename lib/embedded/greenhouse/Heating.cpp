@@ -9,9 +9,9 @@ const int k_pumpSwitch2 = 2;
 
 Heating::Heating() {}
 
-bool Heating::SwitchWaterHeating(bool on)
+bool Heating::SwitchWaterHeater(bool on)
 {
-  if (!native::greenhouse::Heating::SwitchWaterHeating(on)) {
+  if (!native::greenhouse::Heating::SwitchWaterHeater(on)) {
     return false;
   }
 
