@@ -44,8 +44,8 @@ public:
   virtual int WaterHeaterLimitMinutes() const { return m_waterHeaterLimitMinutes; }
   virtual void WaterHeatingRuntimeMinutes(float value) { m_waterHeatingRuntimeMinutes = value; }
   virtual float WaterHeatingRuntimeMinutes() const { return m_waterHeatingRuntimeMinutes; }
-  virtual void WaterHeatingCostDaily(float value) { m_waterHeatingCostDaily = value; }
-  virtual float WaterHeatingCostDaily() const { return m_waterHeatingCostDaily; }
+  virtual void WaterHeatingCostCumulative(float value) { m_waterHeatingCostCumulative = value; }
+  virtual float WaterHeatingCostCumulative() const { return m_waterHeatingCostCumulative; }
 
 private:
   void UpdateDayWaterHeating(bool airHeatingRequired, bool soilHeatingRequired);
@@ -78,7 +78,7 @@ private:
   float m_waterHeatingRuntimeMinutes;
   int m_waterHeaterLimitMinutes;
   unsigned long m_waterHeatingLastUpdate;
-  float m_waterHeatingCostDaily;
+  float m_waterHeatingCostCumulative;
 };
 
 } // namespace greenhouse

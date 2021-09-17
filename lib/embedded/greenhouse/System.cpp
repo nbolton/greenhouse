@@ -914,7 +914,7 @@ void System::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
 void System::ReportWaterHeatingInfo()
 {
   Blynk.virtualWrite(V62, Heating().WaterHeatingRuntimeMinutes());
-  Blynk.virtualWrite(V63, Heating().WaterHeatingCostDaily());
+  Blynk.virtualWrite(V63, Heating().WaterHeatingCostCumulative());
 }
 
 void System::ManualRefresh()
@@ -1118,7 +1118,7 @@ BLYNK_WRITE(V61) { s_instance->Heating().WaterHeaterLimitMinutes(param.asInt());
 
 BLYNK_WRITE(V62) { s_instance->Heating().WaterHeatingRuntimeMinutes(param.asFloat()); }
 
-BLYNK_WRITE(V63) { s_instance->Heating().WaterHeatingCostDaily(param.asFloat()); }
+BLYNK_WRITE(V63) { s_instance->Heating().WaterHeatingCostCumulative(param.asFloat()); }
 
 BLYNK_WRITE(V64)
 {

@@ -30,7 +30,7 @@ Heating::Heating() :
   m_waterHeatingRuntimeMinutes(0),
   m_waterHeaterLimitMinutes(k_unknown),
   m_waterHeatingLastUpdate(k_unknownUL),
-  m_waterHeatingCostDaily(0)
+  m_waterHeatingCostCumulative(0)
 {
 }
 
@@ -175,14 +175,14 @@ void Heating::Update()
 
     int addSeconds = (System().UptimeSeconds() - m_waterHeatingLastUpdate);
     m_waterHeatingRuntimeMinutes += (float)addSeconds / 60;
-    m_waterHeatingCostDaily += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
+    m_waterHeatingCostCumulative += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
 
     System().ReportWaterHeatingInfo();
     Log().Trace(
       "Advanced water heating runtime, add=%ds, total=%.2fm, cost=£%.2f",
       addSeconds,
       m_waterHeatingRuntimeMinutes,
-      m_waterHeatingCostDaily);
+      m_waterHeatingCostCumulative);
 
     if (m_waterHeatingRuntimeMinutes >= m_waterHeaterLimitMinutes) {
       System().ReportInfo(
@@ -208,7 +208,7 @@ void Heating::HandleDayNightTransition()
 {
   // reset daily runtime and cost back to 0
   WaterHeatingRuntimeMinutes(0);
-  WaterHeatingCostDaily(0);
+  WaterHeatingCostCumulative(0);
   System().ReportWaterHeatingInfo();
   m_waterHeatingLastUpdate = k_unknownUL;
   Log().Trace("Water heater runtime was reset");
