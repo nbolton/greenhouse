@@ -827,10 +827,7 @@ void System::UpdateTime()
 
 void System::OnPowerSwitch() { Blynk.virtualWrite(V28, Power().PvPowerSource()); }
 
-void System::ExpanderWrite(int pin, int value)
-{
-  s_io1.digitalWrite(pin, value);
-}
+void System::ExpanderWrite(int pin, int value) { s_io1.digitalWrite(pin, value); }
 
 void System::ShiftRegister(int pin, bool set)
 {
@@ -842,20 +839,11 @@ void System::ShiftRegister(int pin, bool set)
   }
 }
 
-bool System::PowerSensorReady()
-{
-  return s_adc2.ready;
-}
+bool System::PowerSensorReady() { return s_adc2.ready; }
 
-float System::ReadPowerSensorVoltage()
-{
-  return ReadAdc(s_adc2, k_pvVoltagePin);
-}
+float System::ReadPowerSensorVoltage() { return ReadAdc(s_adc2, k_pvVoltagePin); }
 
-float System::ReadPowerSensorCurrent()
-{
-  return ReadAdc(s_adc2, k_pvCurrentPin);
-}
+float System::ReadPowerSensorCurrent() { return ReadAdc(s_adc2, k_pvCurrentPin); }
 
 } // namespace greenhouse
 } // namespace embedded
