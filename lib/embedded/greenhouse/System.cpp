@@ -767,12 +767,15 @@ void System::ReportSystemInfo()
 
 void System::HandleNightDayTransition()
 {
+  // report cumulative time to daily virtual pin before calling 
+  // base function (which resets cumulative to 0)
+  Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
+
   base::System::HandleNightDayTransition();
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
 
   Blynk.virtualWrite(V64, DayNightTransitionTime());
-  Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
 }
 
 void System::ReportWarnings()
