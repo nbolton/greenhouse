@@ -21,7 +21,6 @@ System::System() :
   m_openFinish(k_unknown),
   m_windowProgress(k_unknown),
   m_testMode(false),
-  m_insideHumidityWarning(k_unknown),
   m_soilMostureWarning(k_unknown),
   m_dayStartHour(k_unknown),
   m_dayEndHour(k_unknown),
