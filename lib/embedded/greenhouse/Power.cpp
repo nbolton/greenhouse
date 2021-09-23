@@ -9,7 +9,7 @@ using namespace common;
 namespace embedded {
 namespace greenhouse {
 
-const int s_threadInterval = 10;     // 10 ms, high frequency in case of voltage drop
+const int s_threadInterval = 10000;  // 10s
 const int k_pvOnboardVoltageMin = 7; // V, in case of sudden voltage drop
 const int k_pvOnboardVoltageMapIn = 745;
 const float k_pvOnboardVoltageMapOut = 13.02;
