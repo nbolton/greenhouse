@@ -42,7 +42,7 @@ protected:
   virtual void RunWindowActuator(bool forward) {}
   virtual void StopActuator() {}
   virtual void SetWindowActuatorSpeed(int speed) {}
-  virtual void SystemDelay(unsigned long ms) {}
+  virtual void Delay(unsigned long ms) {}
   virtual bool UpdateWeatherForecast() { return false; }
   virtual void HandleNightDayTransition();
 

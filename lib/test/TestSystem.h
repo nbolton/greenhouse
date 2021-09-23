@@ -129,9 +129,9 @@ public:
     m_calls_SetWindowActuatorSpeed++;
   }
 
-  void SystemDelay(unsigned long ms)
+  void Delay(unsigned long ms)
   {
-    Log().Trace("Stub: SystemDelay, forward=%d", static_cast<int>(ms));
+    Log().Trace("Stub: Delay, forward=%d", static_cast<int>(ms));
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }

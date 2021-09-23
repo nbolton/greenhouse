@@ -3,6 +3,7 @@
 #include <cstdarg>
 
 #include "Heating.h"
+#include "ISystem.h"
 #include "common.h"
 #include "ho_config.h"
 
@@ -18,7 +19,6 @@
 #include <OneWire.h>
 #include <PCF8574.h>
 #include <SPI.h>
-#include <Thread.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
 
@@ -45,7 +45,7 @@ const int k_shiftRegisterClockPin = D7; // SRCLK (11)
 const int k_actuatorPinA = D8;
 
 // msr pins
-const int k_relayPin = 0;
+const int k_pvRelayPin = 0;
 const int k_startBeepPin = 1;
 const int k_caseFanPin = 2;
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
@@ -59,15 +59,11 @@ const int k_actuatorPin2 = P7;
 const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
 
 // adc2 pins
-const ADS1115_MUX k_voltagePin = ADS1115_COMP_0_GND;
-const ADS1115_MUX k_currentPin = ADS1115_COMP_1_GND;
+const ADS1115_MUX k_pvVoltagePin = ADS1115_COMP_0_GND;
+const ADS1115_MUX k_pvCurrentPin = ADS1115_COMP_1_GND;
 
 const bool k_enableLed = false;
 const int k_shiftRegisterTotal = 2;
-const int k_voltAverageCountMax = 100;
-const int k_pvOnboardVoltageMin = 7; // V, in case of sudden voltage drop
-const int k_pvOnboardVoltageMapIn = 745;
-const float k_pvOnboardVoltageMapOut = 13.02;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
@@ -80,13 +76,11 @@ const float k_weatherLon = -4.408;
 const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char *k_weatherHost = "api.openweathermap.org";
 const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
-const int s_relayThreadInterval = 10; // 10 ms, high frequency in case of voltage drop
 const uint8_t k_ioAddress = 0x20;
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
   k_shiftRegisterTotal, k_shiftRegisterLatchPin, k_shiftRegisterClockPin, k_shiftRegisterDataPin);
-static Thread s_relayThread = Thread();
 static OneWire s_oneWire(k_oneWirePin);
 static DallasTemperature s_dallas(&s_oneWire);
 static WiFiUDP s_ntpUdp;
@@ -102,8 +96,6 @@ static DynamicJsonDocument s_weatherJson(2048);
 
 // free-function declarations
 
-float readPvOnboardVoltage();
-void relayCallback() { s_instance->RelayCallback(); }
 void refreshTimer() { s_instance->Refresh(); }
 
 // member functions
@@ -115,6 +107,7 @@ void System::Instance(System &ga) { s_instance = &ga; }
 System::System() :
   m_log(),
   m_heating(),
+  m_power(k_psuRelayPin, k_pvRelayPin),
   m_insideAirTemperature(k_unknown),
   m_insideAirHumidity(k_unknown),
   m_outsideAirTemperature(k_unknown),
@@ -132,22 +125,6 @@ System::System() :
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
   m_activeSwitch(k_unknown),
-  m_pvPowerSource(false),
-  m_pvVoltageSwitchOn(k_unknown),
-  m_pvVoltageSwitchOff(k_unknown),
-  m_pvVoltageSensor(k_unknown),
-  m_pvVoltageOutput(k_unknown),
-  m_pvVoltageSensorMin(0),
-  m_pvVoltageSensorMax(k_unknown),
-  m_pvVoltageOutputMin(0),
-  m_pvVoltageOutputMax(k_unknown),
-  m_pvCurrentSensor(k_unknown),
-  m_pvCurrentOutput(k_unknown),
-  m_pvCurrentSensorMin(0),
-  m_pvCurrentSensorMax(k_unknown),
-  m_pvCurrentOutputMin(0),
-  m_pvCurrentOutputMax(k_unknown),
-  m_pvMode(PvModes::k_pvAuto),
   m_timeClientOk(false)
 {
   for (int i = 0; i < k_switchCount; i++) {
@@ -183,8 +160,9 @@ void System::Setup()
   s_io1.pinMode(k_psuRelayPin, OUTPUT);
   s_io1.digitalWrite(k_psuRelayPin, LOW);
 
-  s_relayThread.onRun(relayCallback);
-  s_relayThread.setInterval(s_relayThreadInterval);
+  m_power.Embedded(*this);
+  m_power.Native(*this);
+  m_power.Setup();
 
   s_dallas.begin();
   s_timeClient.begin();
@@ -213,9 +191,7 @@ void System::Loop()
 
   s_timer.run();
 
-  if (s_relayThread.shouldRun()) {
-    s_relayThread.run();
-  }
+  m_power.Loop();
 }
 
 void System::InitShiftRegisters()
@@ -290,14 +266,14 @@ bool System::Refresh()
   Log().Trace(F("Refresh shift"));
   s_shiftRegisters.shift();
 
-  MeasureCurrent();
+  m_power.MeasureCurrent();
   Log().Trace("Onboard PV voltage: %.2fV (%d/1023)", readPvOnboardVoltage(), analogRead(A0));
 
-  Blynk.virtualWrite(V28, m_pvPowerSource);
-  Blynk.virtualWrite(V29, m_pvVoltageSensor);
-  Blynk.virtualWrite(V30, m_pvVoltageOutput);
-  Blynk.virtualWrite(V42, m_pvCurrentSensor);
-  Blynk.virtualWrite(V43, m_pvCurrentOutput);
+  Blynk.virtualWrite(V28, Power().PvPowerSource());
+  Blynk.virtualWrite(V29, Power().PvVoltageSensor());
+  Blynk.virtualWrite(V30, Power().PvVoltageOutput());
+  Blynk.virtualWrite(V42, Power().PvCurrentSensor());
+  Blynk.virtualWrite(V43, Power().PvCurrentOutput());
   Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
@@ -409,7 +385,7 @@ bool System::ReadSensors(int &failures)
     }
 
     Log().Trace(F("Dallas sensor read failed, retrying (attempt %d)"), dallasRetry);
-    SystemDelay(dallasRetryWait);
+    Delay(dallasRetryWait);
   }
 
   float moistureAnalog = ReadAdc(s_adc1, k_moisturePin);
@@ -447,7 +423,7 @@ void System::StopActuator()
   s_io1.digitalWrite(k_actuatorPin2, LOW);
 }
 
-void System::SystemDelay(unsigned long ms) { delay(ms); }
+void System::Delay(unsigned long ms) { delay(ms); }
 
 void System::Restart()
 {
@@ -545,40 +521,6 @@ void System::ToggleActiveSwitch()
   }
 }
 
-void System::RelayCallback()
-{
-  MeasureVoltage();
-  float onboardVoltage = readPvOnboardVoltage();
-
-  if (onboardVoltage <= k_pvOnboardVoltageMin) {
-    if (m_pvPowerSource) {
-      ReportWarning("PV voltage drop detected: %.2fV", onboardVoltage);
-      SwitchPower(false);
-    }
-  }
-  else if (PvMode() != PvModes::k_pvAuto) {
-    if (!m_pvPowerSource && (PvMode() == PvModes::k_pvOn)) {
-      SwitchPower(true);
-    }
-    else if (m_pvPowerSource && (PvMode() == PvModes::k_pvOff)) {
-      SwitchPower(false);
-    }
-  }
-  else if (m_pvVoltageOutput != k_unknown) {
-
-    if (
-      !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
-      (m_pvVoltageOutput >= m_pvVoltageSwitchOn)) {
-      SwitchPower(true);
-    }
-    else if (
-      m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
-      (m_pvVoltageOutput <= m_pvVoltageSwitchOff)) {
-      SwitchPower(false);
-    }
-  }
-}
-
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
@@ -604,66 +546,6 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
   }
 
   return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
-}
-
-void System::MeasureVoltage()
-{
-  if (!s_adc2.ready || m_pvVoltageSensorMax == k_unknown || m_pvVoltageOutputMax == k_unknown) {
-    return;
-  }
-
-  m_pvVoltageSensor = ReadAdc(s_adc2, k_voltagePin);
-  m_pvVoltageOutput = mapFloat(
-    m_pvVoltageSensor,
-    m_pvVoltageSensorMin,
-    m_pvVoltageSensorMax,
-    m_pvVoltageOutputMin,
-    m_pvVoltageOutputMax);
-}
-
-void System::MeasureCurrent()
-{
-  if (!s_adc2.ready || m_pvCurrentSensorMax == k_unknown || m_pvCurrentOutputMax == k_unknown) {
-    return;
-  }
-
-  m_pvCurrentSensor = ReadAdc(s_adc2, k_currentPin);
-  m_pvCurrentOutput = mapFloat(
-    m_pvCurrentSensor,
-    m_pvCurrentSensorMin,
-    m_pvCurrentSensorMax,
-    m_pvCurrentOutputMin,
-    m_pvCurrentOutputMax);
-}
-
-void System::SwitchPower(bool pv)
-{
-  if (!pv) {
-    // close the PSU relay and give the PSU time to power up
-    s_io1.digitalWrite(k_psuRelayPin, LOW);
-    Log().Trace(F("PSU AC relay closed"));
-    SystemDelay(1000);
-  }
-
-  if (pv) {
-    s_shiftRegisters.clear(k_relayPin);
-  }
-  else {
-    s_shiftRegisters.set(k_relayPin);
-  }
-
-  Log().Trace(F("Switch power shift"));
-  s_shiftRegisters.shift();
-
-  if (pv) {
-    // open the PSU relay to turn off mains power when on PV
-    s_io1.digitalWrite(k_psuRelayPin, HIGH);
-    Log().Trace(F("PSU AC relay open"));
-  }
-
-  m_pvPowerSource = pv;
-  Log().Trace(F("Source: %s"), pv ? "PV" : "PSU");
-  Blynk.virtualWrite(V28, m_pvPowerSource);
 }
 
 int System::CurrentHour() const
@@ -767,7 +649,7 @@ void System::ReportSystemInfo()
 
 void System::HandleNightDayTransition()
 {
-  // report cumulative time to daily virtual pin before calling 
+  // report cumulative time to daily virtual pin before calling
   // base function (which resets cumulative to 0)
   Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
 
@@ -807,7 +689,7 @@ void System::OnLastWrite()
 
 void System::OnSystemStarted()
 {
-  InitPowerSource();
+  Power().InitPowerSource();
 
   // loop() will not have run yet, so make sure the time is updated
   // before running the refresh function.
@@ -928,31 +810,6 @@ void System::ManualRefresh()
   Refresh();
 }
 
-void System::InitPowerSource()
-{
-  const float sensorMin = m_pvVoltageSwitchOff;
-
-  MeasureVoltage();
-  float onboardVoltage = readPvOnboardVoltage();
-  Log().Trace(
-    F("Init power source, onboard=%.2fV, sensor=%.2fV, min=%.2fV"),
-    onboardVoltage,
-    m_pvVoltageOutput,
-    sensorMin);
-
-  if (
-    (m_pvVoltageSwitchOn != k_unknown) && (m_pvVoltageOutput >= sensorMin) &&
-    (onboardVoltage > k_pvOnboardVoltageMin)) {
-
-    Log().Trace(F("Using PV on start"));
-    SwitchPower(true);
-  }
-  else {
-    Log().Trace(F("Using PSU on start"));
-    SwitchPower(false);
-  }
-}
-
 void System::UpdateTime()
 {
   const int retryDelay = 1000;
@@ -963,20 +820,41 @@ void System::UpdateTime()
     m_timeClientOk = s_timeClient.update();
     if (!m_timeClientOk) {
       Log().Trace(F("Time update failed (attempt %d)"), retryCount);
-      SystemDelay(retryDelay);
+      Delay(retryDelay);
     }
   } while (!m_timeClientOk && retryCount++ < retryLimit);
 }
 
-// free-functions
+void System::OnPowerSwitch() { Blynk.virtualWrite(V28, Power().PvPowerSource()); }
 
-float readPvOnboardVoltage()
+void System::ExpanderWrite(int pin, int value)
 {
-  // reads the onboard PV voltage (as opposed to measuring at the battery).
-  // this is after any potential breaks in the circuit (eg if the battery
-  // is disconnected or if the battery case switch is off).
-  int analogValue = analogRead(A0);
-  return mapFloat(analogValue, 0, k_pvOnboardVoltageMapIn, 0, k_pvOnboardVoltageMapOut);
+  s_io1.digitalWrite(pin, value);
+}
+
+void System::ShiftRegister(int pin, bool set)
+{
+  if (set) {
+    s_shiftRegisters.set_shift(pin);
+  }
+  else {
+    s_shiftRegisters.clear_shift(pin);
+  }
+}
+
+bool System::PowerSensorReady()
+{
+  return s_adc2.ready;
+}
+
+float System::ReadPowerSensorVoltage()
+{
+  return ReadAdc(s_adc2, k_pvVoltagePin);
+}
+
+float System::ReadPowerSensorCurrent()
+{
+  return ReadAdc(s_adc2, k_pvCurrentPin);
 }
 
 } // namespace greenhouse
@@ -1077,27 +955,27 @@ BLYNK_WRITE(V31) { s_instance->DayStartHour(param.asInt()); }
 
 BLYNK_WRITE(V32) { s_instance->DayEndHour(param.asInt()); }
 
-BLYNK_WRITE(V34) { s_instance->PvVoltageSensorMin(param.asFloat()); }
+BLYNK_WRITE(V34) { s_instance->Power().PvVoltageSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V35) { s_instance->PvVoltageSensorMax(param.asFloat()); }
+BLYNK_WRITE(V35) { s_instance->Power().PvVoltageSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V36) { s_instance->PvVoltageOutputMin(param.asFloat()); }
+BLYNK_WRITE(V36) { s_instance->Power().PvVoltageOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V37) { s_instance->PvVoltageOutputMax(param.asFloat()); }
+BLYNK_WRITE(V37) { s_instance->Power().PvVoltageOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V38) { s_instance->PvCurrentSensorMin(param.asFloat()); }
+BLYNK_WRITE(V38) { s_instance->Power().PvCurrentSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V39) { s_instance->PvCurrentSensorMax(param.asFloat()); }
+BLYNK_WRITE(V39) { s_instance->Power().PvCurrentSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V40) { s_instance->PvCurrentOutputMin(param.asFloat()); }
+BLYNK_WRITE(V40) { s_instance->Power().PvCurrentOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V41) { s_instance->PvCurrentOutputMax(param.asFloat()); }
+BLYNK_WRITE(V41) { s_instance->Power().PvCurrentOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V44) { s_instance->PvVoltageSwitchOn(param.asFloat()); }
+BLYNK_WRITE(V44) { s_instance->Power().PvVoltageSwitchOn(param.asFloat()); }
 
-BLYNK_WRITE(V45) { s_instance->PvVoltageSwitchOff(param.asFloat()); }
+BLYNK_WRITE(V45) { s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) { s_instance->PvMode((embedded::greenhouse::PvModes)param.asInt()); }
+BLYNK_WRITE(V47) { s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
 BLYNK_WRITE(V48) { s_instance->WindowActuatorSpeedPercent(param.asInt()); }
 

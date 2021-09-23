@@ -239,7 +239,7 @@ void System::AdjustWindow(bool open, float delta)
 
   int runtime = (m_windowActuatorRuntimeSec * 1000) * delta;
   Log().Trace("Actuator runtime: %dms", runtime);
-  SystemDelay(runtime);
+  Delay(runtime);
 
   StopActuator();
 }
