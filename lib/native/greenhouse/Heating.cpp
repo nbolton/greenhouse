@@ -27,24 +27,34 @@ Heating::Heating() :
   m_waterHeaterIsOn(false),
   m_soilHeatingIsOn(false),
   m_airHeatingIsOn(false),
-  m_waterHeaterRuntimeMinutes(0),
-  m_waterHeaterLimitMinutes(k_unknown),
   m_waterHeaterLastUpdate(k_unknownUL),
-  m_waterHeaterCostCumulative(0)
+  m_waterHeaterCostCumulative(0),
+  m_waterHeaterDayRuntimeMinutes(0),
+  m_waterHeaterDayLimitMinutes(k_unknown),
+  m_waterHeaterNightRuntimeMinutes(0),
+  m_waterHeaterNightLimitMinutes(k_unknown)
 {
 }
 
 bool Heating::SwitchWaterHeater(bool on)
 {
-  if (
-    on && (WaterHeaterRuntimeMinutes() > 0) &&
-    (WaterHeaterRuntimeMinutes() >= WaterHeaterLimitMinutes())) {
+  if (on) {
+    float runtime;
+    int limit;
 
-    Log().Trace(
-      "Blocking water heating switch on, runtime=%.2fm, limit=%dm",
-      WaterHeaterRuntimeMinutes(),
-      WaterHeaterLimitMinutes());
-    return false;
+    if (System().IsDaytime()) {
+      runtime = WaterHeaterDayRuntimeMinutes();
+      limit = WaterHeaterDayLimitMinutes();
+    }
+    else {
+      runtime = WaterHeaterNightRuntimeMinutes();
+      limit = WaterHeaterNightLimitMinutes();
+    }
+
+    if ((runtime > 0) && (runtime >= limit)) {
+      Log().Trace("Blocking water heating switch on, runtime=%.2fm, limit=%dm", runtime, limit);
+      return false;
+    }
   }
 
   if (WaterHeaterIsOn() != on) {
@@ -169,32 +179,58 @@ void Heating::Update()
     return;
   }
 
-  Log().Trace("Update heating systems, hour=%d", System().CurrentHour());
+  bool daytime = System().IsDaytime();
+  Log().Trace(
+    "Update heating systems, hour=%d, period=%s",
+    System().CurrentHour(),
+    daytime ? "day" : "night");
 
   if (WaterHeaterIsOn() && (m_waterHeaterLastUpdate != k_unknownUL)) {
 
+    float runtime;
+    int limit;
+
+    if (daytime) {
+      runtime = WaterHeaterDayRuntimeMinutes();
+      limit = WaterHeaterDayLimitMinutes();
+    }
+    else {
+      runtime = WaterHeaterNightRuntimeMinutes();
+      limit = WaterHeaterNightLimitMinutes();
+    }
+
     int addSeconds = (System().UptimeSeconds() - m_waterHeaterLastUpdate);
-    m_waterHeaterRuntimeMinutes += (float)addSeconds / 60;
+    runtime += (float)addSeconds / 60;
     m_waterHeaterCostCumulative += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
 
     System().ReportWaterHeaterInfo();
     Log().Trace(
-      "Advanced water heating runtime, add=%ds, total=%.2fm, cost=£%.2f",
+      "Advanced water heating runtime, add=%ds, day=%.2fm, night=%.2fm, cost=£%.2f",
       addSeconds,
-      m_waterHeaterRuntimeMinutes,
-      m_waterHeaterCostCumulative);
+      WaterHeaterDayRuntimeMinutes(),
+      WaterHeaterNightRuntimeMinutes(),
+      WaterHeaterCostCumulative());
 
-    if (m_waterHeaterRuntimeMinutes >= m_waterHeaterLimitMinutes) {
-      System().ReportInfo(
-        "Water heater runtime limit reached (%dm), switching off", m_waterHeaterLimitMinutes);
+    if (runtime >= limit) {
+      Log().Trace(
+        "Water heater %s runtime limit reached (%dm), switching off",
+        daytime ? "day" : "night",
+        limit);
       SwitchWaterHeater(false);
+    }
+
+    if (daytime) {
+      WaterHeaterDayRuntimeMinutes(runtime);
+    }
+    else {
+      WaterHeaterNightRuntimeMinutes(runtime);
     }
   }
 
   m_waterHeaterLastUpdate = System().UptimeSeconds();
 
   // heat water to different temperature depending on if day or night
-  if (System().IsDaytime()) {
+  if (daytime) {
     Log().Trace("Daytime heating mode");
     UpdatePeriod(DayWaterTemperature(), DaySoilTemperature(), DayAirTemperature());
   }
@@ -204,14 +240,21 @@ void Heating::Update()
   }
 }
 
-void Heating::HandleDayNightTransition()
+void Heating::HandleNightToDayTransition()
 {
-  // reset daily runtime and cost back to 0
-  WaterHeaterRuntimeMinutes(0);
+  WaterHeaterDayRuntimeMinutes(0);
   WaterHeaterCostCumulative(0);
   System().ReportWaterHeaterInfo();
   m_waterHeaterLastUpdate = k_unknownUL;
-  Log().Trace("Water heater runtime was reset");
+  Log().Trace("Water heater day runtime was reset");
+}
+
+void Heating::HandleDayToNightTransition()
+{
+  WaterHeaterNightRuntimeMinutes(0);
+  System().ReportWaterHeaterInfo();
+  m_waterHeaterLastUpdate = k_unknownUL;
+  Log().Trace("Water heater night runtime was reset");
 }
 
 } // namespace greenhouse

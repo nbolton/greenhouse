@@ -647,17 +647,25 @@ void System::ReportSystemInfo()
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
-void System::HandleNightDayTransition()
+void System::HandleNightToDayTransition()
 {
   // report cumulative time to daily virtual pin before calling
   // base function (which resets cumulative to 0)
   Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
 
-  base::System::HandleNightDayTransition();
+  base::System::HandleNightToDayTransition();
+  
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
 
-  Blynk.virtualWrite(V64, DayNightTransitionTime());
+  Blynk.virtualWrite(V64, NightToDayTransitionTime());
+}
+
+void System::HandleDayToNightTransition()
+{
+  base::System::HandleDayToNightTransition();
+
+  Blynk.virtualWrite(V68, DayToNightTransitionTime());
 }
 
 void System::ReportWarnings()
@@ -800,7 +808,8 @@ void System::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
 
 void System::ReportWaterHeaterInfo()
 {
-  Blynk.virtualWrite(V62, Heating().WaterHeaterRuntimeMinutes());
+  Blynk.virtualWrite(V62, Heating().WaterHeaterDayRuntimeMinutes());
+  Blynk.virtualWrite(V67, Heating().WaterHeaterNightRuntimeMinutes());
   Blynk.virtualWrite(V63, Heating().WaterHeaterCostCumulative());
 }
 
@@ -894,7 +903,10 @@ BLYNK_CONNECTED()
     V61,
     V62,
     V63,
-    V64);
+    V64,
+    V66,
+    V67,
+    V68);
 }
 
 BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
@@ -982,19 +994,33 @@ BLYNK_WRITE(V57) { s_instance->Heating().DayAirTemperature(param.asFloat()); }
 
 BLYNK_WRITE(V58) { s_instance->Heating().NightAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V61) { s_instance->Heating().WaterHeaterLimitMinutes(param.asInt()); }
+BLYNK_WRITE(V61) { s_instance->Heating().WaterHeaterDayLimitMinutes(param.asInt()); }
 
-BLYNK_WRITE(V62) { s_instance->Heating().WaterHeaterRuntimeMinutes(param.asFloat()); }
+BLYNK_WRITE(V62) { s_instance->Heating().WaterHeaterDayRuntimeMinutes(param.asFloat()); }
 
 BLYNK_WRITE(V63) { s_instance->Heating().WaterHeaterCostCumulative(param.asFloat()); }
 
 BLYNK_WRITE(V64)
 {
   if (!String(param.asString()).isEmpty()) {
-    s_instance->DayNightTransitionTime(param.asLongLong());
+    s_instance->NightToDayTransitionTime(param.asLongLong());
   }
   else {
-    s_instance->DayNightTransitionTime(k_unknownUL);
+    s_instance->NightToDayTransitionTime(k_unknownUL);
+  }
+}
+
+BLYNK_WRITE(V66) { s_instance->Heating().WaterHeaterNightLimitMinutes(param.asInt()); }
+
+BLYNK_WRITE(V67) { s_instance->Heating().WaterHeaterNightRuntimeMinutes(param.asFloat()); }
+
+BLYNK_WRITE(V68)
+{
+  if (!String(param.asString()).isEmpty()) {
+    s_instance->DayToNightTransitionTime(param.asLongLong());
+  }
+  else {
+    s_instance->DayToNightTransitionTime(k_unknownUL);
   }
 
   // TODO: find a better way to always call this last; sometimes

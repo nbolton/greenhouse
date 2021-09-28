@@ -304,7 +304,7 @@ void Test_Update_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeater(void)
   TEST_ASSERT_EQUAL(false, heating.WaterHeaterIsOn());
 }
 
-void Test_Update_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeater(void)
+void Test_Update_WaterHeaterDayRuntimeLimitReached_SwitchOffWaterHeater(void)
 {
   TestSystem system;
   TestHeating heating;
@@ -320,7 +320,43 @@ void Test_Update_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeater(void)
   heating.DayWaterTemperature(8);
   heating.DaySoilTemperature(2);
   heating.DayAirTemperature(2);
-  heating.WaterHeaterLimitMinutes(1);
+  heating.WaterHeaterDayLimitMinutes(1);
+
+  heating.Update();
+
+  TEST_ASSERT_EQUAL(true, heating.WaterHeaterIsOn());
+
+  system.m_mock_UptimeSeconds = 60;
+
+  heating.Update();
+
+  TEST_ASSERT_EQUAL(false, heating.WaterHeaterIsOn());
+
+  system.m_mock_UptimeSeconds = 120;
+
+  heating.Update();
+
+  // ensure water heating switch on is blocked
+  TEST_ASSERT_EQUAL(false, heating.WaterHeaterIsOn());
+}
+
+void Test_Update_WaterHeaterNightRuntimeLimitReached_SwitchOffWaterHeater(void)
+{
+  TestSystem system;
+  TestHeating heating;
+  heating.System(system);
+
+  system.m_mockOn_IsDaytime = true;
+  system.m_mock_IsDaytime = false;
+  system.m_mock_SoilTemperature = 0;
+  system.m_mock_WaterTemperature = 0;
+  system.m_mock_InsideAirTemperature = 0;
+  system.m_mock_UptimeSeconds = 0;
+
+  heating.NightWaterTemperature(8);
+  heating.NightSoilTemperature(2);
+  heating.NightAirTemperature(2);
+  heating.WaterHeaterNightLimitMinutes(1);
 
   heating.Update();
 
@@ -410,8 +446,8 @@ void Test_Update_DaytimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAi
   heating.WaterHeaterIsOn(false);
   heating.SoilHeatingIsOn(false);
   heating.AirHeatingIsOn(true);
-  heating.WaterHeaterLimitMinutes(1);
-  heating.WaterHeaterRuntimeMinutes(1);
+  heating.WaterHeaterDayLimitMinutes(1);
+  heating.WaterHeaterDayRuntimeMinutes(1);
 
   heating.Update();
 
@@ -420,16 +456,56 @@ void Test_Update_DaytimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAi
   TEST_ASSERT_EQUAL(false, heating.AirHeatingIsOn());
 }
 
-void Test_HandleDayNightTransition_Called_WaterHeaterRuntimeLimitIsReset(void)
+void Test_Update_NighttimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAirHeating()
 {
   TestSystem system;
   TestHeating heating;
   heating.System(system);
 
-  heating.WaterHeaterLimitMinutes(1);
-  heating.HandleDayNightTransition();
+  system.m_mockOn_IsDaytime = true;
+  system.m_mock_IsDaytime = false;
+  system.m_mock_WaterTemperature = 21.94;     // remember margin
+  system.m_mock_SoilTemperature = 21.69;      // remember margin
+  system.m_mock_InsideAirTemperature = 20.04; // remember margin
 
-  TEST_ASSERT_EQUAL_INT(0, heating.WaterHeaterRuntimeMinutes());
+  heating.NightWaterTemperature(40);
+  heating.NightSoilTemperature(24);
+  heating.NightAirTemperature(21);
+  heating.WaterHeaterIsOn(false);
+  heating.SoilHeatingIsOn(false);
+  heating.AirHeatingIsOn(true);
+  heating.WaterHeaterNightLimitMinutes(1);
+  heating.WaterHeaterNightRuntimeMinutes(1);
+
+  heating.Update();
+
+  TEST_ASSERT_EQUAL(false, heating.WaterHeaterIsOn());
+  TEST_ASSERT_EQUAL(false, heating.SoilHeatingIsOn());
+  TEST_ASSERT_EQUAL(false, heating.AirHeatingIsOn());
+}
+
+void Test_HandleDayToNightTransition_Called_WaterHeaterRuntimeLimitIsReset(void)
+{
+  TestSystem system;
+  TestHeating heating;
+  heating.System(system);
+
+  heating.WaterHeaterDayLimitMinutes(1);
+  heating.HandleDayToNightTransition();
+
+  TEST_ASSERT_EQUAL_INT(0, heating.WaterHeaterDayRuntimeMinutes());
+}
+
+void Test_HandleNightToDayTransition_Called_WaterHeaterRuntimeLimitIsReset(void)
+{
+  TestSystem system;
+  TestHeating heating;
+  heating.System(system);
+
+  heating.WaterHeaterNightLimitMinutes(1);
+  heating.HandleNightToDayTransition();
+
+  TEST_ASSERT_EQUAL_INT(0, heating.WaterHeaterNightRuntimeMinutes());
 }
 
 void testHeating()
@@ -448,9 +524,12 @@ void testHeating()
   RUN_TEST(Test_Update_NighttimeAboveNightTemp_SwitchOffAirHeating);
   RUN_TEST(Test_Update_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_SwitchOffWaterHeater);
   RUN_TEST(Test_Update_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeater);
-  RUN_TEST(Test_Update_WaterHeaterRuntimeLimitReached_SwitchOffWaterHeater);
+  RUN_TEST(Test_Update_WaterHeaterDayRuntimeLimitReached_SwitchOffWaterHeater);
+  RUN_TEST(Test_Update_WaterHeaterNightRuntimeLimitReached_SwitchOffWaterHeater);
   RUN_TEST(Test_Update_DaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating);
   RUN_TEST(Test_Update_NighttimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating);
   RUN_TEST(Test_Update_DaytimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAirHeating);
-  RUN_TEST(Test_HandleDayNightTransition_Called_WaterHeaterRuntimeLimitIsReset);
+  RUN_TEST(Test_Update_NighttimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAirHeating);
+  RUN_TEST(Test_HandleDayToNightTransition_Called_WaterHeaterRuntimeLimitIsReset);
+  RUN_TEST(Test_HandleNightToDayTransition_Called_WaterHeaterRuntimeLimitIsReset);
 }

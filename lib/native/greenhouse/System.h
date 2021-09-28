@@ -44,7 +44,8 @@ protected:
   virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void Delay(unsigned long ms) {}
   virtual bool UpdateWeatherForecast() { return false; }
-  virtual void HandleNightDayTransition();
+  virtual void HandleNightToDayTransition();
+  virtual void HandleDayToNightTransition();
 
 public:
   // getters & setters
@@ -85,12 +86,14 @@ public:
   virtual void SystemStarted(bool value) { m_systemStarted = value; }
   virtual bool SystemStarted() const { return m_systemStarted; }
   virtual bool IsDaytime() const;
-  virtual void DayNightTransitionTime(unsigned long value) { m_dayNightTransitionTime = value; }
-  virtual unsigned long DayNightTransitionTime() const { return m_dayNightTransitionTime; }
+  virtual void NightToDayTransitionTime(unsigned long value) { m_nightToDayTransitionTime = value; }
+  virtual unsigned long NightToDayTransitionTime() const { return m_nightToDayTransitionTime; }
+  virtual void DayToNightTransitionTime(unsigned long value) { m_dayToNightTransitionTime = value; }
+  virtual unsigned long DayToNightTransitionTime() const { return m_dayToNightTransitionTime; }
 
 private:
   bool IsRaining() const;
-  void CheckDayNightTransition();
+  void CheckTimeTransition();
 
 private:
   common::Log m_log;
@@ -111,7 +114,8 @@ private:
   bool m_systemStarted;
   int m_weatherErrors;
   bool m_weatherErrorReportSent;
-  unsigned long m_dayNightTransitionTime;
+  unsigned long m_nightToDayTransitionTime;
+  unsigned long m_dayToNightTransitionTime;
 };
 
 } // namespace greenhouse

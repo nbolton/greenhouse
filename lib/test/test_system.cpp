@@ -235,7 +235,7 @@ void Test_Refresh_NightDayNightDay_DayNightTransitionedTwice(void)
   TestSystem system;
   
   system.m_mock_CurrentHour = 1;
-  system.m_mock_EpochTime = 86400L * 1;
+  system.m_mock_EpochTime = 86400L * 1; // +1 day
 
   system.DayStartHour(2);
   system.DayEndHour(3);
@@ -243,29 +243,33 @@ void Test_Refresh_NightDayNightDay_DayNightTransitionedTwice(void)
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(0, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(0, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleDayToNightTransition);
 
   system.m_mock_CurrentHour = 2;
 
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleDayToNightTransition);
 
   system.m_mock_CurrentHour = 1;
-  system.m_mock_EpochTime = 86400L * 2;
+  system.m_mock_EpochTime = 86400L * 2; // +1 day
 
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleDayToNightTransition);
 
   system.m_mock_CurrentHour = 2;
 
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleDayToNightTransition);
 }
 
 void Test_Refresh_DayNightDayNight_DayNightTransitionedTwice(void)
@@ -273,7 +277,7 @@ void Test_Refresh_DayNightDayNight_DayNightTransitionedTwice(void)
   TestSystem system;
   
   system.m_mock_CurrentHour = 2;
-  system.m_mock_EpochTime = 86400L * 1;
+  system.m_mock_EpochTime = 86400L * 1; // +1 day
 
   system.DayStartHour(2);
   system.DayEndHour(3);
@@ -281,29 +285,34 @@ void Test_Refresh_DayNightDayNight_DayNightTransitionedTwice(void)
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(0, system.m_calls_HandleDayToNightTransition);
 
   system.m_mock_CurrentHour = 1;
-  system.m_mock_EpochTime = 86400L * 2;
+  system.m_mock_EpochTime = 86400L * 2; // +1 day
 
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleDayToNightTransition);
 
   system.m_mock_CurrentHour = 2;
 
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleDayToNightTransition);
 
   system.m_mock_CurrentHour = 1;
+  system.m_mock_EpochTime = 86400L * 3; // +1 day
 
   system.Refresh();
   system.Refresh();
 
-  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightDayTransition);
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleNightToDayTransition);
+  TEST_ASSERT_EQUAL_INT(2, system.m_calls_HandleDayToNightTransition);
 }
 
 void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)

@@ -17,7 +17,8 @@ public:
     m_calls_SetWindowActuatorSpeed(0),
     m_calls_SystemDelay(0),
     m_calls_ReportWarning(0),
-    m_calls_HandleNightDayTransition(0),
+    m_calls_HandleNightToDayTransition(0),
+    m_calls_HandleDayToNightTransition(0),
 
     // mock returns
     m_mock_ReadDhtSensor(false),
@@ -142,10 +143,16 @@ public:
     m_calls_ReportWarning++;
   }
 
-  void HandleNightDayTransition()
+  void HandleNightToDayTransition()
   {
-    Log().Trace("Stub: HandleNightDayTransition");
-    m_calls_HandleNightDayTransition++;
+    Log().Trace("Stub: HandleNightToDayTransition");
+    m_calls_HandleNightToDayTransition++;
+  }
+
+  void HandleDayToNightTransition()
+  {
+    Log().Trace("Stub: HandleDayToNightTransition");
+    m_calls_HandleDayToNightTransition++;
   }
   
   // expose protected members to public
@@ -177,7 +184,8 @@ public:
   int m_calls_SetWindowActuatorSpeed;
   int m_calls_SystemDelay;
   int m_calls_ReportWarning;
-  int m_calls_HandleNightDayTransition;
+  int m_calls_HandleNightToDayTransition;
+  int m_calls_HandleDayToNightTransition;
 
   // last arg (leave undefined)
 

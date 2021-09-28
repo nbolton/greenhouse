@@ -32,7 +32,8 @@ System::System() :
   m_systemStarted(false),
   m_weatherErrors(0),
   m_weatherErrorReportSent(false),
-  m_dayNightTransitionTime(k_unknownUL)
+  m_nightToDayTransitionTime(k_unknownUL),
+  m_dayToNightTransitionTime(k_unknownUL)
 {
 }
 
@@ -44,7 +45,7 @@ bool System::Refresh()
 {
   Log().Trace("Refreshing");
 
-  CheckDayNightTransition();
+  CheckTimeTransition();
 
   int sensorFailures = 0;
   bool sensorsOk = ReadSensors(sensorFailures);
@@ -257,32 +258,43 @@ float System::CalculateMoisture(float analogValue) const
 
 bool System::IsRaining() const { return WeatherCode() < k_dryWeatherCode; }
 
-void System::HandleNightDayTransition()
+void System::HandleNightToDayTransition()
 {
   m_weatherErrorReportSent = false;
-  Heating().HandleDayNightTransition();
+  Heating().HandleNightToDayTransition();
 }
+
+void System::HandleDayToNightTransition() { Heating().HandleDayToNightTransition(); }
 
 bool System::IsDaytime() const
 {
   return (CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour());
 }
 
-void System::CheckDayNightTransition()
+void System::CheckTimeTransition()
 {
   // if time unknown, we can't do anything.
   if (EpochTime() == k_unknownUL) {
-    Log().Trace("Epoch unknown, can't check day night transition");
+    Log().Trace("Epoch unknown, can't check time transition");
     return;
   }
 
+  bool daytime = IsDaytime();
   time_t now = EpochTime();
-  time_t last = DayNightTransitionTime();
+  time_t last;
+
+  if (daytime) {
+    last = NightToDayTransitionTime();
+  }
+  else {
+    last = DayToNightTransitionTime();
+  }
 
   // HACK: cast to int to print -1 (%lld doesn't seem to print -1).
   // this is a bad idea, and will break in 2038.
   Log().Trace(
-    "Checking day night transition, now=%d, last=%d",
+    "Checking for %s transition, now=%d, last=%d",
+    daytime ? "night to day" : "night to day",
     static_cast<int>(now),
     static_cast<int>(last));
 
@@ -304,18 +316,24 @@ void System::CheckDayNightTransition()
     Log().Trace("Epoch (now), day=%d, month=%d, year=%d", nowDay, nowMonth, nowYear);
     Log().Trace("Last transition, day=%d, month=%d, year=%d", lastDay, lastMonth, lastYear);
 
-    // if days match, we already transitioned today.
+    // if days match, we already transitioned for this period.
     if ((nowDay == lastDay) && (nowMonth == lastMonth) && (nowYear == lastYear)) {
-      Log().Trace("Day night transition already happened today");
+      Log().Trace(
+        "%s transition already happened today", daytime ? "Day to night" : "Night to day");
       return;
     }
   }
 
   // wait until the start of the day to transition.
-  if (IsDaytime()) {
-    Log().Trace("Night/day transition detected");
-    DayNightTransitionTime(EpochTime());
-    HandleNightDayTransition();
+  if (daytime) {
+    Log().Trace("Night to day transition detected");
+    NightToDayTransitionTime(EpochTime());
+    HandleNightToDayTransition();
+  }
+  else {
+    Log().Trace("Day to night transition detected");
+    DayToNightTransitionTime(EpochTime());
+    HandleDayToNightTransition();
   }
 }
 

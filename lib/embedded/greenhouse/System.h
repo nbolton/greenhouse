@@ -70,7 +70,8 @@ protected:
   void SetWindowActuatorSpeed(int speed);
   void Delay(unsigned long ms);
   bool UpdateWeatherForecast();
-  void HandleNightDayTransition();
+  void HandleNightToDayTransition();
+  void HandleDayToNightTransition();
 
 public:
   // getters & setters
