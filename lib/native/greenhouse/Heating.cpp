@@ -206,7 +206,6 @@ void Heating::Update()
     runtime += (float)addSeconds / 60;
     m_waterHeaterCostCumulative += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
 
-    System().ReportWaterHeaterInfo();
     Log().Trace(
       "Advanced water heating runtime, add=%ds, day=%.2fm, night=%.2fm, cost=£%.2f",
       addSeconds,
@@ -241,6 +240,8 @@ void Heating::Update()
     Log().Trace("Nighttime heating mode");
     UpdatePeriod(NightWaterTemperature(), NightSoilTemperature(), NightAirTemperature());
   }
+  
+  System().ReportWaterHeaterInfo();
 }
 
 void Heating::HandleNightToDayTransition()
