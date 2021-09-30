@@ -11,7 +11,8 @@ namespace greenhouse {
 const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
 const float k_airTempMargin = 1;
-const float k_minimumWaterDelta = 5;
+const float k_waterSoilDeltaMin = 5;
+const float k_waterAirDeltaMin = 10;
 
 const float k_waterHeaterPowerUse = 3.4;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
@@ -87,11 +88,13 @@ bool Heating::SwitchAirHeating(bool on)
 
 void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
 {
+  float waterTemp = System().WaterTemperature();
+  float soilTemp = System().SoilTemperature();
+  float airTemp = System().InsideAirTemperature();
+
   // ensure that water is warm enough (as not to waste energy)
-  bool soilDeltaInBounds =
-    (System().WaterTemperature() >= System().SoilTemperature() + k_minimumWaterDelta);
-  bool airDeltaInBounds =
-    (System().WaterTemperature() >= System().InsideAirTemperature() + k_minimumWaterDelta);
+  bool soilDeltaInBounds = (waterTemp >= soilTemp + k_waterSoilDeltaMin);
+  bool airDeltaInBounds = (waterTemp >= airTemp + k_waterAirDeltaMin);
 
   Log().Trace(
     "Water heater deltas in bounds, soil=%s, air=%s",
@@ -101,8 +104,8 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
   bool soilHeatingRequired = SoilHeatingIsOn();
   bool airHeatingRequired = AirHeatingIsOn();
 
-  if (System().SoilTemperature() != k_unknown) {
-    if (System().SoilTemperature() < (soilTarget - k_soilTempMargin)) {
+  if (soilTemp != k_unknown) {
+    if (soilTemp < (soilTarget - k_soilTempMargin)) {
 
       Log().Trace("Soil temp below");
       soilHeatingRequired = true;
@@ -114,7 +117,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
         SwitchSoilHeating(false);
       }
     }
-    else if (System().SoilTemperature() > (soilTarget + k_soilTempMargin)) {
+    else if (soilTemp > (soilTarget + k_soilTempMargin)) {
 
       Log().Trace("Soil temp above");
       soilHeatingRequired = false;
@@ -123,8 +126,8 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
     }
   }
 
-  if (System().InsideAirTemperature() != k_unknown) {
-    if (System().InsideAirTemperature() < (airTarget - k_airTempMargin)) {
+  if (airTemp != k_unknown) {
+    if (airTemp < (airTarget - k_airTempMargin)) {
 
       Log().Trace("Air temp below");
       airHeatingRequired = true;
@@ -136,7 +139,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
         SwitchAirHeating(false);
       }
     }
-    else if (System().InsideAirTemperature() > (airTarget + k_airTempMargin)) {
+    else if (airTemp > (airTarget + k_airTempMargin)) {
 
       Log().Trace("Air temp above");
       airHeatingRequired = false;
@@ -153,7 +156,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
     SwitchAirHeating(false);
   }
 
-  if (System().WaterTemperature() < (waterTarget - k_waterTempMargin)) {
+  if (waterTemp < (waterTarget - k_waterTempMargin)) {
 
     if (airHeatingRequired || soilHeatingRequired) {
 
@@ -165,7 +168,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
       SwitchWaterHeater(false);
     }
   }
-  else if (System().WaterTemperature() > (waterTarget + k_waterTempMargin)) {
+  else if (waterTemp > (waterTarget + k_waterTempMargin)) {
 
     // always switch off, even if soil/air heating on
     SwitchWaterHeater(false);

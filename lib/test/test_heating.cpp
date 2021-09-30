@@ -185,7 +185,7 @@ void Test_Update_DaytimeBelowDayTemp_SwitchOnAirHeating(void)
   system.m_mockOn_IsDaytime = true;
   system.m_mock_IsDaytime = true;
   system.m_mock_InsideAirTemperature = 0; // remember margin
-  system.m_mock_WaterTemperature = 5;     // remember margin + min water delta
+  system.m_mock_WaterTemperature = 10;    // remember margin + min water delta
   system.m_mock_SoilTemperature = 0;      // remember margin
 
   heating.DayAirTemperature(2);
@@ -224,7 +224,7 @@ void Test_Update_NighttimeBelowNightTemp_SwitchOnAirHeating(void)
   system.m_mockOn_IsDaytime = true;
   system.m_mock_IsDaytime = false;
   system.m_mock_InsideAirTemperature = 0; // remember margin
-  system.m_mock_WaterTemperature = 5;     // remember margin + min water delta
+  system.m_mock_WaterTemperature = 10;    // remember margin + min water delta
   system.m_mock_SoilTemperature = 0;      // remember margin
 
   heating.NightAirTemperature(2);
