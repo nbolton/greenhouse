@@ -90,6 +90,10 @@ public:
   virtual unsigned long NightToDayTransitionTime() const { return m_nightToDayTransitionTime; }
   virtual void DayToNightTransitionTime(unsigned long value) { m_dayToNightTransitionTime = value; }
   virtual unsigned long DayToNightTransitionTime() const { return m_dayToNightTransitionTime; }
+  virtual void SoilSensorWet(float value) { m_soilSensorWet = value; }
+  virtual float SoilSensorWet() const { return m_soilSensorWet; }
+  virtual void SoilSensorDry(float value) { m_soilSensorDry = value; }
+  virtual float SoilSensorDry() const { return m_soilSensorDry; }
 
 private:
   bool IsRaining() const;
@@ -116,6 +120,8 @@ private:
   bool m_weatherErrorReportSent;
   unsigned long m_nightToDayTransitionTime;
   unsigned long m_dayToNightTransitionTime;
+  float m_soilSensorWet; // V, in water
+  float m_soilSensorDry; // V, in air
 };
 
 } // namespace greenhouse

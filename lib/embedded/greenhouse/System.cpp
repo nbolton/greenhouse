@@ -654,7 +654,7 @@ void System::HandleNightToDayTransition()
   Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
 
   base::System::HandleNightToDayTransition();
-  
+
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
 
@@ -906,7 +906,9 @@ BLYNK_CONNECTED()
     V64,
     V66,
     V67,
-    V68);
+    V68,
+    V69,
+    V70);
 }
 
 BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
@@ -1022,6 +1024,13 @@ BLYNK_WRITE(V68)
   else {
     s_instance->DayToNightTransitionTime(k_unknownUL);
   }
+}
+
+BLYNK_WRITE(V69) { s_instance->SoilSensorWet(param.asFloat()); }
+
+BLYNK_WRITE(V70)
+{
+  s_instance->SoilSensorDry(param.asFloat());
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
