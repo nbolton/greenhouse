@@ -674,8 +674,9 @@ void System::ReportWarnings()
     return;
   }
 
-  bool moistureKnown = !(static_cast<int>(m_soilMoisture) != k_unknown);
-  if (!m_soilMoistureWarningSent && moistureKnown && (m_soilMoisture <= SoilMostureWarning())) {
+  bool moistureKnown = (m_soilMoisture != k_unknown);
+  bool moistureLow = (m_soilMoisture <= SoilMostureWarning());
+  if (!m_soilMoistureWarningSent && moistureKnown && moistureLow) {
     ReportWarning("Soil moisture low (%.2f%%)", m_soilMoisture);
     m_soilMoistureWarningSent = true;
   }
