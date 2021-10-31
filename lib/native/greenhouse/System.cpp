@@ -10,6 +10,7 @@ namespace greenhouse {
 const float k_windowAdjustThreshold = 0.05;
 const int k_windowActuatorSpeedMax = 255;
 const int k_dryWeatherCode = 701; // anything less is snow/rain
+const int k_moistureMargin = 20;
 
 System::System() :
   m_log(),
@@ -249,7 +250,7 @@ float System::CalculateMoisture(float analogValue) const
 {
   float percent = mapFloat(analogValue, SoilSensorDry(), SoilSensorWet(), 0, 100);
   Log().Trace("Soil moisture, analog=%.4fV, percent=%.2f%%", analogValue, percent);
-  if (percent < -10 || percent > 110) {
+  if (percent < (k_moistureMargin * -1) || percent > (100 + k_moistureMargin)) {
     Log().Trace("Invalid soil moisture value");
     return k_unknown;
   }

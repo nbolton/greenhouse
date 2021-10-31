@@ -354,22 +354,46 @@ void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
 void Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero()
 {
   TestSystem system;
-  float percent = system.CalculateMoisture(3.93);
+  system.SoilSensorDry(2);
+  system.SoilSensorWet(1);
+  float percent = system.CalculateMoisture(2);
   TEST_ASSERT_EQUAL_FLOAT(0, percent);
 }
 
 void Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred()
 {
   TestSystem system;
-  float percent = system.CalculateMoisture(1.89);
+  system.SoilSensorDry(2);
+  system.SoilSensorWet(1);
+  float percent = system.CalculateMoisture(1);
   TEST_ASSERT_EQUAL_FLOAT(100, percent);
 }
 
 void Test_CalculateMoisture_InBounds_ReturnsPercent()
 {
   TestSystem system;
-  float percent = system.CalculateMoisture(3);
-  TEST_ASSERT_FLOAT_WITHIN(.1, 45.5, percent);
+  system.SoilSensorDry(2);
+  system.SoilSensorWet(1);
+  float percent = system.CalculateMoisture(1.5);
+  TEST_ASSERT_FLOAT_WITHIN(.1, 50, percent);
+}
+
+void Test_CalculateMoisture_AboveBounds_ReturnsUnknown()
+{
+  TestSystem system;
+  system.SoilSensorDry(2);
+  system.SoilSensorWet(1);
+  float percent = system.CalculateMoisture(6);
+  TEST_ASSERT_EQUAL_INT(k_unknown, percent);
+}
+
+void Test_CalculateMoisture_BelowBounds_ReturnsUnknown()
+{
+  TestSystem system;
+  system.SoilSensorDry(2);
+  system.SoilSensorWet(1);
+  float percent = system.CalculateMoisture(0);
+  TEST_ASSERT_EQUAL_INT(k_unknown, percent);
 }
 
 void Test_IsDaytime_CurrentHourBeforeDayStart_ReturnsFalse()
@@ -439,6 +463,8 @@ void testSystem()
   RUN_TEST(Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero);
   RUN_TEST(Test_CalculateMoisture_AboveOrEqualMax_ReturnsHundred);
   RUN_TEST(Test_CalculateMoisture_InBounds_ReturnsPercent);
+  RUN_TEST(Test_CalculateMoisture_AboveBounds_ReturnsUnknown);
+  RUN_TEST(Test_CalculateMoisture_BelowBounds_ReturnsUnknown);
   RUN_TEST(Test_IsDaytime_CurrentHourBeforeDayStart_ReturnsFalse);
   RUN_TEST(Test_IsDaytime_CurrentHourEqualsDayStart_ReturnsTrue);
   RUN_TEST(Test_IsDaytime_CurrentHourInBounds_ReturnsTrue);
