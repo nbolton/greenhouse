@@ -338,5 +338,31 @@ void System::CheckTimeTransition()
   }
 }
 
+void System::SoilCalibrateWet()
+{
+  if (!ReadSoilMoistureSensor()) {
+    Log().Trace("Unable to calibrate, failed to read soil moisture sensor");
+    return;
+  }
+
+  Log().Trace("Calibrating soil moisture wet: %.2fV", SoilSensor());
+  SoilSensorWet(SoilSensor());
+  ReportMoistureCalibration();
+  Refresh();
+}
+
+void System::SoilCalibrateDry()
+{
+  if (!ReadSoilMoistureSensor()) {
+    Log().Trace("Unable to calibrate, failed to read soil moisture sensor");
+    return;
+  }
+
+  Log().Trace("Calibrating soil moisture dry: %.2fV", SoilSensor());
+  SoilSensorDry(SoilSensor());
+  ReportMoistureCalibration();
+  Refresh();
+}
+
 } // namespace greenhouse
 } // namespace native

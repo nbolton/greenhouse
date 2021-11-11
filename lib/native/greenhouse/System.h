@@ -22,6 +22,8 @@ public:
   virtual void ReportWarning(const char *m, ...) {}
   virtual void ReportCritical(const char *m, ...) {}
   virtual const common::Log &Log() const { return m_log; }
+  virtual void SoilCalibrateWet();
+  virtual void SoilCalibrateDry();
 
 protected:
   virtual void ReportSensorValues() {}
@@ -30,9 +32,10 @@ protected:
   virtual void ReportWarnings() {}
   virtual void ReportWeather() {}
   virtual void ReportWaterHeaterInfo() {}
+  virtual void ReportMoistureCalibration() {}
   virtual void SetSwitch(int index, bool on) {}
-
   virtual bool ReadSensors(int &failures) { return false; }
+  virtual bool ReadSoilMoistureSensor() { return false; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual float CalculateMoisture(float analogValue) const;
@@ -94,6 +97,8 @@ public:
   virtual float SoilSensorWet() const { return m_soilSensorWet; }
   virtual void SoilSensorDry(float value) { m_soilSensorDry = value; }
   virtual float SoilSensorDry() const { return m_soilSensorDry; }
+  virtual void SoilSensor(float value) { m_soilSensor = value; }
+  virtual float SoilSensor() const { return m_soilSensor; }
 
 private:
   bool IsRaining() const;
@@ -122,6 +127,7 @@ private:
   unsigned long m_dayToNightTransitionTime;
   float m_soilSensorWet; // V, in water
   float m_soilSensorDry; // V, in air
+  float m_soilSensor;    // V, latest
 };
 
 } // namespace greenhouse

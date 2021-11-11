@@ -62,9 +62,11 @@ protected:
   void ReportWarnings();
   void ReportWeather();
   void ReportWaterHeaterInfo();
+  void ReportMoistureCalibration();
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
+  bool ReadSoilMoistureSensor();
   void RunWindowActuator(bool forward);
   void StopActuator();
   void SetWindowActuatorSpeed(int speed);

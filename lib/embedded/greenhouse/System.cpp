@@ -388,19 +388,25 @@ bool System::ReadSensors(int &failures)
     Delay(dallasRetryWait);
   }
 
-  float moistureAnalog = ReadAdc(s_adc1, k_moisturePin);
-  if (moistureAnalog == k_unknown) {
+  ReadSoilMoistureSensor();
+  if (SoilSensor() == k_unknown) {
     m_soilMoisture = k_unknown;
     failures++;
   }
   else {
-    m_soilMoisture = CalculateMoisture(moistureAnalog);
+    m_soilMoisture = CalculateMoisture(SoilSensor());
     if (m_soilMoisture == k_unknown) {
       failures++;
     }
   }
 
   return failures == 0;
+}
+
+bool System::ReadSoilMoistureSensor()
+{
+  SoilSensor(ReadAdc(s_adc1, k_moisturePin));
+  return (SoilSensor() != k_unknown);
 }
 
 void System::SetWindowActuatorSpeed(int speed) { analogWrite(k_actuatorPinA, speed); }
@@ -814,6 +820,12 @@ void System::ReportWaterHeaterInfo()
   Blynk.virtualWrite(V63, Heating().WaterHeaterCostCumulative());
 }
 
+void System::ReportMoistureCalibration()
+{
+  Blynk.virtualWrite(V69, SoilSensorWet());
+  Blynk.virtualWrite(V70, SoilSensorDry());
+}
+
 void System::ManualRefresh()
 {
   Log().Trace(F("Manual refresh"));
@@ -909,7 +921,9 @@ BLYNK_CONNECTED()
     V67,
     V68,
     V69,
-    V70);
+    V70,
+    V71,
+    V72);
 }
 
 BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
@@ -1029,9 +1043,20 @@ BLYNK_WRITE(V68)
 
 BLYNK_WRITE(V69) { s_instance->SoilSensorWet(param.asFloat()); }
 
-BLYNK_WRITE(V70)
+BLYNK_WRITE(V70) { s_instance->SoilSensorDry(param.asFloat()); }
+
+BLYNK_WRITE(V71)
 {
-  s_instance->SoilSensorDry(param.asFloat());
+  if (param.asInt() != 0) {
+    s_instance->SoilCalibrateWet();
+  }
+}
+
+BLYNK_WRITE(V72)
+{
+  if (param.asInt() != 0) {
+    s_instance->SoilCalibrateDry();
+  }
 
   // TODO: find a better way to always call this last; sometimes
   // when adding new write functions, moving this gets forgotten about.
