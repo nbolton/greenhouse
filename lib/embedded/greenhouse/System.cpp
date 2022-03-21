@@ -48,10 +48,10 @@ const int k_shiftRegisterClockPin = D7;   // SRCLK (11)
 const int k_pvRelayPin = 0;
 const int k_startBeepPin = 1;
 const int k_caseFanPin = 2;
+const int k_psuRelayPin = 3;
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // io1 pins
-const int k_psuRelayPin = P0;
 const int k_actuatorPin1 = P6;
 const int k_actuatorPin2 = P7;
 
@@ -156,9 +156,6 @@ void System::Setup()
   Wire.begin();
 
   InitActuators();
-
-  s_io1.pinMode(k_psuRelayPin, OUTPUT);
-  s_io1.digitalWrite(k_psuRelayPin, LOW);
 
   m_power.Embedded(*this);
   m_power.Native(*this);
