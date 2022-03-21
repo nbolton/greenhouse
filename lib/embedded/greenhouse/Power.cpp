@@ -92,14 +92,24 @@ void Power::InitPowerSource()
     m_pvVoltageOutput,
     sensorMin);
 
-  if (
-    (m_pvVoltageSwitchOn != k_unknown) && (m_pvVoltageOutput >= sensorMin) &&
-    (onboardVoltage > k_pvOnboardVoltageMin)) {
+  bool pvSensorAboveMin = m_pvVoltageOutput >= sensorMin;
+  bool pvOnboardAboveMin = onboardVoltage >= k_pvOnboardVoltageMin;
+
+  if ((m_pvVoltageSwitchOn != k_unknown) && pvSensorAboveMin && pvOnboardAboveMin) {
 
     Log().Trace(F("Using PV on start"));
     SwitchPower(true);
   }
   else {
+
+    if (!pvSensorAboveMin) {
+      Log().Trace(F("PV sensor voltage is below min"));
+    }
+
+    if (!pvOnboardAboveMin) {
+      Log().Trace(F("PV onboard voltage is below min"));
+    }
+    
     Log().Trace(F("Using PSU on start"));
     SwitchPower(false);
   }
@@ -177,7 +187,7 @@ void Power::SwitchPower(bool pv)
 {
   if (!pv) {
     // close the PSU relay and give the PSU time to power up
-    Embedded().ExpanderWrite(m_psuRelayPin, LOW);
+    Embedded().ShiftRegister(m_psuRelayPin, false);
     Log().Trace(F("PSU AC relay closed"));
     Embedded().Delay(1000);
   }
@@ -186,7 +196,7 @@ void Power::SwitchPower(bool pv)
 
   if (pv) {
     // open the PSU relay to turn off mains power when on PV
-    Embedded().ExpanderWrite(m_psuRelayPin, HIGH);
+    Embedded().ShiftRegister(m_psuRelayPin, true);
     Log().Trace(F("PSU AC relay open"));
   }
 
