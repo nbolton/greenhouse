@@ -3850,7 +3850,7 @@
   (symbol (lib_id "power:+5V") (at 271.78 160.02 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid db6607a5-d24c-4fdf-98bd-7c48dca4f9ad)
-    (property "Reference" "#PWR?" (id 0) (at 271.78 163.83 0)
+    (property "Reference" "#PWR03" (id 0) (at 271.78 163.83 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+5V" (id 1) (at 271.78 154.94 0))
@@ -3951,7 +3951,7 @@
   (symbol (lib_id "Nick:2N2222A") (at 269.24 165.1 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid ea36a4ae-b6e4-4966-a53d-e362137e93ee)
-    (property "Reference" "Q?" (id 0) (at 274.32 163.8299 0)
+    (property "Reference" "Q8" (id 0) (at 274.32 163.8299 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Value" "2N2222A" (id 1) (at 274.32 166.3699 0)
@@ -3994,6 +3994,9 @@
     )
     (path "/27bd8f30-9836-45ce-ae8d-66e31ba97a71"
       (reference "#PWR02") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/db6607a5-d24c-4fdf-98bd-7c48dca4f9ad"
+      (reference "#PWR03") (unit 1) (value "+5V") (footprint "")
     )
     (path "/89f6aa24-278b-41b4-bb3b-e1e585067bd1"
       (reference "#PWR0101") (unit 1) (value "GND") (footprint "")
@@ -4069,9 +4072,6 @@
     )
     (path "/78a6f081-6f85-4196-9897-d4d9d94e9c71"
       (reference "#PWR0125") (unit 1) (value "GND") (footprint "")
-    )
-    (path "/db6607a5-d24c-4fdf-98bd-7c48dca4f9ad"
-      (reference "#PWR?") (unit 1) (value "+5V") (footprint "")
     )
     (path "/e9cc145f-bccc-4781-862a-a53065926266"
       (reference "BZ1") (unit 1) (value "Buzzer") (footprint "Buzzer_Beeper:Buzzer_12x9.5RM7.6")
@@ -4158,7 +4158,7 @@
       (reference "Q7") (unit 1) (value "2N2222A") (footprint "Package_TO_SOT_THT:TO-92_Inline")
     )
     (path "/ea36a4ae-b6e4-4966-a53d-e362137e93ee"
-      (reference "Q?") (unit 1) (value "2N2222A") (footprint "Package_TO_SOT_THT:TO-92_Inline")
+      (reference "Q8") (unit 1) (value "2N2222A") (footprint "Package_TO_SOT_THT:TO-92_Inline")
     )
     (path "/ded41c74-3323-47f8-b02d-55f1d484132e"
       (reference "R1") (unit 1) (value "R10k") (footprint "Resistor_THT:R_Box_L13.0mm_W4.0mm_P9.00mm")
