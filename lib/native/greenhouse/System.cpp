@@ -8,7 +8,6 @@ namespace native {
 namespace greenhouse {
 
 const float k_windowAdjustThreshold = 0.05;
-const int k_windowActuatorSpeedMax = 255;
 const int k_dryWeatherCode = 701; // anything less is snow/rain
 const int k_moistureMargin = 20;
 
@@ -23,7 +22,6 @@ System::System() :
   m_soilMostureWarning(k_unknown),
   m_dayStartHour(k_unknown),
   m_dayEndHour(k_unknown),
-  m_windowActuatorSpeedPercent(0),
   m_windowActuatorRuntimeSec(0),
   m_weatherCode(k_unknown),
   m_weatherInfo(),
@@ -233,10 +231,6 @@ void System::CloseWindow(float delta)
 
 void System::AdjustWindow(bool open, float delta)
 {
-  int speed = m_windowActuatorSpeedPercent * ((float)k_windowActuatorSpeedMax / 100);
-  Log().Trace("Actuator speed: %dms", speed);
-  SetWindowActuatorSpeed(speed);
-
   RunWindowActuator(open);
 
   int runtime = (m_windowActuatorRuntimeSec * 1000) * delta;

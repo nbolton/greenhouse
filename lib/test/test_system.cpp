@@ -325,11 +325,9 @@ void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
 
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_RunWindowActuator);
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_SetWindowActuatorSpeed);
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_SystemDelay);
 
   TEST_ASSERT_EQUAL(true, system.m_lastArg_RunWindowActuator_forward);
-  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, system.m_lastArg_SetWindowActuatorSpeed_speed);
   TEST_ASSERT_EQUAL_UINT64(550, system.m_lastArg_SystemDelay_ms);
 }
 
@@ -343,11 +341,9 @@ void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
 
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_RunWindowActuator);
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_SetWindowActuatorSpeed);
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_SystemDelay);
 
   TEST_ASSERT_EQUAL(false, system.m_lastArg_RunWindowActuator_forward);
-  TEST_ASSERT_FLOAT_WITHIN(0.1, 229, system.m_lastArg_SetWindowActuatorSpeed_speed);
   TEST_ASSERT_EQUAL_UINT64(550, system.m_lastArg_SystemDelay_ms);
 }
 

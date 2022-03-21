@@ -44,7 +44,6 @@ protected:
   virtual void AdjustWindow(bool open, float delta);
   virtual void RunWindowActuator(bool forward) {}
   virtual void StopActuator() {}
-  virtual void SetWindowActuatorSpeed(int speed) {}
   virtual void Delay(unsigned long ms) {}
   virtual bool UpdateWeatherForecast() { return false; }
   virtual void HandleNightToDayTransition();
@@ -78,8 +77,6 @@ public:
   virtual int DayStartHour() const { return m_dayStartHour; }
   virtual void DayEndHour(int value) { m_dayEndHour = value; }
   virtual int DayEndHour() const { return m_dayEndHour; }
-  virtual void WindowActuatorSpeedPercent(int value) { m_windowActuatorSpeedPercent = value; }
-  virtual int WindowActuatorSpeedPercent() const { return m_windowActuatorSpeedPercent; }
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
   virtual int WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
   virtual void WeatherCode(int value) { m_weatherCode = value; }
@@ -115,7 +112,6 @@ private:
   float m_soilMostureWarning;
   int m_dayStartHour;
   int m_dayEndHour;
-  int m_windowActuatorSpeedPercent;
   float m_windowActuatorRuntimeSec;
   int m_weatherCode;
   std::string m_weatherInfo;

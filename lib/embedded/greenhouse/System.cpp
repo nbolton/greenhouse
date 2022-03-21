@@ -39,10 +39,10 @@ struct ADC {
 
 // regular pins
 const int k_oneWirePin = D3;
-const int k_shiftRegisterLatchPin = D5; // RCLK (12)
-const int k_shiftRegisterDataPin = D6;  // SER (14)
-const int k_shiftRegisterClockPin = D7; // SRCLK (11)
-const int k_actuatorPinA = D8;
+const int k_shiftRegisterEnablePin = D0;  // OE (13)
+const int k_shiftRegisterLatchPin = D5;   // RCLK (12)
+const int k_shiftRegisterDataPin = D6;    // SER (14)
+const int k_shiftRegisterClockPin = D7;   // SRCLK (11)
 
 // msr pins
 const int k_pvRelayPin = 0;
@@ -196,6 +196,9 @@ void System::Loop()
 
 void System::InitShiftRegisters()
 {
+  pinMode(k_shiftRegisterEnablePin, OUTPUT);
+  digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
+
   pinMode(k_shiftRegisterLatchPin, OUTPUT);
   pinMode(k_shiftRegisterClockPin, OUTPUT);
   pinMode(k_shiftRegisterDataPin, OUTPUT);
@@ -206,8 +209,6 @@ void System::InitShiftRegisters()
 
 void System::InitActuators()
 {
-  pinMode(k_actuatorPinA, OUTPUT);
-
   s_io1.pinMode(k_actuatorPin1, OUTPUT);
   s_io1.pinMode(k_actuatorPin2, OUTPUT);
 
@@ -408,8 +409,6 @@ bool System::ReadSoilMoistureSensor()
   SoilSensor(ReadAdc(s_adc1, k_moisturePin));
   return (SoilSensor() != k_unknown);
 }
-
-void System::SetWindowActuatorSpeed(int speed) { analogWrite(k_actuatorPinA, speed); }
 
 void System::RunWindowActuator(bool forward)
 {
@@ -995,7 +994,7 @@ BLYNK_WRITE(V45) { s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
 
 BLYNK_WRITE(V47) { s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
-BLYNK_WRITE(V48) { s_instance->WindowActuatorSpeedPercent(param.asInt()); }
+BLYNK_WRITE(V48) { /* Unused */ }
 
 BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 

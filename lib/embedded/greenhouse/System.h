@@ -69,7 +69,6 @@ protected:
   bool ReadSoilMoistureSensor();
   void RunWindowActuator(bool forward);
   void StopActuator();
-  void SetWindowActuatorSpeed(int speed);
   void Delay(unsigned long ms);
   bool UpdateWeatherForecast();
   void HandleNightToDayTransition();
