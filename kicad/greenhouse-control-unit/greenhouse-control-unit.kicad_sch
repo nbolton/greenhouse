@@ -4316,8 +4316,21 @@
     (pin "1" (uuid 3c8a81d3-8177-4848-a08e-eedfdbc91db7))
   )
 
+  (sheet (at 43.18 161.29) (size 62.23 39.37) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid a7149a5c-3ae8-420e-91ae-76637013ed53)
+    (property "Sheet name" "battery-junction" (id 0) (at 43.18 160.5784 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "battery-junction.kicad_sch" (id 1) (at 43.18 201.2446 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+
   (sheet_instances
     (path "/" (page "1"))
+    (path "/a7149a5c-3ae8-420e-91ae-76637013ed53" (page "2"))
   )
 
   (symbol_instances
