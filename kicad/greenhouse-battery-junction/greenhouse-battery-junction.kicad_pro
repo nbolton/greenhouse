@@ -347,7 +347,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "greenhouse-control-unit.kicad_pro",
+    "filename": "greenhouse-battery-junction.kicad_pro",
     "version": 1
   },
   "net_settings": {
@@ -426,7 +426,7 @@
   },
   "sheets": [
     [
-      "55992e35-fe7b-468a-9b7a-1e4dc931b904",
+      "5d4d5b2c-376b-4c96-b5e5-521c0ff9595a",
       ""
     ]
   ],

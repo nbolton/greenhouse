@@ -4,6 +4,6 @@
 ho_config.h
 .DS_Store
 platformio-local.ini
-greenhouse-control-unit-backups
-kicad/greenhouse-control-unit/fp-info-cache
-kicad/greenhouse-control-unit/#auto_saved_files#
+*-backups
+fp-info-cache
+#auto_saved_files#
