@@ -55,6 +55,10 @@ void Power::Setup()
   s_instance = this;
   s_powerThread.onRun(threadCallback);
   s_powerThread.setInterval(s_threadInterval);
+
+  // circuit default state is both power sources connected 
+  Embedded().ShiftRegister(m_psuLedPin, true);
+  Embedded().ShiftRegister(m_batteryLedPin, true);
 }
 
 void Power::Loop()
@@ -187,20 +191,28 @@ void Power::MeasureCurrent()
 
 void Power::SwitchPower(bool pv)
 {
-  Embedded().ShiftRegister(m_psuRelayPin, pv);
-  Embedded().ShiftRegister(m_psuLedPin, !pv);
+  // first, close both NC relays to ensure constant power
+  Embedded().ShiftRegister(m_psuRelayPin, false);
+  Embedded().ShiftRegister(m_pvRelayPin, false);
+  Embedded().ShiftRegister(m_psuLedPin, true);
+  Embedded().ShiftRegister(m_batteryLedPin, true);
+
+  // if on battery, give the PSU time to power up, or,
+  // if on PSU, allow the battery relay to close first.
+  Embedded().Delay(1000);
 
   if (!pv) {
     Log().Trace(F("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)"));
-
-    // give the PSU time to power up
-    Embedded().Delay(1000);
   }
   else {
     Log().Trace(F("PSU AC NC relay open (PSU off), PV NC relay closed (battery on)"));
   }
 
+  // false = closed (on the NC relay)
+  Embedded().ShiftRegister(m_psuRelayPin, pv);
   Embedded().ShiftRegister(m_pvRelayPin, !pv);
+
+  Embedded().ShiftRegister(m_psuLedPin, !pv);
   Embedded().ShiftRegister(m_batteryLedPin, pv);
 
   m_pvPowerSource = pv;
