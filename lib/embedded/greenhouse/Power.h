@@ -11,7 +11,7 @@ enum PvModes { k_pvAuto, k_pvOn, k_pvOff };
 
 class Power {
 public:
-  Power(int psuRelayPin, int pvRelayPin);
+  Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin);
   const embedded::Log &Log() const { return m_log; }
   void Setup();
   void Loop();
@@ -53,6 +53,8 @@ private:
   embedded::Log m_log;
   int m_psuRelayPin;
   int m_pvRelayPin;
+  int m_batteryLedPin;
+  int m_psuLedPin;
   bool m_pvPowerSource;
   float m_pvVoltageSwitchOn;
   float m_pvVoltageSwitchOff;
@@ -71,7 +73,7 @@ private:
   PvModes m_pvMode;
 };
 
-float readPvOnboardVoltage();
+float readOnboardVoltage();
 
 } // namespace greenhouse
 } // namespace embedded
