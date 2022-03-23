@@ -20,6 +20,7 @@ void Log::Trace(const char *format, ...) const
   vsprintf(s_buffer, format, args);
   va_end(args);
 
+  Serial.println("---> format: " + String(format));
   Serial.println(s_buffer);
 }
 
@@ -34,6 +35,7 @@ void Log::Trace(const __FlashStringHelper *format, ...) const
   vsnprintf_P(s_buffer, sizeof(s_buffer), (const char *)format, args);
   va_end(args);
 
+  Serial.println("---> format: " + String(format));
   Serial.println(s_buffer);
 }
 

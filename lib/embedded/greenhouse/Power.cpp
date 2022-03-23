@@ -10,7 +10,7 @@ namespace embedded {
 namespace greenhouse {
 
 const int s_threadInterval = 10000;  // 10s
-const int k_pvOnboardVoltageMin = 7; // V, in case of sudden voltage drop
+const int k_onboardVoltageMin = 7; // V, in case of sudden voltage drop
 const int k_pvOnboardVoltageMapIn = 745;
 const float k_pvOnboardVoltageMapOut = 13.02;
 
@@ -23,12 +23,14 @@ void threadCallback() { s_instance->ThreadCallback(); }
 
 // member functions
 
-Power::Power(int psuRelayPin, int pvRelayPin) :
+Power::Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin) :
   m_embedded(nullptr),
   m_native(nullptr),
   m_log(),
   m_psuRelayPin(psuRelayPin),
   m_pvRelayPin(pvRelayPin),
+  m_batteryLedPin(batteryLedPin),
+  m_psuLedPin(psuLedPin),
   m_pvPowerSource(false),
   m_pvVoltageSwitchOn(k_unknown),
   m_pvVoltageSwitchOff(k_unknown),
@@ -85,7 +87,7 @@ void Power::InitPowerSource()
   const float sensorMin = m_pvVoltageSwitchOff;
 
   MeasureVoltage();
-  float onboardVoltage = readPvOnboardVoltage();
+  float onboardVoltage = readOnboardVoltage();
   Log().Trace(
     F("Init power source, onboard=%.2fV, sensor=%.2fV, min=%.2fV"),
     onboardVoltage,
@@ -93,11 +95,11 @@ void Power::InitPowerSource()
     sensorMin);
 
   bool pvSensorAboveMin = m_pvVoltageOutput >= sensorMin;
-  bool pvOnboardAboveMin = onboardVoltage >= k_pvOnboardVoltageMin;
+  bool onboardAboveMin = onboardVoltage >= k_onboardVoltageMin;
 
-  if ((m_pvVoltageSwitchOn != k_unknown) && pvSensorAboveMin && pvOnboardAboveMin) {
+  if ((m_pvVoltageSwitchOn != k_unknown) && pvSensorAboveMin && onboardAboveMin) {
 
-    Log().Trace(F("Using PV on start"));
+    Log().Trace(F("Using PV on start (onboard voltage and PV sensor above min)"));
     SwitchPower(true);
   }
   else {
@@ -106,7 +108,7 @@ void Power::InitPowerSource()
       Log().Trace(F("PV sensor voltage is below min"));
     }
 
-    if (!pvOnboardAboveMin) {
+    if (!onboardAboveMin) {
       Log().Trace(F("PV onboard voltage is below min"));
     }
     
@@ -118,9 +120,9 @@ void Power::InitPowerSource()
 void Power::ThreadCallback()
 {
   MeasureVoltage();
-  float onboardVoltage = readPvOnboardVoltage();
+  float onboardVoltage = readOnboardVoltage();
 
-  if (onboardVoltage <= k_pvOnboardVoltageMin) {
+  if (onboardVoltage <= k_onboardVoltageMin) {
     if (m_pvPowerSource) {
       Native().ReportWarning("PV voltage drop detected: %.2fV", onboardVoltage);
       SwitchPower(false);
@@ -185,20 +187,21 @@ void Power::MeasureCurrent()
 
 void Power::SwitchPower(bool pv)
 {
+  Embedded().ShiftRegister(m_psuRelayPin, pv);
+  Embedded().ShiftRegister(m_psuLedPin, !pv);
+
   if (!pv) {
-    // close the PSU relay and give the PSU time to power up
-    Embedded().ShiftRegister(m_psuRelayPin, false);
-    Log().Trace(F("PSU AC relay closed"));
+    Log().Trace(F("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)"));
+
+    // give the PSU time to power up
     Embedded().Delay(1000);
+  }
+  else {
+    Log().Trace(F("PSU AC NC relay open (PSU off), PV NC relay closed (battery on)"));
   }
 
   Embedded().ShiftRegister(m_pvRelayPin, !pv);
-
-  if (pv) {
-    // open the PSU relay to turn off mains power when on PV
-    Embedded().ShiftRegister(m_psuRelayPin, true);
-    Log().Trace(F("PSU AC relay open"));
-  }
+  Embedded().ShiftRegister(m_batteryLedPin, pv);
 
   m_pvPowerSource = pv;
   Log().Trace(F("Source: %s"), pv ? "PV" : "PSU");
@@ -207,7 +210,7 @@ void Power::SwitchPower(bool pv)
 
 // free function definitions
 
-float readPvOnboardVoltage()
+float readOnboardVoltage()
 {
   // reads the onboard PV voltage (as opposed to measuring at the battery).
   // this is after any potential breaks in the circuit (eg if the battery

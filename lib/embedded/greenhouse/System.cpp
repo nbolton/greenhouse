@@ -49,6 +49,8 @@ const int k_pvRelayPin = 0;
 const int k_startBeepPin = 1;
 const int k_caseFanPin = 2;
 const int k_psuRelayPin = 3;
+const int k_batteryLedPin = 4;
+const int k_psuLedPin = 5;
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // io1 pins
@@ -107,7 +109,7 @@ void System::Instance(System &ga) { s_instance = &ga; }
 System::System() :
   m_log(),
   m_heating(),
-  m_power(k_psuRelayPin, k_pvRelayPin),
+  m_power(k_psuRelayPin, k_pvRelayPin, k_batteryLedPin, k_psuLedPin),
   m_insideAirTemperature(k_unknown),
   m_insideAirHumidity(k_unknown),
   m_outsideAirTemperature(k_unknown),
@@ -265,7 +267,7 @@ bool System::Refresh()
   s_shiftRegisters.shift();
 
   m_power.MeasureCurrent();
-  Log().Trace("Onboard PV voltage: %.2fV (%d/1023)", readPvOnboardVoltage(), analogRead(A0));
+  Log().Trace("Onboard PV voltage: %.2fV (%d/1023)", readOnboardVoltage(), analogRead(A0));
 
   Blynk.virtualWrite(V28, Power().PvPowerSource());
   Blynk.virtualWrite(V29, Power().PvVoltageSensor());
