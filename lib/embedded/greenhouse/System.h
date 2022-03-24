@@ -104,6 +104,7 @@ private:
   void InitActuators();
   void InitShiftRegisters();
   void UpdateTime();
+  void UpdateCaseFan();
 
 private:
   embedded::Log m_log;

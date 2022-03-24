@@ -39,10 +39,10 @@ struct ADC {
 
 // regular pins
 const int k_oneWirePin = D3;
-const int k_shiftRegisterEnablePin = D0;  // OE (13)
-const int k_shiftRegisterLatchPin = D5;   // RCLK (12)
-const int k_shiftRegisterDataPin = D6;    // SER (14)
-const int k_shiftRegisterClockPin = D7;   // SRCLK (11)
+const int k_shiftRegisterEnablePin = D0; // OE (13)
+const int k_shiftRegisterLatchPin = D5;  // RCLK (12)
+const int k_shiftRegisterDataPin = D6;   // SER (14)
+const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
 
 // msr pins
 const int k_pvRelayPin = 0;
@@ -95,6 +95,7 @@ static ADC s_adc1, s_adc2;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
+int s_switchOnCount = 0;
 
 // free-function declarations
 
@@ -493,11 +494,11 @@ void System::SetSwitch(int index, bool on)
   s_shiftRegisters.shift();
 
   String switchStates;
-  int onCount = 0;
+  s_switchOnCount = 0;
   for (int i = 0; i < k_switchCount; i++) {
     bool on = m_switchState[i];
     if (on) {
-      onCount++;
+      s_switchOnCount++;
     }
     switchStates += "S";
     switchStates += i;
@@ -509,8 +510,7 @@ void System::SetSwitch(int index, bool on)
   }
   Blynk.virtualWrite(V33, switchStates);
 
-  // turn case fan on when any switch is on
-  CaseFan(onCount > 0);
+  UpdateCaseFan();
 }
 
 void System::ToggleActiveSwitch()
@@ -846,7 +846,18 @@ void System::UpdateTime()
   } while (!m_timeClientOk && retryCount++ < retryLimit);
 }
 
-void System::OnPowerSwitch() { Blynk.virtualWrite(V28, Power().PvPowerSource()); }
+void System::UpdateCaseFan()
+{
+  // turn case fan on when any switch is on or if PSU is in use
+  bool caseFanOn = (s_switchOnCount > 0) || (!Power().PvPowerSource());
+  CaseFan(caseFanOn);
+}
+
+void System::OnPowerSwitch()
+{
+  UpdateCaseFan();
+  Blynk.virtualWrite(V28, Power().PvPowerSource());
+}
 
 void System::ExpanderWrite(int pin, int value) { s_io1.digitalWrite(pin, value); }
 
@@ -993,7 +1004,9 @@ BLYNK_WRITE(V45) { s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
 
 BLYNK_WRITE(V47) { s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
-BLYNK_WRITE(V48) { /* Unused */ }
+BLYNK_WRITE(V48)
+{ /* Unused */
+}
 
 BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 
