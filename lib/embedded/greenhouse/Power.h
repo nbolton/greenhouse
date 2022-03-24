@@ -19,6 +19,7 @@ public:
   void InitPowerSource();
   void MeasureVoltage();
   void MeasureCurrent();
+  void RelayTest();
 
 public:
   // getters & setters

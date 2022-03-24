@@ -9,17 +9,23 @@ using namespace common;
 namespace embedded {
 namespace greenhouse {
 
-const int s_threadInterval = 10000;  // 10s
-const int k_onboardVoltageMin = 7; // V, in case of sudden voltage drop
+const int s_threadInterval = 10000; // 10s
+const int k_onboardVoltageMin = 7;  // V, in case of sudden voltage drop
 const int k_pvOnboardVoltageMapIn = 745;
 const float k_pvOnboardVoltageMapOut = 13.02;
+const int k_switchDelay = 500; // delay between switching both relays
+const bool k_relayTest = false; // useful for testing power drop
+const int k_relayTestInterval = 2000;
 
 static Power *s_instance = nullptr;
 static Thread s_powerThread = Thread();
+static Thread s_relayTestThread = Thread();
+bool s_testState = false;
 
 // free-functions declarations
 
 void threadCallback() { s_instance->ThreadCallback(); }
+void relayTestCallback() { s_instance->RelayTest(); }
 
 // member functions
 
@@ -56,7 +62,10 @@ void Power::Setup()
   s_powerThread.onRun(threadCallback);
   s_powerThread.setInterval(s_threadInterval);
 
-  // circuit default state is both power sources connected 
+  s_relayTestThread.onRun(relayTestCallback);
+  s_relayTestThread.setInterval(k_relayTestInterval);
+
+  // circuit default state is both power sources connected
   Embedded().ShiftRegister(m_psuLedPin, true);
   Embedded().ShiftRegister(m_batteryLedPin, true);
 }
@@ -65,6 +74,10 @@ void Power::Loop()
 {
   if (s_powerThread.shouldRun()) {
     s_powerThread.run();
+  }
+
+  if (k_relayTest && s_relayTestThread.shouldRun()) {
+    s_relayTestThread.run();
   }
 }
 
@@ -115,7 +128,7 @@ void Power::InitPowerSource()
     if (!onboardAboveMin) {
       Log().Trace(F("PV onboard voltage is below min"));
     }
-    
+
     Log().Trace(F("Using PSU on start"));
     SwitchPower(false);
   }
@@ -199,7 +212,7 @@ void Power::SwitchPower(bool pv)
 
   // if on battery, give the PSU time to power up, or,
   // if on PSU, allow the battery relay to close first.
-  Embedded().Delay(1000);
+  Embedded().Delay(k_switchDelay);
 
   if (!pv) {
     Log().Trace(F("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)"));
@@ -218,6 +231,13 @@ void Power::SwitchPower(bool pv)
   m_pvPowerSource = pv;
   Log().Trace(F("Source: %s"), pv ? "PV" : "PSU");
   Embedded().OnPowerSwitch();
+}
+
+void Power::RelayTest()
+{
+  SwitchPower(s_testState);
+  s_testState = !s_testState;
+  delay(1000);
 }
 
 // free function definitions
