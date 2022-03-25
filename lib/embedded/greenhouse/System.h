@@ -101,7 +101,6 @@ private:
   float ReadAdc(ADC &adc, ADS1115_MUX channel);
   void InitSensors();
   void InitADCs();
-  void InitActuators();
   void InitShiftRegisters();
   void UpdateTime();
   void UpdateCaseFan();

@@ -51,11 +51,9 @@ const int k_caseFanPin = 2;
 const int k_psuRelayPin = 3;
 const int k_batteryLedPin = 4;
 const int k_psuLedPin = 5;
+const int k_actuatorPin1 = 6;
+const int k_actuatorPin2 = 7;
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
-
-// io1 pins
-const int k_actuatorPin1 = P6;
-const int k_actuatorPin2 = P7;
 
 // adc1 pins
 const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
@@ -158,8 +156,6 @@ void System::Setup()
 
   Wire.begin();
 
-  InitActuators();
-
   m_power.Embedded(*this);
   m_power.Native(*this);
   m_power.Setup();
@@ -205,15 +201,6 @@ void System::InitShiftRegisters()
 
   Log().Trace(F("Init shift"));
   s_shiftRegisters.shift();
-}
-
-void System::InitActuators()
-{
-  s_io1.pinMode(k_actuatorPin1, OUTPUT);
-  s_io1.pinMode(k_actuatorPin2, OUTPUT);
-
-  s_io1.digitalWrite(k_actuatorPin1, LOW);
-  s_io1.digitalWrite(k_actuatorPin2, LOW);
 }
 
 void System::InitSensors()
@@ -413,19 +400,19 @@ bool System::ReadSoilMoistureSensor()
 void System::RunWindowActuator(bool forward)
 {
   if (forward) {
-    s_io1.digitalWrite(k_actuatorPin1, HIGH);
-    s_io1.digitalWrite(k_actuatorPin2, LOW);
+    s_shiftRegisters.set(k_actuatorPin1);
+    s_shiftRegisters.clear(k_actuatorPin2);
   }
   else {
-    s_io1.digitalWrite(k_actuatorPin1, LOW);
-    s_io1.digitalWrite(k_actuatorPin2, HIGH);
+    s_shiftRegisters.clear(k_actuatorPin1);
+    s_shiftRegisters.set(k_actuatorPin2);
   }
 }
 
 void System::StopActuator()
 {
-  s_io1.digitalWrite(k_actuatorPin1, LOW);
-  s_io1.digitalWrite(k_actuatorPin2, LOW);
+  s_shiftRegisters.clear(k_actuatorPin1);
+  s_shiftRegisters.clear(k_actuatorPin2);
 }
 
 void System::Delay(unsigned long ms) { delay(ms); }
