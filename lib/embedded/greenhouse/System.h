@@ -67,7 +67,7 @@ protected:
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
   bool ReadSoilMoistureSensor();
-  void RunWindowActuator(bool forward);
+  void RunWindowActuator(bool extend);
   void StopActuator();
   void Delay(unsigned long ms);
   bool UpdateWeatherForecast();

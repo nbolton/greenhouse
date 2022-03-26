@@ -109,10 +109,10 @@ public:
     System::CloseWindow(delta);
   }
 
-  void RunWindowActuator(bool forward)
+  void RunWindowActuator(bool extend)
   {
-    Log().Trace("Stub: RunWindowActuator, forward=%s", forward ? "true" : "false");
-    m_lastArg_RunWindowActuator_forward = forward;
+    Log().Trace("Stub: RunWindowActuator, extend=%s", extend ? "true" : "false");
+    m_lastArg_RunWindowActuator_extend = extend;
     m_calls_RunWindowActuator++;
   }
 
@@ -124,7 +124,7 @@ public:
 
   void Delay(unsigned long ms)
   {
-    Log().Trace("Stub: Delay, forward=%d", static_cast<int>(ms));
+    Log().Trace("Stub: Delay, extend=%d", static_cast<int>(ms));
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }
@@ -182,7 +182,7 @@ public:
 
   float m_lastArg_OpenWindow_delta;
   float m_lastArg_CloseWindow_delta;
-  bool m_lastArg_RunWindowActuator_forward;
+  bool m_lastArg_RunWindowActuator_extend;
   unsigned long m_lastArg_SystemDelay_ms;
 
   native::greenhouse::Heating m_heating;

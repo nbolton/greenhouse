@@ -43,6 +43,8 @@ const int k_shiftRegisterEnablePin = D0; // OE (13)
 const int k_shiftRegisterLatchPin = D5;  // RCLK (12)
 const int k_shiftRegisterDataPin = D6;   // SER (14)
 const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
+const bool k_shiftRegisterTestEnable = false;
+const int k_shiftRegisterTestDelay = 2000;
 
 // msr pins
 const int k_pvRelayPin = 0;
@@ -51,8 +53,8 @@ const int k_caseFanPin = 2;
 const int k_psuRelayPin = 3;
 const int k_batteryLedPin = 4;
 const int k_psuLedPin = 5;
-const int k_actuatorPin1 = 6;
-const int k_actuatorPin2 = 7;
+const int k_actuatorPin1 = 6; // IN1
+const int k_actuatorPin2 = 7; // IN2
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // adc1 pins
@@ -192,15 +194,33 @@ void System::Loop()
 
 void System::InitShiftRegisters()
 {
-  pinMode(k_shiftRegisterEnablePin, OUTPUT);
-  digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
-
   pinMode(k_shiftRegisterLatchPin, OUTPUT);
   pinMode(k_shiftRegisterClockPin, OUTPUT);
   pinMode(k_shiftRegisterDataPin, OUTPUT);
 
+  pinMode(k_shiftRegisterEnablePin, OUTPUT);
+  digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
+
   Log().Trace(F("Init shift"));
   s_shiftRegisters.shift();
+
+  if (k_shiftRegisterTestEnable) {
+    while (true) {
+      Log().Trace(F("Test set"));
+      for (int i = 0; i < 16; i++) {
+        s_shiftRegisters.set(i);
+      }
+      s_shiftRegisters.shift();
+      delay(k_shiftRegisterTestDelay);
+
+      Log().Trace(F("Test clear"));
+      for (int i = 0; i < 16; i++) {
+        s_shiftRegisters.clear(i);
+      }
+      s_shiftRegisters.shift();
+      delay(k_shiftRegisterTestDelay);
+    }
+  }
 }
 
 void System::InitSensors()
@@ -397,22 +417,26 @@ bool System::ReadSoilMoistureSensor()
   return (SoilSensor() != k_unknown);
 }
 
-void System::RunWindowActuator(bool forward)
+void System::RunWindowActuator(bool extend)
 {
-  if (forward) {
+  if (extend) {
+    Log().Trace("Actuator set IN1, clear IN2");
     s_shiftRegisters.set(k_actuatorPin1);
     s_shiftRegisters.clear(k_actuatorPin2);
   }
   else {
+    Log().Trace("Actuator clear IN1, set IN2");
     s_shiftRegisters.clear(k_actuatorPin1);
     s_shiftRegisters.set(k_actuatorPin2);
   }
+  s_shiftRegisters.shift();
 }
 
 void System::StopActuator()
 {
   s_shiftRegisters.clear(k_actuatorPin1);
   s_shiftRegisters.clear(k_actuatorPin2);
+  s_shiftRegisters.shift();
 }
 
 void System::Delay(unsigned long ms) { delay(ms); }

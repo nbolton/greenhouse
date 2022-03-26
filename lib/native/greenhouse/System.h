@@ -42,7 +42,7 @@ protected:
   virtual bool ApplyWindowProgress(float expectedProgress);
   virtual void AddWindowProgressDelta(float delta);
   virtual void AdjustWindow(bool open, float delta);
-  virtual void RunWindowActuator(bool forward) {}
+  virtual void RunWindowActuator(bool extend) {}
   virtual void StopActuator() {}
   virtual void Delay(unsigned long ms) {}
   virtual bool UpdateWeatherForecast() { return false; }
