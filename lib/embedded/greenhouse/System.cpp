@@ -43,7 +43,7 @@ const int k_shiftRegisterEnablePin = D0; // OE (13)
 const int k_shiftRegisterLatchPin = D5;  // RCLK (12)
 const int k_shiftRegisterDataPin = D6;   // SER (14)
 const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
-const bool k_shiftRegisterTestEnable = false;
+const bool k_shiftRegisterTestEnable = true;
 const int k_shiftRegisterTestDelay = 2000;
 
 // msr pins
@@ -56,6 +56,10 @@ const int k_psuLedPin = 5;
 const int k_actuatorPin1 = 6; // IN1
 const int k_actuatorPin2 = 7; // IN2
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
+
+// adc0 pins
+const ADS1115_MUX k_psuVoltagePin = ADS1115_COMP_2_GND;
+const ADS1115_MUX k_commonVoltagePin = ADS1115_COMP_3_GND;
 
 // adc1 pins
 const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
@@ -71,6 +75,7 @@ const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
 const uint8_t k_insideAirSensorAddress = 0x44;
 const uint8_t k_outsideAirSensorAddress = 0x45;
+const int k_adcAddress0 = 0x4A;
 const int k_adcAddress1 = 0x48;
 const int k_adcAddress2 = 0x49;
 const float k_weatherLat = 54.203;
@@ -91,7 +96,7 @@ static char s_reportBuffer[200];
 static BlynkTimer s_timer;
 static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
-static ADC s_adc1, s_adc2;
+static ADC s_adc0, s_adc1, s_adc2;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
@@ -236,12 +241,19 @@ void System::InitSensors()
 
 void System::InitADCs()
 {
+  s_adc0.name = "ADS1115 #0";
   s_adc1.name = "ADS1115 #1";
   s_adc2.name = "ADS1115 #2";
+  s_adc0.ads = ADS1115_WE(k_adcAddress0);
   s_adc1.ads = ADS1115_WE(k_adcAddress1);
   s_adc2.ads = ADS1115_WE(k_adcAddress2);
+  s_adc0.ready = s_adc0.ads.init();
   s_adc1.ready = s_adc1.ads.init();
   s_adc2.ready = s_adc2.ads.init();
+
+  if (!s_adc0.ready) {
+    ReportWarning("ADC not ready, init failed: %s", s_adc0.name.c_str());
+  }
 
   if (!s_adc1.ready) {
     ReportWarning("ADC not ready, init failed: %s", s_adc1.name.c_str());
@@ -275,7 +287,9 @@ bool System::Refresh()
   s_shiftRegisters.shift();
 
   m_power.MeasureCurrent();
-  Log().Trace("Onboard PV voltage: %.2fV (%d/1023)", readOnboardVoltage(), analogRead(A0));
+
+  Log().Trace("Common voltage: %.2fV", m_power.ReadCommonVoltage());
+  Log().Trace("PSU voltage: %.2fV", m_power.ReadPsuVoltage());
 
   Blynk.virtualWrite(V28, Power().PvPowerSource());
   Blynk.virtualWrite(V29, Power().PvVoltageSensor());
@@ -545,6 +559,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
   // HACK: this keeps getting reset to default (possibly due to a power issue
   // when the relay switches), so force the volt range every time we're about to read.
+  s_adc0.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
   s_adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
   s_adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
 
@@ -887,6 +902,10 @@ bool System::PowerSensorReady() { return s_adc2.ready; }
 float System::ReadPowerSensorVoltage() { return ReadAdc(s_adc2, k_pvVoltagePin); }
 
 float System::ReadPowerSensorCurrent() { return ReadAdc(s_adc2, k_pvCurrentPin); }
+
+float System::ReadCommonVoltageSensor() { return ReadAdc(s_adc0, k_commonVoltagePin); }
+
+float System::ReadPsuVoltageSensor() { return ReadAdc(s_adc0, k_psuVoltagePin); }
 
 } // namespace greenhouse
 } // namespace embedded

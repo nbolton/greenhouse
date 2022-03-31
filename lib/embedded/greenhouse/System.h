@@ -49,6 +49,8 @@ public:
   bool PowerSensorReady();
   float ReadPowerSensorVoltage();
   float ReadPowerSensorCurrent();
+  float ReadCommonVoltageSensor();
+  float ReadPsuVoltageSensor();
 
   const embedded::Log &Log() const { return m_log; }
 

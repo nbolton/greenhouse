@@ -10,10 +10,13 @@ namespace embedded {
 namespace greenhouse {
 
 const int s_threadInterval = 10000; // 10s
-const int k_onboardVoltageMin = 7;  // V, in case of sudden voltage drop
-const int k_pvOnboardVoltageMapIn = 745;
-const float k_pvOnboardVoltageMapOut = 13.02;
-const int k_switchDelay = 500; // delay between switching both relays
+const int k_commonVoltageMin = 10;
+const int k_psuVoltageMin = 10;
+const float k_commonVoltageMapIn = 2.10;
+const float k_commonVoltageMapOut = 12.0;
+const float k_psuVoltageMapIn = 2.10;
+const float k_psuVoltageMapOut = 12.0;
+const int k_switchDelay = 500;  // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
 
@@ -29,7 +32,11 @@ void relayTestCallback() { s_instance->RelayTest(); }
 
 // member functions
 
-Power::Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin) :
+Power::Power(
+  int psuRelayPin,
+  int pvRelayPin,
+  int batteryLedPin,
+  int psuLedPin) :
   m_embedded(nullptr),
   m_native(nullptr),
   m_log(),
@@ -104,52 +111,60 @@ void Power::InitPowerSource()
   const float sensorMin = m_pvVoltageSwitchOff;
 
   MeasureVoltage();
-  float onboardVoltage = readOnboardVoltage();
+  float commonVoltage = ReadCommonVoltage();
+  float psuVoltage = ReadPsuVoltage();
   Log().Trace(
-    F("Init power source, onboard=%.2fV, sensor=%.2fV, min=%.2fV"),
-    onboardVoltage,
+    F("Init power source, common=%.2fV, psu=%.2fV, pv=%.2fV, min=%.2fV"),
+    commonVoltage,
+    psuVoltage,
     m_pvVoltageOutput,
     sensorMin);
 
   bool pvSensorAboveMin = m_pvVoltageOutput >= sensorMin;
-  bool onboardAboveMin = onboardVoltage >= k_onboardVoltageMin;
+  bool commonAboveMin = commonVoltage >= k_commonVoltageMin;
+  bool psuAboveMin = psuVoltage >= k_psuVoltageMin;
 
-  if ((m_pvVoltageSwitchOn != k_unknown) && pvSensorAboveMin && onboardAboveMin) {
+  if ((m_pvVoltageSwitchOn != k_unknown) && pvSensorAboveMin && commonAboveMin) {
 
-    Log().Trace(F("Using PV on start (onboard voltage and PV sensor above min)"));
+    Log().Trace(F("Using PV on start (onboard voltage and PV above min)"));
     SwitchPower(true);
   }
-  else {
+  else if (psuAboveMin) {
 
     if (!pvSensorAboveMin) {
-      Log().Trace(F("PV sensor voltage is below min"));
+      Log().Trace(F("PV voltage is below min"));
     }
 
-    if (!onboardAboveMin) {
-      Log().Trace(F("PV onboard voltage is below min"));
+    if (!commonAboveMin) {
+      Log().Trace(F("Common voltage is below min"));
     }
 
     Log().Trace(F("Using PSU on start"));
     SwitchPower(false);
+  }
+  else {
+      Log().Trace(F("Unable to use PSU, no voltage"));
   }
 }
 
 void Power::ThreadCallback()
 {
   MeasureVoltage();
-  float onboardVoltage = readOnboardVoltage();
+  float commonVoltage = ReadCommonVoltage();
 
-  if (onboardVoltage <= k_onboardVoltageMin) {
+  if (commonVoltage <= k_commonVoltageMin) {
     if (m_pvPowerSource) {
-      Native().ReportWarning("PV voltage drop detected: %.2fV", onboardVoltage);
+      Native().ReportWarning("PV voltage drop detected: %.2fV", commonVoltage);
       SwitchPower(false);
     }
   }
   else if (PvMode() != PvModes::k_pvAuto) {
     if (!m_pvPowerSource && (PvMode() == PvModes::k_pvOn)) {
+      Native().ReportWarning("PV mode is manual (PV on)");
       SwitchPower(true);
     }
     else if (m_pvPowerSource && (PvMode() == PvModes::k_pvOff)) {
+      Native().ReportWarning("PV mode is manual (PV off)");
       SwitchPower(false);
     }
   }
@@ -218,7 +233,7 @@ void Power::SwitchPower(bool pv)
     Log().Trace(F("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)"));
   }
   else {
-    Log().Trace(F("PSU AC NC relay open (PSU off), PV NC relay closed (battery on)"));
+    Log().Trace(F("PV NC relay closed (battery on), PSU AC NC relay open (PSU off)"));
   }
 
   // false = closed (on the NC relay)
@@ -240,16 +255,17 @@ void Power::RelayTest()
   delay(1000);
 }
 
-// free function definitions
-
-float readOnboardVoltage()
+float Power::ReadCommonVoltage()
 {
-  // reads the onboard PV voltage (as opposed to measuring at the battery).
-  // this is after any potential breaks in the circuit (eg if the battery
-  // is disconnected or if the battery case switch is off).
-  int analogValue = analogRead(A0);
-  return mapFloat(analogValue, 0, k_pvOnboardVoltageMapIn, 0, k_pvOnboardVoltageMapOut);
+  return mapFloat(Embedded().ReadCommonVoltageSensor(), 0, k_commonVoltageMapIn, 0, k_commonVoltageMapOut);
 }
+
+float Power::ReadPsuVoltage()
+{
+  return mapFloat(Embedded().ReadPsuVoltageSensor(), 0, k_psuVoltageMapIn, 0, k_psuVoltageMapOut);
+}
+
+// free function definitions
 
 } // namespace greenhouse
 } // namespace embedded
