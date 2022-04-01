@@ -154,7 +154,7 @@ void Power::ThreadCallback()
 
   if (commonVoltage <= k_commonVoltageMin) {
     if (m_pvPowerSource) {
-      Native().ReportWarning("PV voltage drop detected: %.2fV", commonVoltage);
+      Native().ReportWarning("Common voltage drop detected: %.2fV", commonVoltage);
       SwitchPower(false);
     }
   }
@@ -173,11 +173,13 @@ void Power::ThreadCallback()
     if (
       !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
       (m_pvVoltageOutput >= m_pvVoltageSwitchOn)) {
+      Log().Trace(F("Switching PV on automatically (PSU off)"));
       SwitchPower(true);
     }
     else if (
       m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
       (m_pvVoltageOutput <= m_pvVoltageSwitchOff)) {
+      Log().Trace(F("Switching PSU on automatically (PV off)"));
       SwitchPower(false);
     }
   }
