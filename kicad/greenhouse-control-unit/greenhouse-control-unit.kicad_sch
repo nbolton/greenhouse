@@ -3436,7 +3436,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 150acdc1-b712-4e27-98d1-32195ff7e94a)
   )
-  (text "PCB TODO:\n- " (at 193.04 22.86 0)
+  (text "PCB TODO:\n- " (at 238.76 21.59 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 3b5de9bb-b7cb-471e-901c-6f0eabee930d)
   )
@@ -3452,12 +3452,12 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7641aeb0-3bfe-4b12-b451-d9d1e97e4090)
   )
-  (text "Schematic TODO:\n- Find less powerful 5V FET than IRLBx (but not 2N7000; max 3.5VGS)\n- Revert new FETs back to BJTs (which actually work fine)"
-    (at 107.95 24.13 0)
+  (text "Schematic TODO:\n- Ensure all 2N7000 FETs are low-side (high side is limited by VGS; low side is not limited)\n"
+    (at 130.81 24.13 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 8a815ad4-4668-4ab6-ae1d-ef281c30f05f)
   )
-  (text "Prototype TODO:\n- Consolidate several 2/3 headers into one\n- Change actuator controller header to 2 pin (split 1-2 to EN1-4)\n- Add LED to case fan FET\n- Check all R values\n- Test current on each SR out (max 20mA, limit 35mA)\n- Test current on SR VCC (max 70mA)"
+  (text "Prototype TODO:\n- Consolidate several 2/3 headers into one\n- Change actuator controller header to 2 or 4 pin (either split 1-2 to EN1-4 or run 4 wires)\n- Add LED to case fan FET\n- Check all R values\n- Test current on each SR out (max 20mA, limit 35mA)\n- Test current on SR VCC (max 70mA)\n- Switch case fan and relay IRLBx's for 2N7000's"
     (at 26.67 36.83 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid ea331df7-3753-4b8c-8dc4-745de6b4e40b)
