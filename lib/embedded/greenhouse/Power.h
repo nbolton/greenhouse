@@ -44,6 +44,8 @@ public:
   void Embedded(embedded::greenhouse::ISystem &value) { m_embedded = &value; }
   native::greenhouse::ISystem &Native() const;
   void Native(native::greenhouse::ISystem &value) { m_native = &value; }
+  float ReadCommonVoltage();
+  float ReadPsuVoltage();
 
 private:
   void SwitchPower(bool pv);
@@ -73,8 +75,6 @@ private:
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
 };
-
-float readOnboardVoltage();
 
 } // namespace greenhouse
 } // namespace embedded
