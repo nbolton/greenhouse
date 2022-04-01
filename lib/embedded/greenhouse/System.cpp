@@ -43,8 +43,8 @@ const int k_shiftRegisterEnablePin = D0; // OE (13)
 const int k_shiftRegisterLatchPin = D5;  // RCLK (12)
 const int k_shiftRegisterDataPin = D6;   // SER (14)
 const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
-const bool k_shiftRegisterTestEnable = true;
-const int k_shiftRegisterTestDelay = 2000;
+const bool k_shiftRegisterTestEnable = false;
+const int k_shiftRegisterTestDelay = 200; // time betweeen sequential shift
 
 // msr pins
 const int k_pvRelayPin = 0;
@@ -211,19 +211,12 @@ void System::InitShiftRegisters()
 
   if (k_shiftRegisterTestEnable) {
     while (true) {
-      Log().Trace(F("Test set"));
       for (int i = 0; i < 16; i++) {
-        s_shiftRegisters.set(i);
+        Log().Trace(F("Test SR pin %d"), i);
+        s_shiftRegisters.set_shift(i);
+        delay(k_shiftRegisterTestDelay);
+        s_shiftRegisters.clear_shift(i);
       }
-      s_shiftRegisters.shift();
-      delay(k_shiftRegisterTestDelay);
-
-      Log().Trace(F("Test clear"));
-      for (int i = 0; i < 16; i++) {
-        s_shiftRegisters.clear(i);
-      }
-      s_shiftRegisters.shift();
-      delay(k_shiftRegisterTestDelay);
     }
   }
 }
