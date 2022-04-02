@@ -160,6 +160,7 @@ void System::Setup()
   InitShiftRegisters();
 
   StartBeep(1);
+  CaseFan(true); // on by default
 
   Wire.begin();
 
