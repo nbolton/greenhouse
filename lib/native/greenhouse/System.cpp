@@ -287,6 +287,7 @@ void System::CheckTimeTransition()
 
   // HACK: cast to int to print -1 (%lld doesn't seem to print -1).
   // this is a bad idea, and will break in 2038.
+  Log().Trace("Current period is %s", daytime ? "daytime" : "nighttime");
   Log().Trace(
     "Checking for %s transition, now=%d, last=%d",
     daytime ? "night to day" : "night to day",
@@ -302,17 +303,19 @@ void System::CheckTimeTransition()
     int nowDay = ptm->tm_mday;
     int nowMonth = ptm->tm_mon;
     int nowYear = ptm->tm_year;
+    int nowHour = ptm->tm_hour;
 
     ptm = gmtime(&last);
     int lastDay = ptm->tm_mday;
     int lastMonth = ptm->tm_mon;
     int lastYear = ptm->tm_year;
+    int lastHour = ptm->tm_hour;
 
-    Log().Trace("Epoch (now), day=%d, month=%d, year=%d", nowDay, nowMonth, nowYear);
-    Log().Trace("Last transition, day=%d, month=%d, year=%d", lastDay, lastMonth, lastYear);
+    Log().Trace("Epoch (now), hour=%d, day=%d, month=%d, year=%d", nowHour, nowDay, nowMonth, nowYear);
+    Log().Trace("Last transition, hour=%d, day=%d, month=%d, year=%d", lastHour, lastDay, lastMonth, lastYear);
 
     // if days match, we already transitioned for this period.
-    if ((nowDay == lastDay) && (nowMonth == lastMonth) && (nowYear == lastYear)) {
+    if ((nowHour == lastHour) && (nowDay == lastDay) && (nowMonth == lastMonth) && (nowYear == lastYear)) {
       Log().Trace(
         "%s transition already happened today", daytime ? "Day to night" : "Night to day");
       return;
