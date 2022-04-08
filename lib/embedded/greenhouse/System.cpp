@@ -714,8 +714,6 @@ void System::OnLastWrite()
 
   m_lastWriteDone = true;
 
-  s_instance->Log().Trace(F("Handling last Blynk write"));
-
   // if this is the first time that the last write was done,
   // this means that the system has started.
   OnSystemStarted();
@@ -960,7 +958,8 @@ BLYNK_CONNECTED()
     V69,
     V70,
     V71,
-    V72);
+    V72,
+    V127 /* last */);
 }
 
 BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
@@ -1096,8 +1095,11 @@ BLYNK_WRITE(V72)
   if (param.asInt() != 0) {
     s_instance->SoilCalibrateDry();
   }
+}
 
-  // TODO: find a better way to always call this last; sometimes
-  // when adding new write functions, moving this gets forgotten about.
+// used only as the last value
+BLYNK_WRITE(V127)
+{
+  s_instance->Log().Trace(F("Handling last Blynk write"));
   s_instance->OnLastWrite();
 }
