@@ -736,8 +736,12 @@ void System::OnSystemStarted()
   Refresh();
 
   FlashLed(k_ledStarted);
-  ReportInfo("System started");
   SystemStarted(true);
+
+  // system started may sound like a good thing, but actually the system
+  // shouldn't normally stop. so, that it has started is not usually a 
+  // good thing.
+  ReportWarning("System started");
 }
 
 void System::RefreshRate(int refreshRate)
