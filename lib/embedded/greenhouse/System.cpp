@@ -274,12 +274,6 @@ bool System::Refresh()
 
   bool ok = base::System::Refresh();
 
-  // HACK: the shift register sometimes gets stuck (maybe due to back-EMF or a surge),
-  // and shifting on every refresh will clear this. the aim is that this should keep
-  // pins on that should be on, but that's uncertain.
-  Log().Trace(F("Refresh shift"));
-  s_shiftRegisters.shift();
-
   m_power.MeasureCurrent();
 
   Log().Trace(F("Common voltage: %.2fV"), m_power.ReadCommonVoltage());
