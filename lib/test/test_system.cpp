@@ -321,6 +321,7 @@ void Test_Refresh_LastNightTransitionSameDay_TransitionedToNight(void)
   
   system.m_mock_CurrentHour = 22;
   system.m_mock_EpochTime = 1649365645;
+  system.DayEndHour(17);
 
   system.NightToDayTransitionTime(1649314854);
   system.DayToNightTransitionTime(1649289653);
@@ -328,6 +329,38 @@ void Test_Refresh_LastNightTransitionSameDay_TransitionedToNight(void)
   system.Refresh();
 
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_HandleDayToNightTransition);
+  TEST_ASSERT_EQUAL_INT(1649365645, system.DayToNightTransitionTime());
+}
+
+void Test_Refresh_LastNightTransitionSameDay_NextHourNoTransition(void)
+{
+  TestSystem system;
+  
+  system.m_mock_CurrentHour = 23;
+  system.m_mock_EpochTime = 1649365645 + 3600;
+
+  system.NightToDayTransitionTime(1649314854);
+  system.DayToNightTransitionTime(1649365645);
+
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, system.m_calls_HandleDayToNightTransition);
+  TEST_ASSERT_EQUAL_INT(1649365645, system.DayToNightTransitionTime());
+}
+
+void Test_Refresh_LastNightTransitionSameDay_NextDayNoTransition(void)
+{
+  TestSystem system;
+  
+  system.m_mock_CurrentHour = 00;
+  system.m_mock_EpochTime = 1649365645 + (3600 * 2);
+
+  system.NightToDayTransitionTime(1649314854);
+  system.DayToNightTransitionTime(1649365645);
+
+  system.Refresh();
+
+  TEST_ASSERT_EQUAL_INT(0, system.m_calls_HandleDayToNightTransition);
   TEST_ASSERT_EQUAL_INT(1649365645, system.DayToNightTransitionTime());
 }
 
@@ -453,6 +486,13 @@ void Test_IsDaytime_CurrentHourAfterDayEnd_ReturnsFalse()
 
 void testSystem()
 {
+  RUN_TEST(Test_Refresh_NightDayNightDay_DayNightTransitionedTwice);
+  RUN_TEST(Test_Refresh_DayNightDayNight_DayNightTransitionedTwice);
+  RUN_TEST(Test_Refresh_LastNightTransitionSameDay_TransitionedToNight);
+  RUN_TEST(Test_Refresh_LastNightTransitionSameDay_NextHourNoTransition);
+  RUN_TEST(Test_Refresh_LastNightTransitionSameDay_NextDayNoTransition);
+  return;
+
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
   RUN_TEST(Test_Refresh_ManualMode_NothingHappens);
   RUN_TEST(Test_Refresh_AutoModeNoOpenBounds_NothingHappens);
@@ -469,6 +509,8 @@ void testSystem()
   RUN_TEST(Test_Refresh_NightDayNightDay_DayNightTransitionedTwice);
   RUN_TEST(Test_Refresh_DayNightDayNight_DayNightTransitionedTwice);
   RUN_TEST(Test_Refresh_LastNightTransitionSameDay_TransitionedToNight);
+  RUN_TEST(Test_Refresh_LastNightTransitionSameDay_NextHourNoTransition);
+  RUN_TEST(Test_Refresh_LastNightTransitionSameDay_NextDayNoTransition);
   RUN_TEST(Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf);
   RUN_TEST(Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf);
   RUN_TEST(Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero);

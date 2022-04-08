@@ -305,6 +305,24 @@ void System::CheckTimeTransition()
     int nowYear = ptm->tm_year;
     int nowHour = ptm->tm_hour;
 
+    Log().Trace("Current time, hour=%d, day=%d, month=%d, year=%d", nowHour, nowDay, nowMonth, nowYear);
+
+    // if less than a full day since transition, it may be the case that
+    // it's too early to transition
+    const int fullDay = (3600 * 24); // 24h
+    if ((now - last) < fullDay) {
+
+      // do nothing if we're not in the right hour to transition
+      if ((DayStartHour() != nowHour) && (DayEndHour() != nowHour)) {
+        Log().Trace("Not time to transition (not start or end of day)");
+        return;
+      }
+
+    }
+    else {
+      Log().Trace("Transition is overdue (24 hours have passed since last)");
+    }
+
     ptm = gmtime(&last);
     int lastDay = ptm->tm_mday;
     int lastMonth = ptm->tm_mon;
@@ -317,7 +335,7 @@ void System::CheckTimeTransition()
     // if days match, we already transitioned for this period.
     if ((nowHour == lastHour) && (nowDay == lastDay) && (nowMonth == lastMonth) && (nowYear == lastYear)) {
       Log().Trace(
-        "%s transition already happened today", daytime ? "Day to night" : "Night to day");
+        "%s transition already happened this hour", daytime ? "Day to night" : "Night to day");
       return;
     }
   }
