@@ -188,7 +188,7 @@ void System::Loop()
   UpdateTime();
 
   if (!Blynk.run()) {
-    Log().Trace("Blynk failed, restarting...");
+    Log().Trace(F("Blynk failed, restarting..."));
     Restart();
     return;
   }
@@ -282,8 +282,8 @@ bool System::Refresh()
 
   m_power.MeasureCurrent();
 
-  Log().Trace("Common voltage: %.2fV", m_power.ReadCommonVoltage());
-  Log().Trace("PSU voltage: %.2fV", m_power.ReadPsuVoltage());
+  Log().Trace(F("Common voltage: %.2fV"), m_power.ReadCommonVoltage());
+  Log().Trace(F("PSU voltage: %.2fV"), m_power.ReadPsuVoltage());
 
   Blynk.virtualWrite(V28, Power().PvPowerSource());
   Blynk.virtualWrite(V29, Power().PvVoltageSensor());
@@ -428,12 +428,12 @@ bool System::ReadSoilMoistureSensor()
 void System::RunWindowActuator(bool extend)
 {
   if (extend) {
-    Log().Trace("Actuator set IN1, clear IN2");
+    Log().Trace(F("Actuator set IN1, clear IN2"));
     s_shiftRegisters.set(k_actuatorPin1);
     s_shiftRegisters.clear(k_actuatorPin2);
   }
   else {
-    Log().Trace("Actuator clear IN1, set IN2");
+    Log().Trace(F("Actuator clear IN1, set IN2"));
     s_shiftRegisters.clear(k_actuatorPin1);
     s_shiftRegisters.set(k_actuatorPin2);
   }
@@ -468,7 +468,7 @@ void System::Restart()
 
 void System::CaseFan(bool on)
 {
-  Log().Trace("Case fan %s", on ? "on" : "off");
+  Log().Trace(F("Case fan %s"), on ? "on" : "off");
 
   if (on) {
     s_shiftRegisters.set(k_caseFanPin);
