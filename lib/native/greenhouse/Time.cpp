@@ -84,7 +84,7 @@ void Time::CheckTransition()
   }
 
   // if last transition didn't happen within this exact hour time frame
-  if ((nowHour != lastHour) || (nowDay != lastDay) || (nowMonth != lastMonth) || (nowYear != lastMonth)) {
+  if ((nowHour != lastHour) || (nowDay != lastDay) || (nowMonth != lastMonth) || (nowYear != lastYear)) {
     Log().Trace("Last transition didn't happen in current hour");
 
     if (DayStartHour() == nowHour) {
