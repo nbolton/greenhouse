@@ -220,12 +220,10 @@ void Test_Refresh_LastNightTransitionSameDay_NextDayNoTransition(void)
 void testTime()
 {
   //RUN_TEST(Test_Refresh_NightDayNightDay_DayNightTransitionedTwice);
-  RUN_TEST(Test_Refresh_DayNightDayNight_DayNightTransitionedTwice);
-    return;
-  RUN_TEST(Test_Refresh_LastNightTransitionSameDay_TransitionedToNight);
+  //RUN_TEST(Test_Refresh_DayNightDayNight_DayNightTransitionedTwice);
+  //RUN_TEST(Test_Refresh_LastNightTransitionSameDay_TransitionedToNight);
   RUN_TEST(Test_Refresh_LastNightTransitionSameDay_NextHourNoTransition);
   RUN_TEST(Test_Refresh_LastNightTransitionSameDay_NextDayNoTransition);
-  return;
 
   RUN_TEST(Test_IsDaytime_CurrentHourBeforeDayStart_ReturnsFalse);
   RUN_TEST(Test_IsDaytime_CurrentHourEqualsDayStart_ReturnsTrue);

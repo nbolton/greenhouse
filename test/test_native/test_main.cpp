@@ -1,5 +1,4 @@
-#include "test_system.h"
-#include "test_heating.h"
+#include "test.h"
 
 #include <iostream>
 
@@ -9,7 +8,8 @@ void process()
 {
   UNITY_BEGIN();
   testSystem();
-  //testHeating();
+  testHeating();
+  testTime();
   UNITY_END();
 }
 

@@ -1,8 +1,9 @@
-#include "test_heating.h"
+#include "test.h"
 
 #include "../native/greenhouse/Heating.h"
 
 #include "TestSystem.h"
+#include "TestTime.h"
 #include <unity.h>
 
 using namespace native::greenhouse;
@@ -20,12 +21,14 @@ class TestHeating : public Heating {
 
 void Test_Update_DaytimeBelowDayTemp_SwitchOnWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_WaterTemperature = 0;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -40,12 +43,14 @@ void Test_Update_DaytimeBelowDayTemp_SwitchOnWaterHeater(void)
 
 void Test_Update_DaytimeAboveDayTemp_SwitchOffWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_WaterTemperature = 3;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -60,12 +65,14 @@ void Test_Update_DaytimeAboveDayTemp_SwitchOffWaterHeater(void)
 
 void Test_Update_NighttimeBelowNightTemp_SwitchOnWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_WaterTemperature = 0;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -80,12 +87,14 @@ void Test_Update_NighttimeBelowNightTemp_SwitchOnWaterHeater(void)
 
 void Test_Update_NighttimeAboveNightTemp_SwitchOffWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_WaterTemperature = 3;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -100,12 +109,14 @@ void Test_Update_NighttimeAboveNightTemp_SwitchOffWaterHeater(void)
 
 void Test_Update_DaytimeBelowDayTemp_SwitchOnSoilHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_WaterTemperature = 5;     // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -119,12 +130,14 @@ void Test_Update_DaytimeBelowDayTemp_SwitchOnSoilHeating(void)
 
 void Test_Update_DaytimeAboveDayTemp_SwitchOffSoilHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_SoilTemperature = 3;      // remember margin
   system.m_mock_WaterTemperature = 5;     // remember margin + min water delta
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -139,12 +152,14 @@ void Test_Update_DaytimeAboveDayTemp_SwitchOffSoilHeating(void)
 
 void Test_Update_NighttimeBelowNightTemp_SwitchOnSoilHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_WaterTemperature = 5;     // remember margin + min water delta
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -158,12 +173,14 @@ void Test_Update_NighttimeBelowNightTemp_SwitchOnSoilHeating(void)
 
 void Test_Update_NighttimeAboveNightTemp_SwitchOffSoilHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_SoilTemperature = 3;      // remember margin
   system.m_mock_WaterTemperature = 0;     // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -178,12 +195,14 @@ void Test_Update_NighttimeAboveNightTemp_SwitchOffSoilHeating(void)
 
 void Test_Update_DaytimeBelowDayTemp_SwitchOnAirHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_InsideAirTemperature = 0; // remember margin
   system.m_mock_WaterTemperature = 10;    // remember margin + min water delta
   system.m_mock_SoilTemperature = 0;      // remember margin
@@ -197,12 +216,14 @@ void Test_Update_DaytimeBelowDayTemp_SwitchOnAirHeating(void)
 
 void Test_Update_DaytimeAboveDayTemp_SwitchOffAirHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_InsideAirTemperature = 3; // remember margin
   system.m_mock_WaterTemperature = 0;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
@@ -217,12 +238,14 @@ void Test_Update_DaytimeAboveDayTemp_SwitchOffAirHeating(void)
 
 void Test_Update_NighttimeBelowNightTemp_SwitchOnAirHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_InsideAirTemperature = 0; // remember margin
   system.m_mock_WaterTemperature = 10;    // remember margin + min water delta
   system.m_mock_SoilTemperature = 0;      // remember margin
@@ -236,12 +259,14 @@ void Test_Update_NighttimeBelowNightTemp_SwitchOnAirHeating(void)
 
 void Test_Update_NighttimeAboveNightTemp_SwitchOffAirHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_InsideAirTemperature = 3; // remember margin
   system.m_mock_WaterTemperature = 0;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
@@ -256,12 +281,14 @@ void Test_Update_NighttimeAboveNightTemp_SwitchOffAirHeating(void)
 
 void Test_Update_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_SwitchOffWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_SoilTemperature = 0;
   system.m_mock_WaterTemperature = 5; // remember margin + min water delta
   system.m_mock_InsideAirTemperature = 2;
@@ -284,12 +311,14 @@ void Test_Update_SoilBelowTempAndWaterBelowTempThenWaterAboveTemp_SwitchOffWater
 
 void Test_Update_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_SoilTemperature = 3;
   system.m_mock_WaterTemperature = 0;
   system.m_mock_InsideAirTemperature = 3;
@@ -306,16 +335,18 @@ void Test_Update_WaterOnWhenAirAndSoilHeatingOff_SwitchOffWaterHeater(void)
 
 void Test_Update_WaterHeaterDayRuntimeLimitReached_SwitchOffWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
+  time.m_mock_UptimeSeconds = 0;
   system.m_mock_SoilTemperature = 0;
   system.m_mock_WaterTemperature = 0;
   system.m_mock_InsideAirTemperature = 0;
-  system.m_mock_UptimeSeconds = 0;
 
   heating.DayWaterTemperature(8);
   heating.DaySoilTemperature(2);
@@ -326,13 +357,13 @@ void Test_Update_WaterHeaterDayRuntimeLimitReached_SwitchOffWaterHeater(void)
 
   TEST_ASSERT_EQUAL(true, heating.WaterHeaterIsOn());
 
-  system.m_mock_UptimeSeconds = 60;
+  time.m_mock_UptimeSeconds = 60;
 
   heating.Update();
 
   TEST_ASSERT_EQUAL(false, heating.WaterHeaterIsOn());
 
-  system.m_mock_UptimeSeconds = 120;
+  time.m_mock_UptimeSeconds = 120;
 
   heating.Update();
 
@@ -342,16 +373,18 @@ void Test_Update_WaterHeaterDayRuntimeLimitReached_SwitchOffWaterHeater(void)
 
 void Test_Update_WaterHeaterNightRuntimeLimitReached_SwitchOffWaterHeater(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
+  time.m_mock_UptimeSeconds = 0;
   system.m_mock_SoilTemperature = 0;
   system.m_mock_WaterTemperature = 0;
   system.m_mock_InsideAirTemperature = 0;
-  system.m_mock_UptimeSeconds = 0;
 
   heating.NightWaterTemperature(8);
   heating.NightSoilTemperature(2);
@@ -362,13 +395,13 @@ void Test_Update_WaterHeaterNightRuntimeLimitReached_SwitchOffWaterHeater(void)
 
   TEST_ASSERT_EQUAL(true, heating.WaterHeaterIsOn());
 
-  system.m_mock_UptimeSeconds = 60;
+  time.m_mock_UptimeSeconds = 60;
 
   heating.Update();
 
   TEST_ASSERT_EQUAL(false, heating.WaterHeaterIsOn());
 
-  system.m_mock_UptimeSeconds = 120;
+  time.m_mock_UptimeSeconds = 120;
 
   heating.Update();
 
@@ -378,12 +411,14 @@ void Test_Update_WaterHeaterNightRuntimeLimitReached_SwitchOffWaterHeater(void)
 
 void Test_Update_DaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_WaterTemperature = 0;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -404,12 +439,14 @@ void Test_Update_DaytimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHea
 
 void Test_Update_NighttimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirHeating(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_WaterTemperature = 0;     // remember margin
   system.m_mock_SoilTemperature = 0;      // remember margin
   system.m_mock_InsideAirTemperature = 0; // remember margin
@@ -430,12 +467,14 @@ void Test_Update_NighttimeBelowDayTempAndWaterNotWarmEnough_SwitchOffSoilAndAirH
 
 void Test_Update_DaytimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAirHeating()
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = true;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = true;
   system.m_mock_WaterTemperature = 21.94;     // remember margin
   system.m_mock_SoilTemperature = 21.69;      // remember margin
   system.m_mock_InsideAirTemperature = 20.04; // remember margin
@@ -458,12 +497,14 @@ void Test_Update_DaytimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAi
 
 void Test_Update_NighttimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOffAirHeating()
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
-  system.m_mockOn_IsDaytime = true;
-  system.m_mock_IsDaytime = false;
+  time.m_mockOn_IsDaytime = true;
+  time.m_mock_IsDaytime = false;
   system.m_mock_WaterTemperature = 21.94;     // remember margin
   system.m_mock_SoilTemperature = 21.69;      // remember margin
   system.m_mock_InsideAirTemperature = 20.04; // remember margin
@@ -486,9 +527,11 @@ void Test_Update_NighttimeAirBelowTemp_WaterTooLowAndWaterLimitReached_SwitchOff
 
 void Test_HandleDayToNightTransition_Called_WaterHeaterRuntimeLimitIsReset(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
   heating.WaterHeaterDayLimitMinutes(1);
   heating.HandleDayToNightTransition();
@@ -498,9 +541,11 @@ void Test_HandleDayToNightTransition_Called_WaterHeaterRuntimeLimitIsReset(void)
 
 void Test_HandleNightToDayTransition_Called_WaterHeaterRuntimeLimitIsReset(void)
 {
+  TestTime time;
   TestSystem system;
   TestHeating heating;
   heating.System(system);
+  system.m_mock_time = &time;
 
   heating.WaterHeaterNightLimitMinutes(1);
   heating.HandleNightToDayTransition();
