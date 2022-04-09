@@ -3,6 +3,7 @@
 #include "../../native/greenhouse/System.h"
 
 #include "../Log.h"
+#include "Time.h"
 #include "Heating.h"
 #include "Power.h"
 
@@ -78,11 +79,9 @@ protected:
 
 public:
   // getters & setters
+  embedded::greenhouse::Time &Time() { return m_time; }
   native::greenhouse::Heating &Heating() { return m_heating; }
   embedded::greenhouse::Power &Power() { return m_power; }
-  int CurrentHour() const;
-  unsigned long UptimeSeconds() const;
-  unsigned long EpochTime() const;
   float InsideAirTemperature() const { return m_insideAirTemperature; }
   float InsideAirHumidity() const;
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }
@@ -104,11 +103,11 @@ private:
   void InitSensors();
   void InitADCs();
   void InitShiftRegisters();
-  void UpdateTime();
   void UpdateCaseFan();
 
 private:
   embedded::Log m_log;
+  embedded::greenhouse::Time m_time;
   embedded::greenhouse::Heating m_heating;
   embedded::greenhouse::Power m_power;
   float m_insideAirTemperature;
@@ -129,7 +128,6 @@ private:
   bool m_soilMoistureWarningSent;
   int m_activeSwitch;
   bool m_switchState[k_switchCount];
-  bool m_timeClientOk;
 };
 
 } // namespace greenhouse

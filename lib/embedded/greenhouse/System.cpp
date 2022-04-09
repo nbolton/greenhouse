@@ -15,11 +15,9 @@
 #include <DallasTemperature.h>
 #include <ESP8266WiFi.h>
 #include <MultiShiftRegister.h>
-#include <NTPClient.h>
 #include <OneWire.h>
 #include <PCF8574.h>
 #include <SPI.h>
-#include <WiFiUdp.h>
 #include <Wire.h>
 
 using namespace common;
@@ -90,8 +88,6 @@ static MultiShiftRegister s_shiftRegisters(
   k_shiftRegisterTotal, k_shiftRegisterLatchPin, k_shiftRegisterClockPin, k_shiftRegisterDataPin);
 static OneWire s_oneWire(k_oneWirePin);
 static DallasTemperature s_dallas(&s_oneWire);
-static WiFiUDP s_ntpUdp;
-static NTPClient s_timeClient(s_ntpUdp);
 static char s_reportBuffer[200];
 static BlynkTimer s_timer;
 static Adafruit_SHT31 s_insideAirSensor;
@@ -132,8 +128,7 @@ System::System() :
   m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
-  m_activeSwitch(k_unknown),
-  m_timeClientOk(false)
+  m_activeSwitch(k_unknown)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -168,8 +163,9 @@ void System::Setup()
   m_power.Native(*this);
   m_power.Setup();
 
+  m_time.Setup();
+
   s_dallas.begin();
-  s_timeClient.begin();
 
   InitSensors();
   InitADCs();
@@ -185,7 +181,7 @@ void System::Loop()
 {
   base::System::Loop();
 
-  UpdateTime();
+  Time().Update();
 
   if (!Blynk.run()) {
     Log().Trace(F("Blynk failed, restarting..."));
@@ -566,24 +562,6 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
   return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 }
 
-int System::CurrentHour() const
-{
-  if (!m_timeClientOk) {
-    return k_unknown;
-  }
-  return s_timeClient.getHours();
-}
-
-unsigned long System::EpochTime() const
-{
-  if (!m_timeClientOk) {
-    return k_unknown;
-  }
-  return s_timeClient.getEpochTime();
-}
-
-unsigned long System::UptimeSeconds() const { return millis() / 1000; }
-
 void System::ReportInfo(const char *format, ...)
 {
   va_list args;
@@ -644,20 +622,10 @@ void System::ReportSystemInfo()
   FlashLed(k_ledSend);
 
   // current time
-  Blynk.virtualWrite(V10, s_timeClient.getFormattedTime() + " UTC");
+  Blynk.virtualWrite(V10, Time().FormattedCurrentTime());
 
   // uptime
-  int seconds, minutes, hours, days;
-  long uptime = UptimeSeconds();
-  minutes = uptime / 60;
-  seconds = uptime % 60;
-  hours = minutes / 60;
-  minutes = minutes % 60;
-  days = hours / 24;
-  hours = hours % 24;
-  char uptimeBuffer[50];
-  sprintf(uptimeBuffer, "%dd %dh %dm %ds", days, hours, minutes, seconds);
-  Blynk.virtualWrite(V12, uptimeBuffer);
+  Blynk.virtualWrite(V12, Time().FormattedUptime());
 
   // free heap
   int freeHeap = ESP.getFreeHeap();
@@ -676,14 +644,14 @@ void System::HandleNightToDayTransition()
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
 
-  Blynk.virtualWrite(V64, NightToDayTransitionTime());
+  Blynk.virtualWrite(V64, Time().NightToDayTransitionTime());
 }
 
 void System::HandleDayToNightTransition()
 {
   base::System::HandleDayToNightTransition();
 
-  Blynk.virtualWrite(V68, DayToNightTransitionTime());
+  Blynk.virtualWrite(V68, Time().DayToNightTransitionTime());
 }
 
 void System::ReportWarnings()
@@ -719,7 +687,7 @@ void System::OnSystemStarted()
 
   // loop() will not have run yet, so make sure the time is updated
   // before running the refresh function.
-  UpdateTime();
+  Time().Update();
 
   // run the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -843,23 +811,8 @@ void System::ReportMoistureCalibration()
 void System::ManualRefresh()
 {
   Log().Trace(F("Manual refresh"));
-  UpdateTime();
+  Time().Update();
   Refresh();
-}
-
-void System::UpdateTime()
-{
-  const int retryDelay = 1000;
-  const int retryLimit = 5;
-  int retryCount = 1;
-
-  do {
-    m_timeClientOk = s_timeClient.update();
-    if (!m_timeClientOk) {
-      Log().Trace(F("Time update failed (attempt %d)"), retryCount);
-      Delay(retryDelay);
-    }
-  } while (!m_timeClientOk && retryCount++ < retryLimit);
 }
 
 void System::UpdateCaseFan()
@@ -999,9 +952,9 @@ BLYNK_WRITE(V25)
   }
 }
 
-BLYNK_WRITE(V31) { s_instance->DayStartHour(param.asInt()); }
+BLYNK_WRITE(V31) { s_instance->Time().DayStartHour(param.asInt()); }
 
-BLYNK_WRITE(V32) { s_instance->DayEndHour(param.asInt()); }
+BLYNK_WRITE(V32) { s_instance->Time().DayEndHour(param.asInt()); }
 
 BLYNK_WRITE(V34) { s_instance->Power().PvVoltageSensorMin(param.asFloat()); }
 
@@ -1052,10 +1005,10 @@ BLYNK_WRITE(V63) { s_instance->Heating().WaterHeaterCostCumulative(param.asFloat
 BLYNK_WRITE(V64)
 {
   if (!String(param.asString()).isEmpty()) {
-    s_instance->NightToDayTransitionTime(param.asLongLong());
+    s_instance->Time().NightToDayTransitionTime(param.asLongLong());
   }
   else {
-    s_instance->NightToDayTransitionTime(k_unknownUL);
+    s_instance->Time().NightToDayTransitionTime(k_unknownUL);
   }
 }
 
@@ -1066,10 +1019,10 @@ BLYNK_WRITE(V67) { s_instance->Heating().WaterHeaterNightRuntimeMinutes(param.as
 BLYNK_WRITE(V68)
 {
   if (!String(param.asString()).isEmpty()) {
-    s_instance->DayToNightTransitionTime(param.asLongLong());
+    s_instance->Time().DayToNightTransitionTime(param.asLongLong());
   }
   else {
-    s_instance->DayToNightTransitionTime(k_unknownUL);
+    s_instance->Time().DayToNightTransitionTime(k_unknownUL);
   }
 }
 

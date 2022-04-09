@@ -2,7 +2,6 @@
 
 #include <cstdlib>
 #include <stdio.h>
-#include <time.h>
 
 namespace native {
 namespace greenhouse {
@@ -20,8 +19,6 @@ System::System() :
   m_windowProgress(k_unknown),
   m_testMode(false),
   m_soilMostureWarning(k_unknown),
-  m_dayStartHour(k_unknown),
-  m_dayEndHour(k_unknown),
   m_windowActuatorRuntimeSec(0),
   m_weatherCode(k_unknown),
   m_weatherInfo(),
@@ -29,14 +26,16 @@ System::System() :
   m_systemStarted(false),
   m_weatherErrors(0),
   m_weatherErrorReportSent(false),
-  m_nightToDayTransitionTime(k_unknownUL),
-  m_dayToNightTransitionTime(k_unknownUL),
   m_soilSensorWet(k_unknown),
   m_soilSensorDry(k_unknown)
 {
 }
 
-void System::Setup() { Heating().System(*this); }
+void System::Setup()
+{
+  Time().System(*this);
+  Heating().System(*this);
+}
 
 void System::Loop() {}
 
@@ -44,7 +43,7 @@ bool System::Refresh()
 {
   Log().Trace("Refreshing");
 
-  CheckTimeTransition();
+  Time().CheckTransition();
 
   int sensorFailures = 0;
   bool sensorsOk = ReadSensors(sensorFailures);
@@ -260,77 +259,6 @@ void System::HandleNightToDayTransition()
 }
 
 void System::HandleDayToNightTransition() { Heating().HandleDayToNightTransition(); }
-
-bool System::IsDaytime() const
-{
-  return (CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour());
-}
-
-void System::CheckTimeTransition()
-{
-  // if time unknown, we can't do anything.
-  if (EpochTime() == k_unknownUL) {
-    Log().Trace("Epoch unknown, can't check time transition");
-    return;
-  }
-
-  bool daytime = IsDaytime();
-  time_t now = EpochTime();
-  time_t last;
-
-  if (daytime) {
-    last = NightToDayTransitionTime();
-  }
-  else {
-    last = DayToNightTransitionTime();
-  }
-
-  // HACK: cast to int to print -1 (%lld doesn't seem to print -1).
-  // this is a bad idea, and will break in 2038.
-  Log().Trace(
-    "Checking for %s transition, now=%d, last=%d",
-    daytime ? "night to day" : "night to day",
-    static_cast<int>(now),
-    static_cast<int>(last));
-
-  // only check transition time if there is one.
-  if (last != k_unknownUL) {
-
-    struct tm *ptm;
-
-    ptm = gmtime(&now);
-    int nowDay = ptm->tm_mday;
-    int nowMonth = ptm->tm_mon;
-    int nowYear = ptm->tm_year;
-
-    ptm = gmtime(&last);
-    int lastDay = ptm->tm_mday;
-    int lastMonth = ptm->tm_mon;
-    int lastYear = ptm->tm_year;
-
-    Log().Trace("Epoch (now), day=%d, month=%d, year=%d", nowDay, nowMonth, nowYear);
-    Log().Trace("Last transition, day=%d, month=%d, year=%d", lastDay, lastMonth, lastYear);
-
-    // if days match, we already transitioned for this period.
-    if ((nowDay == lastDay) && (nowMonth == lastMonth) && (nowYear == lastYear)) {
-      Log().Trace(
-        "%s transition already happened today", daytime ? "Day to night" : "Night to day");
-      return;
-    }
-  }
-
-  // wait until the start of the day to transition.
-  if (daytime) {
-    Log().Trace("Night to day transition detected");
-    NightToDayTransitionTime(EpochTime());
-    HandleNightToDayTransition();
-  }
-  else {
-    Log().Trace("Day to night transition detected");
-    DayToNightTransitionTime(EpochTime());
-    HandleDayToNightTransition();
-  }
-}
 
 void System::SoilCalibrateWet()
 {

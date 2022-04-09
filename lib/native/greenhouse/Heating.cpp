@@ -43,7 +43,7 @@ bool Heating::SwitchWaterHeater(bool on)
     float runtime;
     int limit;
 
-    if (System().IsDaytime()) {
+    if (System().Time().IsDaytime()) {
       runtime = WaterHeaterDayRuntimeMinutes();
       limit = WaterHeaterDayLimitMinutes();
     }
@@ -177,15 +177,15 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
 
 void Heating::Update()
 {
-  if (System().CurrentHour() == k_unknown) {
+  if (System().Time().CurrentHour() == k_unknown) {
     Log().Trace("Unable to update heating, time unknown");
     return;
   }
 
-  bool daytime = System().IsDaytime();
+  bool daytime = System().Time().IsDaytime();
   Log().Trace(
     "Update heating systems, hour=%d, period=%s",
-    System().CurrentHour(),
+    System().Time().CurrentHour(),
     daytime ? "day" : "night");
 
   if (WaterHeaterIsOn() && (m_waterHeaterLastUpdate != k_unknownUL)) {
@@ -202,7 +202,7 @@ void Heating::Update()
       limit = WaterHeaterNightLimitMinutes();
     }
 
-    int addSeconds = (System().UptimeSeconds() - m_waterHeaterLastUpdate);
+    int addSeconds = (System().Time().UptimeSeconds() - m_waterHeaterLastUpdate);
     runtime += (float)addSeconds / 60;
     m_waterHeaterCostCumulative += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
 
@@ -229,7 +229,7 @@ void Heating::Update()
     }
   }
 
-  m_waterHeaterLastUpdate = System().UptimeSeconds();
+  m_waterHeaterLastUpdate = System().Time().UptimeSeconds();
 
   // heat water to different temperature depending on if day or night
   if (daytime) {

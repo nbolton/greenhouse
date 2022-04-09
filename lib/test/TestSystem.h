@@ -9,7 +9,7 @@ class TestSystem : public System {
 public:
   TestSystem() :
 
-    // calls
+    // call counters
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
     m_calls_RunWindowActuator(0),
@@ -20,19 +20,15 @@ public:
     m_calls_HandleDayToNightTransition(0),
 
     // mock returns
+    m_mock_heating(nullptr),
+    m_mock_time(nullptr),
     m_mock_ReadDhtSensor(false),
     m_mock_WaterTemperature(0),
     m_mock_SoilTemperature(0),
-    m_mock_InsideAirTemperature(0),
-    m_mock_CurrentHour(0),
-    m_mock_UptimeSeconds(0),
-    m_mock_IsDaytime(false),
-    m_mock_EpochTime(0),
-
-    // mock enable
-    m_mockOn_IsDaytime(false)
+    m_mock_InsideAirTemperature(0)
   {
     Heating().System(*this);
+    Time().System(*this);
   }
 
   // mocks
@@ -61,32 +57,26 @@ public:
     return m_mock_InsideAirTemperature;
   }
 
-  int CurrentHour() const
+  native::greenhouse::Time &Time()
   {
-    Log().Trace("Mock: CurrentHour, value=%d", m_mock_CurrentHour);
-    return m_mock_CurrentHour;
-  }
-
-  unsigned long UptimeSeconds() const
-  {
-    Log().Trace("Mock: UptimeSeconds, value=%d", static_cast<int>(m_mock_UptimeSeconds));
-    return m_mock_UptimeSeconds;
-  }
-
-  bool IsDaytime() const
-  {
-    if (m_mockOn_IsDaytime) {
-      Log().Trace("Mock: IsDaytime, value=%s", m_mock_IsDaytime ? "true" : "false");
-      return m_mock_IsDaytime;
+    if (m_mock_time != nullptr) {
+      Log().Trace("Mock: Time");
+      return *m_mock_time;
     }
-    
-    return System::IsDaytime();
+
+    // default
+    return m_time;
   }
 
-  unsigned long EpochTime() const
+  native::greenhouse::Heating &Heating()
   {
-    Log().Trace("Mock: EpochTime, value=%d", static_cast<int>(m_mock_EpochTime));
-    return m_mock_EpochTime;
+    if (m_mock_heating != nullptr) {
+      Log().Trace("Mock: Heating");
+      return *m_mock_heating;
+    }
+
+    // default
+    return m_heating;
   }
 
   // stubs
@@ -146,26 +136,20 @@ public:
     Log().Trace("Stub: HandleDayToNightTransition");
     m_calls_HandleDayToNightTransition++;
   }
-  
+
   // expose protected members to public
 
   float CalculateMoisture(float value) const { return System::CalculateMoisture(value); }
   bool ApplyWindowProgress(float value) { return System::ApplyWindowProgress(value); }
 
-  // mock enable
-
-  bool m_mockOn_IsDaytime;
-
   // mock values
 
+  native::greenhouse::Heating *m_mock_heating;
+  native::greenhouse::Time *m_mock_time;
   bool m_mock_ReadDhtSensor;
   float m_mock_WaterTemperature;
   float m_mock_SoilTemperature;
   float m_mock_InsideAirTemperature;
-  int m_mock_CurrentHour;
-  unsigned long m_mock_UptimeSeconds;
-  bool m_mock_IsDaytime;
-  unsigned long m_mock_EpochTime;
 
   // call counters (init to 0)
 
@@ -185,6 +169,8 @@ public:
   bool m_lastArg_RunWindowActuator_extend;
   unsigned long m_lastArg_SystemDelay_ms;
 
+  // defaults
+  
   native::greenhouse::Heating m_heating;
-  native::greenhouse::Heating &Heating() { return m_heating; }
+  native::greenhouse::Time m_time;
 };
