@@ -7,8 +7,8 @@
 void process()
 {
   UNITY_BEGIN();
-  //testSystem();
-  //testHeating();
+  testSystem();
+  testHeating();
   testTime();
   UNITY_END();
 }
