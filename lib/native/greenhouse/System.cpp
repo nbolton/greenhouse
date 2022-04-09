@@ -43,7 +43,7 @@ bool System::Refresh()
 {
   Log().Trace("Refreshing");
 
-  Time().CheckTimeTransition();
+  Time().CheckTransition();
 
   int sensorFailures = 0;
   bool sensorsOk = ReadSensors(sensorFailures);

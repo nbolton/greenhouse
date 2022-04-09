@@ -9,7 +9,7 @@ class TestSystem : public System {
 public:
   TestSystem() :
 
-    // calls
+    // call counters
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
     m_calls_RunWindowActuator(0),

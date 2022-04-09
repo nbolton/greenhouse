@@ -15,9 +15,9 @@ using namespace common;
 class Time : public ITime {
 public:
   Time();
-  virtual void CheckTimeTransition();
+  virtual void CheckTransition();
   virtual const common::Log &Log() const { return m_log; }
-  virtual unsigned long EpochTime() { return k_unknown; }
+  virtual unsigned long EpochTime() const { return k_unknown; }
   unsigned long UptimeSeconds() const { return k_unknown; }
   virtual int CurrentHour() const { return k_unknown; }
   virtual bool IsDaytime() const;
@@ -41,8 +41,10 @@ public:
   }
   void System(ISystem &value) { m_system = &value; }
 
-private:
-  void TransitionTimeNow();
+protected:
+  virtual void Transition(bool nightToDay);
+  virtual void OnNightToDayTransition();
+  virtual void OnDayToNightTransition();
 
 private:
   common::Log m_log;

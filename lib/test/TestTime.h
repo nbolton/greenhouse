@@ -8,6 +8,9 @@ class TestTime : public Time {
 
 public:
   TestTime() :
+    // call counters
+    m_calls_OnNightToDayTransition(0),
+    m_calls_OnDayToNightTransition(0),
 
     // mock returns
     m_mock_CurrentHour(0),
@@ -47,6 +50,23 @@ public:
     Log().Trace("Mock: EpochTime, value=%d", static_cast<int>(m_mock_EpochTime));
     return m_mock_EpochTime;
   }
+
+  void OnNightToDayTransition()
+  {
+    Log().Trace("Stub: OnNightToDayTransition");
+    m_calls_OnNightToDayTransition++;
+  }
+
+  void OnDayToNightTransition()
+  {
+    Log().Trace("Stub: OnDayToNightTransition");
+    m_calls_OnDayToNightTransition++;
+  }
+
+  // call counters (init to 0)
+
+  int m_calls_OnNightToDayTransition;
+  int m_calls_OnDayToNightTransition;
 
   // mock enable
 

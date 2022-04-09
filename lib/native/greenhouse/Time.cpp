@@ -21,7 +21,7 @@ bool Time::IsDaytime() const
   return (CurrentHour() >= DayStartHour()) && (CurrentHour() < DayEndHour());
 }
 
-void Time::CheckTimeTransition()
+void Time::CheckTransition()
 {
   // if time unknown, we can't do anything.
   if (EpochTime() == k_unknownUL) {
@@ -51,7 +51,7 @@ void Time::CheckTimeTransition()
 
   if (last == k_unknownUL) {
     Log().Trace("Last transition not known, assume it never happened");
-    TransitionTimeNow();
+    Transition(IsDaytime());
     return;
   }
 
@@ -79,43 +79,57 @@ void Time::CheckTimeTransition()
   if ((now - last) > fullDay) {
 
     Log().Trace("Transition is overdue (24 hours have passed since last)");
-    TransitionTimeNow();
+    Transition(IsDaytime());
     return;
   }
 
   // if last transition didn't happen within this exact hour time frame
-  if (
-    (nowHour != lastHour) && (nowDay != lastDay) && (nowMonth != lastMonth) &&
-    (nowYear != lastYear)) {
+  if ((nowHour != lastHour) || (nowDay != lastDay) || (nowMonth != nowMonth) || (nowYear != nowYear)) {
+    Log().Trace("Last transition didn't happen in current hour");
 
     if (DayStartHour() == nowHour) {
       Log().Trace("Start of day hour; night to day transition should happen");
-      TransitionTimeNow();
+      Transition(IsDaytime());
       return;
     }
-
-    if (DayEndHour() == nowHour) {
+    else if (DayEndHour() == nowHour) {
       Log().Trace("End of day hour; day to night transition should happen");
-      TransitionTimeNow();
+      Transition(IsDaytime());
       return;
+    }
+    else {
+      Log().Trace("Current hour is not a transition hour");
     }
   }
+  else {
+    Log().Trace("Transition already happened in current hour");
+  }
 
-  Log().Trace("No time transition transition happened");
+  Log().Trace("No time transition happened (no transition conditions met)");
 }
 
-void Time::TransitionTimeNow()
+void Time::Transition(bool nightToDay)
 {
-  if (IsDaytime()) {
+  if (nightToDay) {
     Log().Trace("Transitioning from night to day");
     NightToDayTransitionTime(EpochTime());
-    System().HandleNightToDayTransition();
+    OnNightToDayTransition();
   }
   else {
     Log().Trace("Transitioning from day to night");
     DayToNightTransitionTime(EpochTime());
-    System().HandleDayToNightTransition();
+    OnDayToNightTransition();
   }
+}
+
+void Time::OnNightToDayTransition()
+{
+    System().HandleNightToDayTransition();
+}
+
+void Time::OnDayToNightTransition()
+{
+    System().HandleDayToNightTransition();
 }
 
 } // namespace greenhouse
