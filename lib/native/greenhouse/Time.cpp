@@ -9,10 +9,10 @@ namespace greenhouse {
 using namespace common;
 
 Time::Time() :
-  m_nightToDayTransitionTime(k_unknownUL),
-  m_dayToNightTransitionTime(k_unknownUL),
   m_dayStartHour(k_unknown),
-  m_dayEndHour(k_unknown)
+  m_dayEndHour(k_unknown),
+  m_nightToDayTransitionTime(k_unknownUL),
+  m_dayToNightTransitionTime(k_unknownUL)
 {
 }
 
