@@ -91,7 +91,7 @@ void Power::Loop()
 native::greenhouse::ISystem &Power::Native() const
 {
   if (m_native == nullptr) {
-    Log().Trace("Native system not set");
+    Log().Trace(F("Native system not set"));
     throw;
   }
   return *m_native;
@@ -100,7 +100,7 @@ native::greenhouse::ISystem &Power::Native() const
 embedded::greenhouse::ISystem &Power::Embedded() const
 {
   if (m_embedded == nullptr) {
-    Log().Trace("Embedded system not set");
+    Log().Trace(F("Embedded system not set"));
     throw;
   }
   return *m_embedded;

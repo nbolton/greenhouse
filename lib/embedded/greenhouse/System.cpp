@@ -188,7 +188,7 @@ void System::Loop()
   UpdateTime();
 
   if (!Blynk.run()) {
-    Log().Trace("Blynk failed, restarting...");
+    Log().Trace(F("Blynk failed, restarting..."));
     Restart();
     return;
   }
@@ -274,16 +274,10 @@ bool System::Refresh()
 
   bool ok = base::System::Refresh();
 
-  // HACK: the shift register sometimes gets stuck (maybe due to back-EMF or a surge),
-  // and shifting on every refresh will clear this. the aim is that this should keep
-  // pins on that should be on, but that's uncertain.
-  Log().Trace(F("Refresh shift"));
-  s_shiftRegisters.shift();
-
   m_power.MeasureCurrent();
 
-  Log().Trace("Common voltage: %.2fV", m_power.ReadCommonVoltage());
-  Log().Trace("PSU voltage: %.2fV", m_power.ReadPsuVoltage());
+  Log().Trace(F("Common voltage: %.2fV"), m_power.ReadCommonVoltage());
+  Log().Trace(F("PSU voltage: %.2fV"), m_power.ReadPsuVoltage());
 
   Blynk.virtualWrite(V28, Power().PvPowerSource());
   Blynk.virtualWrite(V29, Power().PvVoltageSensor());
@@ -428,12 +422,12 @@ bool System::ReadSoilMoistureSensor()
 void System::RunWindowActuator(bool extend)
 {
   if (extend) {
-    Log().Trace("Actuator set IN1, clear IN2");
+    Log().Trace(F("Actuator set IN1, clear IN2"));
     s_shiftRegisters.set(k_actuatorPin1);
     s_shiftRegisters.clear(k_actuatorPin2);
   }
   else {
-    Log().Trace("Actuator clear IN1, set IN2");
+    Log().Trace(F("Actuator clear IN1, set IN2"));
     s_shiftRegisters.clear(k_actuatorPin1);
     s_shiftRegisters.set(k_actuatorPin2);
   }
@@ -468,7 +462,7 @@ void System::Restart()
 
 void System::CaseFan(bool on)
 {
-  Log().Trace("Case fan %s", on ? "on" : "off");
+  Log().Trace(F("Case fan %s"), on ? "on" : "off");
 
   if (on) {
     s_shiftRegisters.set(k_caseFanPin);
@@ -714,8 +708,6 @@ void System::OnLastWrite()
 
   m_lastWriteDone = true;
 
-  s_instance->Log().Trace(F("Handling last Blynk write"));
-
   // if this is the first time that the last write was done,
   // this means that the system has started.
   OnSystemStarted();
@@ -736,8 +728,12 @@ void System::OnSystemStarted()
   Refresh();
 
   FlashLed(k_ledStarted);
-  ReportInfo("System started");
   SystemStarted(true);
+
+  // system started may sound like a good thing, but actually the system
+  // shouldn't normally stop. so, that it has started is not usually a 
+  // good thing.
+  ReportWarning("System started");
 }
 
 void System::RefreshRate(int refreshRate)
@@ -956,7 +952,8 @@ BLYNK_CONNECTED()
     V69,
     V70,
     V71,
-    V72);
+    V72,
+    V127 /* last */);
 }
 
 BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
@@ -1092,8 +1089,11 @@ BLYNK_WRITE(V72)
   if (param.asInt() != 0) {
     s_instance->SoilCalibrateDry();
   }
+}
 
-  // TODO: find a better way to always call this last; sometimes
-  // when adding new write functions, moving this gets forgotten about.
+// used only as the last value
+BLYNK_WRITE(V127)
+{
+  s_instance->Log().Trace(F("Handling last Blynk write"));
   s_instance->OnLastWrite();
 }
