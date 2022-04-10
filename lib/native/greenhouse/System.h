@@ -20,7 +20,7 @@ public:
   virtual native::greenhouse::Time &Time() = 0;
   virtual void Setup();
   virtual void Loop();
-  virtual bool Refresh();
+  virtual void Refresh();
   virtual void ReportInfo(const char *m, ...) {}
   virtual void ReportWarning(const char *m, ...) {}
   virtual void ReportCritical(const char *m, ...) {}

@@ -254,13 +254,15 @@ void System::InitADCs()
   }
 }
 
-bool System::Refresh()
+void System::Refresh()
 {
   // TODO: use mutex lock?
   if (m_refreshBusy) {
     Log().Trace(F("Refresh busy, skipping"));
-    return false;
+    return;
   }
+
+  Log().Trace(F("Refreshing (embedded)"));
 
   // TODO: this isn't an ideal mutex lock because the two threads could
   // hit this line at the same time.
@@ -268,7 +270,7 @@ bool System::Refresh()
 
   FlashLed(k_ledRefresh);
 
-  bool ok = base::System::Refresh();
+  base::System::Refresh();
 
   m_power.MeasureCurrent();
 
@@ -286,7 +288,7 @@ bool System::Refresh()
 
   m_refreshBusy = false;
 
-  return ok;
+  Log().Trace(F("Refresh done (embedded)"));
 }
 
 void System::FlashLed(LedFlashTimes times)

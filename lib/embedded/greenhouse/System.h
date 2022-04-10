@@ -35,7 +35,7 @@ public:
 
   void Setup();
   void Loop();
-  bool Refresh();
+  void Refresh();
   void WeatherCallback();
   void OnLastWrite();
   void OnSystemStarted();
@@ -94,6 +94,7 @@ public:
   void FakeSoilTemperature(float value) { m_fakeSoilTemperature = value; }
   void FakeSoilMoisture(float value) { m_fakeSoilMoisture = value; }
   void ActiveSwitch(int value) { m_activeSwitch = value; }
+  bool RefreshBusy() const { return m_refreshBusy; }
 
 private:
   void StartBeep(int times);

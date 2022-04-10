@@ -39,9 +39,9 @@ void System::Setup()
 
 void System::Loop() {}
 
-bool System::Refresh()
+void System::Refresh()
 {
-  Log().Trace("Refreshing");
+  Log().Trace("Refreshing (native)");
 
   Time().CheckTransition();
 
@@ -151,7 +151,7 @@ bool System::Refresh()
 
   ReportSystemInfo();
 
-  return sensorsOk;
+  Log().Trace("Refresh done (native)");
 }
 
 bool System::ApplyWindowProgress(float expectedProgress)
