@@ -701,7 +701,7 @@ void System::OnSystemStarted()
   SystemStarted(true);
 
   // system started may sound like a good thing, but actually the system
-  // shouldn't normally stop. so, that it has started is not usually a 
+  // shouldn't normally stop. so, that it has started is not usually a
   // good thing.
   ReportWarning("System started");
 }
@@ -1047,10 +1047,7 @@ BLYNK_WRITE(V72)
   }
 }
 
-BLYNK_WRITE(V73)
-{
-    s_instance->Heating().Enabled(param.asInt() == 1);
-}
+BLYNK_WRITE(V73) { s_instance->Heating().Enabled(param.asInt() == 1); }
 
 // used only as the last value
 BLYNK_WRITE(V127)
