@@ -950,6 +950,13 @@ BLYNK_WRITE(V24) { s_instance->ActiveSwitch(param.asInt()); }
 
 BLYNK_WRITE(V25)
 {
+  // avoid calling ToggleActiveSwitch while Refresh is busy, 
+  // since this seems to cause a crash.
+  if (s_instance->RefreshBusy()) {
+    s_instance->Log().Trace("V25: Refresh busy, skipping");
+    return;
+  }
+
   if (param.asInt() == 1) {
     s_instance->ToggleActiveSwitch();
   }
