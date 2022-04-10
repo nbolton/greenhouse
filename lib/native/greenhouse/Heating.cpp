@@ -18,7 +18,7 @@ const float k_waterHeaterPowerUse = 3.4;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
 
 Heating::Heating() :
-  m_enabled(false),
+  m_enabled(true),
   m_system(nullptr),
   m_dayWaterTemperature(k_unknown),
   m_nightWaterTemperature(k_unknown),
