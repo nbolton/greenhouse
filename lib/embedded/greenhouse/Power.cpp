@@ -259,12 +259,20 @@ void Power::RelayTest()
 
 float Power::ReadCommonVoltage()
 {
-  return mapFloat(Embedded().ReadCommonVoltageSensor(), 0, k_commonVoltageMapIn, 0, k_commonVoltageMapOut);
+  float f = Embedded().ReadCommonVoltageSensor();
+  if (f == k_unknown) {
+    return k_unknown;
+  }
+  return mapFloat(f, 0, k_commonVoltageMapIn, 0, k_commonVoltageMapOut);
 }
 
 float Power::ReadPsuVoltage()
 {
-  return mapFloat(Embedded().ReadPsuVoltageSensor(), 0, k_psuVoltageMapIn, 0, k_psuVoltageMapOut);
+  float f = Embedded().ReadPsuVoltageSensor();
+  if (f == k_unknown) {
+    return k_unknown;
+  }
+  return mapFloat(f, 0, k_psuVoltageMapIn, 0, k_psuVoltageMapOut);
 }
 
 // free function definitions
