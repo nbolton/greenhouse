@@ -18,6 +18,7 @@ const float k_waterHeaterPowerUse = 3.4;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
 
 Heating::Heating() :
+  m_enabled(false),
   m_system(nullptr),
   m_dayWaterTemperature(k_unknown),
   m_nightWaterTemperature(k_unknown),
@@ -179,6 +180,20 @@ void Heating::Update()
 {
   if (System().Time().CurrentHour() == k_unknown) {
     Log().Trace("Unable to update heating, time unknown");
+    return;
+  }
+
+  if (!Enabled()) {
+    Log().Trace("Unable to update heating, it is disabled");
+    if (AirHeatingIsOn()) {
+      SwitchAirHeating(false);
+    }
+    if (WaterHeaterIsOn()) {
+      SwitchWaterHeater(false);
+    }
+    if (SoilHeatingIsOn()) {
+      SwitchSoilHeating(false);
+    }
     return;
   }
 

@@ -906,6 +906,7 @@ BLYNK_CONNECTED()
     V70,
     V71,
     V72,
+    V73,
     V127 /* last */);
 }
 
@@ -1042,6 +1043,11 @@ BLYNK_WRITE(V72)
   if (param.asInt() != 0) {
     s_instance->SoilCalibrateDry();
   }
+}
+
+BLYNK_WRITE(V73)
+{
+    s_instance->Heating().Enabled(param.asInt() == 1);
 }
 
 // used only as the last value

@@ -45,7 +45,7 @@ void Time::CheckTransition()
   Log().Trace(
     "Now %s, checking for %s transition, now=%d, last=%d",
     daytime ? "daytime" : "nighttime",
-    daytime ? "night to day" : "night to day",
+    daytime ? "night to day" : "day to night",
     static_cast<int>(now),
     static_cast<int>(last));
 

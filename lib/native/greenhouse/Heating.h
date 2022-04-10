@@ -24,6 +24,8 @@ protected:
 
 public:
   // getters & setters
+  virtual bool Enabled() const { return m_enabled; }
+  virtual void Enabled(bool value) { m_enabled = value; }
   virtual void DayWaterTemperature(float value) { m_dayWaterTemperature = value; }
   virtual float DayWaterTemperature() const { return m_dayWaterTemperature; }
   virtual void NightWaterTemperature(float value) { m_nightWaterTemperature = value; }
@@ -70,6 +72,7 @@ public:
 private:
   common::Log m_log;
   ISystem *m_system;
+  bool m_enabled;
   float m_dayWaterTemperature;
   float m_nightWaterTemperature;
   float m_daySoilTemperature;
