@@ -6,4 +6,4 @@ ho_config.h
 platformio-local.ini
 *-backups
 fp-info-cache
-#auto_saved_files#
+\#auto_saved_files\#

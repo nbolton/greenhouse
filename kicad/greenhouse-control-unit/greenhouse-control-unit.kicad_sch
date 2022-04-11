@@ -3436,7 +3436,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 150acdc1-b712-4e27-98d1-32195ff7e94a)
   )
-  (text "PCB TODO:\n- " (at 238.76 21.59 0)
+  (text "PCB TODO:\n- " (at 240.03 24.13 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 3b5de9bb-b7cb-471e-901c-6f0eabee930d)
   )
@@ -3452,8 +3452,8 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7641aeb0-3bfe-4b12-b451-d9d1e97e4090)
   )
-  (text "Schematic TODO:\n- Ensure all 2N7000 FETs are low-side (high side is limited by VGS; low side is not limited)\n"
-    (at 130.81 24.13 0)
+  (text "Schematic TODO: \n- Ensure all 2N7000 FETs are low-side (high side is limited by VGS; low side is not limited)\n- Resistors on SR inputs to prevent parasite power? Maybe make diode redundant?"
+    (at 132.08 26.67 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 8a815ad4-4668-4ab6-ae1d-ef281c30f05f)
   )
@@ -4440,22 +4440,6 @@
     (property "Datasheet" "~" (id 3) (at 365.76 40.64 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-  )
-
-  (symbol (lib_id "power:+5V") (at 120.65 217.17 0) (unit 1)
-    (in_bom yes) (on_board yes) (fields_autoplaced)
-    (uuid 270b5206-01f6-4326-bca0-f1b215f9f6ac)
-    (property "Reference" "#PWR07" (id 0) (at 120.65 220.98 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "+5V" (id 1) (at 120.65 212.09 0))
-    (property "Footprint" "" (id 2) (at 120.65 217.17 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (id 3) (at 120.65 217.17 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 65cc5502-3070-4bd6-98dd-46e4dd574d7e))
   )
 
   (symbol (lib_id "power:GND") (at 233.68 243.84 0) (unit 1)
@@ -5548,6 +5532,22 @@
     (pin "2" (uuid 597d5f7c-975f-429f-8b16-afe914f23802))
   )
 
+  (symbol (lib_id "power:+5V") (at 120.65 217.17 0) (unit 1)
+    (in_bom yes) (on_board yes) (fields_autoplaced)
+    (uuid b3a04bcd-a8de-4fd3-afa7-99bb35daab3f)
+    (property "Reference" "#PWR?" (id 0) (at 120.65 220.98 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+5V" (id 1) (at 120.65 212.09 0))
+    (property "Footprint" "" (id 2) (at 120.65 217.17 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (id 3) (at 120.65 217.17 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid fbfd280b-fd0a-4acc-bede-683e6123a127))
+  )
+
   (symbol (lib_id "power:+3V3") (at 189.23 59.69 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid beda748b-43c8-4e11-a237-32c66a6f8a6d)
@@ -6099,9 +6099,6 @@
     (path "/01e4fccf-8023-47c5-8ebf-902e6ed6b0a3"
       (reference "#PWR06") (unit 1) (value "GND") (footprint "")
     )
-    (path "/270b5206-01f6-4326-bca0-f1b215f9f6ac"
-      (reference "#PWR07") (unit 1) (value "+5V") (footprint "")
-    )
     (path "/14624e4f-3e7f-43e4-90a1-bcd722e8b790"
       (reference "#PWR08") (unit 1) (value "+5V") (footprint "")
     )
@@ -6209,6 +6206,9 @@
     )
     (path "/8013ece4-5872-4702-a905-ad2462242cac"
       (reference "#PWR044") (unit 1) (value "+12V") (footprint "")
+    )
+    (path "/b3a04bcd-a8de-4fd3-afa7-99bb35daab3f"
+      (reference "#PWR?") (unit 1) (value "+5V") (footprint "")
     )
     (path "/e9cc145f-bccc-4781-862a-a53065926266"
       (reference "BZ1") (unit 1) (value "Buzzer") (footprint "Buzzer_Beeper:Buzzer_12x9.5RM7.6")
