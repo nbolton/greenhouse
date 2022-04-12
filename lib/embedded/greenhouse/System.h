@@ -105,6 +105,8 @@ private:
   void InitADCs();
   void InitShiftRegisters();
   void UpdateCaseFan();
+  void PrintCommands();
+  void PrintStatus();
 
 private:
   embedded::Log m_log;

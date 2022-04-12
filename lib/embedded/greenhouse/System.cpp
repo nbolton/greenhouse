@@ -179,6 +179,20 @@ void System::Setup()
 
 void System::Loop()
 {
+  if (Serial.available() > 0) {
+    String s = Serial.readString();
+    const char c = s.c_str()[0];
+    switch (c) {
+    case 's':
+      PrintStatus();
+      break;
+
+    default:
+      PrintCommands();
+      break;
+    }
+  }
+
   base::System::Loop();
 
   Time().Update();
@@ -852,6 +866,13 @@ float System::ReadCommonVoltageSensor() { return ReadAdc(s_adc0, k_commonVoltage
 
 float System::ReadPsuVoltageSensor() { return ReadAdc(s_adc0, k_psuVoltagePin); }
 
+void System::PrintCommands() { Log().Trace(F("Commands\ns: status")); }
+
+void System::PrintStatus()
+{
+  Log().Trace(F("Status\nBlynk: %s"), Blynk.connected() ? "Connected" : "Disconnected");
+}
+
 } // namespace greenhouse
 } // namespace embedded
 
@@ -950,7 +971,7 @@ BLYNK_WRITE(V24) { s_instance->ActiveSwitch(param.asInt()); }
 
 BLYNK_WRITE(V25)
 {
-  // avoid calling ToggleActiveSwitch while Refresh is busy, 
+  // avoid calling ToggleActiveSwitch while Refresh is busy,
   // since this seems to cause a crash.
   if (s_instance->RefreshBusy()) {
     s_instance->Log().Trace("V25: Refresh busy, skipping");
