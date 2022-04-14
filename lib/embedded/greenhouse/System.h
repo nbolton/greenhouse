@@ -52,6 +52,7 @@ public:
   float ReadPowerSensorCurrent();
   float ReadCommonVoltageSensor();
   float ReadPsuVoltageSensor();
+  void QueueRefresh() { m_refreshQueued = true; }
 
   const embedded::Log &Log() const { return m_log; }
 
@@ -131,6 +132,7 @@ private:
   bool m_soilMoistureWarningSent;
   int m_activeSwitch;
   bool m_switchState[k_switchCount];
+  bool m_refreshQueued;
 };
 
 } // namespace greenhouse

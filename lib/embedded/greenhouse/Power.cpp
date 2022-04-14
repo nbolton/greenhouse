@@ -2,14 +2,13 @@
 
 #include "common.h"
 
-#include <Thread.h>
+#include <Arduino.h>
 
 using namespace common;
 
 namespace embedded {
 namespace greenhouse {
 
-const int s_threadInterval = 10000; // 10s
 const int k_commonVoltageMin = 10;
 const int k_psuVoltageMin = 10;
 const float k_commonVoltageMapIn = 2.10;
@@ -21,22 +20,11 @@ const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
 
 static Power *s_instance = nullptr;
-static Thread s_powerThread = Thread();
-static Thread s_relayTestThread = Thread();
 bool s_testState = false;
-
-// free-functions declarations
-
-void threadCallback() { s_instance->ThreadCallback(); }
-void relayTestCallback() { s_instance->RelayTest(); }
 
 // member functions
 
-Power::Power(
-  int psuRelayPin,
-  int pvRelayPin,
-  int batteryLedPin,
-  int psuLedPin) :
+Power::Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin) :
   m_embedded(nullptr),
   m_native(nullptr),
   m_log(),
@@ -66,25 +54,47 @@ Power::Power(
 void Power::Setup()
 {
   s_instance = this;
-  s_powerThread.onRun(threadCallback);
-  s_powerThread.setInterval(s_threadInterval);
-
-  s_relayTestThread.onRun(relayTestCallback);
-  s_relayTestThread.setInterval(k_relayTestInterval);
 
   // circuit default state is both power sources connected
   Embedded().ShiftRegister(m_psuLedPin, true);
   Embedded().ShiftRegister(m_batteryLedPin, true);
 }
 
-void Power::Loop()
+void Power::Refresh()
 {
-  if (s_powerThread.shouldRun()) {
-    s_powerThread.run();
-  }
+  MeasureVoltage();
+  float commonVoltage = ReadCommonVoltage();
 
-  if (k_relayTest && s_relayTestThread.shouldRun()) {
-    s_relayTestThread.run();
+  if (commonVoltage <= k_commonVoltageMin) {
+    if (m_pvPowerSource) {
+      Native().ReportWarning("Common voltage drop detected: %.2fV", commonVoltage);
+      SwitchPower(false);
+    }
+  }
+  else if (PvMode() != PvModes::k_pvAuto) {
+    if (!m_pvPowerSource && (PvMode() == PvModes::k_pvOn)) {
+      Native().ReportWarning("PV mode is manual (PV on)");
+      SwitchPower(true);
+    }
+    else if (m_pvPowerSource && (PvMode() == PvModes::k_pvOff)) {
+      Native().ReportWarning("PV mode is manual (PV off)");
+      SwitchPower(false);
+    }
+  }
+  else if (m_pvVoltageOutput != k_unknown) {
+
+    if (
+      !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
+      (m_pvVoltageOutput >= m_pvVoltageSwitchOn)) {
+      Log().Trace(F("Switching PV on automatically (PSU off)"));
+      SwitchPower(true);
+    }
+    else if (
+      m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
+      (m_pvVoltageOutput <= m_pvVoltageSwitchOff)) {
+      Log().Trace(F("Switching PSU on automatically (PV off)"));
+      SwitchPower(false);
+    }
   }
 }
 
@@ -143,45 +153,7 @@ void Power::InitPowerSource()
     SwitchPower(false);
   }
   else {
-      Log().Trace(F("Unable to use PSU, no voltage"));
-  }
-}
-
-void Power::ThreadCallback()
-{
-  MeasureVoltage();
-  float commonVoltage = ReadCommonVoltage();
-
-  if (commonVoltage <= k_commonVoltageMin) {
-    if (m_pvPowerSource) {
-      Native().ReportWarning("Common voltage drop detected: %.2fV", commonVoltage);
-      SwitchPower(false);
-    }
-  }
-  else if (PvMode() != PvModes::k_pvAuto) {
-    if (!m_pvPowerSource && (PvMode() == PvModes::k_pvOn)) {
-      Native().ReportWarning("PV mode is manual (PV on)");
-      SwitchPower(true);
-    }
-    else if (m_pvPowerSource && (PvMode() == PvModes::k_pvOff)) {
-      Native().ReportWarning("PV mode is manual (PV off)");
-      SwitchPower(false);
-    }
-  }
-  else if (m_pvVoltageOutput != k_unknown) {
-
-    if (
-      !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
-      (m_pvVoltageOutput >= m_pvVoltageSwitchOn)) {
-      Log().Trace(F("Switching PV on automatically (PSU off)"));
-      SwitchPower(true);
-    }
-    else if (
-      m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
-      (m_pvVoltageOutput <= m_pvVoltageSwitchOff)) {
-      Log().Trace(F("Switching PSU on automatically (PV off)"));
-      SwitchPower(false);
-    }
+    Log().Trace(F("Unable to use PSU, no voltage"));
   }
 }
 
@@ -250,13 +222,6 @@ void Power::SwitchPower(bool pv)
   Embedded().OnPowerSwitch();
 }
 
-void Power::RelayTest()
-{
-  SwitchPower(s_testState);
-  s_testState = !s_testState;
-  delay(1000);
-}
-
 float Power::ReadCommonVoltage()
 {
   float f = Embedded().ReadCommonVoltageSensor();
@@ -273,6 +238,12 @@ float Power::ReadPsuVoltage()
     return k_unknown;
   }
   return mapFloat(f, 0, k_psuVoltageMapIn, 0, k_psuVoltageMapOut);
+}
+
+void Power::PvMode(PvModes value)
+{
+  m_pvMode = value;
+  Embedded().QueueRefresh();
 }
 
 // free function definitions

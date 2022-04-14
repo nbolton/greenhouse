@@ -100,7 +100,7 @@ int s_switchOnCount = 0;
 
 // free-function declarations
 
-void refreshTimer() { s_instance->Refresh(); }
+void refreshTimer() { s_instance->QueueRefresh(); }
 
 // member functions
 
@@ -128,7 +128,8 @@ System::System() :
   m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
-  m_activeSwitch(k_unknown)
+  m_activeSwitch(k_unknown),
+  m_refreshQueued(true)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -195,8 +196,6 @@ void System::Loop()
 
   base::System::Loop();
 
-  Time().Update();
-
   if (!Blynk.run()) {
     Log().Trace(F("Blynk failed, restarting..."));
     Restart();
@@ -205,7 +204,10 @@ void System::Loop()
 
   s_timer.run();
 
-  m_power.Loop();
+  if (m_refreshQueued) {
+    m_refreshQueued = false;
+    Refresh();
+  }
 }
 
 void System::InitShiftRegisters()
@@ -270,17 +272,10 @@ void System::InitADCs()
 
 void System::Refresh()
 {
-  // TODO: use mutex lock?
-  if (m_refreshBusy) {
-    Log().Trace(F("Refresh busy, skipping"));
-    return;
-  }
-
   Log().Trace(F("Refreshing (embedded)"));
 
-  // TODO: this isn't an ideal mutex lock because the two threads could
-  // hit this line at the same time.
-  m_refreshBusy = true;
+  Time().Refresh();
+  Power().Refresh();
 
   FlashLed(k_ledRefresh);
 
@@ -299,8 +294,6 @@ void System::Refresh()
   Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
-
-  m_refreshBusy = false;
 
   Log().Trace(F("Refresh done (embedded)"));
 }
@@ -701,15 +694,11 @@ void System::OnSystemStarted()
 {
   Power().InitPowerSource();
 
-  // loop() will not have run yet, so make sure the time is updated
-  // before running the refresh function.
-  Time().Update();
-
-  // run the first refresh (instead of waiting for the 1st refresh timer).
+  // queue the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
   // have all of the correct initial values.
-  Refresh();
+  QueueRefresh();
 
   FlashLed(k_ledStarted);
   SystemStarted(true);
@@ -827,8 +816,7 @@ void System::ReportMoistureCalibration()
 void System::ManualRefresh()
 {
   Log().Trace(F("Manual refresh"));
-  Time().Update();
-  Refresh();
+  QueueRefresh();
 }
 
 void System::UpdateCaseFan()
