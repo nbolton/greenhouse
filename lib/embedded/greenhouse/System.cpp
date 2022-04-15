@@ -97,7 +97,7 @@ static ADC s_adc0, s_adc1, s_adc2;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
-int s_switchOnCount = 0;
+static int s_switchOnCount = 0;
 
 // free-function declarations
 
