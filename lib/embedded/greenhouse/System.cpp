@@ -82,6 +82,7 @@ const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char *k_weatherHost = "api.openweathermap.org";
 const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const uint8_t k_ioAddress = 0x20;
+const int k_loopDelay = 1000;
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
@@ -208,6 +209,8 @@ void System::Loop()
     m_refreshQueued = false;
     Refresh();
   }
+  // slow loop down to save power
+  Delay(k_loopDelay);
 }
 
 void System::InitShiftRegisters()
