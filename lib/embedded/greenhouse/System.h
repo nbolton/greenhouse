@@ -98,7 +98,7 @@ public:
   bool RefreshBusy() const { return m_refreshBusy; }
 
 private:
-  void StartBeep(int times);
+  void Beep(int times, bool longBeep);
   void CaseFan(bool on);
   void Actuator(bool forward, int s, int t);
   float ReadAdc(ADC &adc, ADS1115_MUX channel);
@@ -133,6 +133,8 @@ private:
   int m_activeSwitch;
   bool m_switchState[k_switchCount];
   bool m_refreshQueued;
+  int m_blynkFailures;
+  unsigned long m_lastBlynkFailure;
 };
 
 } // namespace greenhouse

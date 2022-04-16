@@ -46,7 +46,7 @@ const int k_shiftRegisterTestDelay = 200; // time betweeen sequential shift
 
 // msr pins
 const int k_pvRelayPin = 0;
-const int k_startBeepPin = 1;
+const int k_BeepPin = 1;
 const int k_caseFanPin = 2;
 const int k_psuRelayPin = 3;
 const int k_batteryLedPin = 4;
@@ -83,6 +83,8 @@ const char *k_weatherHost = "api.openweathermap.org";
 const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const uint8_t k_ioAddress = 0x20;
 const int k_loopDelay = 1000;
+const int k_blynkFailuresMax = 300;
+const int k_blynkRecoverTimeSec = 300; //5m
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
@@ -130,7 +132,9 @@ System::System() :
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
   m_activeSwitch(k_unknown),
-  m_refreshQueued(true)
+  m_refreshQueued(true),
+  m_blynkFailures(0),
+  m_lastBlynkFailure(0)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -156,7 +160,7 @@ void System::Setup()
 
   InitShiftRegisters();
 
-  StartBeep(1);
+  Beep(1, false);
   CaseFan(true); // on by default
 
   Wire.begin();
@@ -176,7 +180,7 @@ void System::Setup()
 
   Log().Trace(F("System ready"));
   Blynk.virtualWrite(V52, "Ready");
-  StartBeep(2);
+  Beep(2, false);
 }
 
 void System::Loop()
@@ -197,10 +201,23 @@ void System::Loop()
 
   base::System::Loop();
 
+  unsigned long now = Time().EpochTime();
   if (!Blynk.run()) {
-    Log().Trace(F("Blynk failed, restarting..."));
-    Restart();
-    return;
+
+    m_lastBlynkFailure = now;
+    m_blynkFailures++;
+    Log().Trace(F("Blynk failed %d time(s)"), m_blynkFailures);
+
+    if (m_blynkFailures >= k_blynkFailuresMax) {
+      Log().Trace(F("Restarting, too many Blynk failures"));
+      Restart();
+      return;
+    }
+  }
+  else if (((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec) && (m_blynkFailures != 0)) {
+    // no failures happened within last n - r seconds (n = now, r = recover time)
+    Log().Trace(F("Blynk is back to normal, resetting fail count"));
+    m_blynkFailures = 0;
   }
 
   s_timer.run();
@@ -458,6 +475,8 @@ void System::Delay(unsigned long ms) { delay(ms); }
 void System::Restart()
 {
   FlashLed(k_ledRestart);
+  Beep(2, true);
+
   ReportWarning("System restarting");
   Blynk.virtualWrite(V52, "Restarting");
 
@@ -487,15 +506,15 @@ void System::CaseFan(bool on)
   s_shiftRegisters.shift();
 }
 
-void System::StartBeep(int times)
+void System::Beep(int times, bool longBeep)
 {
   for (int i = 0; i < times; i++) {
     Log().Trace(F("Beep set shift"));
-    s_shiftRegisters.set_shift(k_startBeepPin);
-    delay(100);
+    s_shiftRegisters.set_shift(k_BeepPin);
+    delay(longBeep ? 200 : 100);
 
     Log().Trace(F("Beep clear shift"));
-    s_shiftRegisters.clear_shift(k_startBeepPin);
+    s_shiftRegisters.clear_shift(k_BeepPin);
     delay(200);
   }
 }
