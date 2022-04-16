@@ -6,6 +6,7 @@
 #include "Time.h"
 
 #include <string>
+#include <queue>
 
 namespace native {
 namespace greenhouse {
@@ -26,6 +27,8 @@ public:
   virtual void ReportCritical(const char *m, ...) {}
   virtual void SoilCalibrateWet();
   virtual void SoilCalibrateDry();
+  void AddSoilMoistureSample(float sample);
+  float SoilMoistureAverage();
 
 protected:
   virtual void ReportSensorValues() {}
@@ -87,6 +90,8 @@ public:
   virtual float SoilSensorDry() const { return m_soilSensorDry; }
   virtual void SoilSensor(float value) { m_soilSensor = value; }
   virtual float SoilSensor() const { return m_soilSensor; }
+  virtual void SoilMoistureSampleMax(int value) { m_soilMoistureSampleMax = value; }
+  virtual float SoilMoistureSampleMax() { return m_soilMoistureSampleMax; }
 
 private:
   bool IsRaining() const;
@@ -110,6 +115,9 @@ private:
   float m_soilSensorWet; // V, in water
   float m_soilSensorDry; // V, in air
   float m_soilSensor;    // V, latest
+  int m_soilMoistureSampleMax;
+  std::queue<float> m_soilMoistureSamples;
+  float m_soilMoistureAverage;
 };
 
 } // namespace greenhouse

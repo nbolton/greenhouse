@@ -412,9 +412,13 @@ bool System::ReadSensors(int &failures)
     failures++;
   }
   else {
-    m_soilMoisture = CalculateMoisture(SoilSensor());
-    if (m_soilMoisture == k_unknown) {
+    float moisture = CalculateMoisture(SoilSensor());
+    if (moisture == k_unknown) {
       failures++;
+    }
+    else {
+      AddSoilMoistureSample(moisture);
+      m_soilMoisture = SoilMoistureAverage();
     }
   }
 
@@ -619,7 +623,7 @@ void System::ReportSensorValues()
   Blynk.virtualWrite(V19, OutsideAirTemperature());
   Blynk.virtualWrite(V20, OutsideAirHumidity());
   Blynk.virtualWrite(V11, SoilTemperature());
-  Blynk.virtualWrite(V21, SoilMoisture());
+  Blynk.virtualWrite(V21, SoilMoistureAverage());
   Blynk.virtualWrite(V46, WaterTemperature());
 }
 

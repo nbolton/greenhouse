@@ -9,6 +9,7 @@ namespace greenhouse {
 const float k_windowAdjustThreshold = 0.05;
 const int k_dryWeatherCode = 701; // anything less is snow/rain
 const int k_moistureMargin = 20;
+const int k_soilMoistureSampleMax = 10;
 
 System::System() :
   m_log(),
@@ -27,7 +28,9 @@ System::System() :
   m_weatherErrors(0),
   m_weatherErrorReportSent(false),
   m_soilSensorWet(k_unknown),
-  m_soilSensorDry(k_unknown)
+  m_soilSensorDry(k_unknown),
+  m_soilMoistureSampleMax(k_soilMoistureSampleMax),
+  m_soilMoistureAverage(0)
 {
 }
 
@@ -67,10 +70,11 @@ void System::Refresh()
     WaterTemperature());
 
   Log().Trace(
-    "Moisture, inside=%.2f%%, outside=%.2f%%, soil=%.2f%%",
+    "Moisture, inside=%.2f%%, outside=%.2f%%, soil-now=%.2f%%, soil-avg=%.2f%%",
     InsideAirHumidity(),
     OutsideAirHumidity(),
-    SoilMoisture());
+    SoilMoisture(),
+    SoilMoistureAverage());
 
   ReportSensorValues();
   ReportWarnings();
@@ -285,6 +289,34 @@ void System::SoilCalibrateDry()
   ReportMoistureCalibration();
   Refresh();
 }
+
+void System::AddSoilMoistureSample(float sample)
+{
+  m_soilMoistureSamples.push(sample);
+  if (m_soilMoistureSamples.size() > SoilMoistureSampleMax()) {
+    m_soilMoistureSamples.pop();
+    Log().Trace("Moisture samples reduced by 1, new size: %d", m_soilMoistureSamples.size());
+  }
+
+  // we could use deque but this is fine for a short float list that isn't
+  // accessed very often.
+  float total = 0;
+  const int size = m_soilMoistureSamples.size();
+  std::queue<float> temp = m_soilMoistureSamples;
+  while (!temp.empty()) {
+    total += temp.front();
+    temp.pop();
+  }
+  m_soilMoistureAverage = total / size;
+
+  Log().Trace(
+    "Calculating moisture average, total=%.0f, size=%d, avg=%.2f",
+    total,
+    size,
+    m_soilMoistureAverage);
+}
+
+float System::SoilMoistureAverage() { return m_soilMoistureAverage; }
 
 } // namespace greenhouse
 } // namespace native

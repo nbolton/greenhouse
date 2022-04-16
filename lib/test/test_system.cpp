@@ -305,6 +305,44 @@ void Test_CalculateMoisture_BelowBounds_ReturnsUnknown()
   TEST_ASSERT_EQUAL_INT(k_unknown, percent);
 }
 
+void Test_SoilMoistureAverage_SingleValue_CorrectValue()
+{
+  TestSystem system;
+  system.SoilMoistureSampleMax(1);
+  system.AddSoilMoistureSample(1);
+  TEST_ASSERT_EQUAL_FLOAT(1, system.SoilMoistureAverage());
+}
+
+void Test_SoilMoistureAverage_TwoValues_CorrectValue()
+{
+  TestSystem system;
+  system.SoilMoistureSampleMax(2);
+  system.AddSoilMoistureSample(1);
+  system.AddSoilMoistureSample(2);
+  TEST_ASSERT_EQUAL_FLOAT(1.5, system.SoilMoistureAverage());
+}
+
+void Test_SoilMoistureAverage_ValueAddedUnderSampleMax_CorrectValue()
+{
+  TestSystem system;
+  system.SoilMoistureSampleMax(3);
+  system.AddSoilMoistureSample(1);
+  system.AddSoilMoistureSample(2);
+  system.AddSoilMoistureSample(3);
+  TEST_ASSERT_EQUAL_FLOAT(2, system.SoilMoistureAverage());
+}
+
+void Test_SoilMoistureAverage_ValueAddedOverSampleMax3_AverageLast3()
+{
+  TestSystem system;
+  system.SoilMoistureSampleMax(3);
+  system.AddSoilMoistureSample(1);
+  system.AddSoilMoistureSample(2);
+  system.AddSoilMoistureSample(3);
+  system.AddSoilMoistureSample(4);
+  TEST_ASSERT_EQUAL_FLOAT(3, system.SoilMoistureAverage());
+}
+
 void testSystem()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -327,4 +365,8 @@ void testSystem()
   RUN_TEST(Test_CalculateMoisture_InBounds_ReturnsPercent);
   RUN_TEST(Test_CalculateMoisture_AboveBounds_ReturnsUnknown);
   RUN_TEST(Test_CalculateMoisture_BelowBounds_ReturnsUnknown);
+  RUN_TEST(Test_SoilMoistureAverage_SingleValue_CorrectValue);
+  RUN_TEST(Test_SoilMoistureAverage_TwoValues_CorrectValue);
+  RUN_TEST(Test_SoilMoistureAverage_ValueAddedUnderSampleMax_CorrectValue);
+  RUN_TEST(Test_SoilMoistureAverage_ValueAddedOverSampleMax3_AverageLast3);
 }
