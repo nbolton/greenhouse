@@ -134,7 +134,10 @@ System::System() :
   m_activeSwitch(k_unknown),
   m_refreshQueued(true),
   m_blynkFailures(0),
-  m_lastBlynkFailure(0)
+  m_lastBlynkFailure(0),
+  m_toggleActiveSwitchQueued(false),
+  m_windowProgressQueued(false),
+  m_windowProgressValue(k_unknown)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -220,12 +223,34 @@ void System::Loop()
     m_blynkFailures = 0;
   }
 
+  Power().Loop();
+
+  if (m_windowProgressQueued) {
+    m_windowProgressQueued = false;
+    
+    if (WindowProgress() != k_unknown) {
+      // only apply window progress if it's not the 1st time;
+      // otherwise the window will always open from 0 on start,
+      // and the position might be something else.
+      ApplyWindowProgress((float)m_windowProgressValue / 100);
+    }
+
+    WindowProgress(m_windowProgressValue);
+  }
+
+  if (m_toggleActiveSwitchQueued) {
+    m_toggleActiveSwitchQueued = false;
+    ToggleActiveSwitch();
+  }
+
+  // may or may not queue a refresh
   s_timer.run();
 
   if (m_refreshQueued) {
     m_refreshQueued = false;
     Refresh();
   }
+
   // slow loop down to save power
   Delay(k_loopDelay);
 }
@@ -295,7 +320,6 @@ void System::Refresh()
   Log().Trace(F("Refreshing (embedded)"));
 
   Time().Refresh();
-  Power().Refresh();
 
   FlashLed(k_ledRefresh);
 
@@ -751,16 +775,10 @@ void System::RefreshRate(int refreshRate)
   Log().Trace(F("New refresh timer: %d"), m_timerId);
 }
 
-void System::HandleWindowProgress(int value)
+void System::QueueWindowProgress(int value)
 {
-  if (WindowProgress() != k_unknown) {
-    // only apply window progress if it's not the 1st time;
-    // otherwise the window will always open from 0 on start,
-    // and the position might be something else.
-    ApplyWindowProgress((float)value / 100);
-  }
-
-  WindowProgress(value);
+  m_windowProgressQueued = true;
+  m_windowProgressValue = value;
 }
 
 bool System::UpdateWeatherForecast()
@@ -837,12 +855,6 @@ void System::ReportMoistureCalibration()
 {
   Blynk.virtualWrite(V69, SoilSensorWet());
   Blynk.virtualWrite(V70, SoilSensorDry());
-}
-
-void System::ManualRefresh()
-{
-  Log().Trace(F("Manual refresh"));
-  QueueRefresh();
 }
 
 void System::UpdateCaseFan()
@@ -963,13 +975,13 @@ BLYNK_WRITE(V6)
 BLYNK_WRITE(V7)
 {
   if (param.asInt() == 1) {
-    s_instance->ManualRefresh();
+    s_instance->QueueRefresh();
   }
 }
 
 BLYNK_WRITE(V8) { s_instance->OpenFinish(param.asFloat()); }
 
-BLYNK_WRITE(V9) { s_instance->HandleWindowProgress(param.asInt()); }
+BLYNK_WRITE(V9) { s_instance->QueueWindowProgress(param.asInt()); }
 
 BLYNK_WRITE(V14) { s_instance->TestMode(param.asInt() == 1); }
 
@@ -985,15 +997,8 @@ BLYNK_WRITE(V24) { s_instance->ActiveSwitch(param.asInt()); }
 
 BLYNK_WRITE(V25)
 {
-  // avoid calling ToggleActiveSwitch while Refresh is busy,
-  // since this seems to cause a crash.
-  if (s_instance->RefreshBusy()) {
-    s_instance->Log().Trace("V25: Refresh busy, skipping");
-    return;
-  }
-
   if (param.asInt() == 1) {
-    s_instance->ToggleActiveSwitch();
+    s_instance->QueueToggleActiveSwitch();
   }
 }
 

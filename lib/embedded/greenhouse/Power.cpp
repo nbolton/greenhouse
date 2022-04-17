@@ -47,7 +47,8 @@ Power::Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin) 
   m_pvCurrentSensorMax(k_unknown),
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
-  m_pvMode(PvModes::k_pvAuto)
+  m_pvMode(PvModes::k_pvAuto),
+  m_refreshQueued(false)
 {
 }
 
@@ -60,7 +61,7 @@ void Power::Setup()
   Embedded().ShiftRegister(m_batteryLedPin, true);
 }
 
-void Power::Refresh()
+void Power::Loop()
 {
   MeasureVoltage();
   float commonVoltage = ReadCommonVoltage();
@@ -238,12 +239,6 @@ float Power::ReadPsuVoltage()
     return k_unknown;
   }
   return mapFloat(f, 0, k_psuVoltageMapIn, 0, k_psuVoltageMapOut);
-}
-
-void Power::PvMode(PvModes value)
-{
-  m_pvMode = value;
-  Embedded().QueueRefresh();
 }
 
 // free function definitions

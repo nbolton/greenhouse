@@ -14,7 +14,7 @@ public:
   Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin);
   const embedded::Log &Log() const { return m_log; }
   void Setup();
-  void Refresh();
+  void Loop();
   void InitPowerSource();
   void MeasureVoltage();
   void MeasureCurrent();
@@ -37,7 +37,7 @@ public:
   float PvCurrentSensor() { return m_pvCurrentSensor; }
   float PvCurrentOutput() { return m_pvCurrentOutput; }
   PvModes PvMode() const { return m_pvMode; }
-  void PvMode(PvModes value);
+  void PvMode(PvModes value) { m_pvMode = value; }
   embedded::greenhouse::ISystem &Embedded() const;
   void Embedded(embedded::greenhouse::ISystem &value) { m_embedded = &value; }
   native::greenhouse::ISystem &Native() const;
@@ -72,6 +72,7 @@ private:
   float m_pvCurrentOutputMin;
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
+  bool m_refreshQueued;
 };
 
 } // namespace greenhouse

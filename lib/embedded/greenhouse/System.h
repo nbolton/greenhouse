@@ -41,8 +41,6 @@ public:
   void OnSystemStarted();
   void Restart();
   void ToggleActiveSwitch();
-  void HandleWindowProgress(int value);
-  void ManualRefresh();
   void SetSwitch(int index, bool on);
   void OnPowerSwitch();
   void ExpanderWrite(int pin, int value);
@@ -53,6 +51,8 @@ public:
   float ReadCommonVoltageSensor();
   float ReadPsuVoltageSensor();
   void QueueRefresh() { m_refreshQueued = true; }
+  void QueueToggleActiveSwitch() { m_toggleActiveSwitchQueued = true; }
+  void QueueWindowProgress(int value);
 
   const embedded::Log &Log() const { return m_log; }
 
@@ -135,6 +135,9 @@ private:
   bool m_refreshQueued;
   int m_blynkFailures;
   unsigned long m_lastBlynkFailure;
+  bool m_toggleActiveSwitchQueued;
+  bool m_windowProgressQueued;
+  int m_windowProgressValue;
 };
 
 } // namespace greenhouse
