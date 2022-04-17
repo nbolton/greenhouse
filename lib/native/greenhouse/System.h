@@ -95,6 +95,8 @@ public:
   virtual float SoilMoistureSampleMax() { return m_soilMoistureSampleMax; }
   virtual void WindowAdjustPositions(int value) { m_windowAdjustPositions = value; }
   virtual int WindowAdjustPositions() { return m_windowAdjustPositions; }
+  virtual void WindowAdjustTimeframe(int value) { m_windowAdjustTimeframe = value; }
+  virtual int WindowAdjustTimeframe() { return m_windowAdjustTimeframe; }
 
 private:
   bool IsRaining() const;
@@ -124,6 +126,8 @@ private:
   std::queue<float> m_soilMoistureSamples;
   float m_soilMoistureAverage;
   int m_windowAdjustPositions;
+  int m_windowAdjustTimeframe;
+  unsigned long m_windowAdjustLast;
 };
 
 } // namespace greenhouse

@@ -33,7 +33,9 @@ System::System() :
   m_soilSensorDry(k_unknown),
   m_soilMoistureSampleMax(k_soilMoistureSampleMax),
   m_soilMoistureAverage(0),
-  m_windowAdjustPositions(k_unknown)
+  m_windowAdjustPositions(k_unknown),
+  m_windowAdjustTimeframe(k_unknown),
+  m_windowAdjustLast(k_unknownUL)
 {
 }
 
@@ -137,14 +139,21 @@ void System::Refresh()
     float soilTemperature = SoilTemperature();
 
     Log().Trace(
-      "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC",
+      "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC last=%d timeframe=%dm",
       WindowProgressExpected(),
       soilTemperature,
       openStart,
-      openFinish);
+      openFinish,
+      (int)m_windowAdjustLast, // HACK
+      m_windowAdjustTimeframe);
 
-    if (
-      (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown)) {
+    int timeframeSec = m_windowAdjustTimeframe * 60;
+    bool timeframeOk = (m_windowAdjustTimeframe == k_unknown) || (m_windowAdjustLast == k_unknownUL) ||
+                       ((int)(Time().EpochTime() - m_windowAdjustLast) > timeframeSec);
+    bool noUnknowns =
+      (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown);
+
+    if (noUnknowns && timeframeOk) {
 
       if ((soilTemperature > openStart) && (soilTemperature < openFinish)) {
         // window should be semi-open
@@ -219,10 +228,12 @@ bool System::ApplyWindowProgress()
 
     if (openDelta > 0) {
       OpenWindow(openDelta);
+      m_windowAdjustLast = Time().EpochTime();
       return true;
     }
     else if (closeDelta > 0) {
       CloseWindow(closeDelta);
+      m_windowAdjustLast = Time().EpochTime();
       return true;
     }
   }

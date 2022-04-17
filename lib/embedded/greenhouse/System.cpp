@@ -938,6 +938,7 @@ BLYNK_CONNECTED()
     V71,
     V72,
     V73,
+    V74,
     V127 /* last */);
 }
 
@@ -1075,6 +1076,8 @@ BLYNK_WRITE(V72)
 }
 
 BLYNK_WRITE(V73) { s_instance->Heating().Enabled(param.asInt() == 1); }
+
+BLYNK_WRITE(V74) { s_instance->WindowAdjustTimeframe(param.asInt()); }
 
 // used only as the last value
 BLYNK_WRITE(V127)
