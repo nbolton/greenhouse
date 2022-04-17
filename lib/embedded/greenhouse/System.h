@@ -52,7 +52,6 @@ public:
   float ReadPsuVoltageSensor();
   void QueueRefresh() { m_refreshQueued = true; }
   void QueueToggleActiveSwitch();
-  void QueueWindowProgress(int value);
 
   const embedded::Log &Log() const { return m_log; }
 
@@ -136,8 +135,6 @@ private:
   int m_blynkFailures;
   unsigned long m_lastBlynkFailure;
   std::queue<int> m_toggleActiveSwitchQueue;
-  bool m_windowProgressQueued;
-  int m_windowProgressValue;
 };
 
 } // namespace greenhouse

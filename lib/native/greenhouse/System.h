@@ -29,6 +29,7 @@ public:
   virtual void SoilCalibrateDry();
   void AddSoilMoistureSample(float sample);
   float SoilMoistureAverage();
+  void QueueWindowProgress(int value);
 
 protected:
   virtual void ReportSensorValues() {}
@@ -44,8 +45,8 @@ protected:
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual float CalculateMoisture(float analogValue) const;
-  virtual bool ApplyWindowProgress(float expectedProgress);
-  virtual void AddWindowProgressDelta(float delta);
+  virtual bool ApplyWindowProgress();
+  virtual void AddWindowProgressActualDelta(float delta);
   virtual void AdjustWindow(bool open, float delta);
   virtual void RunWindowActuator(bool extend) {}
   virtual void StopActuator() {}
@@ -64,8 +65,8 @@ public:
   virtual float SoilTemperature() const { return k_unknown; }
   virtual float WaterTemperature() const { return k_unknown; }
   virtual float SoilMoisture() const { return k_unknown; }
-  virtual void WindowProgress(int value) { m_windowProgress = value; }
-  virtual int WindowProgress() const { return m_windowProgress; }
+  virtual int WindowProgressExpected() const { return m_windowProgressExpected; }
+  virtual int WindowProgressActual() const { return m_windowProgressActual; }
   virtual void AutoMode(bool value) { m_autoMode = value; }
   virtual bool AutoMode() const { return m_autoMode; }
   virtual void OpenStart(float value) { m_openStart = value; }
@@ -92,8 +93,8 @@ public:
   virtual float SoilSensor() const { return m_soilSensor; }
   virtual void SoilMoistureSampleMax(int value) { m_soilMoistureSampleMax = value; }
   virtual float SoilMoistureSampleMax() { return m_soilMoistureSampleMax; }
-  virtual void WindowAdjustThreshold(int value) { m_windowAdjustThreshold = value; }
-  virtual int WindowAdjustThreshold() { return m_windowAdjustThreshold; }
+  virtual void WindowAdjustPositions(int value) { m_windowAdjustPositions = value; }
+  virtual int WindowAdjustPositions() { return m_windowAdjustPositions; }
 
 private:
   bool IsRaining() const;
@@ -104,7 +105,9 @@ private:
   bool m_autoMode;
   float m_openStart;
   float m_openFinish;
-  int m_windowProgress;
+  int m_windowProgressExpected;
+  int m_windowProgressActual;
+  int m_windowProgressQueued;
   bool m_testMode;
   float m_soilMostureWarning;
   float m_windowActuatorRuntimeSec;
@@ -120,7 +123,7 @@ private:
   int m_soilMoistureSampleMax;
   std::queue<float> m_soilMoistureSamples;
   float m_soilMoistureAverage;
-  int m_windowAdjustThreshold;
+  int m_windowAdjustPositions;
 };
 
 } // namespace greenhouse

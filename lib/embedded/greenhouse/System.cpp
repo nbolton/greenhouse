@@ -134,9 +134,7 @@ System::System() :
   m_activeSwitch(k_unknown),
   m_refreshQueued(true),
   m_blynkFailures(0),
-  m_lastBlynkFailure(0),
-  m_windowProgressQueued(false),
-  m_windowProgressValue(k_unknown)
+  m_lastBlynkFailure(0)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -223,19 +221,6 @@ void System::Loop()
   }
 
   Power().Loop();
-
-  if (m_windowProgressQueued) {
-    m_windowProgressQueued = false;
-
-    if (WindowProgress() != k_unknown) {
-      // only apply window progress if it's not the 1st time;
-      // otherwise the window will always open from 0 on start,
-      // and the position might be something else.
-      ApplyWindowProgress((float)m_windowProgressValue / 100);
-    }
-
-    WindowProgress(m_windowProgressValue);
-  }
 
   while (!m_toggleActiveSwitchQueue.empty()) {
     int queuedSwitch = m_toggleActiveSwitchQueue.front();
@@ -674,7 +659,7 @@ void System::ReportSensorValues()
 void System::ReportWindowProgress()
 {
   FlashLed(k_ledSend);
-  Blynk.virtualWrite(V9, WindowProgress());
+  Blynk.virtualWrite(V9, WindowProgressExpected());
 }
 
 void System::ReportSystemInfo()
@@ -774,12 +759,6 @@ void System::RefreshRate(int refreshRate)
 
   m_timerId = s_timer.setInterval(refreshRate * 1000L, refreshTimer);
   Log().Trace(F("New refresh timer: %d"), m_timerId);
-}
-
-void System::QueueWindowProgress(int value)
-{
-  m_windowProgressQueued = true;
-  m_windowProgressValue = value;
 }
 
 bool System::UpdateWeatherForecast()
@@ -1031,7 +1010,7 @@ BLYNK_WRITE(V45) { s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
 
 BLYNK_WRITE(V47) { s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
-BLYNK_WRITE(V48) { s_instance->WindowAdjustThreshold(param.asInt()); }
+BLYNK_WRITE(V48) { s_instance->WindowAdjustPositions(param.asInt()); }
 
 BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 

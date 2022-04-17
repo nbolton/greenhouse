@@ -140,7 +140,6 @@ public:
   // expose protected members to public
 
   float CalculateMoisture(float value) const { return System::CalculateMoisture(value); }
-  bool ApplyWindowProgress(float value) { return System::ApplyWindowProgress(value); }
 
   // mock values
 

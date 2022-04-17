@@ -1,6 +1,7 @@
 #include "System.h"
 
 #include <cstdlib>
+#include <math.h>
 #include <stdio.h>
 
 namespace native {
@@ -16,7 +17,9 @@ System::System() :
   m_autoMode(false),
   m_openStart(k_unknown),
   m_openFinish(k_unknown),
-  m_windowProgress(k_unknown),
+  m_windowProgressExpected(k_unknown),
+  m_windowProgressActual(k_unknown),
+  m_windowProgressQueued(k_unknown),
   m_testMode(false),
   m_soilMostureWarning(k_unknown),
   m_windowActuatorRuntimeSec(0),
@@ -29,7 +32,8 @@ System::System() :
   m_soilSensorWet(k_unknown),
   m_soilSensorDry(k_unknown),
   m_soilMoistureSampleMax(k_soilMoistureSampleMax),
-  m_soilMoistureAverage(0)
+  m_soilMoistureAverage(0),
+  m_windowAdjustPositions(k_unknown)
 {
 }
 
@@ -39,7 +43,31 @@ void System::Setup()
   Heating().System(*this);
 }
 
-void System::Loop() {}
+void System::Loop()
+{
+  if (m_windowProgressQueued != k_unknown) {
+
+    Log().Trace(
+      "Window progress queued=%d, current=%d, actual=%d",
+      m_windowProgressQueued,
+      m_windowProgressExpected,
+      m_windowProgressActual);
+
+    int firstTime = m_windowProgressExpected == k_unknown;
+    m_windowProgressExpected = m_windowProgressQueued;
+    m_windowProgressQueued = k_unknown;
+
+    if (firstTime) {
+      m_windowProgressActual = m_windowProgressExpected;
+    }
+    else {
+      // only apply window progress if it's not the 1st time;
+      // otherwise the window will always open from 0 on start,
+      // and the position might be something else.
+      ApplyWindowProgress();
+    }
+  }
+}
 
 void System::Refresh()
 {
@@ -99,10 +127,10 @@ void System::Refresh()
   float openFinish = m_openFinish;
 
   if ((WeatherCode() != k_unknown) && IsRaining()) {
-    if (WindowProgress() > 0) {
+    if (WindowProgressExpected() > 0) {
       // close windows on rain even if in manual mode (it may get left on by accident)
       ReportInfo("Weather forecast is rain, closing window");
-      CloseWindow((float)WindowProgress() / 100);
+      CloseWindow((float)WindowProgressExpected() / 100);
     }
   }
   else if (m_autoMode) {
@@ -110,7 +138,7 @@ void System::Refresh()
 
     Log().Trace(
       "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC",
-      WindowProgress(),
+      WindowProgressExpected(),
       soilTemperature,
       openStart,
       openFinish);
@@ -118,27 +146,26 @@ void System::Refresh()
     if (
       (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown)) {
 
-      float expectedProgress = 0;
-
       if ((soilTemperature > openStart) && (soilTemperature < openFinish)) {
         // window should be semi-open
         Log().Trace("Temperature in bounds");
 
         float tempWidth = openFinish - openStart;
         float progressAsTemp = soilTemperature - openStart;
-        expectedProgress = progressAsTemp / tempWidth;
+        m_windowProgressExpected = (progressAsTemp / tempWidth) * 100;
       }
       else if (soilTemperature >= openFinish) {
         // window should be fully open
         Log().Trace("Temperature above bounds");
-        expectedProgress = 1;
+        m_windowProgressExpected = 100;
       }
       else {
         // window should be fully closed
         Log().Trace("Temperature below bounds");
+        m_windowProgressExpected = 0;
       }
 
-      windowMoved = ApplyWindowProgress(expectedProgress);
+      windowMoved = ApplyWindowProgress();
     }
   }
 
@@ -157,28 +184,36 @@ void System::Refresh()
   Log().Trace("Refresh done (native)");
 }
 
-bool System::ApplyWindowProgress(float expectedProgress)
+bool System::ApplyWindowProgress()
 {
-  // TODO: would 0/100 cause a random crash?
-  float currentProgress = (float)WindowProgress() / 100;
+  const float positions = WindowAdjustPositions();
+  const float expected = WindowProgressExpected();
+  const float actual = WindowProgressActual();
 
-  // avoid constant micro movements; only open/close window if difference is more than threshold
-  float threshold = (float)m_windowAdjustThreshold / 100;
-  bool overThreshold = std::abs(expectedProgress - currentProgress) > threshold;
-  bool fullValue = (expectedProgress == 0) || (expectedProgress == 1);
+  bool fullExtent = (expected == 0) || (expected == 1);
+  float rounded = (round((positions / 100) * expected) / positions) * 100;
+  bool changed = std::abs(rounded - actual) > 0.01f;
 
   Log().Trace(
-    "Apply window progress, threshold=%.2f, expected=%.2f, current=%.2f, over=%s, full=%s",
-    threshold,
-    expectedProgress,
-    currentProgress,
-    overThreshold ? "true" : "false",
-    fullValue ? "true" : "false");
+    "Apply window progress, "
+    "positions=%d, expected=%.2f, rounded=%.2f, actual=%.2f, "
+    "changed=%s, full=%s",
+    (int)positions,
+    expected,
+    rounded,
+    actual,
+    changed ? "true" : "false",
+    fullExtent ? "true" : "false");
 
-  if (overThreshold || fullValue) {
+  if (positions == k_unknown) {
+    Log().Trace("Cannot apply window progress with unknown positions");
+    return false;
+  }
 
-    float closeDelta = currentProgress - expectedProgress;
-    float openDelta = expectedProgress - currentProgress;
+  if (changed || fullExtent) {
+
+    float closeDelta = (actual - rounded) / 100;
+    float openDelta = (rounded - actual) / 100;
 
     Log().Trace("Testing window progress, open=%.2f, close=%.2f", openDelta, closeDelta);
 
@@ -196,9 +231,9 @@ bool System::ApplyWindowProgress(float expectedProgress)
   return false;
 }
 
-void System::AddWindowProgressDelta(float delta)
+void System::AddWindowProgressActualDelta(float delta)
 {
-  int wp = WindowProgress();
+  int wp = m_windowProgressActual;
   wp += delta * 100;
   if (wp < 0) {
     wp = 0;
@@ -206,7 +241,7 @@ void System::AddWindowProgressDelta(float delta)
   else if (wp > 100) {
     wp = 100;
   }
-  WindowProgress(wp);
+  m_windowProgressActual = wp;
 }
 
 void System::OpenWindow(float delta)
@@ -214,7 +249,7 @@ void System::OpenWindow(float delta)
   Log().Trace("Opening window...");
   Log().Trace("Delta: %.2f", delta);
 
-  AddWindowProgressDelta(delta);
+  AddWindowProgressActualDelta(delta);
   ReportWindowProgress();
   AdjustWindow(true, delta);
 
@@ -227,7 +262,7 @@ void System::CloseWindow(float delta)
   Log().Trace("Closing window...");
   Log().Trace("Delta: %.2f", delta);
 
-  AddWindowProgressDelta(delta * -1);
+  AddWindowProgressActualDelta(delta * -1);
   ReportWindowProgress();
   AdjustWindow(false, delta);
 
@@ -320,6 +355,8 @@ void System::AddSoilMoistureSample(float sample)
 }
 
 float System::SoilMoistureAverage() { return m_soilMoistureAverage; }
+
+void System::QueueWindowProgress(int value) { m_windowProgressQueued = value; }
 
 } // namespace greenhouse
 } // namespace native
