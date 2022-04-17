@@ -84,7 +84,7 @@ const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&app
 const uint8_t k_ioAddress = 0x20;
 const int k_loopDelay = 1000;
 const int k_blynkFailuresMax = 300;
-const int k_blynkRecoverTimeSec = 300; //5m
+const int k_blynkRecoverTimeSec = 300; // 5m
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
@@ -135,7 +135,6 @@ System::System() :
   m_refreshQueued(true),
   m_blynkFailures(0),
   m_lastBlynkFailure(0),
-  m_toggleActiveSwitchQueued(false),
   m_windowProgressQueued(false),
   m_windowProgressValue(k_unknown)
 {
@@ -227,7 +226,7 @@ void System::Loop()
 
   if (m_windowProgressQueued) {
     m_windowProgressQueued = false;
-    
+
     if (WindowProgress() != k_unknown) {
       // only apply window progress if it's not the 1st time;
       // otherwise the window will always open from 0 on start,
@@ -238,9 +237,11 @@ void System::Loop()
     WindowProgress(m_windowProgressValue);
   }
 
-  if (m_toggleActiveSwitchQueued) {
-    m_toggleActiveSwitchQueued = false;
-    ToggleActiveSwitch();
+  while (!m_toggleActiveSwitchQueue.empty()) {
+    int queuedSwitch = m_toggleActiveSwitchQueue.front();
+    m_toggleActiveSwitchQueue.pop();
+
+    ToggleSwitch(queuedSwitch);
   }
 
   // may or may not queue a refresh
@@ -581,15 +582,15 @@ void System::SetSwitch(int index, bool on)
   UpdateCaseFan();
 }
 
-void System::ToggleActiveSwitch()
+void System::ToggleSwitch(int switchIndex)
 {
-  if (!m_switchState[m_activeSwitch]) {
-    Log().Trace(F("Toggle switch on: %d"), m_activeSwitch);
-    SetSwitch(m_activeSwitch, true);
+  if (!m_switchState[switchIndex]) {
+    Log().Trace(F("Toggle switch on: %d"), switchIndex);
+    SetSwitch(switchIndex, true);
   }
   else {
-    Log().Trace(F("Toggle switch off: %d"), m_activeSwitch);
-    SetSwitch(m_activeSwitch, false);
+    Log().Trace(F("Toggle switch off: %d"), switchIndex);
+    SetSwitch(switchIndex, false);
   }
 }
 
@@ -898,6 +899,8 @@ void System::PrintStatus()
 {
   Log().Trace(F("Status\nBlynk: %s"), Blynk.connected() ? "Connected" : "Disconnected");
 }
+
+void System::QueueToggleActiveSwitch() { m_toggleActiveSwitchQueue.push(m_activeSwitch); }
 
 } // namespace greenhouse
 } // namespace embedded

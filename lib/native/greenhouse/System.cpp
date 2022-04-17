@@ -168,8 +168,10 @@ bool System::ApplyWindowProgress(float expectedProgress)
   bool fullValue = (expectedProgress == 0) || (expectedProgress == 1);
 
   Log().Trace(
-    "Apply window progress, threshold=%.2f, over=%s, full=%s",
+    "Apply window progress, threshold=%.2f, expected=%.2f, current=%.2f, over=%s, full=%s",
     threshold,
+    expectedProgress,
+    currentProgress,
     overThreshold ? "true" : "false",
     fullValue ? "true" : "false");
 
@@ -178,12 +180,7 @@ bool System::ApplyWindowProgress(float expectedProgress)
     float closeDelta = currentProgress - expectedProgress;
     float openDelta = expectedProgress - currentProgress;
 
-    Log().Trace(
-      "Testing window progress, expected=%.2f, current=%.2f, open=%.2f, close=%.2f",
-      expectedProgress,
-      currentProgress,
-      openDelta,
-      closeDelta);
+    Log().Trace("Testing window progress, open=%.2f, close=%.2f", openDelta, closeDelta);
 
     if (openDelta > 0) {
       OpenWindow(openDelta);
