@@ -1023,9 +1023,7 @@ BLYNK_WRITE(V45) { s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
 
 BLYNK_WRITE(V47) { s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
-BLYNK_WRITE(V48)
-{ /* Unused */
-}
+BLYNK_WRITE(V48) { s_instance->WindowAdjustThreshold(param.asInt()); }
 
 BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 

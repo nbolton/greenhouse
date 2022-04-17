@@ -92,6 +92,8 @@ public:
   virtual float SoilSensor() const { return m_soilSensor; }
   virtual void SoilMoistureSampleMax(int value) { m_soilMoistureSampleMax = value; }
   virtual float SoilMoistureSampleMax() { return m_soilMoistureSampleMax; }
+  virtual void WindowAdjustThreshold(int value) { m_windowAdjustThreshold = value; }
+  virtual int WindowAdjustThreshold() { return m_windowAdjustThreshold; }
 
 private:
   bool IsRaining() const;
@@ -118,6 +120,7 @@ private:
   int m_soilMoistureSampleMax;
   std::queue<float> m_soilMoistureSamples;
   float m_soilMoistureAverage;
+  int m_windowAdjustThreshold;
 };
 
 } // namespace greenhouse

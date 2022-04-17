@@ -6,7 +6,6 @@
 namespace native {
 namespace greenhouse {
 
-const float k_windowAdjustThreshold = 0.05;
 const int k_dryWeatherCode = 701; // anything less is snow/rain
 const int k_moistureMargin = 20;
 const int k_soilMoistureSampleMax = 10;
@@ -164,8 +163,15 @@ bool System::ApplyWindowProgress(float expectedProgress)
   float currentProgress = (float)WindowProgress() / 100;
 
   // avoid constant micro movements; only open/close window if difference is more than threshold
-  bool overThreshold = std::abs(expectedProgress - currentProgress) > k_windowAdjustThreshold;
+  float threshold = (float)m_windowAdjustThreshold / 100;
+  bool overThreshold = std::abs(expectedProgress - currentProgress) > threshold;
   bool fullValue = (expectedProgress == 0) || (expectedProgress == 1);
+
+  Log().Trace(
+    "Apply window progress, threshold=%.2f, over=%s, full=%s",
+    threshold,
+    overThreshold ? "true" : "false",
+    fullValue ? "true" : "false");
 
   if (overThreshold || fullValue) {
 
