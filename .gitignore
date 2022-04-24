@@ -7,3 +7,4 @@ platformio-local.ini
 *-backups
 fp-info-cache
 \#auto_saved_files\#
+*.kicad_sch-bak
