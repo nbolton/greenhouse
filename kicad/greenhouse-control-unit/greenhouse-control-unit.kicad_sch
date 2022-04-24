@@ -3521,7 +3521,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7641aeb0-3bfe-4b12-b451-d9d1e97e4090)
   )
-  (text "Schematic TODO: \n- Disable SR when no input voltage using transistor\n- Change beep FET back to BJT 2N2222A"
+  (text "Schematic TODO: \n- Disable SR when no input voltage (SR can draw power from inputs; i.e. MC)"
     (at 132.08 26.67 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 8a815ad4-4668-4ab6-ae1d-ef281c30f05f)
