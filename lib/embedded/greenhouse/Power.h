@@ -15,11 +15,9 @@ public:
   const embedded::Log &Log() const { return m_log; }
   void Setup();
   void Loop();
-  void ThreadCallback();
   void InitPowerSource();
   void MeasureVoltage();
   void MeasureCurrent();
-  void RelayTest();
 
 public:
   // getters & setters
@@ -74,6 +72,7 @@ private:
   float m_pvCurrentOutputMin;
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
+  bool m_refreshQueued;
 };
 
 } // namespace greenhouse

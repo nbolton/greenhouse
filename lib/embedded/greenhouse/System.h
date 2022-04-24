@@ -40,9 +40,7 @@ public:
   void OnLastWrite();
   void OnSystemStarted();
   void Restart();
-  void ToggleActiveSwitch();
-  void HandleWindowProgress(int value);
-  void ManualRefresh();
+  void ToggleSwitch(int switchIndex);
   void SetSwitch(int index, bool on);
   void OnPowerSwitch();
   void ExpanderWrite(int pin, int value);
@@ -52,6 +50,8 @@ public:
   float ReadPowerSensorCurrent();
   float ReadCommonVoltageSensor();
   float ReadPsuVoltageSensor();
+  void QueueRefresh() { m_refreshQueued = true; }
+  void QueueToggleActiveSwitch();
 
   const embedded::Log &Log() const { return m_log; }
 
@@ -97,7 +97,7 @@ public:
   bool RefreshBusy() const { return m_refreshBusy; }
 
 private:
-  void StartBeep(int times);
+  void Beep(int times, bool longBeep);
   void CaseFan(bool on);
   void Actuator(bool forward, int s, int t);
   float ReadAdc(ADC &adc, ADS1115_MUX channel);
@@ -105,6 +105,8 @@ private:
   void InitADCs();
   void InitShiftRegisters();
   void UpdateCaseFan();
+  void PrintCommands();
+  void PrintStatus();
 
 private:
   embedded::Log m_log;
@@ -129,6 +131,10 @@ private:
   bool m_soilMoistureWarningSent;
   int m_activeSwitch;
   bool m_switchState[k_switchCount];
+  bool m_refreshQueued;
+  int m_blynkFailures;
+  unsigned long m_lastBlynkFailure;
+  std::queue<int> m_toggleActiveSwitchQueue;
 };
 
 } // namespace greenhouse

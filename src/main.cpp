@@ -10,21 +10,18 @@ void setup()
   greenhouse.Setup();
 }
 
-void loop()
-{
-  greenhouse.Loop();
-}
+void loop() { greenhouse.Loop(); }
 
 #else
 
 #include "../lib/native/greenhouse/System.h"
 
-native::greenhouse::System greenhouse;
+// native::greenhouse::System greenhouse;
 
 int main()
 {
-  greenhouse.Setup();
-  greenhouse.Loop();
+  // greenhouse.Setup();
+  // greenhouse.Loop();
 }
 
 #endif

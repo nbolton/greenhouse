@@ -46,7 +46,7 @@ const int k_shiftRegisterTestDelay = 200; // time betweeen sequential shift
 
 // msr pins
 const int k_pvRelayPin = 0;
-const int k_startBeepPin = 1;
+const int k_BeepPin = 1;
 const int k_caseFanPin = 2;
 const int k_psuRelayPin = 3;
 const int k_batteryLedPin = 4;
@@ -82,6 +82,9 @@ const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char *k_weatherHost = "api.openweathermap.org";
 const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const uint8_t k_ioAddress = 0x20;
+const int k_loopDelay = 1000;
+const int k_blynkFailuresMax = 300;
+const int k_blynkRecoverTimeSec = 300; // 5m
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
@@ -96,11 +99,11 @@ static ADC s_adc0, s_adc1, s_adc2;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
-int s_switchOnCount = 0;
+static int s_switchOnCount = 0;
 
 // free-function declarations
 
-void refreshTimer() { s_instance->Refresh(); }
+void refreshTimer() { s_instance->QueueRefresh(); }
 
 // member functions
 
@@ -128,7 +131,10 @@ System::System() :
   m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
-  m_activeSwitch(k_unknown)
+  m_activeSwitch(k_unknown),
+  m_refreshQueued(true),
+  m_blynkFailures(0),
+  m_lastBlynkFailure(0)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -154,7 +160,7 @@ void System::Setup()
 
   InitShiftRegisters();
 
-  StartBeep(1);
+  Beep(1, false);
   CaseFan(true); // on by default
 
   Wire.begin();
@@ -174,24 +180,65 @@ void System::Setup()
 
   Log().Trace(F("System ready"));
   Blynk.virtualWrite(V52, "Ready");
-  StartBeep(2);
+  Beep(2, false);
 }
 
 void System::Loop()
 {
-  base::System::Loop();
+  if (Serial.available() > 0) {
+    String s = Serial.readString();
+    const char c = s.c_str()[0];
+    switch (c) {
+    case 's':
+      PrintStatus();
+      break;
 
-  Time().Update();
-
-  if (!Blynk.run()) {
-    Log().Trace(F("Blynk failed, restarting..."));
-    Restart();
-    return;
+    default:
+      PrintCommands();
+      break;
+    }
   }
 
+  base::System::Loop();
+
+  unsigned long now = Time().EpochTime();
+  if (!Blynk.run()) {
+
+    m_lastBlynkFailure = now;
+    m_blynkFailures++;
+    Log().Trace(F("Blynk failed %d time(s)"), m_blynkFailures);
+
+    if (m_blynkFailures >= k_blynkFailuresMax) {
+      Log().Trace(F("Restarting, too many Blynk failures"));
+      Restart();
+      return;
+    }
+  }
+  else if (((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec) && (m_blynkFailures != 0)) {
+    // no failures happened within last n - r seconds (n = now, r = recover time)
+    Log().Trace(F("Blynk is back to normal, resetting fail count"));
+    m_blynkFailures = 0;
+  }
+
+  Power().Loop();
+
+  while (!m_toggleActiveSwitchQueue.empty()) {
+    int queuedSwitch = m_toggleActiveSwitchQueue.front();
+    m_toggleActiveSwitchQueue.pop();
+
+    ToggleSwitch(queuedSwitch);
+  }
+
+  // may or may not queue a refresh
   s_timer.run();
 
-  m_power.Loop();
+  if (m_refreshQueued) {
+    m_refreshQueued = false;
+    Refresh();
+  }
+
+  // slow loop down to save power
+  Delay(k_loopDelay);
 }
 
 void System::InitShiftRegisters()
@@ -256,17 +303,9 @@ void System::InitADCs()
 
 void System::Refresh()
 {
-  // TODO: use mutex lock?
-  if (m_refreshBusy) {
-    Log().Trace(F("Refresh busy, skipping"));
-    return;
-  }
-
   Log().Trace(F("Refreshing (embedded)"));
 
-  // TODO: this isn't an ideal mutex lock because the two threads could
-  // hit this line at the same time.
-  m_refreshBusy = true;
+  Time().Refresh();
 
   FlashLed(k_ledRefresh);
 
@@ -285,8 +324,6 @@ void System::Refresh()
   Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
-
-  m_refreshBusy = false;
 
   Log().Trace(F("Refresh done (embedded)"));
 }
@@ -402,9 +439,13 @@ bool System::ReadSensors(int &failures)
     failures++;
   }
   else {
-    m_soilMoisture = CalculateMoisture(SoilSensor());
-    if (m_soilMoisture == k_unknown) {
+    float moisture = CalculateMoisture(SoilSensor());
+    if (moisture == k_unknown) {
       failures++;
+    }
+    else {
+      AddSoilMoistureSample(moisture);
+      m_soilMoisture = SoilMoistureAverage();
     }
   }
 
@@ -444,6 +485,8 @@ void System::Delay(unsigned long ms) { delay(ms); }
 void System::Restart()
 {
   FlashLed(k_ledRestart);
+  Beep(2, true);
+
   ReportWarning("System restarting");
   Blynk.virtualWrite(V52, "Restarting");
 
@@ -473,15 +516,15 @@ void System::CaseFan(bool on)
   s_shiftRegisters.shift();
 }
 
-void System::StartBeep(int times)
+void System::Beep(int times, bool longBeep)
 {
   for (int i = 0; i < times; i++) {
     Log().Trace(F("Beep set shift"));
-    s_shiftRegisters.set_shift(k_startBeepPin);
-    delay(100);
+    s_shiftRegisters.set_shift(k_BeepPin);
+    delay(longBeep ? 200 : 100);
 
     Log().Trace(F("Beep clear shift"));
-    s_shiftRegisters.clear_shift(k_startBeepPin);
+    s_shiftRegisters.clear_shift(k_BeepPin);
     delay(200);
   }
 }
@@ -524,15 +567,15 @@ void System::SetSwitch(int index, bool on)
   UpdateCaseFan();
 }
 
-void System::ToggleActiveSwitch()
+void System::ToggleSwitch(int switchIndex)
 {
-  if (!m_switchState[m_activeSwitch]) {
-    Log().Trace(F("Toggle switch on: %d"), m_activeSwitch);
-    SetSwitch(m_activeSwitch, true);
+  if (!m_switchState[switchIndex]) {
+    Log().Trace(F("Toggle switch on: %d"), switchIndex);
+    SetSwitch(switchIndex, true);
   }
   else {
-    Log().Trace(F("Toggle switch off: %d"), m_activeSwitch);
-    SetSwitch(m_activeSwitch, false);
+    Log().Trace(F("Toggle switch off: %d"), switchIndex);
+    SetSwitch(switchIndex, false);
   }
 }
 
@@ -609,14 +652,14 @@ void System::ReportSensorValues()
   Blynk.virtualWrite(V19, OutsideAirTemperature());
   Blynk.virtualWrite(V20, OutsideAirHumidity());
   Blynk.virtualWrite(V11, SoilTemperature());
-  Blynk.virtualWrite(V21, SoilMoisture());
+  Blynk.virtualWrite(V21, SoilMoistureAverage());
   Blynk.virtualWrite(V46, WaterTemperature());
 }
 
 void System::ReportWindowProgress()
 {
   FlashLed(k_ledSend);
-  Blynk.virtualWrite(V9, WindowProgress());
+  Blynk.virtualWrite(V9, WindowProgressExpected());
 }
 
 void System::ReportSystemInfo()
@@ -687,15 +730,11 @@ void System::OnSystemStarted()
 {
   Power().InitPowerSource();
 
-  // loop() will not have run yet, so make sure the time is updated
-  // before running the refresh function.
-  Time().Update();
-
-  // run the first refresh (instead of waiting for the 1st refresh timer).
+  // queue the first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
   // have all of the correct initial values.
-  Refresh();
+  QueueRefresh();
 
   FlashLed(k_ledStarted);
   SystemStarted(true);
@@ -720,18 +759,6 @@ void System::RefreshRate(int refreshRate)
 
   m_timerId = s_timer.setInterval(refreshRate * 1000L, refreshTimer);
   Log().Trace(F("New refresh timer: %d"), m_timerId);
-}
-
-void System::HandleWindowProgress(int value)
-{
-  if (WindowProgress() != k_unknown) {
-    // only apply window progress if it's not the 1st time;
-    // otherwise the window will always open from 0 on start,
-    // and the position might be something else.
-    ApplyWindowProgress((float)value / 100);
-  }
-
-  WindowProgress(value);
 }
 
 bool System::UpdateWeatherForecast()
@@ -810,13 +837,6 @@ void System::ReportMoistureCalibration()
   Blynk.virtualWrite(V70, SoilSensorDry());
 }
 
-void System::ManualRefresh()
-{
-  Log().Trace(F("Manual refresh"));
-  Time().Update();
-  Refresh();
-}
-
 void System::UpdateCaseFan()
 {
   // turn case fan on when any switch is on or if PSU is in use
@@ -851,6 +871,15 @@ float System::ReadPowerSensorCurrent() { return ReadAdc(s_adc2, k_pvCurrentPin);
 float System::ReadCommonVoltageSensor() { return ReadAdc(s_adc0, k_commonVoltagePin); }
 
 float System::ReadPsuVoltageSensor() { return ReadAdc(s_adc0, k_psuVoltagePin); }
+
+void System::PrintCommands() { Log().Trace(F("Commands\ns: status")); }
+
+void System::PrintStatus()
+{
+  Log().Trace(F("Status\nBlynk: %s"), Blynk.connected() ? "Connected" : "Disconnected");
+}
+
+void System::QueueToggleActiveSwitch() { m_toggleActiveSwitchQueue.push(m_activeSwitch); }
 
 } // namespace greenhouse
 } // namespace embedded
@@ -909,6 +938,7 @@ BLYNK_CONNECTED()
     V71,
     V72,
     V73,
+    V74,
     V127 /* last */);
 }
 
@@ -928,13 +958,13 @@ BLYNK_WRITE(V6)
 BLYNK_WRITE(V7)
 {
   if (param.asInt() == 1) {
-    s_instance->ManualRefresh();
+    s_instance->QueueRefresh();
   }
 }
 
 BLYNK_WRITE(V8) { s_instance->OpenFinish(param.asFloat()); }
 
-BLYNK_WRITE(V9) { s_instance->HandleWindowProgress(param.asInt()); }
+BLYNK_WRITE(V9) { s_instance->QueueWindowProgress(param.asInt()); }
 
 BLYNK_WRITE(V14) { s_instance->TestMode(param.asInt() == 1); }
 
@@ -950,15 +980,8 @@ BLYNK_WRITE(V24) { s_instance->ActiveSwitch(param.asInt()); }
 
 BLYNK_WRITE(V25)
 {
-  // avoid calling ToggleActiveSwitch while Refresh is busy, 
-  // since this seems to cause a crash.
-  if (s_instance->RefreshBusy()) {
-    s_instance->Log().Trace("V25: Refresh busy, skipping");
-    return;
-  }
-
   if (param.asInt() == 1) {
-    s_instance->ToggleActiveSwitch();
+    s_instance->QueueToggleActiveSwitch();
   }
 }
 
@@ -988,9 +1011,7 @@ BLYNK_WRITE(V45) { s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
 
 BLYNK_WRITE(V47) { s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
-BLYNK_WRITE(V48)
-{ /* Unused */
-}
+BLYNK_WRITE(V48) { s_instance->WindowAdjustPositions(param.asInt()); }
 
 BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 
@@ -1055,6 +1076,8 @@ BLYNK_WRITE(V72)
 }
 
 BLYNK_WRITE(V73) { s_instance->Heating().Enabled(param.asInt() == 1); }
+
+BLYNK_WRITE(V74) { s_instance->WindowAdjustTimeframe(param.asInt()); }
 
 // used only as the last value
 BLYNK_WRITE(V127)

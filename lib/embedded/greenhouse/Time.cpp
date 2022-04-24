@@ -16,8 +16,10 @@ Time::Time() : m_timeClientOk(false) {}
 
 void Time::Setup() { s_timeClient.begin(); }
 
-void Time::Update()
+void Time::Refresh()
 {
+  Log().Trace(F("Time refresh"));
+  
   const int retryDelay = 1000;
   const int retryLimit = 5;
   int retryCount = 1;

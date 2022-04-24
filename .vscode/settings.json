@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "typeinfo": "cpp",
-    "cstdarg": "cpp"
+    "cstdarg": "cpp",
+    "cmath": "cpp"
   }
 }
