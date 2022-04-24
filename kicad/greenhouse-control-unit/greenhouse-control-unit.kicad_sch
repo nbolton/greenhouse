@@ -2278,9 +2278,6 @@
   (junction (at 95.25 238.76) (diameter 0) (color 0 0 0 0)
     (uuid 7c88e503-6c9d-4da8-a393-a06c50ed0b94)
   )
-  (junction (at 104.14 171.45) (diameter 0) (color 0 0 0 0)
-    (uuid 7d8be22a-eed9-47fc-ad9a-8164b96562b4)
-  )
   (junction (at 295.91 151.13) (diameter 0) (color 0 0 0 0)
     (uuid 7e645320-128d-458d-9817-5a5dbd57e2c7)
   )
@@ -2635,7 +2632,7 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 3d68cb2a-123d-4618-bfb7-ce7bfdd50c64)
   )
-  (wire (pts (xy 104.14 171.45) (xy 125.73 171.45))
+  (wire (pts (xy 86.36 171.45) (xy 125.73 171.45))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 3e57a002-8548-43c9-9e88-822b2cfbbada)
   )
@@ -2666,10 +2663,6 @@
   (wire (pts (xy 220.98 72.39) (xy 233.68 72.39))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 46578352-3ef3-49e0-b9f4-bee443452d1e)
-  )
-  (wire (pts (xy 104.14 173.99) (xy 104.14 171.45))
-    (stroke (width 0) (type default) (color 0 0 0 0))
-    (uuid 465f0a84-6d8c-4902-8705-213fd90b5ed0)
   )
   (wire (pts (xy 259.08 64.77) (xy 259.08 67.31))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -2798,10 +2791,6 @@
   (wire (pts (xy 293.37 209.55) (xy 293.37 212.09))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 69e902d3-068b-4808-883c-7cbcdf37bcfe)
-  )
-  (wire (pts (xy 125.73 173.99) (xy 104.14 173.99))
-    (stroke (width 0) (type default) (color 0 0 0 0))
-    (uuid 6afa7bd5-2876-45d7-9dba-07d34a3e8ea0)
   )
   (wire (pts (xy 104.14 177.8) (xy 125.73 177.8))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -3082,10 +3071,6 @@
   (wire (pts (xy 368.3 95.25) (xy 378.46 95.25))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid af9d2fb8-82f7-4507-b4e8-d3907b39ca5e)
-  )
-  (wire (pts (xy 86.36 171.45) (xy 104.14 171.45))
-    (stroke (width 0) (type default) (color 0 0 0 0))
-    (uuid b0089518-357f-44cf-a249-f80a96ff1b9a)
   )
   (wire (pts (xy 365.76 127) (xy 365.76 128.27))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -3452,12 +3437,12 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7641aeb0-3bfe-4b12-b451-d9d1e97e4090)
   )
-  (text "Schematic TODO: \n- Ensure all 2N7000 FETs are low-side (high side is limited by VGS; low side is not limited)\n- Resistors on SR inputs to prevent parasite power? Maybe make diode redundant?"
+  (text "Schematic TODO: \n- Disable SR when no input voltage using transistor\n- Change beep FET back to BJT 2N2222A"
     (at 132.08 26.67 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 8a815ad4-4668-4ab6-ae1d-ef281c30f05f)
   )
-  (text "Prototype TODO:\n- Consolidate several 2/3 headers into one\n- Change actuator controller header to 2 or 4 pin (either split 1-2 to EN1-4 or run 4 wires)\n- Add LED to case fan FET\n- Check all R values\n- Test current on each SR out (max 20mA, limit 35mA)\n- Test current on SR VCC (max 70mA)\n- Switch case fan and relay IRLBx's for 2N7000's"
+  (text "Prototype TODO:\n- Check all R values\n- Test current on each SR out (max 20mA, limit 35mA)\n- Test current on SR VCC (max 70mA)\n- Add EN transistor for SR\n- Add L298 to main board"
     (at 26.67 36.83 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid ea331df7-3753-4b8c-8dc4-745de6b4e40b)
@@ -3974,10 +3959,6 @@
   (label "ADC1_A1" (at 369.57 142.24 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid e143e7fc-390e-401c-a293-d874b72ab409)
-  )
-  (label "Motor_ENA" (at 125.73 173.99 180)
-    (effects (font (size 1.27 1.27)) (justify right bottom))
-    (uuid e37e3cf0-0d33-47da-ba63-729ed869d169)
   )
   (label "SW4_SR_Q12" (at 318.77 74.93 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
@@ -5535,7 +5516,7 @@
   (symbol (lib_id "power:+5V") (at 120.65 217.17 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid b3a04bcd-a8de-4fd3-afa7-99bb35daab3f)
-    (property "Reference" "#PWR?" (id 0) (at 120.65 220.98 0)
+    (property "Reference" "#PWR0101" (id 0) (at 120.65 220.98 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+5V" (id 1) (at 120.65 212.09 0))
@@ -6076,8 +6057,21 @@
     (pin "3" (uuid 7c73a42b-ebac-4d23-9e19-333d023bb126))
   )
 
+  (sheet (at 339.09 198.12) (size 58.42 35.56) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid c8388099-9606-46b9-9f66-ad2ea4b72ec6)
+    (property "Sheet name" "L298N motor driver" (id 0) (at 339.09 197.4084 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "L298N-motor-driver.kicad_sch" (id 1) (at 339.09 234.2646 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+
   (sheet_instances
     (path "/" (page "1"))
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6" (page "2"))
   )
 
   (symbol_instances
@@ -6208,7 +6202,31 @@
       (reference "#PWR044") (unit 1) (value "+12V") (footprint "")
     )
     (path "/b3a04bcd-a8de-4fd3-afa7-99bb35daab3f"
-      (reference "#PWR?") (unit 1) (value "+5V") (footprint "")
+      (reference "#PWR0101") (unit 1) (value "+5V") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/621d562f-1ba8-4a7e-bf1a-6add68c1e5fa"
+      (reference "#PWR0102") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/d9226e02-c0d4-4875-9a90-5ff655385a42"
+      (reference "#PWR0103") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/ffee6268-c691-4fee-8d07-2fcf704786b8"
+      (reference "#PWR0104") (unit 1) (value "+5V") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/3bedd05b-2dac-4928-b481-4e94d1fc07be"
+      (reference "#PWR0105") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/e33ec384-03d4-42a8-b060-0079d3f02614"
+      (reference "#PWR0106") (unit 1) (value "+12V") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/b4befb27-4008-4e19-8558-ea6bfc08fe0d"
+      (reference "#PWR0107") (unit 1) (value "+5V") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/0597cceb-f32b-48b0-8822-f08dc77b019a"
+      (reference "#PWR0108") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/f8349e20-f50b-409d-b70f-d46b045c76a3"
+      (reference "#PWR0109") (unit 1) (value "+12V") (footprint "")
     )
     (path "/e9cc145f-bccc-4781-862a-a53065926266"
       (reference "BZ1") (unit 1) (value "Buzzer") (footprint "Buzzer_Beeper:Buzzer_12x9.5RM7.6")
@@ -6218,6 +6236,15 @@
     )
     (path "/7031a6a0-9f8f-4979-bfb3-ae92ce4df07e"
       (reference "C2") (unit 1) (value "0.01 μf") (footprint "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/04ce182a-7abb-4f82-b92f-59beb92690a5"
+      (reference "C3") (unit 1) (value "220uF") (footprint "Capacitor_THT:CP_Radial_D6.3mm_P2.50mm")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/7c8d7a17-2fa6-4a81-860c-670099d2c8f9"
+      (reference "C4") (unit 1) (value "100nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/e8027441-943e-46b8-a56c-711fcc5b269f"
+      (reference "C5") (unit 1) (value "100nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
     )
     (path "/84dea478-b855-4267-aa24-6b336fbce1d8"
       (reference "D1") (unit 1) (value "DSB20I15PA Schottky") (footprint "Package_TO_SOT_THT:TO-220-2_Vertical")
@@ -6242,6 +6269,30 @@
     )
     (path "/7132155c-bebb-4975-b2ae-17917ff1ab80"
       (reference "D8") (unit 1) (value "LED") (footprint "LED_THT:LED_D5.0mm")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/aea877f5-0ed7-43d1-8662-bec20709999f"
+      (reference "D9") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/64212f15-f75f-481f-a6fe-64e98eee845a"
+      (reference "D10") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/eda1c1a0-9fb6-4e29-8fb5-2e3604d67388"
+      (reference "D11") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/16ee782e-9fd5-4603-9bb2-92bb586f1c40"
+      (reference "D12") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/d9cd62f5-388a-4f78-9896-4f46b1d54a35"
+      (reference "D13") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/2838e4ff-3b56-4a56-b1f9-7cb3f296a134"
+      (reference "D14") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/2c9fd049-fac2-42d1-9903-3c6e2d83b458"
+      (reference "D15") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/a4b1d692-2142-4886-95dd-72809a8d03ed"
+      (reference "D16") (unit 1) (value "1N4007") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
     )
     (path "/e0ff723e-9da4-419a-9b7c-537137a1c661"
       (reference "H1") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3mm")
@@ -6369,6 +6420,9 @@
     (path "/2cf0ee19-1d31-46a4-afc6-82ca23049e09"
       (reference "R7") (unit 1) (value "2k") (footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
     )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/a1d7204f-9437-49c2-b0ae-6481b6a6c9ff"
+      (reference "R8") (unit 1) (value "10k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal")
+    )
     (path "/48f1e3b1-710a-42d1-bfff-ca44e51fda44"
       (reference "R9") (unit 1) (value "4k6") (footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
     )
@@ -6411,11 +6465,17 @@
     (path "/da0aa2e5-67a5-4840-930e-b50247cfb7af"
       (reference "R22") (unit 1) (value "10k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal")
     )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/dc1a26b3-6693-4318-93ff-873bee3b6601"
+      (reference "R23") (unit 1) (value "10k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal")
+    )
     (path "/9c6824f3-5657-45c3-b20c-8450c4b95d0e"
       (reference "U1") (unit 1) (value "74HC595") (footprint "Package_DIP:DIP-16_W7.62mm_Socket")
     )
     (path "/1d375454-682f-4cd8-bb29-a94b1ff41761"
       (reference "U2") (unit 1) (value "74HC595") (footprint "Package_DIP:DIP-16_W7.62mm_Socket")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/d4e68898-a7da-4bc4-94ee-4c4d1d1bda8c"
+      (reference "U3") (unit 1) (value "L298HN") (footprint "Package_TO_SOT_THT:TO-220-15_P2.54x2.54mm_StaggerOdd_Lead4.58mm_Vertical")
     )
   )
 )

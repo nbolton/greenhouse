@@ -428,6 +428,10 @@
     [
       "55992e35-fe7b-468a-9b7a-1e4dc931b904",
       ""
+    ],
+    [
+      "c8388099-9606-46b9-9f66-ad2ea4b72ec6",
+      "L298N motor driver"
     ]
   ],
   "text_variables": {}
