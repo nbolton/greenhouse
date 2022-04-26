@@ -3521,7 +3521,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7641aeb0-3bfe-4b12-b451-d9d1e97e4090)
   )
-  (text "Schematic TODO: \n- Disable SR when no input voltage using transistor\n- Change beep FET back to BJT 2N2222A"
+  (text "Schematic TODO: \n- Disable SR when no input voltage (SR can draw power from inputs; i.e. MC)"
     (at 132.08 26.67 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 8a815ad4-4668-4ab6-ae1d-ef281c30f05f)
@@ -6177,6 +6177,9 @@
     (path "/01e4fccf-8023-47c5-8ebf-902e6ed6b0a3"
       (reference "#PWR06") (unit 1) (value "GND") (footprint "")
     )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/a8f4949d-a997-4597-bd13-164ec0d8afb8"
+      (reference "#PWR07") (unit 1) (value "+12V") (footprint "")
+    )
     (path "/14624e4f-3e7f-43e4-90a1-bcd722e8b790"
       (reference "#PWR08") (unit 1) (value "+5V") (footprint "")
     )
@@ -6225,6 +6228,9 @@
     (path "/a6d59de1-6564-4f0c-acc0-0d9ae07a8f1d"
       (reference "#PWR023") (unit 1) (value "+3V3") (footprint "")
     )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/f38438b3-cf3e-405b-a849-40579211d05f"
+      (reference "#PWR024") (unit 1) (value "GND") (footprint "")
+    )
     (path "/56e3f442-a8f4-44a1-a4c1-542a470d70c6"
       (reference "#PWR025") (unit 1) (value "+5VA") (footprint "")
     )
@@ -6233,6 +6239,9 @@
     )
     (path "/535f0783-a9c6-4c75-aaff-f55657a48bfa"
       (reference "#PWR027") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/9d46fd89-3a21-4d92-baec-1afe2af1c311"
+      (reference "#PWR028") (unit 1) (value "+12V") (footprint "")
     )
     (path "/c75844e3-7fae-424e-8c05-c4d20b7e9c48"
       (reference "#PWR029") (unit 1) (value "GND") (footprint "")
@@ -6294,9 +6303,6 @@
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/3bedd05b-2dac-4928-b481-4e94d1fc07be"
       (reference "#PWR0105") (unit 1) (value "GND") (footprint "")
     )
-    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/e33ec384-03d4-42a8-b060-0079d3f02614"
-      (reference "#PWR0106") (unit 1) (value "+12V") (footprint "")
-    )
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/b4befb27-4008-4e19-8558-ea6bfc08fe0d"
       (reference "#PWR0107") (unit 1) (value "+5V") (footprint "")
     )
@@ -6324,11 +6330,14 @@
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/04ce182a-7abb-4f82-b92f-59beb92690a5"
       (reference "C3") (unit 1) (value "220uF") (footprint "Capacitor_THT:CP_Radial_D6.3mm_P2.50mm")
     )
-    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/7c8d7a17-2fa6-4a81-860c-670099d2c8f9"
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/09c80e56-2dd2-46de-971b-4f170f74a8c6"
       (reference "C4") (unit 1) (value "100nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
     )
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/e8027441-943e-46b8-a56c-711fcc5b269f"
       (reference "C5") (unit 1) (value "100nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/30193f8a-b91b-4f57-a943-206a2be51557"
+      (reference "C6") (unit 1) (value "100nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
     )
     (path "/84dea478-b855-4267-aa24-6b336fbce1d8"
       (reference "D1") (unit 1) (value "DSB20I15PA Schottky") (footprint "Package_TO_SOT_THT:TO-220-2_Vertical")
@@ -6483,6 +6492,9 @@
     (path "/80bb1bb3-676f-48f5-b7c7-e870622eac55"
       (reference "Q11") (unit 1) (value "IRLB8721PBF") (footprint "Package_TO_SOT_THT:TO-220-3_Horizontal_TabDown")
     )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/a014cedf-904d-478e-a042-8bded0b5d7ef"
+      (reference "Q12") (unit 1) (value "D44H8") (footprint "Package_TO_SOT_THT:TO-220-3_Vertical")
+    )
     (path "/09100dc3-93ba-49e2-9313-2ca39775f045"
       (reference "R1") (unit 1) (value "4k6") (footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
     )
@@ -6503,9 +6515,6 @@
     )
     (path "/2cf0ee19-1d31-46a4-afc6-82ca23049e09"
       (reference "R7") (unit 1) (value "2k") (footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
-    )
-    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/a1d7204f-9437-49c2-b0ae-6481b6a6c9ff"
-      (reference "R8") (unit 1) (value "10k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal")
     )
     (path "/48f1e3b1-710a-42d1-bfff-ca44e51fda44"
       (reference "R9") (unit 1) (value "4k6") (footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
@@ -6549,8 +6558,8 @@
     (path "/da0aa2e5-67a5-4840-930e-b50247cfb7af"
       (reference "R22") (unit 1) (value "10k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal")
     )
-    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/dc1a26b3-6693-4318-93ff-873bee3b6601"
-      (reference "R23") (unit 1) (value "10k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal")
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/7518d2ed-2c96-41ca-ad67-541b53f9a63d"
+      (reference "R24") (unit 1) (value "100R") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal")
     )
     (path "/9c6824f3-5657-45c3-b20c-8450c4b95d0e"
       (reference "U1") (unit 1) (value "74HC595") (footprint "Package_DIP:DIP-16_W7.62mm_Socket")
@@ -6560,6 +6569,9 @@
     )
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/d4e68898-a7da-4bc4-94ee-4c4d1d1bda8c"
       (reference "U3") (unit 1) (value "L298HN") (footprint "Package_TO_SOT_THT:TO-220-15_P2.54x2.54mm_StaggerOdd_Lead4.58mm_Vertical")
+    )
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/6903a76f-65b1-46d9-9725-712dbf64ad32"
+      (reference "U4") (unit 1) (value "WS78L10") (footprint "Nick:TO-92L_Inline_China")
     )
   )
 )

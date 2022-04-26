@@ -35,7 +35,8 @@ System::System() :
   m_soilMoistureAverage(0),
   m_windowAdjustPositions(k_unknown),
   m_windowAdjustTimeframe(k_unknown),
-  m_windowAdjustLast(k_unknownUL)
+  m_windowAdjustLast(k_unknownUL),
+  m_windowActuatorStopTime(k_unknownUL)
 {
 }
 
@@ -47,6 +48,19 @@ void System::Setup()
 
 void System::Loop()
 {
+  if (IsWindowActuatorRunning()) {
+    const int windowTimeLeft = m_windowActuatorStopTime - Time().EpochTime();
+    if (windowTimeLeft <= 0) {
+      Log().Trace("Actuator finished, overshoot: %dms", abs(windowTimeLeft));
+      m_windowActuatorStopTime = k_unknownUL;
+      StopActuator();
+    }
+    else {
+      Log().Trace("Actuator opening window, time left: %dms", windowTimeLeft);
+      return;
+    }
+  }
+
   if (m_windowProgressQueued != k_unknown) {
 
     Log().Trace(
@@ -148,7 +162,8 @@ void System::Refresh()
       m_windowAdjustTimeframe);
 
     int timeframeSec = m_windowAdjustTimeframe * 60;
-    bool timeframeOk = (m_windowAdjustTimeframe == k_unknown) || (m_windowAdjustLast == k_unknownUL) ||
+    bool timeframeOk = (m_windowAdjustTimeframe == k_unknown) ||
+                       (m_windowAdjustLast == k_unknownUL) ||
                        ((int)(Time().EpochTime() - m_windowAdjustLast) > timeframeSec);
     bool noUnknowns =
       (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown);
@@ -286,10 +301,9 @@ void System::AdjustWindow(bool open, float delta)
   RunWindowActuator(open);
 
   int runtime = (m_windowActuatorRuntimeSec * 1000) * delta;
-  Log().Trace("Actuator runtime: %dms", runtime);
-  Delay(runtime);
+  Log().Trace("Actuator runtime set: %dms", runtime);
 
-  StopActuator();
+  m_windowActuatorStopTime = Time().EpochTime() + runtime;
 }
 
 float System::CalculateMoisture(float analogValue) const

@@ -2,6 +2,9 @@
 
 #include "../native/greenhouse/System.h"
 
+#include "TestTime.h"
+#include "TestHeating.h"
+
 using namespace native::greenhouse;
 
 class TestSystem : public System {

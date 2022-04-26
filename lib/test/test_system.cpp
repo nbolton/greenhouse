@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include "TestSystem.h"
+
 #include <unity.h>
 
 // void setUp(void) {
@@ -322,31 +323,54 @@ void Test_Loop_WindowAdjustTwiceUnderThenOverThreshold_WindowOpens(void)
 void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
 {
   TestSystem system;
+  TestTime time;
+  system.m_mock_time = &time;
+
+  time.m_mock_EpochTime = 0;
   system.WindowActuatorRuntimeSec(1.1);
 
   system.OpenWindow(.5);
-
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_RunWindowActuator);
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_SystemDelay);
+  
+  // test that window is still opening
+  system.Loop();
+  TEST_ASSERT_EQUAL_INT(0, system.m_calls_StopActuator);
 
+  // test that window stopped opening
+  time.m_mock_EpochTime = 2000;
+  system.Loop();
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
   TEST_ASSERT_EQUAL(true, system.m_lastArg_RunWindowActuator_extend);
-  TEST_ASSERT_EQUAL_UINT64(550, system.m_lastArg_SystemDelay_ms);
+
+  // test that it didn't stop twice
+  system.Loop();
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
 }
 
 void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
 {
   TestSystem system;
+  TestTime time;
+  system.m_mock_time = &time;
   system.WindowActuatorRuntimeSec(1.1);
 
   system.CloseWindow(.5);
-
+  system.Loop();
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_RunWindowActuator);
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
-  TEST_ASSERT_EQUAL_INT(1, system.m_calls_SystemDelay);
+  
+  // test that window is still closing
+  system.Loop();
+  TEST_ASSERT_EQUAL_INT(0, system.m_calls_StopActuator);
 
+  // test that window stopped closing
+  time.m_mock_EpochTime = 2000;
+  system.Loop();
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
   TEST_ASSERT_EQUAL(false, system.m_lastArg_RunWindowActuator_extend);
-  TEST_ASSERT_EQUAL_UINT64(550, system.m_lastArg_SystemDelay_ms);
+
+  // test that it didn't stop twice
+  system.Loop();
+  TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
 }
 
 void Test_CalculateMoisture_BelowOrEqualMin_ReturnsZero()

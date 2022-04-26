@@ -15,7 +15,7 @@ const float k_commonVoltageMapIn = 2.10;
 const float k_commonVoltageMapOut = 12.0;
 const float k_psuVoltageMapIn = 2.10;
 const float k_psuVoltageMapOut = 12.0;
-const int k_switchDelay = 500;  // delay between switching both relays
+const int k_switchDelay = 1000;  // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
 
