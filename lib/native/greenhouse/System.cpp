@@ -170,6 +170,11 @@ void System::Refresh()
     bool noUnknowns =
       (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown);
 
+    Log().Trace(
+      "Window adjust, unknowns=%s, timeframeOk=%s",
+      noUnknowns ? "true" : "false",
+      timeframeOk ? "true" : "false");
+      
     if (noUnknowns && timeframeOk) {
 
       if ((soilTemperature > openStart) && (soilTemperature < openFinish)) {
