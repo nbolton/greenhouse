@@ -269,7 +269,12 @@ void System::InitShiftRegisters()
   pinMode(k_shiftRegisterLatchPin, OUTPUT);
   pinMode(k_shiftRegisterClockPin, OUTPUT);
   pinMode(k_shiftRegisterDataPin, OUTPUT);
+
   pinMode(k_shiftRegisterEnablePin, OUTPUT);
+  digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
+
+  Log().Trace(F("Init shift"));
+  s_shiftRegisters.shift();
 
   if (k_shiftRegisterTestEnable) {
     digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
