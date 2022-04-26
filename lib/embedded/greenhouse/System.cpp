@@ -85,6 +85,7 @@ const uint8_t k_ioAddress = 0x20;
 const int k_loopDelay = 1000;
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
+const int k_serialWaitDelay = 1000;    // 1s
 
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
@@ -149,7 +150,7 @@ void System::Setup()
     Serial.begin(9600);
 
     // wait for serial to connect before first trace
-    delay(1000);
+    Delay(k_serialWaitDelay);
   }
 
   if (k_enableLed) {
@@ -258,7 +259,7 @@ void System::InitShiftRegisters()
       for (int i = 0; i < 16; i++) {
         Log().Trace(F("Test SR pin %d"), i);
         s_shiftRegisters.set_shift(i);
-        delay(k_shiftRegisterTestDelay);
+        Delay(k_shiftRegisterTestDelay);
         s_shiftRegisters.clear_shift(i);
       }
     }
@@ -342,7 +343,7 @@ void System::FlashLed(LedFlashTimes times)
   for (int i = 0; i < (int)times * 2; i++) {
     m_led = (m_led == LOW) ? HIGH : LOW;
     digitalWrite(LED_BUILTIN, m_led);
-    delay(k_ledFlashDelay);
+    Delay(k_ledFlashDelay);
   }
 }
 
@@ -480,7 +481,11 @@ void System::StopActuator()
   s_shiftRegisters.shift();
 }
 
-void System::Delay(unsigned long ms) { delay(ms); }
+void System::Delay(unsigned long ms)
+{
+  Log().Trace("Delay: %dms", (int)ms);
+  delay(ms);
+}
 
 void System::Restart()
 {
@@ -521,11 +526,11 @@ void System::Beep(int times, bool longBeep)
   for (int i = 0; i < times; i++) {
     Log().Trace(F("Beep set shift"));
     s_shiftRegisters.set_shift(k_BeepPin);
-    delay(longBeep ? 200 : 100);
+    Delay(longBeep ? 200 : 100);
 
     Log().Trace(F("Beep clear shift"));
     s_shiftRegisters.clear_shift(k_BeepPin);
-    delay(200);
+    Delay(200);
   }
 }
 
@@ -597,7 +602,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
   int times = 0;
   while (adc.ads.isBusy()) {
-    delay(10);
+    Delay(10);
     if (times++ > 10) {
       Log().Trace(F("ADC is busy: %s"), adc.name.c_str());
       return k_unknown;
