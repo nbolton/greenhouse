@@ -186,6 +186,13 @@ void System::Setup()
 
 void System::Loop()
 {
+  // always run before actuator check
+  base::System::Loop();
+
+  if (IsWindowActuatorRunning()) {
+    return;
+  }
+
   if (Serial.available() > 0) {
     String s = Serial.readString();
     const char c = s.c_str()[0];
@@ -199,8 +206,6 @@ void System::Loop()
       break;
     }
   }
-
-  base::System::Loop();
 
   unsigned long now = Time().EpochTime();
   if (!Blynk.run()) {

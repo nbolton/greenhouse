@@ -5,8 +5,8 @@
 #include "Heating.h"
 #include "Time.h"
 
-#include <string>
 #include <queue>
+#include <string>
 
 namespace native {
 namespace greenhouse {
@@ -54,6 +54,7 @@ protected:
   virtual bool UpdateWeatherForecast() { return false; }
   virtual void HandleNightToDayTransition();
   virtual void HandleDayToNightTransition();
+  virtual bool IsWindowActuatorRunning() { return m_windowActuatorStopTime != k_unknownUL; }
 
 public:
   // getters & setters
@@ -128,6 +129,7 @@ private:
   int m_windowAdjustPositions;
   int m_windowAdjustTimeframe;
   unsigned long m_windowAdjustLast;
+  unsigned long m_windowActuatorStopTime;
 };
 
 } // namespace greenhouse
