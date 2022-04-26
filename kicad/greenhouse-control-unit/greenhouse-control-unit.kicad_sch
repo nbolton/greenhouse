@@ -2880,7 +2880,7 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 6c021eac-f4c3-4649-9ca7-9f65ceec3341)
   )
-  (wire (pts (xy 91.44 148.59) (xy 109.22 148.59))
+  (wire (pts (xy 91.44 148.59) (xy 121.92 148.59))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 6c151268-d725-4e8d-8f1d-0c9fe4a27844)
   )
@@ -2931,10 +2931,6 @@
   (wire (pts (xy 95.25 238.76) (xy 95.25 240.03))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 791ec6ba-502b-44fb-bc2b-1208290b47b4)
-  )
-  (wire (pts (xy 118.11 146.05) (xy 118.11 147.32))
-    (stroke (width 0) (type default) (color 0 0 0 0))
-    (uuid 7957f84f-8c81-4033-9d29-0abf9f2e91a3)
   )
   (wire (pts (xy 157.48 134.62) (xy 170.18 134.62))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -3011,6 +3007,10 @@
   (wire (pts (xy 285.75 82.55) (xy 295.91 82.55))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 8f8a3392-4bfc-4494-bcce-93bb894f25fa)
+  )
+  (wire (pts (xy 124.46 146.05) (xy 124.46 152.4))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid 8fe884cd-6339-42e2-ac38-04ae0ca6ad41)
   )
   (wire (pts (xy 332.74 151.13) (xy 342.9 151.13))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -3332,7 +3332,7 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid d5dc34c3-d32e-4458-b682-a19d76830f98)
   )
-  (wire (pts (xy 91.44 146.05) (xy 118.11 146.05))
+  (wire (pts (xy 91.44 146.05) (xy 124.46 146.05))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid d73f9671-1a9c-4d53-be39-227ed300758a)
   )
@@ -3521,12 +3521,12 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7641aeb0-3bfe-4b12-b451-d9d1e97e4090)
   )
-  (text "Schematic TODO: \n- Disable SR when no input voltage (SR can draw power from inputs; i.e. MC)"
+  (text "Schematic TODO: \n- Disable SR when no input voltage (SR can draw power from inputs; i.e. MC)\n"
     (at 132.08 26.67 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 8a815ad4-4668-4ab6-ae1d-ef281c30f05f)
   )
-  (text "Prototype TODO:\n- Check all R values\n- Test current on each SR out (max 20mA, limit 35mA)\n- Test current on SR VCC (max 70mA)\n- Add EN transistor for SR\n- Add L298 to main board"
+  (text "Prototype TODO:\n- Swithc out L7805 for L7810 (motor driver supply FET driver)\n\n- Check all R values\n- Test current on each SR out (max 20mA, limit 35mA)\n- Test current on SR VCC (max 70mA)\n"
     (at 26.67 36.83 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid ea331df7-3753-4b8c-8dc4-745de6b4e40b)
@@ -4060,6 +4060,10 @@
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid e82e0950-eb69-4987-abf4-dbaed56354bc)
   )
+  (label "PSU+12V" (at 121.92 148.59 180)
+    (effects (font (size 1.27 1.27)) (justify right bottom))
+    (uuid e955258c-2496-433f-9dcb-fcb7179b7f5a)
+  )
   (label "SW_FET7" (at 368.3 113.03 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid eab7ab02-c7fc-4b68-8bf0-b949ba899168)
@@ -4135,22 +4139,6 @@
   (label "ADC2_A0" (at 170.18 166.37 180)
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid ff6abf00-0f46-45b7-b107-1c323dd64d19)
-  )
-
-  (symbol (lib_id "power:GND") (at 118.11 147.32 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (uuid 01e4fccf-8023-47c5-8ebf-902e6ed6b0a3)
-    (property "Reference" "#PWR06" (id 0) (at 118.11 153.67 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "GND" (id 1) (at 118.11 152.4 0))
-    (property "Footprint" "" (id 2) (at 118.11 147.32 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (id 3) (at 118.11 147.32 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 7bc61a86-011c-4748-8cbf-82f084d4520c))
   )
 
   (symbol (lib_id "Connector:Conn_01x01_Female") (at 107.95 114.3 180) (unit 1)
@@ -6121,6 +6109,22 @@
     (pin "1" (uuid 3c8a81d3-8177-4848-a08e-eedfdbc91db7))
   )
 
+  (symbol (lib_id "power:GND") (at 124.46 152.4 0) (unit 1)
+    (in_bom yes) (on_board yes)
+    (uuid febb5532-f50b-4206-9c76-51e32fa8cfdc)
+    (property "Reference" "#PWR0105" (id 0) (at 124.46 158.75 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "GND" (id 1) (at 124.46 157.48 0))
+    (property "Footprint" "" (id 2) (at 124.46 152.4 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (id 3) (at 124.46 152.4 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 8fe64775-4ef7-4e5a-9d92-082effea7647))
+  )
+
   (symbol (lib_id "Transistor_FET:IRLB8721PBF") (at 293.37 74.93 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid ffc39c48-9b39-48be-9e12-e20964b433d9)
@@ -6173,9 +6177,6 @@
     )
     (path "/459c2275-be66-4693-ab37-73c11649581b"
       (reference "#PWR05") (unit 1) (value "+5V") (footprint "")
-    )
-    (path "/01e4fccf-8023-47c5-8ebf-902e6ed6b0a3"
-      (reference "#PWR06") (unit 1) (value "GND") (footprint "")
     )
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/a8f4949d-a997-4597-bd13-164ec0d8afb8"
       (reference "#PWR07") (unit 1) (value "+12V") (footprint "")
@@ -6300,7 +6301,7 @@
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/ffee6268-c691-4fee-8d07-2fcf704786b8"
       (reference "#PWR0104") (unit 1) (value "+5V") (footprint "")
     )
-    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/3bedd05b-2dac-4928-b481-4e94d1fc07be"
+    (path "/febb5532-f50b-4206-9c76-51e32fa8cfdc"
       (reference "#PWR0105") (unit 1) (value "GND") (footprint "")
     )
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/b4befb27-4008-4e19-8558-ea6bfc08fe0d"
@@ -6327,8 +6328,8 @@
     (path "/7031a6a0-9f8f-4979-bfb3-ae92ce4df07e"
       (reference "C2") (unit 1) (value "0.01 μf") (footprint "Capacitor_THT:C_Disc_D3.0mm_W1.6mm_P2.50mm")
     )
-    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/04ce182a-7abb-4f82-b92f-59beb92690a5"
-      (reference "C3") (unit 1) (value "220uF") (footprint "Capacitor_THT:CP_Radial_D6.3mm_P2.50mm")
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/0567ebc0-6b29-4900-b5b8-9c8a8ac19768"
+      (reference "C3") (unit 1) (value "100nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
     )
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/09c80e56-2dd2-46de-971b-4f170f74a8c6"
       (reference "C4") (unit 1) (value "100nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
@@ -6570,8 +6571,8 @@
     (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/d4e68898-a7da-4bc4-94ee-4c4d1d1bda8c"
       (reference "U3") (unit 1) (value "L298HN") (footprint "Package_TO_SOT_THT:TO-220-15_P2.54x2.54mm_StaggerOdd_Lead4.58mm_Vertical")
     )
-    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/6903a76f-65b1-46d9-9725-712dbf64ad32"
-      (reference "U4") (unit 1) (value "WS78L10") (footprint "Nick:TO-92L_Inline_China")
+    (path "/c8388099-9606-46b9-9f66-ad2ea4b72ec6/2bb05439-fb20-45a4-b0f5-c7ae48a3d511"
+      (reference "U4") (unit 1) (value "L7810") (footprint "")
     )
   )
 )
