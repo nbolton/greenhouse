@@ -10,6 +10,7 @@ namespace greenhouse {
 const int k_dryWeatherCode = 701; // anything less is snow/rain
 const int k_moistureMargin = 20;
 const int k_soilMoistureSampleMax = 10;
+const int k_windowActuatorLoopDelay = 100;
 
 System::System() :
   m_log(),
@@ -51,12 +52,13 @@ void System::Loop()
   if (IsWindowActuatorRunning()) {
     const int windowTimeLeft = m_windowActuatorStopTime - Time().EpochTime();
     if (windowTimeLeft <= 0) {
-      Log().Trace("Actuator finished, overshoot: %dms", abs(windowTimeLeft));
+      Log().Trace("Actuator finished, overshoot: %ds", abs(windowTimeLeft));
       m_windowActuatorStopTime = k_unknownUL;
       StopActuator();
     }
     else {
-      Log().Trace("Actuator opening window, time left: %dms", windowTimeLeft);
+      Log().Trace("Actuator opening window, time left: %ds", windowTimeLeft);
+      Delay(k_windowActuatorLoopDelay);
       return;
     }
   }
@@ -300,8 +302,8 @@ void System::AdjustWindow(bool open, float delta)
 {
   RunWindowActuator(open);
 
-  int runtime = (m_windowActuatorRuntimeSec * 1000) * delta;
-  Log().Trace("Actuator runtime set: %dms", runtime);
+  int runtime = m_windowActuatorRuntimeSec * delta;
+  Log().Trace("Actuator runtime set: %ds", runtime);
 
   m_windowActuatorStopTime = Time().EpochTime() + runtime;
 }
