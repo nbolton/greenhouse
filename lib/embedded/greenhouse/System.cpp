@@ -140,7 +140,9 @@ System::System() :
   m_refreshQueued(true),
   m_blynkFailures(0),
   m_lastBlynkFailure(0),
-  m_shiftRegisterEnabled(true)
+  m_shiftRegisterEnabled(true),
+  m_queueSoilCalibrateWet(false),
+  m_queueSoilCalibrateDry(false)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -262,6 +264,16 @@ void System::Loop()
   if (m_refreshQueued) {
     m_refreshQueued = false;
     Refresh();
+  }
+
+  if (m_queueSoilCalibrateWet) {
+    m_queueSoilCalibrateWet = false;
+    SoilCalibrateWet();
+  }
+
+  if (m_queueSoilCalibrateDry) {
+    m_queueSoilCalibrateDry = false;
+    SoilCalibrateDry();
   }
 
   // slow loop down to save power
@@ -1104,14 +1116,14 @@ BLYNK_WRITE(V70) { s_instance->SoilSensorDry(param.asFloat()); }
 BLYNK_WRITE(V71)
 {
   if (param.asInt() != 0) {
-    s_instance->SoilCalibrateWet();
+    s_instance->QueueSoilCalibrateWet();
   }
 }
 
 BLYNK_WRITE(V72)
 {
   if (param.asInt() != 0) {
-    s_instance->SoilCalibrateDry();
+    s_instance->QueueSoilCalibrateDry();
   }
 }
 
