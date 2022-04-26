@@ -51,8 +51,8 @@ const int k_caseFanPin = 2;
 const int k_psuRelayPin = 3;
 const int k_batteryLedPin = 4;
 const int k_psuLedPin = 5;
-const int k_actuatorPin1 = 6; // IN1
-const int k_actuatorPin2 = 7; // IN2
+const int k_actuatorPin1 = 7; // IN1
+const int k_actuatorPin2 = 6; // IN2
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
 // adc0 pins
