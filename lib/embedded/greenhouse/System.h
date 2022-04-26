@@ -72,7 +72,7 @@ protected:
   bool ReadSoilMoistureSensor();
   void RunWindowActuator(bool extend);
   void StopActuator();
-  void Delay(unsigned long ms);
+  void Delay(unsigned long ms, const char* reason);
   bool UpdateWeatherForecast();
   void HandleNightToDayTransition();
   void HandleDayToNightTransition();
@@ -135,6 +135,7 @@ private:
   int m_blynkFailures;
   unsigned long m_lastBlynkFailure;
   std::queue<int> m_toggleActiveSwitchQueue;
+  bool m_shiftRegisterEnabled;
 };
 
 } // namespace greenhouse

@@ -115,9 +115,9 @@ public:
     m_calls_StopActuator++;
   }
 
-  void Delay(unsigned long ms)
+  void Delay(unsigned long ms, const char* reason)
   {
-    Log().Trace("Stub: Delay, extend=%d", static_cast<int>(ms));
+    Log().Trace("Stub: Delay, ms=%d, reason=%s", static_cast<int>(ms), reason);
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }

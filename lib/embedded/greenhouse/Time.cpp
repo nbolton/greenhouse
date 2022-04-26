@@ -28,7 +28,7 @@ void Time::Refresh()
     m_timeClientOk = s_timeClient.update();
     if (!m_timeClientOk) {
       Log().Trace(F("Time update failed (attempt %d)"), retryCount);
-      System().Delay(retryDelay);
+      System().Delay(retryDelay, "time update");
     }
   } while (!m_timeClientOk && retryCount++ < retryLimit);
 }

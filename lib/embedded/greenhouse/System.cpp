@@ -2,6 +2,7 @@
 
 #include <cstdarg>
 
+#include "MultiShiftRegister.h"
 #include "Heating.h"
 #include "ISystem.h"
 #include "common.h"
@@ -14,7 +15,6 @@
 #include <BlynkSimpleEsp8266.h>
 #include <DallasTemperature.h>
 #include <ESP8266WiFi.h>
-#include <MultiShiftRegister.h>
 #include <OneWire.h>
 #include <PCF8574.h>
 #include <SPI.h>
@@ -42,7 +42,11 @@ const int k_shiftRegisterLatchPin = D5;  // RCLK (12)
 const int k_shiftRegisterDataPin = D6;   // SER (14)
 const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
 const bool k_shiftRegisterTestEnable = false;
-const int k_shiftRegisterTestDelay = 200; // time betweeen sequential shift
+const int k_shiftRegisterTestFrom = 0; // min 0
+const int k_shiftRegisterTestTo = 15; // max 15
+const int k_shiftRegisterTestOn = 500; // time between shift and clear
+const int k_shiftRegisterTestOff = 0; // time between last clear and next shift
+const int k_shiftRegisterMinVoltage = 5;
 
 // msr pins
 const int k_pvRelayPin = 0;
@@ -135,7 +139,8 @@ System::System() :
   m_activeSwitch(k_unknown),
   m_refreshQueued(true),
   m_blynkFailures(0),
-  m_lastBlynkFailure(0)
+  m_lastBlynkFailure(0),
+  m_shiftRegisterEnabled(true)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -150,7 +155,7 @@ void System::Setup()
     Serial.begin(9600);
 
     // wait for serial to connect before first trace
-    Delay(k_serialWaitDelay);
+    Delay(k_serialWaitDelay, "Serial wait");
   }
 
   if (k_enableLed) {
@@ -188,7 +193,7 @@ void System::Loop()
 {
   // always run before actuator check
   base::System::Loop();
-
+  
   if (IsWindowActuatorRunning()) {
     return;
   }
@@ -228,6 +233,18 @@ void System::Loop()
 
   Power().Loop();
 
+  // the shift register seems to draw power through from the microcontroller,
+  // possibly through the inputs, which doesn't seem great. so, turn the shift
+  // register off when it doesn't have any power. ideally this should be done
+  // though circuit logic, but this will do for now.
+  const bool srEnable = m_power.ReadCommonVoltage() >= k_shiftRegisterMinVoltage;
+  if (srEnable != m_shiftRegisterEnabled) {
+    Log().Trace(F("Shift register %s"), srEnable ? "enabled" : "disabled");
+    digitalWrite(k_shiftRegisterEnablePin, srEnable ? LOW : HIGH); // LOW = enable
+
+    m_shiftRegisterEnabled = srEnable;
+  }
+
   while (!m_toggleActiveSwitchQueue.empty()) {
     int queuedSwitch = m_toggleActiveSwitchQueue.front();
     m_toggleActiveSwitchQueue.pop();
@@ -244,7 +261,7 @@ void System::Loop()
   }
 
   // slow loop down to save power
-  Delay(k_loopDelay);
+  Delay(k_loopDelay, "Loop");
 }
 
 void System::InitShiftRegisters()
@@ -252,20 +269,23 @@ void System::InitShiftRegisters()
   pinMode(k_shiftRegisterLatchPin, OUTPUT);
   pinMode(k_shiftRegisterClockPin, OUTPUT);
   pinMode(k_shiftRegisterDataPin, OUTPUT);
-
   pinMode(k_shiftRegisterEnablePin, OUTPUT);
-  digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
-
-  Log().Trace(F("Init shift"));
-  s_shiftRegisters.shift();
 
   if (k_shiftRegisterTestEnable) {
+    digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
+    const int from = k_shiftRegisterTestFrom;
+    const int to = k_shiftRegisterTestTo + 1;
     while (true) {
-      for (int i = 0; i < 16; i++) {
-        Log().Trace(F("Test SR pin %d"), i);
+      Log().Trace(F("Test shift loop from=%d to=%d"), from, to);
+      for (int i = from; i < to; i++) {
+
+        Log().Trace(F("Test set SR pin %d"), i);
         s_shiftRegisters.set_shift(i);
-        Delay(k_shiftRegisterTestDelay);
+        Delay(k_shiftRegisterTestOn, "SR test on");
+
+        Log().Trace(F("Test clear SR pin %d"), i);
         s_shiftRegisters.clear_shift(i);
+        Delay(k_shiftRegisterTestOff, "SR test off");
       }
     }
   }
@@ -348,7 +368,7 @@ void System::FlashLed(LedFlashTimes times)
   for (int i = 0; i < (int)times * 2; i++) {
     m_led = (m_led == LOW) ? HIGH : LOW;
     digitalWrite(LED_BUILTIN, m_led);
-    Delay(k_ledFlashDelay);
+    Delay(k_ledFlashDelay, "LED flash");
   }
 }
 
@@ -436,7 +456,7 @@ bool System::ReadSensors(int &failures)
     }
 
     Log().Trace(F("Dallas sensor read failed, retrying (attempt %d)"), dallasRetry);
-    Delay(dallasRetryWait);
+    Delay(dallasRetryWait, "Dallas retry");
   }
 
   ReadSoilMoistureSensor();
@@ -481,14 +501,15 @@ void System::RunWindowActuator(bool extend)
 
 void System::StopActuator()
 {
+  Log().Trace(F("Stopping actuator"));
   s_shiftRegisters.clear(k_actuatorPin1);
   s_shiftRegisters.clear(k_actuatorPin2);
   s_shiftRegisters.shift();
 }
 
-void System::Delay(unsigned long ms)
+void System::Delay(unsigned long ms, const char* reason)
 {
-  Log().Trace("Delay: %dms", (int)ms);
+  Log().Trace(F("%s delay: %dms"), reason, (int)ms);
   delay(ms);
 }
 
@@ -531,11 +552,11 @@ void System::Beep(int times, bool longBeep)
   for (int i = 0; i < times; i++) {
     Log().Trace(F("Beep set shift"));
     s_shiftRegisters.set_shift(k_BeepPin);
-    Delay(longBeep ? 200 : 100);
+    Delay(longBeep ? 200 : 100, "Beep on");
 
     Log().Trace(F("Beep clear shift"));
     s_shiftRegisters.clear_shift(k_BeepPin);
-    Delay(200);
+    Delay(200, "Beep off");
   }
 }
 
@@ -607,7 +628,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
   int times = 0;
   while (adc.ads.isBusy()) {
-    Delay(10);
+    Delay(10, "ADC wait");
     if (times++ > 10) {
       Log().Trace(F("ADC is busy: %s"), adc.name.c_str());
       return k_unknown;

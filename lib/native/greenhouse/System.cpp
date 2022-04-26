@@ -58,7 +58,7 @@ void System::Loop()
     }
     else {
       Log().Trace("Actuator opening window, time left: %ds", windowTimeLeft);
-      Delay(k_windowActuatorLoopDelay);
+      Delay(k_windowActuatorLoopDelay, "Actuator loop");
       return;
     }
   }

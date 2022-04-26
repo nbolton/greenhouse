@@ -50,7 +50,7 @@ protected:
   virtual void AdjustWindow(bool open, float delta);
   virtual void RunWindowActuator(bool extend) {}
   virtual void StopActuator() {}
-  virtual void Delay(unsigned long ms) {}
+  virtual void Delay(unsigned long ms, const char* reason) {}
   virtual bool UpdateWeatherForecast() { return false; }
   virtual void HandleNightToDayTransition();
   virtual void HandleDayToNightTransition();

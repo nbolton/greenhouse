@@ -202,7 +202,7 @@ void Power::SwitchPower(bool pv)
 
   // if on battery, give the PSU time to power up, or,
   // if on PSU, allow the battery relay to close first.
-  Embedded().Delay(k_switchDelay);
+  Embedded().Delay(k_switchDelay, "Relay");
 
   if (!pv) {
     Log().Trace(F("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)"));
