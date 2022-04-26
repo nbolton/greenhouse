@@ -191,6 +191,10 @@ void System::Setup()
 
 void System::Loop()
 {
+  // HACK: the shift register gets into an undefined state sometimes,
+  // so keep shifting to ensure that it's state is persisted.
+  s_shiftRegisters.shift();
+  
   // always run before actuator check
   base::System::Loop();
   
