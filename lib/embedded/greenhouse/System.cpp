@@ -2,9 +2,9 @@
 
 #include <cstdarg>
 
-#include "MultiShiftRegister.h"
 #include "Heating.h"
 #include "ISystem.h"
+#include "MultiShiftRegister.h"
 #include "common.h"
 #include "ho_config.h"
 
@@ -22,9 +22,8 @@
 
 using namespace common;
 
-namespace base = native::greenhouse;
-
-static embedded::greenhouse::System *s_instance = nullptr;
+namespace ng = native::greenhouse;
+namespace eg = embedded::greenhouse;
 
 namespace embedded {
 namespace greenhouse {
@@ -43,9 +42,9 @@ const int k_shiftRegisterDataPin = D6;   // SER (14)
 const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
 const bool k_shiftRegisterTestEnable = false;
 const int k_shiftRegisterTestFrom = 0; // min 0
-const int k_shiftRegisterTestTo = 15; // max 15
+const int k_shiftRegisterTestTo = 15;  // max 15
 const int k_shiftRegisterTestOn = 500; // time between shift and clear
-const int k_shiftRegisterTestOff = 0; // time between last clear and next shift
+const int k_shiftRegisterTestOff = 0;  // time between last clear and next shift
 const int k_shiftRegisterMinVoltage = 5;
 
 // msr pins
@@ -91,13 +90,14 @@ const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
 const int k_serialWaitDelay = 1000;    // 1s
 
+static System *s_instance = nullptr;
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
   k_shiftRegisterTotal, k_shiftRegisterLatchPin, k_shiftRegisterClockPin, k_shiftRegisterDataPin);
 static OneWire s_oneWire(k_oneWirePin);
 static DallasTemperature s_dallas(&s_oneWire);
 static char s_reportBuffer[200];
-static BlynkTimer s_timer;
+static BlynkTimer s_refreshTimer;
 static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
 static ADC s_adc0, s_adc1, s_adc2;
@@ -105,10 +105,19 @@ static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
 static int s_switchOnCount = 0;
+static int s_refreshRate = -1;
+static int s_windowProgress = -1;
 
 // free-function declarations
 
-void refreshTimer() { s_instance->QueueRefresh(); }
+void onLastWrite() { eg::s_instance->OnLastWrite(); }
+void refresh() { eg::s_instance->Refresh(); }
+void refreshTimer() { eg::s_instance->QueueCallback(refresh, "Refresh (timer)"); }
+void restart() { eg::s_instance->Restart(); }
+void refreshRate() { eg::s_instance->RefreshRate(s_refreshRate); }
+void windowProgress() { eg::s_instance->WindowProgress(s_windowProgress); }
+void soilCalibrateWet() { eg::s_instance->SoilCalibrateWet(); }
+void soilCalibrateDry() { eg::s_instance->SoilCalibrateDry(); }
 
 // member functions
 
@@ -137,12 +146,9 @@ System::System() :
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
   m_activeSwitch(k_unknown),
-  m_refreshQueued(true),
   m_blynkFailures(0),
   m_lastBlynkFailure(0),
-  m_shiftRegisterEnabled(true),
-  m_queueSoilCalibrateWet(false),
-  m_queueSoilCalibrateDry(false)
+  m_shiftRegisterEnabled(true)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -151,7 +157,7 @@ System::System() :
 
 void System::Setup()
 {
-  base::System::Setup();
+  ng::System::Setup();
 
   if (k_trace) {
     Serial.begin(9600);
@@ -196,10 +202,10 @@ void System::Loop()
   // HACK: the shift register gets into an undefined state sometimes,
   // so keep shifting to ensure that it's state is persisted.
   s_shiftRegisters.shift();
-  
+
   // always run before actuator check
-  base::System::Loop();
-  
+  ng::System::Loop();
+
   if (IsWindowActuatorRunning()) {
     return;
   }
@@ -259,22 +265,7 @@ void System::Loop()
   }
 
   // may or may not queue a refresh
-  s_timer.run();
-
-  if (m_refreshQueued) {
-    m_refreshQueued = false;
-    Refresh();
-  }
-
-  if (m_queueSoilCalibrateWet) {
-    m_queueSoilCalibrateWet = false;
-    SoilCalibrateWet();
-  }
-
-  if (m_queueSoilCalibrateDry) {
-    m_queueSoilCalibrateDry = false;
-    SoilCalibrateDry();
-  }
+  s_refreshTimer.run();
 
   // slow loop down to save power
   Delay(k_loopDelay, "Loop");
@@ -356,7 +347,7 @@ void System::Refresh()
 
   FlashLed(k_ledRefresh);
 
-  base::System::Refresh();
+  ng::System::Refresh();
 
   m_power.MeasureCurrent();
 
@@ -528,7 +519,7 @@ void System::StopActuator()
   s_shiftRegisters.shift();
 }
 
-void System::Delay(unsigned long ms, const char* reason)
+void System::Delay(unsigned long ms, const char *reason)
 {
   Log().Trace(F("%s delay: %dms"), reason, (int)ms);
   delay(ms);
@@ -736,7 +727,7 @@ void System::HandleNightToDayTransition()
   // base function (which resets cumulative to 0)
   Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
 
-  base::System::HandleNightToDayTransition();
+  ng::System::HandleNightToDayTransition();
 
   m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
@@ -746,7 +737,7 @@ void System::HandleNightToDayTransition()
 
 void System::HandleDayToNightTransition()
 {
-  base::System::HandleDayToNightTransition();
+  ng::System::HandleDayToNightTransition();
 
   Blynk.virtualWrite(V68, Time().DayToNightTransitionTime());
 }
@@ -786,7 +777,7 @@ void System::OnSystemStarted()
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
   // have all of the correct initial values.
-  QueueRefresh();
+  QueueCallback(refresh, "Refresh (startup)");
 
   FlashLed(k_ledStarted);
   SystemStarted(true);
@@ -804,12 +795,14 @@ void System::RefreshRate(int refreshRate)
     return;
   }
 
+  Log().Trace(F("New refresh rate: %ds"), refreshRate);
+
   if (m_timerId != k_unknown) {
     Log().Trace(F("Deleting old timer: %d"), m_timerId);
-    s_timer.deleteTimer(m_timerId);
+    s_refreshTimer.deleteTimer(m_timerId);
   }
 
-  m_timerId = s_timer.setInterval(refreshRate * 1000L, refreshTimer);
+  m_timerId = s_refreshTimer.setInterval(refreshRate * 1000L, refreshTimer);
   Log().Trace(F("New refresh timer: %d"), m_timerId);
 }
 
@@ -994,146 +987,150 @@ BLYNK_CONNECTED()
     V127 /* last */);
 }
 
-BLYNK_WRITE(V0) { s_instance->AutoMode(param.asInt() == 1); }
+BLYNK_WRITE(V0) { eg::s_instance->AutoMode(param.asInt() == 1); }
 
-BLYNK_WRITE(V3) { s_instance->RefreshRate(param.asInt()); }
+BLYNK_WRITE(V3)
+{
+  eg::s_refreshRate = param.asInt();
+  eg::s_instance->QueueCallback(eg::refreshRate, "Refresh rate");
+}
 
-BLYNK_WRITE(V5) { s_instance->OpenStart(param.asFloat()); }
+BLYNK_WRITE(V5) { eg::s_instance->OpenStart(param.asFloat()); }
 
 BLYNK_WRITE(V6)
 {
   if (param.asInt() == 1) {
-    s_instance->Restart();
+    eg::s_instance->QueueCallback(eg::restart, "Restart");
   }
 }
 
 BLYNK_WRITE(V7)
 {
   if (param.asInt() == 1) {
-    s_instance->QueueRefresh();
+    eg::s_instance->QueueCallback(eg::refresh, "Refresh (manual)");
   }
 }
 
-BLYNK_WRITE(V8) { s_instance->OpenFinish(param.asFloat()); }
+BLYNK_WRITE(V8) { eg::s_instance->OpenFinish(param.asFloat()); }
 
-BLYNK_WRITE(V9) { s_instance->QueueWindowProgress(param.asInt()); }
+BLYNK_WRITE(V9)
+{
+  eg::s_windowProgress = param.asInt();
+  eg::s_instance->QueueCallback(eg::windowProgress, "Window progress");
+}
 
-BLYNK_WRITE(V14) { s_instance->TestMode(param.asInt() == 1); }
+BLYNK_WRITE(V14) { eg::s_instance->TestMode(param.asInt() == 1); }
 
-BLYNK_WRITE(V17) { s_instance->SoilMostureWarning(param.asFloat()); }
+BLYNK_WRITE(V17) { eg::s_instance->SoilMostureWarning(param.asFloat()); }
 
-BLYNK_WRITE(V18) { s_instance->FakeSoilTemperature(param.asFloat()); }
+BLYNK_WRITE(V18) { eg::s_instance->FakeSoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V22) { s_instance->FakeSoilMoisture(param.asFloat()); }
+BLYNK_WRITE(V22) { eg::s_instance->FakeSoilMoisture(param.asFloat()); }
 
-BLYNK_WRITE(V23) { s_instance->FakeInsideHumidity(param.asFloat()); }
+BLYNK_WRITE(V23) { eg::s_instance->FakeInsideHumidity(param.asFloat()); }
 
-BLYNK_WRITE(V24) { s_instance->ActiveSwitch(param.asInt()); }
+BLYNK_WRITE(V24) { eg::s_instance->ActiveSwitch(param.asInt()); }
 
 BLYNK_WRITE(V25)
 {
   if (param.asInt() == 1) {
-    s_instance->QueueToggleActiveSwitch();
+    eg::s_instance->QueueToggleActiveSwitch();
   }
 }
 
-BLYNK_WRITE(V31) { s_instance->Time().DayStartHour(param.asInt()); }
+BLYNK_WRITE(V31) { eg::s_instance->Time().DayStartHour(param.asInt()); }
 
-BLYNK_WRITE(V32) { s_instance->Time().DayEndHour(param.asInt()); }
+BLYNK_WRITE(V32) { eg::s_instance->Time().DayEndHour(param.asInt()); }
 
-BLYNK_WRITE(V34) { s_instance->Power().PvVoltageSensorMin(param.asFloat()); }
+BLYNK_WRITE(V34) { eg::s_instance->Power().PvVoltageSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V35) { s_instance->Power().PvVoltageSensorMax(param.asFloat()); }
+BLYNK_WRITE(V35) { eg::s_instance->Power().PvVoltageSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V36) { s_instance->Power().PvVoltageOutputMin(param.asFloat()); }
+BLYNK_WRITE(V36) { eg::s_instance->Power().PvVoltageOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V37) { s_instance->Power().PvVoltageOutputMax(param.asFloat()); }
+BLYNK_WRITE(V37) { eg::s_instance->Power().PvVoltageOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V38) { s_instance->Power().PvCurrentSensorMin(param.asFloat()); }
+BLYNK_WRITE(V38) { eg::s_instance->Power().PvCurrentSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V39) { s_instance->Power().PvCurrentSensorMax(param.asFloat()); }
+BLYNK_WRITE(V39) { eg::s_instance->Power().PvCurrentSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V40) { s_instance->Power().PvCurrentOutputMin(param.asFloat()); }
+BLYNK_WRITE(V40) { eg::s_instance->Power().PvCurrentOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V41) { s_instance->Power().PvCurrentOutputMax(param.asFloat()); }
+BLYNK_WRITE(V41) { eg::s_instance->Power().PvCurrentOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V44) { s_instance->Power().PvVoltageSwitchOn(param.asFloat()); }
+BLYNK_WRITE(V44) { eg::s_instance->Power().PvVoltageSwitchOn(param.asFloat()); }
 
-BLYNK_WRITE(V45) { s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
+BLYNK_WRITE(V45) { eg::s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) { s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
+BLYNK_WRITE(V47) { eg::s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
 
-BLYNK_WRITE(V48) { s_instance->WindowAdjustPositions(param.asInt()); }
+BLYNK_WRITE(V48) { eg::s_instance->WindowAdjustPositions(param.asInt()); }
 
-BLYNK_WRITE(V49) { s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
+BLYNK_WRITE(V49) { eg::s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 
-BLYNK_WRITE(V50) { s_instance->Heating().DayWaterTemperature(param.asFloat()); }
+BLYNK_WRITE(V50) { eg::s_instance->Heating().DayWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V51) { s_instance->Heating().NightWaterTemperature(param.asFloat()); }
+BLYNK_WRITE(V51) { eg::s_instance->Heating().NightWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V53) { s_instance->Heating().DaySoilTemperature(param.asFloat()); }
+BLYNK_WRITE(V53) { eg::s_instance->Heating().DaySoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V54) { s_instance->Heating().NightSoilTemperature(param.asFloat()); }
+BLYNK_WRITE(V54) { eg::s_instance->Heating().NightSoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V57) { s_instance->Heating().DayAirTemperature(param.asFloat()); }
+BLYNK_WRITE(V57) { eg::s_instance->Heating().DayAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V58) { s_instance->Heating().NightAirTemperature(param.asFloat()); }
+BLYNK_WRITE(V58) { eg::s_instance->Heating().NightAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V61) { s_instance->Heating().WaterHeaterDayLimitMinutes(param.asInt()); }
+BLYNK_WRITE(V61) { eg::s_instance->Heating().WaterHeaterDayLimitMinutes(param.asInt()); }
 
-BLYNK_WRITE(V62) { s_instance->Heating().WaterHeaterDayRuntimeMinutes(param.asFloat()); }
+BLYNK_WRITE(V62) { eg::s_instance->Heating().WaterHeaterDayRuntimeMinutes(param.asFloat()); }
 
-BLYNK_WRITE(V63) { s_instance->Heating().WaterHeaterCostCumulative(param.asFloat()); }
+BLYNK_WRITE(V63) { eg::s_instance->Heating().WaterHeaterCostCumulative(param.asFloat()); }
 
 BLYNK_WRITE(V64)
 {
   if (!String(param.asString()).isEmpty()) {
-    s_instance->Time().NightToDayTransitionTime(param.asLongLong());
+    eg::s_instance->Time().NightToDayTransitionTime(param.asLongLong());
   }
   else {
-    s_instance->Time().NightToDayTransitionTime(k_unknownUL);
+    eg::s_instance->Time().NightToDayTransitionTime(k_unknownUL);
   }
 }
 
-BLYNK_WRITE(V66) { s_instance->Heating().WaterHeaterNightLimitMinutes(param.asInt()); }
+BLYNK_WRITE(V66) { eg::s_instance->Heating().WaterHeaterNightLimitMinutes(param.asInt()); }
 
-BLYNK_WRITE(V67) { s_instance->Heating().WaterHeaterNightRuntimeMinutes(param.asFloat()); }
+BLYNK_WRITE(V67) { eg::s_instance->Heating().WaterHeaterNightRuntimeMinutes(param.asFloat()); }
 
 BLYNK_WRITE(V68)
 {
   if (!String(param.asString()).isEmpty()) {
-    s_instance->Time().DayToNightTransitionTime(param.asLongLong());
+    eg::s_instance->Time().DayToNightTransitionTime(param.asLongLong());
   }
   else {
-    s_instance->Time().DayToNightTransitionTime(k_unknownUL);
+    eg::s_instance->Time().DayToNightTransitionTime(k_unknownUL);
   }
 }
 
-BLYNK_WRITE(V69) { s_instance->SoilSensorWet(param.asFloat()); }
+BLYNK_WRITE(V69) { eg::s_instance->SoilSensorWet(param.asFloat()); }
 
-BLYNK_WRITE(V70) { s_instance->SoilSensorDry(param.asFloat()); }
+BLYNK_WRITE(V70) { eg::s_instance->SoilSensorDry(param.asFloat()); }
 
 BLYNK_WRITE(V71)
 {
   if (param.asInt() != 0) {
-    s_instance->QueueSoilCalibrateWet();
+    eg::s_instance->QueueCallback(eg::soilCalibrateWet, "Soil calibrate (wet)");
   }
 }
 
 BLYNK_WRITE(V72)
 {
   if (param.asInt() != 0) {
-    s_instance->QueueSoilCalibrateDry();
+    eg::s_instance->QueueCallback(eg::soilCalibrateDry, "Soil calibrate (dry)");
   }
 }
 
-BLYNK_WRITE(V73) { s_instance->Heating().Enabled(param.asInt() == 1); }
+BLYNK_WRITE(V73) { eg::s_instance->Heating().Enabled(param.asInt() == 1); }
 
-BLYNK_WRITE(V74) { s_instance->WindowAdjustTimeframe(param.asInt()); }
+BLYNK_WRITE(V74) { eg::s_instance->WindowAdjustTimeframe(param.asInt()); }
 
 // used only as the last value
-BLYNK_WRITE(V127)
-{
-  s_instance->Log().Trace(F("Handling last Blynk write"));
-  s_instance->OnLastWrite();
-}
+BLYNK_WRITE(V127) { eg::s_instance->QueueCallback(eg::onLastWrite, "On last write"); }

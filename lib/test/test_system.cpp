@@ -16,9 +16,8 @@ void Test_Refresh_DhtNotReady_NothingHappens(void)
 {
   TestSystem system;
   system.m_mock_ReadDhtSensor = false;
-  system.QueueWindowProgress(0);
+  system.WindowProgress(0);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -32,9 +31,8 @@ void Test_Refresh_ManualMode_NothingHappens(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 1;
   system.AutoMode(false);
-  system.QueueWindowProgress(0);
+  system.WindowProgress(0);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -48,9 +46,8 @@ void Test_Refresh_AutoModeNoOpenBounds_NothingHappens(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 1;
   system.AutoMode(true);
-  system.QueueWindowProgress(0);
+  system.WindowProgress(0);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -66,9 +63,8 @@ void Test_Refresh_AutoModeAboveBoundsAndAlreadyOpen_NothingHappens(void)
   system.AutoMode(true);
   system.OpenStart(1.1);
   system.OpenFinish(2.1);
-  system.QueueWindowProgress(100);
+  system.WindowProgress(100);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -84,9 +80,8 @@ void Test_Refresh_AutoModeBelowBoundsAndAlreadyClosed_NothingHappens(void)
   system.AutoMode(true);
   system.OpenStart(1.1);
   system.OpenFinish(2.1);
-  system.QueueWindowProgress(0);
+  system.WindowProgress(0);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -100,11 +95,10 @@ void Test_Refresh_AutoModeInBoundsTooClosed_WindowOpenedPartly(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 25 + (5 * 0.8); // 80% between 25C and 30C
   system.AutoMode(true);
-  system.QueueWindowProgress(50);
+  system.WindowProgress(50);
   system.OpenStart(25.1);
   system.OpenFinish(30.1);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -120,11 +114,10 @@ void Test_Refresh_AutoModeInBoundsTooOpen_WindowClosedPartly(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 25 + (5 * 0.4); // 40% between 25C and 30C
   system.AutoMode(true);
-  system.QueueWindowProgress(80);
+  system.WindowProgress(80);
   system.OpenStart(25.1);
   system.OpenFinish(30.1);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -140,11 +133,10 @@ void Test_Refresh_AutoModeInBoundsTooOpenTwice_WindowClosedPartlyTwice(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 25 + (5 * 0.6); // 60% between 25C and 30C
   system.AutoMode(true);
-  system.QueueWindowProgress(90);
+  system.WindowProgress(90);
   system.OpenStart(25.1);
   system.OpenFinish(30.1);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -168,11 +160,10 @@ void Test_Refresh_AutoModeInBoundsTooClosedTwice_WindowOpenedPartlyTwice(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 25 + (5 * 0.3); // 30% between 25C and 30C
   system.AutoMode(true);
-  system.QueueWindowProgress(5);
+  system.WindowProgress(5);
   system.OpenStart(25.1);
   system.OpenFinish(30.1);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -196,11 +187,10 @@ void Test_Refresh_AutoModeBelowBounds_WindowClosedFully(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 24.9;
   system.AutoMode(true);
-  system.QueueWindowProgress(30);
+  system.WindowProgress(30);
   system.OpenStart(25.1);
   system.OpenFinish(30.1);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -216,11 +206,10 @@ void Test_Refresh_AutoModeAboveBounds_WindowOpenedFully(void)
   system.m_mock_ReadDhtSensor = true;
   system.m_mock_SoilTemperature = 30.1;
   system.AutoMode(true);
-  system.QueueWindowProgress(60);
+  system.WindowProgress(60);
   system.OpenStart(25.1);
   system.OpenFinish(30.1);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -234,10 +223,9 @@ void Test_Refresh_RainDetectedInAutoMode_WindowClosed(void)
 {
   TestSystem system;
   system.AutoMode(true);
-  system.QueueWindowProgress(50);
+  system.WindowProgress(50);
   system.WeatherCode(700);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -249,10 +237,9 @@ void Test_Refresh_RainDetectedInManualMode_WindowClosed(void)
 {
   TestSystem system;
   system.AutoMode(false);
-  system.QueueWindowProgress(50);
+  system.WindowProgress(50);
   system.WeatherCode(700);
   system.WindowAdjustPositions(10);
-  system.Loop();
 
   system.Refresh();
 
@@ -264,13 +251,9 @@ void Test_Loop_WindowAdjustOnceUnderThreshold_NothingHappens(void)
 {
   TestSystem system;
   system.WindowAdjustPositions(5); // i.e. first is 20%
+  system.WindowProgress(0); // 0% open
 
-  // first loop sets initial actual progress
-  system.QueueWindowProgress(0); // 0% open
-  system.Loop();
-
-  system.QueueWindowProgress(5); // 5% open (round to 0%)
-  system.Loop();
+  system.WindowProgress(5); // 5% open (round to 0%)
 
   TEST_ASSERT_EQUAL_INT(0, system.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(5, system.WindowProgressExpected());
@@ -281,13 +264,9 @@ void Test_Loop_WindowAdjustOnceOverThreshold_WindowOpens(void)
 {
   TestSystem system;
   system.WindowAdjustPositions(5); // i.e. first is 20%
+  system.WindowProgress(0); // 0% open
 
-  // first loop sets initial actual progress
-  system.QueueWindowProgress(0); // 0% open
-  system.Loop();
-
-  system.QueueWindowProgress(25); // 25% open (round to 20%)
-  system.Loop();
+  system.WindowProgress(25); // 25% open (round to 20%)
 
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(.2, system.m_lastArg_OpenWindow_delta);
@@ -299,20 +278,15 @@ void Test_Loop_WindowAdjustTwiceUnderThenOverThreshold_WindowOpens(void)
 {
   TestSystem system;
   system.WindowAdjustPositions(5); // i.e. first is 20%
+  system.WindowProgress(20); // 0% open
 
-  // first loop sets initial actual progress
-  system.QueueWindowProgress(20); // 0% open
-  system.Loop();
-
-  system.QueueWindowProgress(25); // 25% open (round to 20%)
-  system.Loop();
+  system.WindowProgress(25); // 25% open (round to 20%)
 
   TEST_ASSERT_EQUAL_INT(0, system.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(25, system.WindowProgressExpected());
   TEST_ASSERT_EQUAL_FLOAT(20, system.WindowProgressActual());
 
-  system.QueueWindowProgress(35); // 35% open (round to 40%)
-  system.Loop();
+  system.WindowProgress(35); // 35% open (round to 40%)
 
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_OpenWindow);
   TEST_ASSERT_EQUAL_FLOAT(.2, system.m_lastArg_OpenWindow_delta);

@@ -72,7 +72,6 @@ private:
   float m_pvCurrentOutputMin;
   float m_pvCurrentOutputMax;
   PvModes m_pvMode;
-  bool m_refreshQueued;
 };
 
 } // namespace greenhouse

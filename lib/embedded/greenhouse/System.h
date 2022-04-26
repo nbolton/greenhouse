@@ -50,10 +50,7 @@ public:
   float ReadPowerSensorCurrent();
   float ReadCommonVoltageSensor();
   float ReadPsuVoltageSensor();
-  void QueueRefresh() { m_refreshQueued = true; }
   void QueueToggleActiveSwitch();
-  void QueueSoilCalibrateWet() { m_queueSoilCalibrateWet = true; }
-  void QueueSoilCalibrateDry() { m_queueSoilCalibrateDry = true; }
 
   const embedded::Log &Log() const { return m_log; }
 
@@ -133,13 +130,10 @@ private:
   bool m_soilMoistureWarningSent;
   int m_activeSwitch;
   bool m_switchState[k_switchCount];
-  bool m_refreshQueued;
   int m_blynkFailures;
   unsigned long m_lastBlynkFailure;
   std::queue<int> m_toggleActiveSwitchQueue;
   bool m_shiftRegisterEnabled;
-  bool m_queueSoilCalibrateWet;
-  bool m_queueSoilCalibrateDry;
 };
 
 } // namespace greenhouse

@@ -47,8 +47,7 @@ Power::Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin) 
   m_pvCurrentSensorMax(k_unknown),
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
-  m_pvMode(PvModes::k_pvAuto),
-  m_refreshQueued(false)
+  m_pvMode(PvModes::k_pvAuto)
 {
 }
 

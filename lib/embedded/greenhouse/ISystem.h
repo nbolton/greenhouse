@@ -14,7 +14,6 @@ public:
   virtual float ReadPowerSensorCurrent() = 0;
   virtual float ReadCommonVoltageSensor() = 0;
   virtual float ReadPsuVoltageSensor() = 0;
-  virtual void QueueRefresh() = 0;
 };
 
 } // namespace greenhouse

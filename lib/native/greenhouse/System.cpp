@@ -20,7 +20,6 @@ System::System() :
   m_openFinish(k_unknown),
   m_windowProgressExpected(k_unknown),
   m_windowProgressActual(k_unknown),
-  m_windowProgressQueued(k_unknown),
   m_testMode(false),
   m_soilMostureWarning(k_unknown),
   m_windowActuatorRuntimeSec(0),
@@ -63,27 +62,19 @@ void System::Loop()
     }
   }
 
-  if (m_windowProgressQueued != k_unknown) {
+  while (!m_callbackQueue.empty()) {
+    Callback callback = m_callbackQueue.front();
+    m_callbackQueue.pop();
 
-    Log().Trace(
-      "Window progress queued=%d, current=%d, actual=%d",
-      m_windowProgressQueued,
-      m_windowProgressExpected,
-      m_windowProgressActual);
-
-    int firstTime = m_windowProgressExpected == k_unknown;
-    m_windowProgressExpected = m_windowProgressQueued;
-    m_windowProgressQueued = k_unknown;
-
-    if (firstTime) {
-      m_windowProgressActual = m_windowProgressExpected;
+    Log().Trace("Callback function: %s", callback.m_name.c_str());
+    if (callback.m_function != nullptr) {
+      callback.m_function();
     }
     else {
-      // only apply window progress if it's not the 1st time;
-      // otherwise the window will always open from 0 on start,
-      // and the position might be something else.
-      ApplyWindowProgress();
+      Log().Trace("Function pointer was null");
     }
+
+    Log().Trace("Callback queue remaining=%d", m_callbackQueue.size());
   }
 }
 
@@ -170,11 +161,6 @@ void System::Refresh()
     bool noUnknowns =
       (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown);
 
-    Log().Trace(
-      "Window adjust, unknowns=%s, timeframeOk=%s",
-      noUnknowns ? "true" : "false",
-      timeframeOk ? "true" : "false");
-      
     if (noUnknowns && timeframeOk) {
 
       if ((soilTemperature > openStart) && (soilTemperature < openFinish)) {
@@ -197,6 +183,12 @@ void System::Refresh()
       }
 
       windowMoved = ApplyWindowProgress();
+    }
+    else {
+      Log().Trace(
+        "Window adjust didn't run, noUnknowns=%s, timeframeOk=%s",
+        noUnknowns ? "true" : "false",
+        timeframeOk ? "true" : "false");
     }
   }
 
@@ -388,7 +380,27 @@ void System::AddSoilMoistureSample(float sample)
 
 float System::SoilMoistureAverage() { return m_soilMoistureAverage; }
 
-void System::QueueWindowProgress(int value) { m_windowProgressQueued = value; }
+void System::WindowProgress(int progress)
+{
+  Log().Trace(
+    "Window progress new=%d, current=%d, actual=%d",
+    progress,
+    m_windowProgressExpected,
+    m_windowProgressActual);
+
+  int firstTime = m_windowProgressExpected == k_unknown;
+  m_windowProgressExpected = progress;
+
+  if (firstTime) {
+    m_windowProgressActual = m_windowProgressExpected;
+  }
+  else {
+    // only apply window progress if it's not the 1st time;
+    // otherwise the window will always open from 0 on start,
+    // and the position might be something else.
+    ApplyWindowProgress();
+  }
+}
 
 } // namespace greenhouse
 } // namespace native
