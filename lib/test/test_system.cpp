@@ -327,7 +327,7 @@ void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
   system.m_mock_time = &time;
 
   time.m_mock_EpochTime = 0;
-  system.WindowActuatorRuntimeSec(1.1);
+  system.WindowActuatorRuntimeSec(2);
 
   system.OpenWindow(.5);
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_RunWindowActuator);
@@ -337,7 +337,7 @@ void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
   TEST_ASSERT_EQUAL_INT(0, system.m_calls_StopActuator);
 
   // test that window stopped opening
-  time.m_mock_EpochTime = 2000;
+  time.m_mock_EpochTime = 1;
   system.Loop();
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
   TEST_ASSERT_EQUAL(true, system.m_lastArg_RunWindowActuator_extend);
@@ -352,7 +352,9 @@ void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
   TestSystem system;
   TestTime time;
   system.m_mock_time = &time;
-  system.WindowActuatorRuntimeSec(1.1);
+
+  time.m_mock_EpochTime = 0;
+  system.WindowActuatorRuntimeSec(2);
 
   system.CloseWindow(.5);
   system.Loop();
@@ -363,7 +365,7 @@ void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
   TEST_ASSERT_EQUAL_INT(0, system.m_calls_StopActuator);
 
   // test that window stopped closing
-  time.m_mock_EpochTime = 2000;
+  time.m_mock_EpochTime = 1;
   system.Loop();
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_StopActuator);
   TEST_ASSERT_EQUAL(false, system.m_lastArg_RunWindowActuator_extend);
