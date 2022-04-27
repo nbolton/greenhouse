@@ -3,9 +3,9 @@
 #include "../../native/greenhouse/System.h"
 
 #include "../Log.h"
-#include "Time.h"
 #include "Heating.h"
 #include "Power.h"
+#include "Time.h"
 
 #include <ADS1115_WE.h>
 #include <Arduino.h>
@@ -20,13 +20,20 @@ struct ADC;
 
 enum LedFlashTimes {
   k_ledRefresh = 1,
-  k_ledSend = 2,
-  k_ledRecieve = 3,
-  k_ledStarted = 4,
-  k_ledRestart = 5
+  k_ledStarted = 2,
+  k_ledRestart = 3
 };
 
 class System : public native::greenhouse::System, ISystem {
+
+  typedef void (System::*CallbackFunction)(void);
+
+  struct Callback {
+    CallbackFunction m_function;
+    std::string m_name;
+    Callback(CallbackFunction function, std::string name) : m_function(function), m_name(name) {}
+  };
+
 public:
   static System &Instance();
   static void Instance(System &ga);
@@ -51,6 +58,8 @@ public:
   float ReadCommonVoltageSensor();
   float ReadPsuVoltageSensor();
   void QueueToggleActiveSwitch();
+  void ApplyRefreshRate();
+  void QueueCallback(CallbackFunction f, std::string name);
 
   const embedded::Log &Log() const { return m_log; }
 
@@ -71,7 +80,7 @@ protected:
   bool ReadSoilMoistureSensor();
   void RunWindowActuator(bool extend);
   void StopActuator();
-  void Delay(unsigned long ms, const char* reason);
+  void Delay(unsigned long ms, const char *reason);
   bool UpdateWeatherForecast();
   void HandleNightToDayTransition();
   void HandleDayToNightTransition();
@@ -88,7 +97,7 @@ public:
   float SoilTemperature() const;
   float SoilMoisture() const;
   float WaterTemperature() const { return m_waterTemperature; }
-  void RefreshRate(int value);
+  void RefreshRate(int value) { m_refreshRate = value; }
   void FakeInsideHumidity(float value) { m_fakeInsideHumidity = value; }
   void FakeSoilTemperature(float value) { m_fakeSoilTemperature = value; }
   void FakeSoilMoisture(float value) { m_fakeSoilMoisture = value; }
@@ -124,7 +133,6 @@ private:
   float m_fakeSoilTemperature;
   float m_fakeSoilMoisture;
   bool m_refreshBusy;
-  bool m_lastWriteDone;
   float m_soilMoisture;
   bool m_insideHumidityWarningSent;
   bool m_soilMoistureWarningSent;
@@ -134,6 +142,9 @@ private:
   unsigned long m_lastBlynkFailure;
   std::queue<int> m_toggleActiveSwitchQueue;
   bool m_shiftRegisterEnabled;
+  int m_refreshRate;
+  std::queue<Callback> m_callbackQueue;
+  bool m_queueOnSystemStarted;
 };
 
 } // namespace greenhouse

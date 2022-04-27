@@ -105,19 +105,10 @@ static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
 static int s_switchOnCount = 0;
-static int s_refreshRate = -1;
-static int s_windowProgress = -1;
 
 // free-function declarations
 
-void onLastWrite() { eg::s_instance->OnLastWrite(); }
-void refresh() { eg::s_instance->Refresh(); }
-void refreshTimer() { eg::s_instance->QueueCallback(refresh, "Refresh (timer)"); }
-void restart() { eg::s_instance->Restart(); }
-void refreshRate() { eg::s_instance->RefreshRate(s_refreshRate); }
-void windowProgress() { eg::s_instance->WindowProgress(s_windowProgress); }
-void soilCalibrateWet() { eg::s_instance->SoilCalibrateWet(); }
-void soilCalibrateDry() { eg::s_instance->SoilCalibrateDry(); }
+void refreshTimer() { eg::s_instance->QueueCallback(&eg::System::Refresh, "Refresh (timer)"); }
 
 // member functions
 
@@ -141,14 +132,15 @@ System::System() :
   m_fakeSoilTemperature(k_unknown),
   m_fakeSoilMoisture(k_unknown),
   m_refreshBusy(false),
-  m_lastWriteDone(false),
   m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
   m_activeSwitch(k_unknown),
   m_blynkFailures(0),
   m_lastBlynkFailure(0),
-  m_shiftRegisterEnabled(true)
+  m_shiftRegisterEnabled(true),
+  m_refreshRate(k_unknown),
+  m_queueOnSystemStarted(false)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -267,6 +259,30 @@ void System::Loop()
   // may or may not queue a refresh
   s_refreshTimer.run();
 
+  if (SystemStarted()) {
+    while (!m_callbackQueue.empty()) {
+      Callback callback = m_callbackQueue.front();
+
+      Log().Trace("Callback function: %s", callback.m_name.c_str());
+
+      m_callbackQueue.pop();
+
+      if (callback.m_function != nullptr) {
+        (this->*callback.m_function)();
+      }
+      else {
+        Log().Trace("Function pointer was null");
+      }
+
+      Log().Trace("Callback queue remaining=%d", m_callbackQueue.size());
+    }
+  }
+
+  if (m_queueOnSystemStarted) {
+    m_queueOnSystemStarted = false;
+    OnSystemStarted();
+  }
+
   // slow loop down to save power
   Delay(k_loopDelay, "Loop");
 }
@@ -369,11 +385,6 @@ void System::Refresh()
 void System::FlashLed(LedFlashTimes times)
 {
   if (!k_enableLed) {
-    return;
-  }
-
-  // disable flashing LED until after the last write is done
-  if (!m_lastWriteDone) {
     return;
   }
 
@@ -663,16 +674,19 @@ void System::ReportInfo(const char *format, ...)
 
 void System::ReportWarning(const char *format, ...)
 {
-  if (!k_reportWarnings) {
-    return;
-  }
-
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
+  // still log even if k_reportWarnings is off (the intent of k_reportWarnings
+  // is to reduce noise on the blynk app during testing)
   Log().Trace(s_reportBuffer);
+
+  if (!k_reportWarnings) {
+    return;
+  }
+
   Blynk.logEvent("warning", s_reportBuffer);
 }
 
@@ -689,7 +703,6 @@ void System::ReportCritical(const char *format, ...)
 
 void System::ReportSensorValues()
 {
-  FlashLed(k_ledSend);
   Blynk.virtualWrite(V1, InsideAirTemperature());
   Blynk.virtualWrite(V2, InsideAirHumidity());
   Blynk.virtualWrite(V19, OutsideAirTemperature());
@@ -699,16 +712,10 @@ void System::ReportSensorValues()
   Blynk.virtualWrite(V46, WaterTemperature());
 }
 
-void System::ReportWindowProgress()
-{
-  FlashLed(k_ledSend);
-  Blynk.virtualWrite(V9, WindowProgressExpected());
-}
+void System::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgressExpected()); }
 
 void System::ReportSystemInfo()
 {
-  FlashLed(k_ledSend);
-
   // current time
   Blynk.virtualWrite(V10, Time().FormattedCurrentTime());
 
@@ -758,51 +765,46 @@ void System::ReportWarnings()
 
 void System::OnLastWrite()
 {
-  if (m_lastWriteDone) {
-    return;
+  if (!SystemStarted()) {
+    m_queueOnSystemStarted = true;
   }
-
-  m_lastWriteDone = true;
-
-  // if this is the first time that the last write was done,
-  // this means that the system has started.
-  OnSystemStarted();
 }
 
 void System::OnSystemStarted()
 {
   Power().InitPowerSource();
 
-  // queue the first refresh (instead of waiting for the 1st refresh timer).
+  // run first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
   // have all of the correct initial values.
-  QueueCallback(refresh, "Refresh (startup)");
+  Log().Trace(F("First refresh"));
+  Refresh();
 
   FlashLed(k_ledStarted);
   SystemStarted(true);
 
   // system started may sound like a good thing, but actually the system
   // shouldn't normally stop. so, that it has started is not usually a
-  // good thing.
+  // good thing (unless we're in test mode, but then warnings are disabled).
   ReportWarning("System started");
 }
 
-void System::RefreshRate(int refreshRate)
+void System::ApplyRefreshRate()
 {
-  if (refreshRate <= 0) {
-    Log().Trace(F("Invalid refresh rate: %ds"), refreshRate);
+  if (m_refreshRate <= 0) {
+    Log().Trace(F("Invalid refresh rate: %ds"), m_refreshRate);
     return;
   }
 
-  Log().Trace(F("New refresh rate: %ds"), refreshRate);
+  Log().Trace(F("New refresh rate: %ds"), m_refreshRate);
 
   if (m_timerId != k_unknown) {
     Log().Trace(F("Deleting old timer: %d"), m_timerId);
     s_refreshTimer.deleteTimer(m_timerId);
   }
 
-  m_timerId = s_refreshTimer.setInterval(refreshRate * 1000L, refreshTimer);
+  m_timerId = s_refreshTimer.setInterval(m_refreshRate * 1000L, refreshTimer);
   Log().Trace(F("New refresh timer: %d"), m_timerId);
 }
 
@@ -926,6 +928,11 @@ void System::PrintStatus()
 
 void System::QueueToggleActiveSwitch() { m_toggleActiveSwitchQueue.push(m_activeSwitch); }
 
+void System::QueueCallback(CallbackFunction f, std::string name)
+{
+  m_callbackQueue.push(Callback(f, name));
+}
+
 } // namespace greenhouse
 } // namespace embedded
 
@@ -991,8 +998,8 @@ BLYNK_WRITE(V0) { eg::s_instance->AutoMode(param.asInt() == 1); }
 
 BLYNK_WRITE(V3)
 {
-  eg::s_refreshRate = param.asInt();
-  eg::s_instance->QueueCallback(eg::refreshRate, "Refresh rate");
+  eg::s_instance->RefreshRate(param.asInt());
+  eg::s_instance->QueueCallback(&eg::System::ApplyRefreshRate, "Refresh rate");
 }
 
 BLYNK_WRITE(V5) { eg::s_instance->OpenStart(param.asFloat()); }
@@ -1000,14 +1007,14 @@ BLYNK_WRITE(V5) { eg::s_instance->OpenStart(param.asFloat()); }
 BLYNK_WRITE(V6)
 {
   if (param.asInt() == 1) {
-    eg::s_instance->QueueCallback(eg::restart, "Restart");
+    eg::s_instance->QueueCallback(&eg::System::Restart, "Restart");
   }
 }
 
 BLYNK_WRITE(V7)
 {
   if (param.asInt() == 1) {
-    eg::s_instance->QueueCallback(eg::refresh, "Refresh (manual)");
+    eg::s_instance->QueueCallback(&eg::System::Refresh, "Refresh (manual)");
   }
 }
 
@@ -1015,8 +1022,8 @@ BLYNK_WRITE(V8) { eg::s_instance->OpenFinish(param.asFloat()); }
 
 BLYNK_WRITE(V9)
 {
-  eg::s_windowProgress = param.asInt();
-  eg::s_instance->QueueCallback(eg::windowProgress, "Window progress");
+  eg::s_instance->WindowProgress(param.asInt());
+  eg::s_instance->QueueCallback(&eg::System::UpdateWindowProgress, "Window progress");
 }
 
 BLYNK_WRITE(V14) { eg::s_instance->TestMode(param.asInt() == 1); }
@@ -1117,14 +1124,14 @@ BLYNK_WRITE(V70) { eg::s_instance->SoilSensorDry(param.asFloat()); }
 BLYNK_WRITE(V71)
 {
   if (param.asInt() != 0) {
-    eg::s_instance->QueueCallback(eg::soilCalibrateWet, "Soil calibrate (wet)");
+    eg::s_instance->QueueCallback(&eg::System::SoilCalibrateWet, "Soil calibrate (wet)");
   }
 }
 
 BLYNK_WRITE(V72)
 {
   if (param.asInt() != 0) {
-    eg::s_instance->QueueCallback(eg::soilCalibrateDry, "Soil calibrate (dry)");
+    eg::s_instance->QueueCallback(&eg::System::SoilCalibrateDry, "Soil calibrate (dry)");
   }
 }
 
@@ -1133,4 +1140,4 @@ BLYNK_WRITE(V73) { eg::s_instance->Heating().Enabled(param.asInt() == 1); }
 BLYNK_WRITE(V74) { eg::s_instance->WindowAdjustTimeframe(param.asInt()); }
 
 // used only as the last value
-BLYNK_WRITE(V127) { eg::s_instance->QueueCallback(eg::onLastWrite, "On last write"); }
+BLYNK_WRITE(V127) { eg::s_instance->OnLastWrite(); }

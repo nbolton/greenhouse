@@ -11,17 +11,10 @@
 namespace native {
 namespace greenhouse {
 
-typedef void (*Function)(void);
-
-struct Callback {
-  Function m_function;
-  std::string m_name;
-  Callback(Function function, std::string name) : m_function(function), m_name(name) {}
-};
-
 using namespace common;
 
 class System : public ISystem {
+
 public:
   System();
 
@@ -35,10 +28,11 @@ public:
   virtual void ReportCritical(const char *m, ...) {}
   virtual void SoilCalibrateWet();
   virtual void SoilCalibrateDry();
+
+public:
   void AddSoilMoistureSample(float sample);
   float SoilMoistureAverage();
-  void WindowProgress(int value);
-  void QueueCallback(Function f, std::string name) { m_callbackQueue.push(Callback(f, name)); }
+  void UpdateWindowProgress();
 
 protected:
   virtual void ReportSensorValues() {}
@@ -107,6 +101,7 @@ public:
   virtual int WindowAdjustPositions() { return m_windowAdjustPositions; }
   virtual void WindowAdjustTimeframe(int value) { m_windowAdjustTimeframe = value; }
   virtual int WindowAdjustTimeframe() { return m_windowAdjustTimeframe; }
+  virtual void WindowProgress(int value) { m_windowProgress = value; }
 
 private:
   bool IsRaining() const;
@@ -117,6 +112,7 @@ private:
   bool m_autoMode;
   float m_openStart;
   float m_openFinish;
+  int m_windowProgress;
   int m_windowProgressExpected;
   int m_windowProgressActual;
   bool m_testMode;
@@ -138,7 +134,6 @@ private:
   int m_windowAdjustTimeframe;
   unsigned long m_windowAdjustLast;
   unsigned long m_windowActuatorStopTime;
-  std::queue<Callback> m_callbackQueue;
 };
 
 } // namespace greenhouse

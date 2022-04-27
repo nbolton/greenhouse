@@ -61,21 +61,6 @@ void System::Loop()
       return;
     }
   }
-
-  while (!m_callbackQueue.empty()) {
-    Callback callback = m_callbackQueue.front();
-    m_callbackQueue.pop();
-
-    Log().Trace("Callback function: %s", callback.m_name.c_str());
-    if (callback.m_function != nullptr) {
-      callback.m_function();
-    }
-    else {
-      Log().Trace("Function pointer was null");
-    }
-
-    Log().Trace("Callback queue remaining=%d", m_callbackQueue.size());
-  }
 }
 
 void System::Refresh()
@@ -380,16 +365,16 @@ void System::AddSoilMoistureSample(float sample)
 
 float System::SoilMoistureAverage() { return m_soilMoistureAverage; }
 
-void System::WindowProgress(int progress)
+void System::UpdateWindowProgress()
 {
   Log().Trace(
     "Window progress new=%d, current=%d, actual=%d",
-    progress,
+    m_windowProgress,
     m_windowProgressExpected,
     m_windowProgressActual);
 
   int firstTime = m_windowProgressExpected == k_unknown;
-  m_windowProgressExpected = progress;
+  m_windowProgressExpected = m_windowProgress;
 
   if (firstTime) {
     m_windowProgressActual = m_windowProgressExpected;
