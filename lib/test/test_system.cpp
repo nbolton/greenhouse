@@ -449,6 +449,34 @@ void Test_SoilMoistureAverage_ValueAddedOverSampleMax3_AverageLast3()
   TEST_ASSERT_EQUAL_FLOAT(3, system.SoilMoistureAverage());
 }
 
+void Test_SoilCalibrateWet_SamplesAdded_AverageIsReset()
+{
+  TestSystem system;
+  system.SoilMoistureSampleMax(3);
+  system.AddSoilMoistureSample(1);
+  system.AddSoilMoistureSample(2);
+  system.m_mock_ReadSoilMoistureSensor = true;
+  TEST_ASSERT_EQUAL_FLOAT(1.5, system.SoilMoistureAverage());
+
+  system.SoilCalibrateWet();
+  system.AddSoilMoistureSample(1);
+  TEST_ASSERT_EQUAL_FLOAT(1, system.SoilMoistureAverage());
+}
+
+void Test_SoilCalibrateDry_SamplesAdded_AverageIsReset()
+{
+  TestSystem system;
+  system.SoilMoistureSampleMax(3);
+  system.AddSoilMoistureSample(1);
+  system.AddSoilMoistureSample(2);
+  system.m_mock_ReadSoilMoistureSensor = true;
+  TEST_ASSERT_EQUAL_FLOAT(1.5, system.SoilMoistureAverage());
+
+  system.SoilCalibrateDry();
+  system.AddSoilMoistureSample(1);
+  TEST_ASSERT_EQUAL_FLOAT(1, system.SoilMoistureAverage());
+}
+
 void testSystem()
 {
   RUN_TEST(Test_Refresh_DhtNotReady_NothingHappens);
@@ -478,4 +506,6 @@ void testSystem()
   RUN_TEST(Test_SoilMoistureAverage_TwoValues_CorrectValue);
   RUN_TEST(Test_SoilMoistureAverage_ValueAddedUnderSampleMax_CorrectValue);
   RUN_TEST(Test_SoilMoistureAverage_ValueAddedOverSampleMax3_AverageLast3);
+  RUN_TEST(Test_SoilCalibrateWet_SamplesAdded_AverageIsReset);
+  RUN_TEST(Test_SoilCalibrateDry_SamplesAdded_AverageIsReset);
 }

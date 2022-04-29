@@ -105,6 +105,7 @@ public:
 
 private:
   bool IsRaining() const;
+  void ResetSoilMoistureAverage();
 
 private:
   common::Log m_log;

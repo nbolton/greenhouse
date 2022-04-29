@@ -311,6 +311,14 @@ void System::HandleNightToDayTransition()
 
 void System::HandleDayToNightTransition() { Heating().HandleDayToNightTransition(); }
 
+void System::ResetSoilMoistureAverage()
+{
+  while (!m_soilMoistureSamples.empty())
+  {
+    m_soilMoistureSamples.pop();
+  }
+}
+
 void System::SoilCalibrateWet()
 {
   if (!ReadSoilMoistureSensor()) {
@@ -321,6 +329,7 @@ void System::SoilCalibrateWet()
   Log().Trace("Calibrating soil moisture wet: %.2fV", SoilSensor());
   SoilSensorWet(SoilSensor());
   ReportMoistureCalibration();
+  ResetSoilMoistureAverage();
   Refresh();
 }
 
@@ -334,6 +343,7 @@ void System::SoilCalibrateDry()
   Log().Trace("Calibrating soil moisture dry: %.2fV", SoilSensor());
   SoilSensorDry(SoilSensor());
   ReportMoistureCalibration();
+  ResetSoilMoistureAverage();
   Refresh();
 }
 

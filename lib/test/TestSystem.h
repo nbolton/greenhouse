@@ -28,7 +28,8 @@ public:
     m_mock_ReadDhtSensor(false),
     m_mock_WaterTemperature(0),
     m_mock_SoilTemperature(0),
-    m_mock_InsideAirTemperature(0)
+    m_mock_InsideAirTemperature(0),
+    m_mock_ReadSoilMoistureSensor(false)
   {
     Heating().System(*this);
     Time().System(*this);
@@ -58,6 +59,12 @@ public:
   {
     Log().Trace("Mock: InsideAirTemperature, value=%.2f", m_mock_InsideAirTemperature);
     return m_mock_InsideAirTemperature;
+  }
+
+  bool ReadSoilMoistureSensor()
+  {
+    Log().Trace("Mock: ReadSoilMoistureSensor, value=%s", m_mock_ReadSoilMoistureSensor ? "true" : "false");
+    return m_mock_ReadSoilMoistureSensor;
   }
 
   native::greenhouse::Time &Time()
@@ -152,6 +159,7 @@ public:
   float m_mock_WaterTemperature;
   float m_mock_SoilTemperature;
   float m_mock_InsideAirTemperature;
+  bool m_mock_ReadSoilMoistureSensor;
 
   // call counters (init to 0)
 
