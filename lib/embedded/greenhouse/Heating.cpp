@@ -6,6 +6,7 @@ namespace greenhouse {
 const int k_fanSwitch = 0;
 const int k_pumpSwitch1 = 1;
 const int k_pumpSwitch2 = 2;
+const int k_utilitySwitch = 3;
 
 Heating::Heating() {}
 
@@ -65,6 +66,16 @@ bool Heating::SwitchAirHeating(bool on)
     }
   }
 
+  return true;
+}
+
+bool Heating::SwitchUtility(bool on)
+{
+  if (!native::greenhouse::Heating::SwitchUtility(on)) {
+    return false;
+  }
+
+  System().SetSwitch(k_utilitySwitch, on);
   return true;
 }
 

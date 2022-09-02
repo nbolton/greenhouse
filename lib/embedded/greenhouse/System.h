@@ -74,6 +74,7 @@ protected:
   void ReportWeather();
   void ReportWaterHeaterInfo();
   void ReportMoistureCalibration();
+  void ReportSwitchStates();
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);

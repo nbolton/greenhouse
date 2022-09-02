@@ -29,6 +29,7 @@ Heating::Heating() :
   m_waterHeaterIsOn(false),
   m_soilHeatingIsOn(false),
   m_airHeatingIsOn(false),
+  m_utilitySwitchIsOn(false),
   m_waterHeaterLastUpdate(k_unknownUL),
   m_waterHeaterCostCumulative(0),
   m_waterHeaterDayRuntimeMinutes(0),
@@ -87,6 +88,16 @@ bool Heating::SwitchAirHeating(bool on)
   return false;
 }
 
+bool Heating::SwitchUtility(bool on)
+{
+  if (UtilitySwitchIsOn() != on) {
+    UtilitySwitchIsOn(on);
+    return true;
+  }
+
+  return false;
+}
+
 void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
 {
   float waterTemp = System().WaterTemperature();
@@ -139,6 +150,9 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
       else {
         SwitchAirHeating(false);
       }
+
+      // eg. backup A/C powered air heater
+      SwitchUtility(true);
     }
     else if (airTemp > (airTarget + k_airTempMargin)) {
 
@@ -146,6 +160,9 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
       airHeatingRequired = false;
 
       SwitchAirHeating(false);
+
+      // eg. backup A/C powered air heater
+      SwitchUtility(false);
     }
   }
 
@@ -193,6 +210,9 @@ void Heating::Update()
     }
     if (SoilHeatingIsOn()) {
       SwitchSoilHeating(false);
+    }
+    if (UtilitySwitchIsOn()) {
+      SwitchUtility(false);
     }
     return;
   }

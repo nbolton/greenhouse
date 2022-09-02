@@ -21,6 +21,7 @@ protected:
   virtual bool SwitchWaterHeater(bool on);
   virtual bool SwitchSoilHeating(bool on);
   virtual bool SwitchAirHeating(bool on);
+  virtual bool SwitchUtility(bool on);
 
 public:
   // getters & setters
@@ -44,6 +45,8 @@ public:
   virtual bool SoilHeatingIsOn() const { return m_soilHeatingIsOn; }
   virtual void AirHeatingIsOn(bool value) { m_airHeatingIsOn = value; }
   virtual bool AirHeatingIsOn() const { return m_airHeatingIsOn; }
+  virtual void UtilitySwitchIsOn(bool value) { m_utilitySwitchIsOn = value; }
+  virtual bool UtilitySwitchIsOn() const { return m_utilitySwitchIsOn; }
   virtual void WaterHeaterCostCumulative(float value) { m_waterHeaterCostCumulative = value; }
   virtual float WaterHeaterCostCumulative() const { return m_waterHeaterCostCumulative; }
   virtual void WaterHeaterDayLimitMinutes(int value) { m_waterHeaterDayLimitMinutes = value; }
@@ -82,6 +85,7 @@ private:
   bool m_waterHeaterIsOn;
   bool m_soilHeatingIsOn;
   bool m_airHeatingIsOn;
+  bool m_utilitySwitchIsOn;
   unsigned long m_waterHeaterLastUpdate;
   float m_waterHeaterCostCumulative;
   float m_waterHeaterDayRuntimeMinutes;

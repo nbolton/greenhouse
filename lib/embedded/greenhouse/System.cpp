@@ -183,6 +183,8 @@ void System::Setup()
   InitADCs();
 
   Blynk.begin(k_auth, k_ssid, k_pass);
+  
+  ReportSwitchStates();
 
   Log().Trace(F("System ready"));
   Blynk.virtualWrite(V52, "Ready");
@@ -583,6 +585,25 @@ void System::Beep(int times, bool longBeep)
   }
 }
 
+void System::ReportSwitchStates() {
+  String switchStates;
+  s_switchOnCount = 0;
+  for (int i = 0; i < k_switchCount; i++) {
+    bool on = m_switchState[i];
+    if (on) {
+      s_switchOnCount++;
+    }
+    switchStates += "S";
+    switchStates += i;
+    switchStates += "=";
+    switchStates += on ? "On" : "Off";
+    if (i != (k_switchCount - 1)) {
+      switchStates += ", ";
+    }
+  }
+  Blynk.virtualWrite(V33, switchStates);
+}
+
 void System::SetSwitch(int index, bool on)
 {
   int pin = k_switchPins[index];
@@ -601,22 +622,7 @@ void System::SetSwitch(int index, bool on)
   Log().Trace(F("Switch shift"));
   s_shiftRegisters.shift();
 
-  String switchStates;
-  s_switchOnCount = 0;
-  for (int i = 0; i < k_switchCount; i++) {
-    bool on = m_switchState[i];
-    if (on) {
-      s_switchOnCount++;
-    }
-    switchStates += "S";
-    switchStates += i;
-    switchStates += "=";
-    switchStates += on ? "On" : "Off";
-    if (i != (k_switchCount - 1)) {
-      switchStates += ", ";
-    }
-  }
-  Blynk.virtualWrite(V33, switchStates);
+  ReportSwitchStates();
 
   UpdateCaseFan();
 }
