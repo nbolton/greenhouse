@@ -22,15 +22,10 @@
 namespace embedded {
 namespace greenhouse {
 
-enum Mode {
-  Ping,
-  Zing,
-  Pong,
-};
-
 RH_ASK s_driver(BIT_RATE, RX_PIN, TX_PIN, PTT_PIN);
 
-int sequence = 0, i = 0, t = 0, last = 0, recvOk = 0, rxErrors = 0, errorRate = 0, timeouts = 0;
+int sequence = 0, i = 0, t = 0, lastPing = 0, lastZing = 0, recvOk = 0, rxErrors = 0, errorRate = 0,
+    timeouts = 0;
 Mode mode;
 Signal s;
 char modeString[10];
@@ -47,12 +42,8 @@ void Radio::Setup()
     }
   }
 
-  mode = Pong;
-  Serial.print("mode: ");
-  sprintf(modeString, "%s", mode == Ping ? "ping >>" : "<< pong");
-  Serial.println(modeString);
-
-  setSignal((mode == Ping) ? Tx : Rx);
+  setMode(Ping);
+  setSignal((mode == Ping) || (mode == Zing) ? Tx : Rx);
 }
 
 void Radio::Loop()
@@ -80,23 +71,65 @@ void Radio::setSignal(Signal s_)
   }
 }
 
-void Radio::errorFlash(int errorFlash)
+void Radio::setMode(Mode _mode)
 {
-  sr(SR_PIN_LED_ERR, true);
-  delay(100);
-  sr(SR_PIN_LED_ERR, false);
-  delay(100);
-  sr(SR_PIN_LED_ERR, true);
-  delay(100);
-  sr(SR_PIN_LED_ERR, false);
+  mode = _mode;
+  Serial.print("mode: ");
+  switch (mode) {
+  case Ping:
+    sprintf(modeString, "%s", "ping >>");
+    break;
+
+  case Zing:
+    sprintf(modeString, "%s", "zing >>");
+    break;
+
+  case Pong:
+    sprintf(modeString, "%s", "<< pong");
+    break;
+  }
+  Serial.println(modeString);
+}
+
+void Radio::errorFlash(int times)
+{
+  for (int i = 0; i < times; i++) {
+    sr(SR_PIN_LED_ERR, true);
+    delay(100);
+    sr(SR_PIN_LED_ERR, false);
+    delay(100);
+  }
+}
+
+#define TOGGLE_MODE
+
+void Radio::toggleMode()
+{
+#ifdef TOGGLE_MODE
+  Serial.println("toggle mode");
+
+  // toggle between ping and zing
+  if (mode == Ping) {
+    Serial.println("going zing");
+    setMode(Zing);
+  }
+  else {
+    Serial.println("going zing");
+    setMode(Ping);
+  }
+#endif
 }
 
 void Radio::tx()
 {
   sr(SR_PIN_EN_TX, true);
 
+  if (mode == Ping || mode == Pong) {
+    sequence++;
+  }
+
   char msg[50];
-  sprintf(msg, "%s %d", modeString, sequence++ % 10);
+  sprintf(msg, "%s %d", modeString, sequence % 10);
 
   s_driver.send((uint8_t *)msg, strlen(msg));
   s_driver.waitPacketSent();
@@ -117,9 +150,6 @@ void Radio::tx()
 #endif
 }
 
-//#define WAIT_STR "zing"
-#define WAIT_STR "ping"
-
 void Radio::rx()
 {
   uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
@@ -134,18 +164,19 @@ void Radio::rx()
     Serial.print("recv: ");
     Serial.println((char *)buf);
 
-    if (strstr((char *)buf, WAIT_STR) != NULL) {
+    if (mode != Pong) {
       recvOk++;
-      Serial.println(WAIT_STR "!");
+
+      int *last = (mode == Ping) ? &lastPing : &lastZing;
 
       i = buf[buflen - 1] - 48;
-      if ((last != -1) && (i != last + 1)) {
+      if ((*last != -1) && (i != *last + 1)) {
         int errorSince;
-        if (i < last) {
-          errorSince = i - (last - 9);
+        if (i < *last) {
+          errorSince = i - (*last - 9);
         }
         else {
-          errorSince = i - last - 1;
+          errorSince = i - *last - 1;
         }
 
         if (errorSince != 0) {
@@ -162,7 +193,7 @@ void Radio::rx()
           errorFlash(1);
         }
       }
-      last = i;
+      *last = i;
 
       sr(SR_PIN_LED_RX, true);
       delay(100);
@@ -171,6 +202,11 @@ void Radio::rx()
       delay(DELAY_RX);
 
 #if SIGNAL_SWITCH
+
+      if ((mode == Ping) || (mode == Zing)) {
+        toggleMode();
+      }
+
       setSignal(Tx);
 #endif
     }
@@ -202,7 +238,9 @@ void Radio::rx()
     timeouts++;
     errorFlash(2);
 
-    if (mode == Ping) {
+    if ((mode == Ping) || (mode == Zing)) {
+      toggleMode();
+
       // only tx if ping; if both tx they would get stuck trying to
       // talk to eachother at the same time.
       setSignal(Tx);

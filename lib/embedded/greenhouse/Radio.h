@@ -7,6 +7,12 @@ namespace greenhouse {
 
 enum Signal { Tx, Rx };
 
+enum Mode {
+  Ping,
+  Zing,
+  Pong,
+};
+
 class ISystem;
 
 class Radio {
@@ -25,7 +31,9 @@ private:
   void tx();
   void rx();
   void setSignal(Signal s);
-  void errorFlash(int errorFlash);
+  void setMode(Mode _mode);
+  void errorFlash(int times);
+  void toggleMode();
 
 private:
   embedded::Log m_log;
