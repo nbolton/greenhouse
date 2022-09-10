@@ -7,6 +7,7 @@
 #define RX_PIN D0
 #define TX_PIN D4
 #define PTT_PIN 0 // using SR instead
+//#define DEBUG_LEDS
 
 #define SR_PIN_EN_TX 15
 #define SR_PIN_LED_ERR 1
@@ -93,12 +94,14 @@ void Radio::setMode(Mode _mode)
 
 void Radio::errorFlash(int times)
 {
+#ifdef DEBUG_LEDS
   for (int i = 0; i < times; i++) {
     sr(SR_PIN_LED_ERR, true);
     delay(100);
     sr(SR_PIN_LED_ERR, false);
     delay(100);
   }
+#endif
 }
 
 #define TOGGLE_MODE
@@ -139,9 +142,11 @@ void Radio::tx()
 
   sr(SR_PIN_EN_TX, false);
 
+#ifdef DEBUG_LEDS
   sr(SR_PIN_LED_TX, true);
   delay(100);
   sr(SR_PIN_LED_TX, false);
+#endif
 
   delay(DELAY_TX);
 
@@ -195,9 +200,11 @@ void Radio::rx()
       }
       *last = i;
 
+#ifdef DEBUG_LEDS
       sr(SR_PIN_LED_RX, true);
       delay(100);
       sr(SR_PIN_LED_RX, false);
+#endif
 
       delay(DELAY_RX);
 
