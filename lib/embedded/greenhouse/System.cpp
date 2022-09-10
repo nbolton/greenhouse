@@ -28,6 +28,9 @@ namespace eg = embedded::greenhouse;
 namespace embedded {
 namespace greenhouse {
 
+#define SR_ON HIGH // opposite due to bjt
+#define SR_OFF LOW 
+
 struct ADC {
   String name;
   ADS1115_WE ads;
@@ -254,7 +257,7 @@ void System::Loop()
   const bool srEnable = m_power.ReadCommonVoltage() >= k_shiftRegisterMinVoltage;
   if (srEnable != m_shiftRegisterEnabled) {
     Log().Trace(F("Shift register %s"), srEnable ? "enabled" : "disabled");
-    digitalWrite(k_shiftRegisterEnablePin, srEnable ? LOW : HIGH); // LOW = enable
+    digitalWrite(k_shiftRegisterEnablePin, srEnable ? SR_ON : SR_OFF);
 
     m_shiftRegisterEnabled = srEnable;
   }
@@ -306,13 +309,13 @@ void System::InitShiftRegisters()
   pinMode(k_shiftRegisterDataPin, OUTPUT);
 
   pinMode(k_shiftRegisterEnablePin, OUTPUT);
-  digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
+  digitalWrite(k_shiftRegisterEnablePin, SR_ON);
 
   Log().Trace(F("Init shift"));
   s_shiftRegisters.shift();
 
   if (k_shiftRegisterTestEnable) {
-    digitalWrite(k_shiftRegisterEnablePin, LOW); // enable
+    digitalWrite(k_shiftRegisterEnablePin, SR_ON);
     const int from = k_shiftRegisterTestFrom;
     const int to = k_shiftRegisterTestTo + 1;
     while (true) {
