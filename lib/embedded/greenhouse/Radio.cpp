@@ -19,6 +19,7 @@
 #define TIMEOUT_RX 2000
 #define ERROR_PRINT_INTERVAL 10000
 #define SIGNAL_SWITCH 1
+#define TX_INTERVAL 5000
 
 namespace embedded {
 namespace greenhouse {
@@ -31,13 +32,14 @@ Mode mode;
 Signal s;
 char modeString[10];
 unsigned long rxStart;
+unsigned long txLast;
 
 Radio::Radio() : m_log(), m_system(nullptr) {}
 
 void Radio::Setup()
 {
   if (!s_driver.init()) {
-    Log().Trace(F("RadioHead ASK init failed"));
+    Log().Trace(F("Radio ASK init failed"));
     while (true) {
       // HCF
     }
@@ -52,8 +54,13 @@ void Radio::Loop()
   if (s == Tx) {
     tx();
   }
-  else {
+  else if (s == Rx) {
     rx();
+  }
+  else {
+    if (millis() >= (txLast + TX_INTERVAL)) {
+      setSignal(Tx);
+    }
   }
 }
 
@@ -64,8 +71,28 @@ void Radio::sr(int pin, bool set) { m_system->ShiftRegister(pin, set); }
 void Radio::setSignal(Signal s_)
 {
   s = s_;
-  Serial.print("signal: ");
-  Serial.println(s == Tx ? "tx" : "rx");
+
+  const char* signalName;
+  switch (s)
+  {
+  case Tx:
+    signalName = "tx";
+    break;
+
+  case Rx:
+    signalName = "rx";
+    break;
+
+  case Idle:
+    signalName = "idle";
+    break;
+  
+  default:
+    signalName = "?";
+    break;
+  }
+
+  Log().Trace(F("Radio signal: %s"), signalName);
 
   if (s == Rx) {
     rxStart = millis();
@@ -75,21 +102,20 @@ void Radio::setSignal(Signal s_)
 void Radio::setMode(Mode _mode)
 {
   mode = _mode;
-  Serial.print("mode: ");
   switch (mode) {
   case Ping:
-    sprintf(modeString, "%s", "ping >>");
+    strcpy(modeString, "ping >>");
     break;
 
   case Zing:
-    sprintf(modeString, "%s", "zing >>");
+    strcpy(modeString, "zing >>");
     break;
 
   case Pong:
-    sprintf(modeString, "%s", "<< pong");
+    strcpy(modeString, "<< pong");
     break;
   }
-  Serial.println(modeString);
+  Log().Trace(F("Radio mode: %s"), modeString);
 }
 
 void Radio::errorFlash(int times)
@@ -109,17 +135,8 @@ void Radio::errorFlash(int times)
 void Radio::toggleMode()
 {
 #ifdef TOGGLE_MODE
-  Serial.println("toggle mode");
-
   // toggle between ping and zing
-  if (mode == Ping) {
-    Serial.println("going zing");
-    setMode(Zing);
-  }
-  else {
-    Serial.println("going zing");
-    setMode(Ping);
-  }
+  setMode(mode == Ping ? Zing : Ping);
 #endif
 }
 
@@ -137,8 +154,7 @@ void Radio::tx()
   s_driver.send((uint8_t *)msg, strlen(msg));
   s_driver.waitPacketSent();
 
-  Serial.print("sent: ");
-  Serial.println(msg);
+  Log().Trace("Radio sent: %s", msg);
 
   sr(SR_PIN_EN_TX, false);
 
@@ -153,6 +169,8 @@ void Radio::tx()
 #if SIGNAL_SWITCH
   setSignal(Rx);
 #endif
+
+  txLast = millis();
 }
 
 void Radio::rx()
@@ -166,8 +184,7 @@ void Radio::rx()
 
     // terminate string so garbage isn't printed
     buf[buflen] = '\0';
-    Serial.print("recv: ");
-    Serial.println((char *)buf);
+    Log().Trace(F("Radio recv: %s"), (char *)buf);
 
     if (mode != Pong) {
       recvOk++;
@@ -186,15 +203,7 @@ void Radio::rx()
 
         if (errorSince != 0) {
           rxErrors += errorSince;
-          Serial.print("! errors: now=");
-          Serial.print(errorSince);
-          Serial.print(", sum=");
-          Serial.print(rxErrors);
-          Serial.print(", ");
-          Serial.print("ok=");
-          Serial.print(recvOk);
-          Serial.println();
-
+          Log().Trace("Radio errors: now=%d, sum=%d, ok=%d", errorSince, rxErrors, recvOk);
           errorFlash(1);
         }
       }
@@ -214,7 +223,7 @@ void Radio::rx()
         toggleMode();
       }
 
-      setSignal(Tx);
+      setSignal(Idle);
 #endif
     }
   }
@@ -223,17 +232,7 @@ void Radio::rx()
   if (diff > ERROR_PRINT_INTERVAL) {
     int errors = timeouts + rxErrors;
     errorRate = ((float)errors / (float)(recvOk + errors)) * 100;
-    Serial.println("");
-    Serial.print("error rate: ");
-    Serial.print(errorRate);
-    Serial.print("% (ok=");
-    Serial.print(recvOk);
-    Serial.print(", ");
-    Serial.print("err=");
-    Serial.print(errors);
-    Serial.print(")");
-    Serial.println("\n");
-
+    Log().Trace("Radio error rate: %d%% (ok=%d, err=%d)", errorRate, recvOk, errors);
     timeouts = 0;
     rxErrors = 0;
     recvOk = 0;
@@ -241,7 +240,7 @@ void Radio::rx()
   }
 
   if ((millis() - rxStart) > TIMEOUT_RX) {
-    Serial.println("timeout");
+    Log().Trace("Radio timeout");
     timeouts++;
     errorFlash(2);
 

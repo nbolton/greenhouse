@@ -5,7 +5,7 @@
 namespace embedded {
 namespace greenhouse {
 
-enum Signal { Tx, Rx };
+enum Signal { Idle, Tx, Rx };
 
 enum Mode {
   Ping,
