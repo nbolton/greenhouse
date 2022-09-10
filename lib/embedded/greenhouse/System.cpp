@@ -36,10 +36,10 @@ struct ADC {
 
 // regular pins
 const int k_oneWirePin = D3;
-const int k_shiftRegisterEnablePin = D0; // OE (13)
 const int k_shiftRegisterLatchPin = D5;  // RCLK (12)
 const int k_shiftRegisterDataPin = D6;   // SER (14)
 const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
+const int k_shiftRegisterEnablePin = D8; // OE (13)
 const bool k_shiftRegisterTestEnable = false;
 const int k_shiftRegisterTestFrom = 0; // min 0
 const int k_shiftRegisterTestTo = 15;  // max 15
@@ -182,8 +182,11 @@ void System::Setup()
   InitSensors();
   InitADCs();
 
+  m_radio.System(this);
+  m_radio.Setup();
+
   Blynk.begin(k_auth, k_ssid, k_pass);
-  
+
   ReportSwitchStates();
 
   Log().Trace(F("System ready"));
@@ -196,6 +199,11 @@ void System::Loop()
   // HACK: the shift register gets into an undefined state sometimes,
   // so keep shifting to ensure that it's state is persisted.
   s_shiftRegisters.shift();
+
+  m_radio.Loop();
+  if (m_radio.Busy()) {
+    return;
+  }
 
   // always run before actuator check
   ng::System::Loop();
@@ -285,8 +293,10 @@ void System::Loop()
     OnSystemStarted();
   }
 
+#ifdef LOOP_DELAY
   // slow loop down to save power
   Delay(k_loopDelay, "Loop");
+#endif
 }
 
 void System::InitShiftRegisters()
@@ -585,7 +595,8 @@ void System::Beep(int times, bool longBeep)
   }
 }
 
-void System::ReportSwitchStates() {
+void System::ReportSwitchStates()
+{
   String switchStates;
   s_switchOnCount = 0;
   for (int i = 0; i < k_switchCount; i++) {
@@ -655,6 +666,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
   adc.ads.setCompareChannels(channel);
   adc.ads.startSingleMeasurement();
 
+#ifdef ADC_WAIT
   int times = 0;
   while (adc.ads.isBusy()) {
     Delay(10, "ADC wait");
@@ -663,6 +675,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
       return k_unknown;
     }
   }
+#endif
 
   return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 }

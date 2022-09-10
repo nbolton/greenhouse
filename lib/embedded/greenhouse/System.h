@@ -6,6 +6,7 @@
 #include "Heating.h"
 #include "Power.h"
 #include "Time.h"
+#include "Radio.h"
 
 #include <ADS1115_WE.h>
 #include <Arduino.h>
@@ -146,6 +147,7 @@ private:
   int m_refreshRate;
   std::queue<Callback> m_callbackQueue;
   bool m_queueOnSystemStarted;
+  Radio m_radio;
 };
 
 } // namespace greenhouse
