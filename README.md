@@ -1,4 +1,5 @@
-# greenhouse
+# Greenhouse
+## An attempt to automate nature 🌶
 
 Prerequesits:
 - VSCode with Platform.io extension
