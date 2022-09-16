@@ -1,6 +1,6 @@
 .pio
-.vscode/c_cpp_properties.json
-.vscode/launch.json
+**/.vscode/c_cpp_properties.json
+**/.vscode/launch.json
 ho_config.h
 .DS_Store
 platformio-local.ini
@@ -8,3 +8,4 @@ platformio-local.ini
 fp-info-cache
 \#auto_saved_files\#
 *.kicad_sch-bak
+firmware/control-unit/.vscode/launch.json
