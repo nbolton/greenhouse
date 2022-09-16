@@ -1,4 +1,4 @@
-# home-automation
+# greenhouse
 
 Prerequesits:
 - VSCode with Platform.io extension
