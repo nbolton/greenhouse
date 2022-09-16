@@ -1,7 +1,7 @@
 # Greenhouse
 ## An attempt to automate nature 🌶
 
-Prerequesits:
+### Prerequesits
 - VSCode with Platform.io extension
 - MinGW if Windows
   - [Chocolatey](https://chocolatey.org/): `choco install mingw`
