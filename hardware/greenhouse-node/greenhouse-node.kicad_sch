@@ -2669,9 +2669,6 @@
     (path "/f125db1d-864d-4c2f-aa44-ac14276ec569/7edb6214-ff1b-45cd-bece-105eb508f1e9"
       (reference "#PWR028") (unit 1) (value "+10V") (footprint "")
     )
-    (path "/f125db1d-864d-4c2f-aa44-ac14276ec569/24032f1c-92ba-4478-9c3a-62b699462be2"
-      (reference "#PWR029") (unit 1) (value "GND") (footprint "")
-    )
     (path "/1bbe0bee-1018-4ce9-bd17-02581403417d"
       (reference "C1") (unit 1) (value "10nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
     )
@@ -2802,7 +2799,7 @@
       (reference "R12") (unit 1) (value "5k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P7.62mm_Horizontal")
     )
     (path "/f125db1d-864d-4c2f-aa44-ac14276ec569/df565b59-55c6-4aa6-b4bc-30a03a18a15b"
-      (reference "R13") (unit 1) (value "5k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P7.62mm_Horizontal")
+      (reference "R13") (unit 1) (value "1k") (footprint "Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P7.62mm_Horizontal")
     )
     (path "/9753ff07-d111-4956-af59-0c4add831580"
       (reference "U1") (unit 1) (value "ATtiny84A-P") (footprint "Package_DIP:DIP-14_W7.62mm_Socket")
