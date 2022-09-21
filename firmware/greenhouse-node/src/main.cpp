@@ -159,7 +159,7 @@ void loop() {
 
     leds(1, 0, 0);
 
-    driver.send(txBuf, strlen(txBuf));
+    driver.send(txBuf, strlen(txBufChar));
     driver.waitPacketSent();
 
     leds(0, 0, 0);
