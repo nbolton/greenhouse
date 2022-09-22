@@ -7,6 +7,8 @@
 #define RADIO_EN 1
 #define TX_WAIT 1
 #define TX_WAIT_DELAY 10
+#define HELLO_EN 0
+#define SINGLE_BUF 1
 
 #if RADIO_EN
 // caution! compile RH_ASK.cpp with RH_ASK_ATTINY_USE_TIMER1 uncommented.
@@ -16,6 +18,7 @@
 
 #include <OneWire.h>
 
+#define SR_EN 0
 #define SR_TOTAL 1
 #define SR_PIN_LED_ON 15
 #define SR_PIN_LED_ERR 1
@@ -38,37 +41,67 @@
 
 #define TX_BIT_RATE 2000
 #define RX_BUF_LEN 8
-#define TX_BUF_LEN 14
+#define TX_BUF_LEN 20
 
 #define TEMP_UNKNOWN 255
+#define OW_MAX_DEVS 4
+#define OW_SINGLE 0
+#define OW_ADDR_LEN 8
+#define OW_DELAY 750 // or 1000?
+#define OW_DS18B20_CONVERT 0x44
+#define OW_READ_SCRATCH 0xBE
+#define OW_ALL_DEVS 0xCC // aka skip/ignore
 
 #if RADIO_EN
 
 RH_ASK driver(TX_BIT_RATE, PIN_RX, PIN_TX, PIN_TX_EN);
+
+#if HELLO_EN
 uint8_t sequence = 0;
+#endif // HELLO_EN
+
+#if SINGLE_BUF
+uint8_t buf[TX_BUF_LEN];
+#define rxBuf buf
+#define txBuf buf
+#else
 uint8_t rxBuf[RX_BUF_LEN];
 uint8_t txBuf[TX_BUF_LEN];
-char* rxBufChar = (char*)rxBuf;
-char* txBufChar = (char*)txBuf;
+#endif // SINGLE_BUF
+
+#if OW_SINGLE == 0
+byte owAddrs[OW_MAX_DEVS][OW_ADDR_LEN];
+#endif
 
 #endif // RADIO_EN
 
+#if SR_EN
 int srData;
-OneWire ds(PIN_ONE_WIRE);
+#endif // SR_EN
+
+OneWire ow(PIN_ONE_WIRE);
 
 void shift();
 void set(int pin);
 void clear(int pin);
 void leds(bool tx, bool rx, bool err);
-void readTemp(byte* data);
 void floatToByte(byte* bytes, float f);
 void debugWave(int waves);
 
+#if OW_SINGLE
+void readTemp(byte* data);
+#else
+uint8_t scanTempDevs();
+void readTempDev(byte* addr, byte* data);
+#endif // OW_SINGLE
+
 void setup()
 {
+#if SR_EN
   pinMode(PIN_SR_LATCH, OUTPUT);
   pinMode(PIN_SR_CLOCK, OUTPUT);
   pinMode(PIN_SR_DATA, OUTPUT);
+#endif //SR_EN
 
 #if LED_DEBUG
   for (int i = 0; i < 2; i++) {
@@ -116,15 +149,27 @@ void loop() {
 
   leds(0, 1, 0);
 
+#if HELLO_EN
   const char* helloMatch = "hello";
   const char* helloAck = "hello back ";
+#endif // HELLO_EN
+
   const char* tempMatch = "temp";
   const char* tempAck = "temp back ";
+  
+#if SINGLE_BUF
+char* rxBufChar = (char*)buf;
+char* txBufChar = (char*)buf;
+#else
+char* rxBufChar = (char*)rxBuf;
+char* txBufChar = (char*)txBuf;
+#endif // SINGLE_BUF
 
   rxBuf[0] = NULL;
   uint8_t rxBufLen = sizeof(rxBuf);
   if (driver.recv(rxBuf, &rxBufLen)) {
     rxBuf[rxBufLen] = NULL;
+#if HELLO_EN
     if (strstr(rxBufChar, helloMatch) != NULL) {
       const char number = rxBufChar[strlen(helloMatch) + 1];
       strcpy(txBufChar, helloAck);
@@ -139,11 +184,23 @@ void loop() {
 #endif // SR_DEBUG
 
     }
-    else if (strstr(rxBufChar, tempMatch) != NULL) {
+    else 
+#endif // HELLO_EN
+    if (strstr(rxBufChar, tempMatch) != NULL) {
+      
       strcpy(txBufChar, tempAck);
       int i = strlen(tempAck);
+
       byte tempData[2];
+#if OW_SINGLE
       readTemp(tempData);
+      txBufChar[i++] = 1;
+#else
+      uint8_t devs = scanTempDevs();
+      readTempDev(owAddrs[0], tempData);
+      txBufChar[i++] = devs;
+#endif
+
       txBufChar[i++] = tempData[0];
       txBufChar[i++] = tempData[1];
       txBufChar[i] = NULL;
@@ -180,6 +237,7 @@ void loop() {
 #endif // RADIO_EN
 }
 
+#if SR_EN
 void shift() {
   digitalWrite(PIN_SR_LATCH, LOW);
   shiftOut(PIN_SR_DATA, PIN_SR_CLOCK, MSBFIRST, srData);
@@ -193,6 +251,16 @@ void set(int pin) {
 void clear(int pin) {
   bitClear(srData, pin);
 }
+#else
+void shift() {
+}
+
+void set(int pin) {
+}
+
+void clear(int pin) {
+}
+#endif
 
 void leds(bool tx, bool rx, bool err)
 {
@@ -233,17 +301,58 @@ void debugWave(int waves) {
   }
 }
 
+#if OW_SINGLE
+
+// only supports 1 device on the wire
 void readTemp(byte* data) {
-  ds.reset(); 
-  ds.write(0xCC);
-  ds.write(0x44);
-
+  ow.reset(); 
+  ow.write(OW_ALL_DEVS);
+  ow.write(OW_DS18B20_CONVERT);
   delay(750);
-
-  ds.reset();
-  ds.write(0xCC);
-  ds.write(0xBE);
-
-  data[0] = ds.read(); 
-  data[1] = ds.read();
+  ow.reset();
+  ow.write(OW_ALL_DEVS);
+  ow.write(OW_READ_SCRATCH);
+  data[0] = ow.read(); 
+  data[1] = ow.read();
 }
+
+#else // many devs
+
+uint8_t scanTempDevs() {
+  uint8_t devs;
+  for (devs = 0; devs < OW_MAX_DEVS; devs++) {
+    if (!ow.search(owAddrs[devs])) {
+      break;
+    }
+  }
+  ow.reset_search();
+  return devs;
+}
+
+void readTempDev(byte* addr, byte* data) {
+  
+  data[0] = TEMP_UNKNOWN;
+  data[1] = TEMP_UNKNOWN;
+
+  // tell DS18B20 to take a temperature reading and put it on the scratchpad.
+  if (!ow.reset()) {
+    return;
+  }
+  ow.select(addr);
+  ow.write(OW_DS18B20_CONVERT);
+
+  // wait for DS18B20 to do it's thing.
+  delay(OW_DELAY);
+  
+  // tell DS18B20 to read from it's scratchpad.
+  if (!ow.reset()) {
+    return;
+  }
+  ow.select(addr);
+  ow.write(OW_READ_SCRATCH);
+  
+  data[0] = ow.read();
+  data[1] = ow.read();
+}
+
+#endif
