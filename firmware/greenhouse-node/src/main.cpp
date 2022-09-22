@@ -1,14 +1,14 @@
 #include "attiny.h"
 
-#define TX_TEST 0
+#define RADIO_EN 1
+#define HELLO_EN 0
+#define OW_SINGLE 0
+#define OW_MAX_DEVS 4
+#define SINGLE_BUF 1
 #define LED_DEBUG 0
 #define SR_DEBUG 0
-#define FLASH_DELAY 200
-#define RADIO_EN 1
-#define TX_WAIT 1
-#define TX_WAIT_DELAY 10
-#define HELLO_EN 0
-#define SINGLE_BUF 1
+#define TX_TEST 0
+#define TX_BIT_RATE 2000
 
 #if RADIO_EN
 // caution! compile RH_ASK.cpp with RH_ASK_ATTINY_USE_TIMER1 uncommented.
@@ -17,6 +17,18 @@
 #endif // RADIO_EN
 
 #include <OneWire.h>
+
+#define OW_ADDR_LEN 8
+#define OW_DELAY 750 // or 1000?
+#define OW_DS18B20_CONVERT 0x44
+#define OW_READ_SCRATCH 0xBE
+#define OW_ALL_DEVS 0xCC // aka skip/ignore
+
+#define FLASH_DELAY 200
+#define TX_WAIT 1
+#define TX_WAIT_DELAY 50
+#define RX_BUF_LEN 8
+#define TX_BUF_LEN 30
 
 #define SR_EN 0
 #define SR_TOTAL 1
@@ -33,24 +45,11 @@
 #define PIN_TX_EN PA0
 #define PIN_TX PA1
 #define PIN_RX PA2
-
 #define PIN_DEBUG PA1
-
 #define PIN_ONE_WIRE PA3
 #define PIN_MOTOR_PWM PB2
 
-#define TX_BIT_RATE 2000
-#define RX_BUF_LEN 8
-#define TX_BUF_LEN 20
-
 #define TEMP_UNKNOWN 255
-#define OW_MAX_DEVS 4
-#define OW_SINGLE 0
-#define OW_ADDR_LEN 8
-#define OW_DELAY 750 // or 1000?
-#define OW_DS18B20_CONVERT 0x44
-#define OW_READ_SCRATCH 0xBE
-#define OW_ALL_DEVS 0xCC // aka skip/ignore
 
 #if RADIO_EN
 
@@ -154,8 +153,8 @@ void loop() {
   const char* helloAck = "hello back ";
 #endif // HELLO_EN
 
-  const char* tempMatch = "temp";
-  const char* tempAck = "temp back ";
+  const char* tempMatch = "t>";
+  const char* tempAck = "t<";
   
 #if SINGLE_BUF
 char* rxBufChar = (char*)buf;
@@ -167,6 +166,7 @@ char* txBufChar = (char*)txBuf;
 
   rxBuf[0] = NULL;
   uint8_t rxBufLen = sizeof(rxBuf);
+  uint8_t txBufLen = 0;
   if (driver.recv(rxBuf, &rxBufLen)) {
     rxBuf[rxBufLen] = NULL;
 #if HELLO_EN
@@ -175,6 +175,7 @@ char* txBufChar = (char*)txBuf;
       strcpy(txBufChar, helloAck);
       txBufChar[strlen(helloAck)] = number;
       txBufChar[strlen(helloAck) + 1] = NULL;
+      txBufLen = strlen(txBufChar);
       
 #if SR_DEBUG
 
@@ -195,15 +196,19 @@ char* txBufChar = (char*)txBuf;
 #if OW_SINGLE
       readTemp(tempData);
       txBufChar[i++] = 1;
-#else
-      uint8_t devs = scanTempDevs();
-      readTempDev(owAddrs[0], tempData);
-      txBufChar[i++] = devs;
-#endif
-
       txBufChar[i++] = tempData[0];
       txBufChar[i++] = tempData[1];
-      txBufChar[i] = NULL;
+#else
+      uint8_t devs = scanTempDevs();
+      txBufChar[i++] = devs;
+      for (int j = 0; j < devs; j++) {
+        readTempDev(owAddrs[j], tempData);
+        txBufChar[i++] = tempData[0];
+        txBufChar[i++] = tempData[1];
+      }
+#endif
+
+      txBufLen = i;
     }
     else {
       strcpy(txBufChar, "error");
@@ -216,7 +221,7 @@ char* txBufChar = (char*)txBuf;
 
     leds(1, 0, 0);
 
-    driver.send(txBuf, strlen(txBufChar));
+    driver.send(txBuf, txBufLen);
     driver.waitPacketSent();
 
     leds(0, 0, 0);
@@ -353,6 +358,9 @@ void readTempDev(byte* addr, byte* data) {
   
   data[0] = ow.read();
   data[1] = ow.read();
+
+  // HACK: ignore the rest of the data
+  delay(100);
 }
 
 #endif
