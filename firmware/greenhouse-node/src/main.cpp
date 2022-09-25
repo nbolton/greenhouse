@@ -39,9 +39,10 @@
 #define SR_PIN_MOTOR_B 4
 #define SR_PIN_MOTOR_A 5
 
-#define PIN_SR_LATCH PA7  // RCLK (12)
+#define PIN_SR_OE PA7     // OE (13)
 #define PIN_SR_DATA PA6   // SER (14)
 #define PIN_SR_CLOCK PA5  // SRCLK (11)
+#define PIN_SR_LATCH PA4  // RCLK (12)
 #define PIN_TX_EN PA0
 #define PIN_TX PA1
 #define PIN_RX PA2
@@ -97,10 +98,13 @@ void readTempDev(byte* addr, byte* data);
 void setup()
 {
 #if SR_EN
+  pinMode(PIN_SR_OE, OUTPUT);
   pinMode(PIN_SR_LATCH, OUTPUT);
   pinMode(PIN_SR_CLOCK, OUTPUT);
   pinMode(PIN_SR_DATA, OUTPUT);
 #endif //SR_EN
+
+digitalWrite(PIN_SR_OE, LOW);
 
 #if LED_DEBUG
   for (int i = 0; i < 2; i++) {
