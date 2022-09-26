@@ -1,20 +1,26 @@
 #include "attiny.h"
 
 #define RADIO_EN 1
+#define OW_EN 1
+
 #define HELLO_EN 0
 #define OW_SINGLE 0
 #define OW_MAX_DEVS 4
 #define SINGLE_BUF 1
-#define LED_DEBUG 0
+#define LED_DEBUG 1
 #define SR_DEBUG 0
 #define TX_TEST 0
 #define TX_BIT_RATE 2000
+#define MOTOR_PWM 200
+#define MOTOR_TEST 0
 
 #if RADIO_EN
 // caution! compile RH_ASK.cpp with RH_ASK_ATTINY_USE_TIMER1 uncommented.
 // otherwise TIMER0 will be used, and delay()/millis() stop working.
 #include <RH_ASK.h>
 #endif // RADIO_EN
+
+#if OW_EN
 
 #include <OneWire.h>
 
@@ -24,15 +30,17 @@
 #define OW_READ_SCRATCH 0xBE
 #define OW_ALL_DEVS 0xCC // aka skip/ignore
 
+#endif // OW_EN
+
 #define FLASH_DELAY 200
 #define TX_WAIT 1
 #define TX_WAIT_DELAY 50
 #define RX_BUF_LEN 8
 #define TX_BUF_LEN 30
 
-#define SR_EN 0
+#define SR_EN 1
 #define SR_TOTAL 1
-#define SR_PIN_LED_ON 15
+#define SR_PIN_LED_ON 0
 #define SR_PIN_LED_ERR 1
 #define SR_PIN_LED_RX 2
 #define SR_PIN_LED_TX 3
@@ -69,17 +77,19 @@ uint8_t rxBuf[RX_BUF_LEN];
 uint8_t txBuf[TX_BUF_LEN];
 #endif // SINGLE_BUF
 
-#if OW_SINGLE == 0
+#endif // RADIO_EN
+
+#if OW_SINGLE == 0 && OW_EN
 byte owAddrs[OW_MAX_DEVS][OW_ADDR_LEN];
 #endif
 
-#endif // RADIO_EN
-
 #if SR_EN
-int srData;
+int srData = 0;
 #endif // SR_EN
 
+#if OW_EN
 OneWire ow(PIN_ONE_WIRE);
+#endif // OW_EN
 
 void shift();
 void set(int pin);
@@ -88,32 +98,37 @@ void leds(bool tx, bool rx, bool err);
 void floatToByte(byte* bytes, float f);
 void debugWave(int waves);
 
+#if OW_EN
 #if OW_SINGLE
 void readTemp(byte* data);
 #else
 uint8_t scanTempDevs();
 void readTempDev(byte* addr, byte* data);
 #endif // OW_SINGLE
+#endif // OW_EN
 
 void setup()
 {
+  analogWrite(PIN_MOTOR_PWM, MOTOR_PWM);
+
 #if SR_EN
+  digitalWrite(PIN_SR_OE, LOW);
+
   pinMode(PIN_SR_OE, OUTPUT);
   pinMode(PIN_SR_LATCH, OUTPUT);
   pinMode(PIN_SR_CLOCK, OUTPUT);
   pinMode(PIN_SR_DATA, OUTPUT);
 #endif //SR_EN
 
-digitalWrite(PIN_SR_OE, LOW);
-
 #if LED_DEBUG
-  for (int i = 0; i < 2; i++) {
-    leds(1, 1, 1);
-    delay(FLASH_DELAY);
-    
-    leds(0, 0, 0);
-    delay(FLASH_DELAY);
-  }
+  set(SR_PIN_LED_ON);
+  delay(FLASH_DELAY);
+  leds(0, 0, 1);
+  delay(FLASH_DELAY);
+  leds(0, 1, 1);
+  delay(FLASH_DELAY);
+  leds(1, 1, 1);
+  delay(FLASH_DELAY);
 #endif // LED_DEBUG
 
 #if RADIO_EN
@@ -124,17 +139,72 @@ digitalWrite(PIN_SR_OE, LOW);
 #endif // RADIO_EN
 
 #if LED_DEBUG
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 3; i++) {
     leds(1, 1, 0);
     delay(FLASH_DELAY);
     
+    clear(SR_PIN_LED_ON);
     leds(0, 0, 0);
     delay(FLASH_DELAY);
   }
+  shift();
 #endif // LED_DEBUG
 }
 
 void loop() {
+
+#if MOTOR_TEST
+
+const int pwmFrom = 100;//(255.0f / 0.9f);
+const int pwmTo = 255;
+const int pwmDelta = 10;
+int d = 2000;
+int pwm = pwmFrom;
+bool forward = true;
+
+while (true) {
+
+  analogWrite(PIN_MOTOR_PWM, pwm);
+
+  clear(SR_PIN_MOTOR_B);
+  set(SR_PIN_MOTOR_A);
+  shift();
+  delay(d);
+  
+  clear(SR_PIN_MOTOR_A);
+  shift();
+  delay(d);
+
+  clear(SR_PIN_MOTOR_A);
+  set(SR_PIN_MOTOR_B);
+  shift();
+  delay(d);
+  
+  clear(SR_PIN_MOTOR_B);
+  shift();
+  delay(d);
+
+  if (forward) {
+    pwm += pwmDelta;
+  }
+  else {
+    pwm -= pwmDelta;
+  }
+
+  if (pwm >= pwmTo) {
+    pwm = pwmTo;
+    forward = false;
+  }
+
+  if (pwm <= pwmFrom) {
+    break;
+  }
+
+}
+
+return;
+#endif // MOTOR_TEST
+
 #if RADIO_EN
 #if TX_TEST
 
@@ -159,6 +229,8 @@ void loop() {
 
   const char* tempMatch = "t>";
   const char* tempAck = "t<";
+  const char* motorMatch = "m>";
+  const char* motorAck = "m<";
   
 #if SINGLE_BUF
 char* rxBufChar = (char*)buf;
@@ -214,8 +286,46 @@ char* txBufChar = (char*)txBuf;
 
       txBufLen = i;
     }
+    else if (strstr(rxBufChar, motorMatch) != NULL) {
+      
+      bool ok = true;
+      const char d = rxBufChar[rxBufLen - 1];
+      switch (d) {
+        case 'b': {
+          set(SR_PIN_MOTOR_A);
+          clear(SR_PIN_MOTOR_B);
+          shift();
+        }
+        break;
+        case 'f': {
+          set(SR_PIN_MOTOR_B);
+          clear(SR_PIN_MOTOR_A);
+          shift();
+        }
+        break;
+        case 's': {
+          clear(SR_PIN_MOTOR_B);
+          clear(SR_PIN_MOTOR_A);
+          shift();
+        }
+        break;
+        default: {
+          ok = false;
+          strcpy(txBufChar, "invalid");
+          txBufLen = strlen(txBufChar);
+        }
+        break;
+      }
+
+      if (ok) {
+        strcpy(txBufChar, motorAck);
+        txBufLen = strlen(motorAck);
+      }
+    }
     else {
-      strcpy(txBufChar, "error");
+      const char* error = "error";
+      strcpy(txBufChar, error);
+      txBufLen = strlen(error);
     }
 
 #if TX_WAIT
@@ -301,6 +411,7 @@ void leds(bool tx, bool rx, bool err)
 #endif // LED_DEBUG
 }
 
+#if SR_DEBUG
 void debugWave(int waves) {
   for (int i = 0; i < waves; i++) {
     digitalWrite(PIN_DEBUG, HIGH);
@@ -309,7 +420,9 @@ void debugWave(int waves) {
     delay(10);
   }
 }
+#endif // SR_DEBUG
 
+#if OW_EN
 #if OW_SINGLE
 
 // only supports 1 device on the wire
@@ -366,5 +479,6 @@ void readTempDev(byte* addr, byte* data) {
   // HACK: ignore the rest of the data
   delay(100);
 }
+#endif // OW_EN
 
 #endif
