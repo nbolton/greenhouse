@@ -20,7 +20,7 @@
 #define RX_TIMEOUT 2000
 #define FLASH_DELAY 200
 #define TEMP_SINGLE 0
-#define LOOP_DELAY 100
+#define LOOP_DELAY 10
 #define START_DELAY 500
 #define SERIAL_DELAY 500
 
