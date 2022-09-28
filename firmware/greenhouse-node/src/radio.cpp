@@ -132,6 +132,10 @@ bool handleRx() {
 
 #if MOTOR_EN
 
+    case GH_CMD_MOTOR_SPEED: {
+      motor_speed(GH_DATA_1(rxBuf));
+    } break;
+
     case GH_CMD_MOTOR_RUN: {
       if (isDupeRx()) {
         return false;

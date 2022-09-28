@@ -17,7 +17,7 @@ void testMotor();
 
 void motor_init() {
   pinMode(PIN_MOTOR_PWM, OUTPUT);
-  analogWrite(PIN_MOTOR_PWM, MOTOR_PWM);
+  motor_speed(MOTOR_PWM);
 }
 
 void motor_loop() {
@@ -34,17 +34,21 @@ void motor_loop() {
 #endif  // MOTOR_TEST
 }
 
+void motor_speed(byte pwm) {
+  analogWrite(PIN_MOTOR_PWM, pwm);
+}
+
 bool motor_run(byte dir, byte secs) {
   motorStop = millis() + (secs * 1000);
   switch (dir) {
     case GH_MOTOR_FORWARD: {
-      set(SR_PIN_MOTOR_A);
-      clear(SR_PIN_MOTOR_B);
+      set(SR_PIN_MOTOR_B);
+      clear(SR_PIN_MOTOR_A);
     } break;
 
     case GH_MOTOR_REVERSE: {
-      set(SR_PIN_MOTOR_B);
-      clear(SR_PIN_MOTOR_A);
+      set(SR_PIN_MOTOR_A);
+      clear(SR_PIN_MOTOR_B);
     } break;
 
     default:

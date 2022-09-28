@@ -59,7 +59,7 @@ struct SendDesc {
   byte cmd = 0;
   byte data1 = 0;
   byte data2 = 0;
-  byte expectCmd = 0;
+  byte expectCmd = GH_CMD_ACK;
   callback okCallback = NULL;
   bool okCallbackReturn = false;
   void* okCallbackArg = NULL;
@@ -71,6 +71,8 @@ uint8_t txBuf[GH_LENGTH];
 uint8_t sequence = 1;  // start at 1; reciever starts at 0
 int stateMachine = 0;
 int errors = 0;
+bool autoTest = true;
+int motorSpeed = 255 / 2;
 
 bool send(SendDesc& sendDesc);
 bool sendHelloReq(bool* p_ackOk);
@@ -78,12 +80,14 @@ bool helloReqRetry();
 bool sendTempDevsReq(TempData* data);
 bool sendTempDataReq(int dev, TempData* data);
 bool tempReqRetry();
-bool sendMotorReq(byte dir, byte sec);
-bool motorReqRetry(byte dir, byte sec);
+bool sendMotorRunReq(byte dir, byte sec);
+bool motorRunReqRetry(byte dir, byte sec);
 void errorFlash(ErrorType type);
 void printBuffer(const __FlashStringHelper* prompt, const uint8_t* buf,
                  uint8_t len);
 void incrementSeq();
+bool motorSpeedReqRetry(byte pwm);
+bool sendMotorSpeedReq(byte pwm);
 
 void setup() {
   Serial.begin(9600);
@@ -140,54 +144,84 @@ void setup() {
   }
 
   Serial.println(F("running"));
-  Serial.println(F("commands: htfrs"));
+  Serial.println(F("commands: htfrsa"));
 }
 
 void loop() {
   if (Serial.available() > 0) {
     bool ok = false;
     const char c = Serial.read();
-    Serial.read();
     switch (c) {
+      case 'a': {
+        autoTest = !autoTest;
+        Serial.println(F("auto mode toggled ") +
+                       String(autoTest ? F("on") : F("off")));
+      } break;
+
 #if HELLO_EN
 
-      case 'h':
+      case 'h': {
         Serial.println(F("hello"));
         ok = helloReqRetry();
-        break;
+      } break;
 
 #endif  // HELLO_EN
 
 #if TEMP_EN
 
-      case 't':
+      case 't': {
+        Serial.println(F("temp"));
         ok = tempReqRetry();
-        break;
+      } break;
 
 #endif  // TEMP_EN
 
 #if MOTOR_EN
 
-      case 'f':
+      case 'f': {
         Serial.println(F("motor forward"));
-        ok = motorReqRetry(GH_MOTOR_FORWARD, MOTOR_RUNTIME);
-        break;
+        ok = motorRunReqRetry(GH_MOTOR_FORWARD, MOTOR_RUNTIME);
+      } break;
 
-      case 'r':
+      case 'r': {
         Serial.println(F("motor reverse"));
-        ok = motorReqRetry(GH_MOTOR_REVERSE, MOTOR_RUNTIME);
-        break;
+        ok = motorRunReqRetry(GH_MOTOR_REVERSE, MOTOR_RUNTIME);
+      } break;
+
+      case '-':
+      case '=': {
+        const byte change = (255.f * .1f);
+        if (c == '-') {
+          motorSpeed -= change;
+          if (motorSpeed < 0) {
+            motorSpeed = 0;
+          }
+          Serial.println(F("motor speed decreased to ") + String(motorSpeed));
+        } else if (c == '=') {
+          motorSpeed += change;
+          if (motorSpeed > 255) {
+            motorSpeed = 255;
+          }
+          Serial.println(F("motor speed increased to ") + String(motorSpeed));
+        }
+        ok = motorSpeedReqRetry(motorSpeed);
+      } break;
 
 #endif  // MOTOR_EN
 
-      default:
+      default: {
         Serial.println(F("unknown: ") + String(c));
-        break;
+      } break;
     }
+
+    // discard return char
+    Serial.read();
+
     Serial.println(ok ? F("request ok") : F("request failed"));
     Serial.println(F("total errors: ") + String(errors));
     Serial.println(F("----"));
-  } else {
+
+  } else if (autoTest) {
     bool ok = false;
     bool check = true;
     switch (stateMachine++) {
@@ -211,13 +245,13 @@ void loop() {
 
       case 2: {
         Serial.println(F("motor forward"));
-        ok = motorReqRetry(GH_MOTOR_FORWARD, MOTOR_RUNTIME);
+        ok = motorRunReqRetry(GH_MOTOR_FORWARD, MOTOR_RUNTIME);
         delay(MOTOR_DELAY);
       } break;
 
       case 3: {
         Serial.println(F("motor reverse"));
-        ok = motorReqRetry(GH_MOTOR_REVERSE, MOTOR_RUNTIME);
+        ok = motorRunReqRetry(GH_MOTOR_REVERSE, MOTOR_RUNTIME);
         delay(MOTOR_DELAY);
       } break;
 
@@ -237,6 +271,38 @@ void loop() {
   }
 
   delay(LOOP_DELAY);
+}
+
+void errorFlash(ErrorType type) {
+  errors++;
+  for (int i = 0; i < type; i++) {
+    set_shift(SR_PIN_LED_ERR);
+    delay(FLASH_DELAY);
+    clear_shift(SR_PIN_LED_ERR);
+    delay(FLASH_DELAY);
+  }
+}
+
+void printBuffer(const __FlashStringHelper* prompt, const uint8_t* buf,
+                 uint8_t len) {
+  Serial.print(prompt);
+  for (uint8_t i = 0; i < len; i++) {
+    if (i % 16 == 15) {
+      Serial.println(buf[i], HEX);
+    } else {
+      Serial.print(buf[i], HEX);
+      Serial.print(F(" "));
+    }
+  }
+  Serial.println(F(""));
+}
+
+void incrementSeq() {
+  if (sequence == 255) {
+    sequence = 0;
+  } else {
+    sequence++;
+  }
 }
 
 bool send(SendDesc& sendDesc) {
@@ -267,7 +333,12 @@ bool send(SendDesc& sendDesc) {
   bool rx = false;
   while (millis() < (start + RX_TIMEOUT)) {
     uint8_t rxBufLen = sizeof(rxBuf);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     if (driver.recv(rxBuf, &rxBufLen)) {
+#pragma GCC diagnostic pop
+
       printBuffer(F("[< rx] got: "), rxBuf, GH_LENGTH);
 
       if (GH_TO(rxBuf) == GH_ADDR_MAIN) {
@@ -345,7 +416,6 @@ bool sendHelloReq(bool* p_ackOk) {
   SendDesc sd;
   sd.to = GH_ADDR_NODE_1;
   sd.cmd = GH_CMD_HELLO;
-  sd.expectCmd = GH_CMD_ACK;
   sd.okCallback = &helloOk;
   bool rxOk = send(sd);
   *p_ackOk = sd.okCallbackReturn;
@@ -359,7 +429,7 @@ bool sendHelloReq(bool* p_ackOk) {
 bool tempReqRetry() {
   TempData tempData;
   bool ok = false;
-  Serial.println(F("getting temp"));
+  Serial.println(F("temp req"));
   for (int i = 0; i < TX_RETRY_MAX; i++) {
 #if TEMP_SINGLE
     tempData.devs = 1;
@@ -463,63 +533,54 @@ bool sendTempDataReq(int dev, TempData* data) {
 
 #if MOTOR_EN
 
-bool motorReqRetry(byte dir, byte sec) {
+bool motorRunReqRetry(byte dir, byte sec) {
   bool ok = false;
-  Serial.println(F("motor command"));
+  Serial.println(F("motor run req"));
   for (int i = 0; i < TX_RETRY_MAX; i++) {
-    ok = sendMotorReq(dir, sec);
+    ok = sendMotorRunReq(dir, sec);
     if (ok) {
       break;
     }
-    Serial.println(F("retry motor req"));
+    Serial.println(F("retry motor run req"));
   }
 
   incrementSeq();
   return ok;
 }
 
-bool sendMotorReq(byte dir, byte sec) {
-  Serial.println(F("[> tx] sending motor req: dir=") + String(dir) +
+bool sendMotorRunReq(byte dir, byte sec) {
+  Serial.println(F("[> tx] sending motor run req: dir=") + String(dir) +
                  F(" sec=") + String(sec));
   SendDesc sd;
   sd.to = GH_ADDR_NODE_1;
   sd.cmd = GH_CMD_MOTOR_RUN;
-  sd.expectCmd = GH_CMD_ACK;
   sd.data1 = dir;
   sd.data2 = sec;
   return send(sd);
 }
 
-#endif  // MOTOR_EN
-
-void errorFlash(ErrorType type) {
-  errors++;
-  for (int i = 0; i < type; i++) {
-    set_shift(SR_PIN_LED_ERR);
-    delay(FLASH_DELAY);
-    clear_shift(SR_PIN_LED_ERR);
-    delay(FLASH_DELAY);
-  }
-}
-
-void printBuffer(const __FlashStringHelper* prompt, const uint8_t* buf,
-                 uint8_t len) {
-  Serial.print(prompt);
-  for (uint8_t i = 0; i < len; i++) {
-    if (i % 16 == 15) {
-      Serial.println(buf[i], HEX);
-    } else {
-      Serial.print(buf[i], HEX);
-      Serial.print(F(" "));
+bool motorSpeedReqRetry(byte pwm) {
+  bool ok = false;
+  Serial.println(F("motor speed req"));
+  for (int i = 0; i < TX_RETRY_MAX; i++) {
+    ok = sendMotorSpeedReq(pwm);
+    if (ok) {
+      break;
     }
+    Serial.println(F("retry motor speed req"));
   }
-  Serial.println(F(""));
+
+  incrementSeq();
+  return ok;
 }
 
-void incrementSeq() {
-  if (sequence == 255) {
-    sequence = 0;
-  } else {
-    sequence++;
-  }
+bool sendMotorSpeedReq(byte pwm) {
+  Serial.println(F("[> tx] sending motor req: pwm=") + String(pwm));
+  SendDesc sd;
+  sd.to = GH_ADDR_NODE_1;
+  sd.cmd = GH_CMD_MOTOR_SPEED;
+  sd.data1 = pwm;
+  return send(sd);
 }
+
+#endif  // MOTOR_EN
