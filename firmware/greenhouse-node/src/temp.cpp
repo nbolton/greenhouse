@@ -21,10 +21,25 @@ byte addrs[OW_MAX_DEVS][OW_ADDR_LEN];
 
 byte tempData(byte i) { return data[i]; }
 
+byte scanTempDevs() {
+#if OW_SINGLE
+  return 1;
+#else
+  byte devs;
+  for (devs = 0; devs < OW_MAX_DEVS; devs++) {
+    if (!ow.search(addrs[devs])) {
+      break;
+    }
+  }
+  ow.reset_search();
+  return devs;
+#endif  // OW_SINGLE
+}
+
+void readTempDev(int addrIndex) {
 #if OW_SINGLE
 
-// only supports 1 device on the wire
-void readTemp() {
+  // only supports 1 device on the wire
   ow.reset();
   ow.write(OW_ALL_DEVS);
   ow.write(OW_DS18B20_CONVERT);
@@ -34,22 +49,9 @@ void readTemp() {
   ow.write(OW_READ_SCRATCH);
   data[0] = ow.read();
   data[1] = ow.read();
-}
 
-#else  // many devs
+#else
 
-byte scanTempDevs() {
-  byte devs;
-  for (devs = 0; devs < OW_MAX_DEVS; devs++) {
-    if (!ow.search(addrs[devs])) {
-      break;
-    }
-  }
-  ow.reset_search();
-  return devs;
-}
-
-void readTempDev(int addrIndex) {
   byte* addr = addrs[addrIndex];
   data[0] = TEMP_UNKNOWN;
   data[1] = TEMP_UNKNOWN;
@@ -76,7 +78,8 @@ void readTempDev(int addrIndex) {
 
   // HACK: ignore the rest of the data
   delay(100);
-}
 
 #endif  // OW_SINGLE
+}
+
 #endif  // TEMP_EN

@@ -102,7 +102,7 @@ bool handleRx() {
   switch (GH_CMD(rxBuf)) {
 #if HELLO_EN
     case GH_CMD_HELLO: {
-      // do nothing; seq already set.
+      // nothing to do; ack is the default.
     } break;
 #endif  // HELLO_EN
 
@@ -110,20 +110,12 @@ bool handleRx() {
 
     case GH_CMD_TEMP_DEVS_REQ: {
       GH_CMD(txBuf) = GH_CMD_TEMP_DEVS_RSP;
-#if OW_SINGLE
-      GH_DATA_1(txBuf) = 1;
-#else
       GH_DATA_1(txBuf) = scanTempDevs();
-#endif  // OW_SINGLE
     } break;
 
     case GH_CMD_TEMP_DATA_REQ: {
       GH_CMD(txBuf) = GH_CMD_TEMP_DATA_RSP;
-#if OW_SINGLE
-      readTemp();
-#else
       readTempDev(GH_DATA_1(rxBuf));
-#endif  // OW_SINGLE
       GH_DATA_1(txBuf) = tempData(0);
       GH_DATA_2(txBuf) = tempData(1);
     } break;
