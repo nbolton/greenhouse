@@ -13,10 +13,11 @@
 #define TEMP_EN 1
 #define MOTOR_EN 1
 
-#define TIMEOUT 2000
 #define TX_BIT_RATE 2000
 #define TX_WAIT_DELAY 10
 #define TX_RETRY_MAX 5
+
+#define RX_TIMEOUT 2000
 #define FLASH_DELAY 200
 #define TEMP_SINGLE 0
 #define LOOP_DELAY 100
@@ -35,6 +36,8 @@
 #define MOTOR_DELAY 3000  // millis
 #define MOTOR_RUNTIME 2   // seconds
 
+typedef bool (*callback)(void* arg);
+
 enum ErrorType {
   k_ErrorTimeout,  // gave up waiting for response
   k_ErrorInvalid,  // got a response, but was unexpected
@@ -46,14 +49,31 @@ struct TempData {
   float temps[TEMP_DEVS_MAX];
 };
 
+struct TempDataCallbackArg {
+  TempData* data = NULL;
+  int dev = 0;
+};
+
+struct SendDesc {
+  byte to = 0;
+  byte cmd = 0;
+  byte data1 = 0;
+  byte data2 = 0;
+  byte expectCmd = 0;
+  callback okCallback = NULL;
+  bool okCallbackReturn = false;
+  void* okCallbackArg = NULL;
+};
+
 RH_ASK driver(TX_BIT_RATE, PIN_RX, PIN_TX, PIN_TX_EN);
 uint8_t rxBuf[GH_LENGTH];
 uint8_t txBuf[GH_LENGTH];
 uint8_t sequence = 1;  // start at 1; reciever starts at 0
-int cmd = 0;
+int stateMachine = 0;
 int errors = 0;
 
-bool sendHelloReq(bool *p_ackOk);
+bool send(SendDesc& sendDesc);
+bool sendHelloReq(bool* p_ackOk);
 bool helloReqRetry();
 bool sendTempDevsReq(TempData* data);
 bool sendTempDataReq(int dev, TempData* data);
@@ -170,7 +190,7 @@ void loop() {
   } else {
     bool ok = false;
     bool check = true;
-    switch (cmd++) {
+    switch (stateMachine++) {
       case 0: {
 #if HELLO_EN
         ok = helloReqRetry();
@@ -204,7 +224,7 @@ void loop() {
 #endif  // MOTOR_EN
 
       default:
-        cmd = 0;
+        stateMachine = 0;
         check = false;
         break;
     }
@@ -219,42 +239,17 @@ void loop() {
   delay(LOOP_DELAY);
 }
 
-#if HELLO_EN
-
-bool helloReqRetry() {
-  Serial.println(F("saying hello"));
-  bool rxOk = false;
-  bool ackOk = false;
-
-  while (true) {
-    rxOk = sendHelloReq(&ackOk);
-    if (rxOk) {
-      if (ackOk) {
-        Serial.println(F("got hello back"));
-      }
-      else {
-        Serial.println(F("got something else back"));
-      }
-      break;
-    } else {
-      Serial.println(F("retry hello req"));
-    }
-  }
-  incrementSeq();
-  return rxOk && ackOk;
-}
-
-bool sendHelloReq(bool *p_ackOk) {
-  Serial.println(F("[> tx] sending hello req"));
-
+bool send(SendDesc& sendDesc) {
   set(SR_PIN_EN_TX);
   set(SR_PIN_LED_TX);
   shift();
   delay(TX_WAIT_DELAY);
 
-  GH_TO(txBuf) = GH_ADDR_NODE_1;
+  GH_TO(txBuf) = sendDesc.to;
   GH_FROM(txBuf) = GH_ADDR_MAIN;
-  GH_CMD(txBuf) = GH_CMD_HELLO;
+  GH_CMD(txBuf) = sendDesc.cmd;
+  GH_DATA_1(txBuf) = sendDesc.data1;
+  GH_DATA_2(txBuf) = sendDesc.data2;
 
   sequence = sequence % 256;
   GH_SEQ(txBuf) = sequence;
@@ -268,35 +263,31 @@ bool sendHelloReq(bool *p_ackOk) {
   set(SR_PIN_LED_RX);
   shift();
 
-  bool ackOk = false;
   unsigned long start = millis();
   bool rx = false;
-  while (millis() < (start + TIMEOUT)) {
-    uint8_t rxBufLen = GH_LENGTH;
+  while (millis() < (start + RX_TIMEOUT)) {
+    uint8_t rxBufLen = sizeof(rxBuf);
     if (driver.recv(rxBuf, &rxBufLen)) {
       printBuffer(F("[< rx] got: "), rxBuf, GH_LENGTH);
-      if (GH_TO(rxBuf) == GH_ADDR_MAIN) {
-        rx = true;
 
+      if (GH_TO(rxBuf) == GH_ADDR_MAIN) {
         if (GH_CMD(rxBuf) == GH_CMD_ERROR) {
           Serial.println(F("[< rx] error code: ") + String(GH_DATA_1(rxBuf)));
           errorFlash(k_ErrorRemote);
-        } else if (GH_CMD(rxBuf) != GH_CMD_ACK) {
-          Serial.println(F("[< rx] error, invalid command"));
+        } else if (GH_CMD(rxBuf) != sendDesc.expectCmd) {
+          Serial.println(F("[< rx] error, unexpected command"));
           errorFlash(k_ErrorInvalid);
-        } else {
-          const int rxSeq = GH_SEQ(rxBuf);
-          if (rxSeq != sequence) {
-            Serial.println(F("[< rx] error, invalid ack: ") + String(rxSeq) +
-                           F("!=") + String(sequence));
-            errorFlash(k_ErrorInvalid);
-          } else {
-            ackOk = true;
-          }
+        } else if (sendDesc.okCallback != NULL) {
+          sendDesc.okCallbackReturn =
+              sendDesc.okCallback(sendDesc.okCallbackArg);
         }
+
+        rx = true;
         break;
+
       } else {
         Serial.println(F("[< rx] ignoring (address mismatch)"));
+        // don't report an error, this is fine
       }
     }
     delay(1);  // prevent WDT reset
@@ -310,8 +301,55 @@ bool sendHelloReq(bool *p_ackOk) {
   clear_shift(SR_PIN_LED_ERR);
   clear_shift(SR_PIN_LED_RX);
 
-  *p_ackOk = ackOk;
   return rx;
+}
+
+#if HELLO_EN
+
+bool helloReqRetry() {
+  Serial.println(F("saying hello"));
+  bool rxOk = false;
+  bool ackOk = false;
+
+  while (true) {
+    rxOk = sendHelloReq(&ackOk);
+    if (rxOk) {
+      if (ackOk) {
+        Serial.println(F("got hello back"));
+      } else {
+        Serial.println(F("got something else back"));
+      }
+      break;
+    } else {
+      Serial.println(F("retry hello req"));
+    }
+  }
+  incrementSeq();
+  return rxOk && ackOk;
+}
+
+bool helloOk(void* arg) {
+  const int rxSeq = GH_SEQ(rxBuf);
+  if (rxSeq != sequence) {
+    Serial.println(F("[< rx] error, invalid ack: ") + String(rxSeq) + F("!=") +
+                   String(sequence));
+    errorFlash(k_ErrorInvalid);
+    return false;
+  }
+
+  return true;
+}
+
+bool sendHelloReq(bool* p_ackOk) {
+  Serial.println(F("[> tx] sending hello req"));
+  SendDesc sd;
+  sd.to = GH_ADDR_NODE_1;
+  sd.cmd = GH_CMD_HELLO;
+  sd.expectCmd = GH_CMD_ACK;
+  sd.okCallback = &helloOk;
+  bool rxOk = send(sd);
+  *p_ackOk = sd.okCallbackReturn;
+  return rxOk;
 }
 
 #endif  // HELLO_EN
@@ -376,143 +414,49 @@ bool tempReqRetry() {
   return ok;
 }
 
+bool tempDevsOk(void* arg) {
+  TempData* data = (TempData*)arg;
+  data->devs = GH_DATA_1(rxBuf);
+  Serial.println(F("[< rx] temp devs: ") + String(data->devs));
+  return true;
+}
+
 bool sendTempDevsReq(TempData* data) {
   Serial.println(F("[> tx] sending temp devs req"));
-
-  set(SR_PIN_EN_TX);
-  set(SR_PIN_LED_TX);
-  shift();
-  delay(TX_WAIT_DELAY);
-
-  GH_TO(txBuf) = GH_ADDR_NODE_1;
-  GH_FROM(txBuf) = GH_ADDR_MAIN;
-  GH_CMD(txBuf) = GH_CMD_TEMP_DEVS_REQ;
-
-  sequence = sequence % 256;
-  GH_SEQ(txBuf) = sequence;
-
-  driver.send(txBuf, GH_LENGTH);
-  driver.waitPacketSent();
-  printBuffer(F("[> tx] sent: "), txBuf, GH_LENGTH);
-
-  clear(SR_PIN_EN_TX);
-  clear(SR_PIN_LED_TX);
-  set(SR_PIN_LED_RX);
-  shift();
-
   data->devs = 0;
+  SendDesc sd;
+  sd.to = GH_ADDR_NODE_1;
+  sd.cmd = GH_CMD_TEMP_DEVS_REQ;
+  sd.expectCmd = GH_CMD_TEMP_DEVS_RSP;
+  sd.okCallback = &tempDevsOk;
+  sd.okCallbackArg = data;
+  return send(sd);
+}
 
-  unsigned long start = millis();
-  bool rx = false;
-  while (millis() < (start + TIMEOUT)) {
-    uint8_t rxBufLen = GH_LENGTH;
-    if (driver.recv(rxBuf, &rxBufLen)) {
-      printBuffer(F("[< rx] got: "), rxBuf, GH_LENGTH);
-
-      if (GH_TO(rxBuf) == GH_ADDR_MAIN) {
-        rx = true;
-
-        if (GH_CMD(rxBuf) == GH_CMD_ERROR) {
-          Serial.println(F("[< rx] error code: ") + String(GH_DATA_1(rxBuf)));
-          errorFlash(k_ErrorRemote);
-        } else if (GH_CMD(rxBuf) != GH_CMD_TEMP_DEVS_RSP) {
-          Serial.println(F("[< rx] error, unexpected command"));
-          errorFlash(k_ErrorInvalid);
-        } else {
-          data->devs = GH_DATA_1(rxBuf);
-          Serial.println(F("[< rx] temp devs: ") + String(data->devs));
-        }
-
-        break;
-      } else {
-        Serial.println(F("[< rx] ignoring (address mismatch)"));
-      }
-    }
-    delay(1);  // prevent WDT reset
+bool tempDataOk(void* argV) {
+  TempDataCallbackArg* arg = (TempDataCallbackArg*)argV;
+  const uint8_t a = GH_DATA_1(rxBuf);
+  const uint8_t b = GH_DATA_2(rxBuf);
+  Serial.println(F("[< rx] float a=") + String(a) + F(" b=") + String(b));
+  if ((a != TEMP_UNKNOWN) && (b != TEMP_UNKNOWN)) {
+    arg->data->temps[arg->dev] = b * 16.0 + a / 16.0;
   }
-
-  if (!rx) {
-    Serial.println(F("[< rx] error, timeout"));
-    errorFlash(k_ErrorTimeout);
-  }
-
-  clear_shift(SR_PIN_LED_ERR);
-  clear_shift(SR_PIN_LED_RX);
-
-  return rx;
+  return true;
 }
 
 bool sendTempDataReq(int dev, TempData* data) {
-  data->temps[dev] = TEMP_UNKNOWN;
   Serial.println(F("[> tx] sending temp data req: ") + String(dev));
-
-  set(SR_PIN_EN_TX);
-  set(SR_PIN_LED_TX);
-  shift();
-  delay(TX_WAIT_DELAY);
-
-  GH_TO(txBuf) = GH_ADDR_NODE_1;
-  GH_FROM(txBuf) = GH_ADDR_MAIN;
-  GH_CMD(txBuf) = GH_CMD_TEMP_DATA_REQ;
-  GH_DATA_1(txBuf) = dev;
-
-  sequence = sequence % 256;
-  GH_SEQ(txBuf) = sequence;
-
-  driver.send(txBuf, GH_LENGTH);
-  driver.waitPacketSent();
-  printBuffer(F("[> tx] sent: "), txBuf, GH_LENGTH);
-
-  clear(SR_PIN_EN_TX);
-  clear(SR_PIN_LED_TX);
-  set(SR_PIN_LED_RX);
-  shift();
-
-  unsigned long start = millis();
-  bool rx = false;
-  while (millis() < (start + TIMEOUT)) {
-    uint8_t rxBufLen = GH_LENGTH;
-    if (driver.recv(rxBuf, &rxBufLen)) {
-      printBuffer(F("[< rx] got: "), rxBuf, GH_LENGTH);
-
-      if (GH_TO(rxBuf) == GH_ADDR_MAIN) {
-        rx = true;
-
-        if (GH_CMD(rxBuf) == GH_CMD_ERROR) {
-          Serial.println(F("[< rx] error code: ") + String(GH_DATA_1(rxBuf)));
-          errorFlash(k_ErrorRemote);
-        } else if (GH_CMD(rxBuf) != GH_CMD_TEMP_DATA_RSP) {
-          Serial.println(F("[< rx] error, unexpected command"));
-          errorFlash(k_ErrorInvalid);
-        } else {
-          const uint8_t a = GH_DATA_1(rxBuf);
-          const uint8_t b = GH_DATA_2(rxBuf);
-          Serial.println(F("[< rx] float a=") + String(a) + F(" b=") +
-                         String(b));
-
-          if ((a != TEMP_UNKNOWN) && (b != TEMP_UNKNOWN)) {
-            data->temps[dev] = b * 16.0 + a / 16.0;
-          }
-        }
-
-        break;
-      } else {
-        Serial.println(F("[< rx] ignoring (address mismatch)"));
-        // don't report an error, this is fine
-      }
-    }
-    delay(1);  // prevent WDT reset
-  }
-
-  if (!rx) {
-    Serial.println(F("[< rx] error, timeout"));
-    errorFlash(k_ErrorTimeout);
-  }
-
-  clear_shift(SR_PIN_LED_ERR);
-  clear_shift(SR_PIN_LED_RX);
-
-  return rx;
+  data->temps[dev] = TEMP_UNKNOWN;
+  SendDesc sd;
+  sd.to = GH_ADDR_NODE_1;
+  sd.cmd = GH_CMD_TEMP_DATA_REQ;
+  sd.expectCmd = GH_CMD_TEMP_DATA_RSP;
+  TempDataCallbackArg arg;
+  arg.dev = dev;
+  arg.data = data;
+  sd.okCallbackArg = &arg;
+  sd.okCallback = &tempDataOk;
+  return send(sd);
 }
 
 #endif  // TEMP_EN
@@ -535,65 +479,15 @@ bool motorReqRetry(byte dir, byte sec) {
 }
 
 bool sendMotorReq(byte dir, byte sec) {
-  set(SR_PIN_EN_TX);
-  set(SR_PIN_LED_TX);
-  shift();
-  delay(TX_WAIT_DELAY);
-
-  GH_TO(txBuf) = GH_ADDR_NODE_1;
-  GH_FROM(txBuf) = GH_ADDR_MAIN;
-  GH_CMD(txBuf) = GH_CMD_MOTOR_RUN;
-  GH_DATA_1(txBuf) = dir;
-  GH_DATA_2(txBuf) = sec;
-
-  sequence = sequence % 256;
-  GH_SEQ(txBuf) = sequence;
-
-  driver.send(txBuf, GH_LENGTH);
-  driver.waitPacketSent();
-  printBuffer(F("[> tx] sent: "), txBuf, GH_LENGTH);
-
-  clear(SR_PIN_EN_TX);
-  clear(SR_PIN_LED_TX);
-  set(SR_PIN_LED_RX);
-  shift();
-
-  unsigned long start = millis();
-  bool rx = false;
-  while (millis() < (start + TIMEOUT)) {
-    uint8_t rxBufLen = sizeof(rxBuf);
-    if (driver.recv(rxBuf, &rxBufLen)) {
-      printBuffer(F("[< rx] got: "), txBuf, GH_LENGTH);
-
-      if (GH_TO(rxBuf) == GH_ADDR_MAIN) {
-        rx = true;
-
-        if (GH_CMD(rxBuf) == GH_CMD_ERROR) {
-          Serial.println(F("[< rx] error code: ") + String(GH_DATA_1(rxBuf)));
-          errorFlash(k_ErrorRemote);
-        } else if (GH_CMD(rxBuf) != GH_CMD_ACK) {
-          Serial.println(F("[< rx] error, unexpected command"));
-          errorFlash(k_ErrorInvalid);
-        }
-
-        break;
-      } else {
-        Serial.println(F("[< rx] ignoring (address mismatch)"));
-        // don't report an error, this is fine
-      }
-    }
-    delay(1);  // prevent WDT reset
-  }
-
-  if (!rx) {
-    Serial.println(F("[< rx] error, timeout"));
-    errorFlash(k_ErrorTimeout);
-  }
-
-  clear_shift(SR_PIN_LED_ERR);
-  clear_shift(SR_PIN_LED_RX);
-
-  return rx;
+  Serial.println(F("[> tx] sending motor req: dir=") + String(dir) +
+                 F(" sec=") + String(sec));
+  SendDesc sd;
+  sd.to = GH_ADDR_NODE_1;
+  sd.cmd = GH_CMD_MOTOR_RUN;
+  sd.expectCmd = GH_CMD_ACK;
+  sd.data1 = dir;
+  sd.data2 = sec;
+  return send(sd);
 }
 
 #endif  // MOTOR_EN
