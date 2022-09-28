@@ -508,7 +508,7 @@ bool tempDataOk(void* argV) {
   const uint8_t a = GH_DATA_1(rxBuf);
   const uint8_t b = GH_DATA_2(rxBuf);
   Serial.println(F("[< rx] float a=") + String(a) + F(" b=") + String(b));
-  if ((a != TEMP_UNKNOWN) && (b != TEMP_UNKNOWN)) {
+  if (b != TEMP_UNKNOWN) {
     arg->data->temps[arg->dev] = b * 16.0 + a / 16.0;
   }
   return true;
