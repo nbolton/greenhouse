@@ -16,17 +16,16 @@
 
 #define GH_ADDR GH_ADDR_NODE_1  // unique to device
 
-#define TX_WAIT 1
-#define TX_WAIT_DELAY 10
 #define TX_BIT_RATE 2000
-#define ERROR_DELAY 1000
+#define TX_WAIT_DELAY 10
+#define ERROR_DELAY 500
 
 RH_ASK driver(TX_BIT_RATE, PIN_RX, PIN_TX, PIN_TX_EN);
 uint8_t rxBuf[GH_LENGTH];
 uint8_t txBuf[GH_LENGTH];
 byte sequence = 0;
 
-void handle();
+bool handleRx();
 
 void radio_init() {
   if (!driver.init()) {
@@ -62,37 +61,21 @@ void radio_loop() {
 
   uint8_t rxBufLen = GH_LENGTH;
   if (driver.recv(rxBuf, &rxBufLen)) {
-    
-    // match to address to us
     if (GH_TO(rxBuf) == GH_ADDR) {
-        
       GH_TO(txBuf) = GH_FROM(rxBuf);
       GH_FROM(txBuf) = GH_ADDR;
       GH_SEQ(txBuf) = GH_SEQ(rxBuf);
 
-      // prevent duplicate messages
-      if (GH_SEQ(rxBuf) != sequence) {
+      // by default, send commnad back to say what we're replying to.
+      GH_CMD(txBuf) = GH_CMD_ACK;
+      GH_DATA_1(txBuf) = GH_CMD(rxBuf);
 
-        // by default, send commnad back to say what we're replying to.
-        GH_CMD(txBuf) = GH_CMD_ACK;
-        GH_DATA_1(txBuf) = GH_CMD(rxBuf);
-
-        handle();
-
-        leds(0, 0, 0);
-      }
-      else {
-        GH_CMD(txBuf) = GH_CMD_ERROR;
-        GH_DATA_1(txBuf) = GH_ERROR_BAD_SEQ;
-        
+      if (!handleRx()) {
         leds(0, 1, 1);
         delay(ERROR_DELAY);
       }
 
-#if TX_WAIT
       delay(TX_WAIT_DELAY);
-#endif  // TX_WAIT
-
       leds(1, 0, 0);
 
       driver.send(txBuf, GH_LENGTH);
@@ -105,7 +88,17 @@ void radio_loop() {
 #endif  // TX_TEST
 }
 
-void handle() {
+bool isDupeRx() {
+  // prevent duplicate messages, only in some cases.
+  if (GH_SEQ(rxBuf) == sequence) {
+    GH_CMD(txBuf) = GH_CMD_ERROR;
+    GH_DATA_1(txBuf) = GH_ERROR_BAD_SEQ;
+    return true;
+  }
+  return false;
+}
+
+bool handleRx() {
   switch (GH_CMD(rxBuf)) {
 #if HELLO_EN
     case GH_CMD_HELLO: {
@@ -140,6 +133,9 @@ void handle() {
 #if MOTOR_EN
 
     case GH_CMD_MOTOR_RUN: {
+      if (isDupeRx()) {
+        return false;
+      }
       if (!motor_run(GH_DATA_1(rxBuf), GH_DATA_2(rxBuf))) {
         GH_CMD(txBuf) = GH_CMD_ERROR;
         GH_DATA_1(txBuf) = GH_ERROR_BAD_MOTOR_CMD;
@@ -152,8 +148,12 @@ void handle() {
       GH_CMD(txBuf) = GH_CMD_ERROR;
       GH_DATA_1(txBuf) = GH_ERROR_BAD_CMD;
       GH_DATA_2(txBuf) = GH_CMD(rxBuf);
-    } break;
+      return false;
+    };
   }
+
+  // all good if we get here
+  return true;
 }
 
 #endif  // RADIO_EN
