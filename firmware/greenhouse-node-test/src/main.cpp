@@ -73,6 +73,7 @@ int stateMachine = 0;
 int errors = 0;
 bool autoTest = true;
 int motorSpeed = 255 / 2;
+int requests = 0;
 
 bool send(SendDesc& sendDesc);
 bool sendHelloReq(bool* p_ackOk);
@@ -265,7 +266,13 @@ void loop() {
 
     if (check) {
       Serial.println(ok ? F("request ok") : F("request failed"));
-      Serial.println(F("total errors: ") + String(errors));
+      float errorPercent = 0;
+      if (errors > 0) {
+        errorPercent = ((float)errors / (float)requests) * 100;
+      }
+      Serial.println(F("requests: ") + String(requests));
+      Serial.println(F("errors: ") + String(errors) + F(" (") +
+                     String(errorPercent, 2) + F("%)"));
       Serial.println(F("----"));
     }
   }
@@ -306,6 +313,8 @@ void incrementSeq() {
 }
 
 bool send(SendDesc& sendDesc) {
+  requests++;
+
   set(SR_PIN_EN_TX);
   set(SR_PIN_LED_TX);
   shift();
