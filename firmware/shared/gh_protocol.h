@@ -15,20 +15,23 @@
 #define GH_CMD_MOTOR_RUN 0x21      // motor run (d1: direction, d2: time)
 
 #define GH_ERROR_BAD_CMD 0x01        // invalid command
+#define GH_ERROR_BAD_SEQ 0x02        // duplicate sequence
 #define GH_ERROR_BAD_MOTOR_CMD 0x10  // invalid motor command
 
 #define GH_MOTOR_FORWARD 0x01
 #define GH_MOTOR_REVERSE 0x02
 
-// 5-byte datagram
-// 0 = to
-// 1 = from
+// 6-byte datagram
+// 0 = to address
+// 1 = from address
 // 2 = command
-// 3 = data 1
-// 4 = data 2
-#define GH_LENGTH 5
+// 3 = sequence (detect duplicates)
+// 4 = data 1
+// 5 = data 2
+#define GH_LENGTH 6
 #define GH_TO(buf) buf[0]
 #define GH_FROM(buf) buf[1]
 #define GH_CMD(buf) buf[2]
-#define GH_DATA_1(buf) buf[3]
-#define GH_DATA_2(buf) buf[4]
+#define GH_SEQ(buf) buf[3]
+#define GH_DATA_1(buf) buf[4]
+#define GH_DATA_2(buf) buf[5]
