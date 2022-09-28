@@ -100,10 +100,13 @@ bool isDupeRx() {
 
 bool handleRx() {
   switch (GH_CMD(rxBuf)) {
+    
 #if HELLO_EN
+
     case GH_CMD_HELLO: {
       // nothing to do; ack is the default.
     } break;
+
 #endif  // HELLO_EN
 
 #if TEMP_EN
