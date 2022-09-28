@@ -343,7 +343,9 @@ bool tempReqRetry() {
     for (int dev = 0; dev < tempData.devs; dev++) {
       for (int retry = 0; retry < TX_RETRY_MAX; retry++) {
         if (sendTempDataReq(dev, &tempData)) {
-          break;
+          if (tempData.temps[dev] != TEMP_UNKNOWN) {
+            break;
+          }
         }
         Serial.println(F("[< rx] retry temp data req"));
       }
