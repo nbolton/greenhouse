@@ -17,12 +17,14 @@
 #define GH_ADDR GH_ADDR_NODE_1  // unique to device
 
 #define TX_WAIT 1
-#define TX_WAIT_DELAY 20
+#define TX_WAIT_DELAY 10
 #define TX_BIT_RATE 2000
+#define ERROR_DELAY 1000
 
 RH_ASK driver(TX_BIT_RATE, PIN_RX, PIN_TX, PIN_TX_EN);
 uint8_t rxBuf[GH_LENGTH];
 uint8_t txBuf[GH_LENGTH];
+byte sequence = 0;
 
 void handle();
 
@@ -60,10 +62,43 @@ void radio_loop() {
 
   uint8_t rxBufLen = GH_LENGTH;
   if (driver.recv(rxBuf, &rxBufLen)) {
+    
+    // match to address to us
     if (GH_TO(rxBuf) == GH_ADDR) {
-      handle();
-    } else {
-      leds(0, 1, 1);
+        
+      GH_TO(txBuf) = GH_FROM(rxBuf);
+      GH_FROM(txBuf) = GH_ADDR;
+      GH_SEQ(txBuf) = GH_SEQ(rxBuf);
+
+      // prevent duplicate messages
+      if (GH_SEQ(rxBuf) != sequence) {
+
+        // by default, send commnad back to say what we're replying to.
+        GH_CMD(txBuf) = GH_CMD_ACK;
+        GH_DATA_1(txBuf) = GH_CMD(rxBuf);
+
+        handle();
+
+        leds(0, 0, 0);
+      }
+      else {
+        GH_CMD(txBuf) = GH_CMD_ERROR;
+        GH_DATA_1(txBuf) = GH_ERROR_BAD_SEQ;
+        
+        leds(0, 1, 1);
+        delay(ERROR_DELAY);
+      }
+
+#if TX_WAIT
+      delay(TX_WAIT_DELAY);
+#endif  // TX_WAIT
+
+      leds(1, 0, 0);
+
+      driver.send(txBuf, GH_LENGTH);
+      driver.waitPacketSent();
+
+      sequence = GH_SEQ(rxBuf);
     }
   }
 
@@ -71,17 +106,10 @@ void radio_loop() {
 }
 
 void handle() {
-  GH_TO(txBuf) = GH_FROM(rxBuf);
-  GH_FROM(txBuf) = GH_ADDR;
-  GH_CMD(txBuf) = GH_CMD_ACK;
-  GH_DATA_1(txBuf) = GH_CMD(rxBuf);
-
   switch (GH_CMD(rxBuf)) {
 #if HELLO_EN
     case GH_CMD_HELLO: {
-      // send commnad back to say what we're replying to,
-      // and send the same number back so sequence can be checked.
-      GH_DATA_2(txBuf) = GH_DATA_1(rxBuf);
+      // do nothing; seq already set.
     } break;
 #endif  // HELLO_EN
 
@@ -126,16 +154,6 @@ void handle() {
       GH_DATA_2(txBuf) = GH_CMD(rxBuf);
     } break;
   }
-
-#if TX_WAIT
-  leds(0, 0, 0);
-  delay(TX_WAIT_DELAY);
-#endif  // TX_WAIT
-
-  leds(1, 0, 0);
-
-  driver.send(txBuf, GH_LENGTH);
-  driver.waitPacketSent();
 }
 
 #endif  // RADIO_EN

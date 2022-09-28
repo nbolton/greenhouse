@@ -1,16 +1,12 @@
 #include "sr.h"
 
-#include "attiny.h"
-#include "pins.h"
+#include <Arduino.h>
 
-#if SR_EN
+#include "pins.h"
 
 static int data = 0;
 
 void sr_init() {
-  digitalWrite(PIN_SR_OE, LOW);
-
-  pinMode(PIN_SR_OE, OUTPUT);
   pinMode(PIN_SR_LATCH, OUTPUT);
   pinMode(PIN_SR_CLOCK, OUTPUT);
   pinMode(PIN_SR_DATA, OUTPUT);
@@ -26,12 +22,12 @@ void set(int pin) { bitSet(data, pin); }
 
 void clear(int pin) { bitClear(data, pin); }
 
-#else
+void set_shift(int pin) {
+  set(pin);
+  shift();
+}
 
-void shift() {}
-
-void set(int pin) {}
-
-void clear(int pin) {}
-
-#endif
+void clear_shift(int pin) {
+  clear(pin);
+  shift();
+}
