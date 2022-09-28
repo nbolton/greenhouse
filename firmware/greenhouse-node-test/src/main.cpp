@@ -530,6 +530,7 @@ bool sendTempDataReq(int dev, TempData* data) {
   sd.to = GH_ADDR_NODE_1;
   sd.cmd = GH_CMD_TEMP_DATA_REQ;
   sd.expectCmd = GH_CMD_TEMP_DATA_RSP;
+  sd.data1 = dev;
   TempDataCallbackArg arg;
   arg.dev = dev;
   arg.data = data;
