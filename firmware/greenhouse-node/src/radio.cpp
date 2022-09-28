@@ -17,7 +17,7 @@
 #define GH_ADDR GH_ADDR_NODE_1  // unique to device
 
 #define TX_BIT_RATE 2000
-#define TX_WAIT_DELAY 10
+#define TX_WAIT_DELAY 20
 #define ERROR_DELAY 500
 
 RH_ASK driver(TX_BIT_RATE, PIN_RX, PIN_TX, PIN_TX_EN);

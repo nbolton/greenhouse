@@ -14,7 +14,7 @@
 #define MOTOR_EN 1
 
 #define TX_BIT_RATE 2000
-#define TX_WAIT_DELAY 10
+#define TX_WAIT_DELAY 20
 #define TX_RETRY_MAX 5
 
 #define RX_TIMEOUT 2000
