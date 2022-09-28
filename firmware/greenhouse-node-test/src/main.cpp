@@ -53,8 +53,10 @@ uint8_t sequence = 1;  // start at 1; reciever starts at 0
 int cmd = 0;
 int errors = 0;
 
-bool sendHelloReq();
-bool sendTempReq(TempData* data);
+bool sendHelloReq(bool *p_ackOk);
+bool helloReqRetry();
+bool sendTempDevsReq(TempData* data);
+bool sendTempDataReq(int dev, TempData* data);
 bool tempReqRetry();
 bool sendMotorReq(byte dir, byte sec);
 bool motorReqRetry(byte dir, byte sec);
@@ -62,9 +64,6 @@ void errorFlash(ErrorType type);
 void printBuffer(const __FlashStringHelper* prompt, const uint8_t* buf,
                  uint8_t len);
 void incrementSeq();
-bool helloReqRetry();
-bool sendTempDevsReq(TempData* data);
-bool sendTempDataReq(int dev, TempData* data);
 
 void setup() {
   Serial.begin(9600);
@@ -224,21 +223,28 @@ void loop() {
 
 bool helloReqRetry() {
   Serial.println(F("saying hello"));
-  bool helloBack = false;
+  bool rxOk = false;
+  bool ackOk = false;
+
   while (true) {
-    helloBack = sendHelloReq();
-    if (helloBack) {
-      Serial.println(F("got hello back"));
+    rxOk = sendHelloReq(&ackOk);
+    if (rxOk) {
+      if (ackOk) {
+        Serial.println(F("got hello back"));
+      }
+      else {
+        Serial.println(F("got something else back"));
+      }
       break;
     } else {
       Serial.println(F("retry hello req"));
     }
   }
   incrementSeq();
-  return helloBack;
+  return rxOk && ackOk;
 }
 
-bool sendHelloReq() {
+bool sendHelloReq(bool *p_ackOk) {
   Serial.println(F("[> tx] sending hello req"));
 
   set(SR_PIN_EN_TX);
@@ -279,7 +285,6 @@ bool sendHelloReq() {
           Serial.println(F("[< rx] error, invalid command"));
           errorFlash(k_ErrorInvalid);
         } else {
-          rx = true;
           const int rxSeq = GH_SEQ(rxBuf);
           if (rxSeq != sequence) {
             Serial.println(F("[< rx] error, invalid ack: ") + String(rxSeq) +
@@ -305,7 +310,8 @@ bool sendHelloReq() {
   clear_shift(SR_PIN_LED_ERR);
   clear_shift(SR_PIN_LED_RX);
 
-  return ackOk;
+  *p_ackOk = ackOk;
+  return rx;
 }
 
 #endif  // HELLO_EN
