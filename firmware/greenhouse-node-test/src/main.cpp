@@ -247,12 +247,14 @@ void loop() {
       case 2: {
         Serial.println(F("motor forward"));
         ok = motorRunReqRetry(GH_MOTOR_FORWARD, MOTOR_RUNTIME);
+        Serial.println(F("waiting"));
         delay(MOTOR_DELAY);
       } break;
 
       case 3: {
         Serial.println(F("motor reverse"));
         ok = motorRunReqRetry(GH_MOTOR_REVERSE, MOTOR_RUNTIME);
+        Serial.println(F("waiting"));
         delay(MOTOR_DELAY);
       } break;
 
@@ -474,7 +476,6 @@ bool tempReqRetry() {
 
     if (tempData.devs == 0) {
       Serial.println(F("[< rx] no temp devs"));
-      errorFlash(k_ErrorInvalid);
     } else {
       for (int i = 0; i < tempData.devs; i++) {
         float temp = tempData.temps[i];
