@@ -6,7 +6,7 @@
 #include "ISystem.h"
 #include "MultiShiftRegister.h"
 #include "common.h"
-#include "ho_config.h"
+#include "gh_config.h"
 
 #include <Adafruit_SHT31.h>
 #include <Arduino.h>

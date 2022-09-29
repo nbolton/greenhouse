@@ -1,6 +1,6 @@
 #include "../embedded/Log.h"
 
-#include "ho_config.h"
+#include "gh_config.h"
 
 #include <cstdarg>
 #include <Arduino.h>
