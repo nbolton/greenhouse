@@ -1,3 +1,5 @@
+#if RADIO_EN
+
 #include "Radio.h"
 
 #include "ISystem.h"
@@ -260,3 +262,5 @@ void Radio::rx()
 
 } // namespace greenhouse
 } // namespace embedded
+
+#endif // RADIO_EN

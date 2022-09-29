@@ -1,3 +1,5 @@
+#if RADIO_EN
+
 #pragma once
 
 #include "../Log.h"
@@ -42,3 +44,5 @@ private:
 
 } // namespace greenhouse
 } // namespace embedded
+
+#endif // RADIO_EN
