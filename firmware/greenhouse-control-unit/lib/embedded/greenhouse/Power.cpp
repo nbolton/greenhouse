@@ -9,8 +9,8 @@ using namespace common;
 namespace embedded {
 namespace greenhouse {
 
-const int k_commonVoltageMin = 10;
-const int k_psuVoltageMin = 10;
+const float k_commonVoltageMin = 9.5;
+const float k_psuVoltageMin = 11.5;
 const float k_commonVoltageMapIn = 2.10;
 const float k_commonVoltageMapOut = 12.0;
 const float k_psuVoltageMapIn = 2.10;
