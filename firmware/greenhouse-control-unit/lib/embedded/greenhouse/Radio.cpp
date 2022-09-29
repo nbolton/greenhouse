@@ -180,7 +180,10 @@ void Radio::rx()
   uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
   uint8_t buflen = sizeof(buf);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   if (s_driver.recv(buf, &buflen)) // Non-blocking
+#pragma GCC diagnostic pop
   {
     rxStart = millis();
 
