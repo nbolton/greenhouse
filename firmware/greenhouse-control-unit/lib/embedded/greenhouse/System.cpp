@@ -142,7 +142,8 @@ System::System() :
   m_lastBlynkFailure(0),
   m_shiftRegisterEnabled(true),
   m_refreshRate(k_unknown),
-  m_queueOnSystemStarted(false)
+  m_queueOnSystemStarted(false),
+  m_lastLoop(0)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -211,6 +212,11 @@ void System::Loop()
     return;
   }
 #endif
+
+  if (millis() < (m_lastLoop + k_loopDelay)) {
+    return;
+  }
+  m_lastLoop = millis();
 
   // always run before actuator check
   ng::System::Loop();
@@ -299,11 +305,6 @@ void System::Loop()
     m_queueOnSystemStarted = false;
     OnSystemStarted();
   }
-
-#ifdef LOOP_DELAY
-  // slow loop down to save power
-  Delay(k_loopDelay, "Loop");
-#endif
 }
 
 void System::InitShiftRegisters()

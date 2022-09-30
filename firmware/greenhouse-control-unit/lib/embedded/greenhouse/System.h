@@ -144,6 +144,7 @@ private:
   int m_refreshRate;
   std::queue<Callback> m_callbackQueue;
   bool m_queueOnSystemStarted;
+  unsigned long m_lastLoop;
 #if RADIO_EN
   Radio m_radio;
 #endif //RADIO_EN
