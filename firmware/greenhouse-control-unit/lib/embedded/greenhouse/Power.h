@@ -42,7 +42,7 @@ public:
   native::greenhouse::ISystem &Native() const;
   void Native(native::greenhouse::ISystem &value) { m_native = &value; }
   float ReadCommonVoltage();
-  float ReadPsuVoltage();
+  //float ReadPsuVoltage();
 
 private:
   void SwitchPower(bool pv);
@@ -69,6 +69,8 @@ private:
   float m_pvCurrentSensorMax;
   float m_pvCurrentOutputMin;
   float m_pvCurrentOutputMax;
+  float m_lastCommonVoltage;
+  //float m_lastPsuVoltage;
   PvModes m_pvMode;
 };
 

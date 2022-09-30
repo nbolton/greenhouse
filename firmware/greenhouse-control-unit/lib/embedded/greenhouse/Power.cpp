@@ -9,12 +9,16 @@ using namespace common;
 namespace embedded {
 namespace greenhouse {
 
+#define VOLTAGE_DIFF_DELTA .1f
+
 const float k_commonVoltageMin = 9.5;
-const float k_psuVoltageMin = 11.5;
 const float k_commonVoltageMapIn = 2.10;
 const float k_commonVoltageMapOut = 12.0;
+#if 0
+const float k_psuVoltageMin = 9.5;
 const float k_psuVoltageMapIn = 2.10;
 const float k_psuVoltageMapOut = 12.0;
+#endif
 const int k_switchDelay = 1000;  // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
@@ -46,6 +50,8 @@ Power::Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin) 
   m_pvCurrentSensorMax(k_unknown),
   m_pvCurrentOutputMin(0),
   m_pvCurrentOutputMax(k_unknown),
+  m_lastCommonVoltage(k_unknown),
+  //m_lastPsuVoltage(k_unknown),
   m_pvMode(PvModes::k_pvAuto)
 {
 }
@@ -62,21 +68,34 @@ void Power::Setup()
 void Power::Loop()
 {
   MeasureVoltage();
+  
   float commonVoltage = ReadCommonVoltage();
+  if (abs(m_lastCommonVoltage - commonVoltage) > VOLTAGE_DIFF_DELTA) {
+    TRACE_F("Local voltage changed: %.2fV", commonVoltage);
+  }
+  m_lastCommonVoltage = commonVoltage;
+  
+  #if 0
+  float psuVoltage = ReadPsuVoltage();
+  if (abs(m_lastPsuVoltage - psuVoltage) > VOLTAGE_DIFF_DELTA) {
+    TRACE_F("PSU voltage changed: %.2fV", psuVoltage);
+  }
+  m_lastPsuVoltage = psuVoltage;
+  #endif
 
   if (commonVoltage <= k_commonVoltageMin) {
     if (m_pvPowerSource) {
-      Native().ReportWarning("Common voltage drop detected: %.2fV", commonVoltage);
+      Native().ReportWarning("Local voltage drop detected: %.2fV", commonVoltage);
       SwitchPower(false);
     }
   }
   else if (PvMode() != PvModes::k_pvAuto) {
     if (!m_pvPowerSource && (PvMode() == PvModes::k_pvOn)) {
-      Native().ReportWarning("PV mode is manual (PV on)");
+      Native().ReportWarning("Battery mode is manual (battery on)");
       SwitchPower(true);
     }
     else if (m_pvPowerSource && (PvMode() == PvModes::k_pvOff)) {
-      Native().ReportWarning("PV mode is manual (PV off)");
+      Native().ReportWarning("Battery mode is manual (battery off)");
       SwitchPower(false);
     }
   }
@@ -85,13 +104,13 @@ void Power::Loop()
     if (
       !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
       (m_pvVoltageOutput >= m_pvVoltageSwitchOn)) {
-      TRACE("Switching PV on automatically (PSU off)");
+      TRACE("Switching to battery automatically (PSU off)");
       SwitchPower(true);
     }
     else if (
       m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
       (m_pvVoltageOutput <= m_pvVoltageSwitchOff)) {
-      TRACE("Switching PSU on automatically (PV off)");
+      TRACE("Switching PSU on automatically (battery off)");
       SwitchPower(false);
     }
   }
@@ -120,32 +139,34 @@ void Power::InitPowerSource()
   const float sensorMin = m_pvVoltageSwitchOff;
 
   MeasureVoltage();
-  float commonVoltage = ReadCommonVoltage();
-  float psuVoltage = ReadPsuVoltage();
+  m_lastCommonVoltage = ReadCommonVoltage();
+  //m_lastPsuVoltage = ReadPsuVoltage();
   TRACE_F(
-    "Init power source, common=%.2fV, psu=%.2fV, pv=%.2fV, min=%.2fV",
-    commonVoltage,
-    psuVoltage,
+    "Init power source, common=%.2fV, psu=%.2fV, battery=%.2fV, min=%.2fV",
+    m_lastCommonVoltage,
+    //m_lastPsuVoltage,
+    m_lastCommonVoltage,
     m_pvVoltageOutput,
     sensorMin);
 
   bool pvSensorAboveMin = m_pvVoltageOutput >= sensorMin;
-  bool commonAboveMin = commonVoltage >= k_commonVoltageMin;
-  bool psuAboveMin = psuVoltage >= k_psuVoltageMin;
+  bool commonAboveMin = m_lastCommonVoltage >= k_commonVoltageMin;
+  //bool psuAboveMin = m_lastPsuVoltage >= k_psuVoltageMin;
+  bool psuAboveMin = true;
 
   if ((m_pvVoltageSwitchOn != k_unknown) && pvSensorAboveMin && commonAboveMin) {
 
-    TRACE("Using PV on start (onboard voltage and PV above min)");
+    TRACE("Using battery on start (onboard voltage and battery above min)");
     SwitchPower(true);
   }
   else if (psuAboveMin) {
 
     if (!pvSensorAboveMin) {
-      TRACE("PV voltage is below min");
+      TRACE("Battery voltage is below min");
     }
 
     if (!commonAboveMin) {
-      TRACE("Common voltage is below min");
+      TRACE("Local voltage is below min");
     }
 
     TRACE("Using PSU on start");
@@ -203,10 +224,10 @@ void Power::SwitchPower(bool pv)
   Embedded().Delay(k_switchDelay, "Relay");
 
   if (!pv) {
-    TRACE("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)");
+    TRACE("PSU AC NC relay closed (PSU on), battery NC relay open (battery off)");
   }
   else {
-    TRACE("PV NC relay closed (battery on), PSU AC NC relay open (PSU off)");
+    TRACE("Battery NC relay closed (battery on), PSU AC NC relay open (PSU off)");
   }
 
   // false = closed (on the NC relay)
@@ -217,7 +238,7 @@ void Power::SwitchPower(bool pv)
   Embedded().ShiftRegister(m_batteryLedPin, pv);
 
   m_pvPowerSource = pv;
-  TRACE_F("Source: %s", pv ? "PV" : "PSU");
+  TRACE_F("Source: %s", pv ? "Battery" : "PSU");
   Embedded().OnPowerSwitch();
 }
 
@@ -230,6 +251,7 @@ float Power::ReadCommonVoltage()
   return mapFloat(f, 0, k_commonVoltageMapIn, 0, k_commonVoltageMapOut);
 }
 
+#if 0
 float Power::ReadPsuVoltage()
 {
   float f = Embedded().ReadPsuVoltageSensor();
@@ -238,6 +260,7 @@ float Power::ReadPsuVoltage()
   }
   return mapFloat(f, 0, k_psuVoltageMapIn, 0, k_psuVoltageMapOut);
 }
+#endif
 
 // free function definitions
 
