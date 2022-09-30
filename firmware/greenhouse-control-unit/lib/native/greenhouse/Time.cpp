@@ -25,7 +25,7 @@ void Time::CheckTransition()
 {
   // if time unknown, we can't do anything.
   if (EpochTime() == k_unknownUL) {
-    Log().Trace("Epoch unknown, can't check time transition");
+    TRACE("Epoch unknown, can't check time transition");
     return;
   }
 
@@ -42,7 +42,7 @@ void Time::CheckTransition()
 
   // HACK: cast to int to print -1 (%lld doesn't seem to print -1).
   // this is a bad idea, and will break in 2038.
-  Log().Trace(
+  TRACE_F(
     "Now %s, checking for %s transition, now=%d, last=%d",
     daytime ? "daytime" : "nighttime",
     daytime ? "night to day" : "day to night",
@@ -50,7 +50,7 @@ void Time::CheckTransition()
     static_cast<int>(last));
 
   if (last == k_unknownUL) {
-    Log().Trace("Last transition not known, assume it never happened");
+    TRACE("Last transition not known, assume it never happened");
     Transition(IsDaytime());
     return;
   }
@@ -63,7 +63,7 @@ void Time::CheckTransition()
   int nowYear = ptm->tm_year;
   int nowHour = ptm->tm_hour;
 
-  Log().Trace(
+  TRACE_F(
     "Current time, hour=%d, day=%d, month=%d, year=%d", nowHour, nowDay, nowMonth, nowYear);
 
   ptm = gmtime(&last);
@@ -72,51 +72,51 @@ void Time::CheckTransition()
   int lastYear = ptm->tm_year;
   int lastHour = ptm->tm_hour;
 
-  Log().Trace(
+  TRACE_F(
     "Last transition, hour=%d, day=%d, month=%d, year=%d", lastHour, lastDay, lastMonth, lastYear);
 
   const int fullDay = (3600 * 24); // 24h
   if ((now - last) > fullDay) {
 
-    Log().Trace("Transition is overdue (24 hours have passed since last)");
+    TRACE("Transition is overdue (24 hours have passed since last)");
     Transition(IsDaytime());
     return;
   }
 
   // if last transition didn't happen within this exact hour time frame
   if ((nowHour != lastHour) || (nowDay != lastDay) || (nowMonth != lastMonth) || (nowYear != lastYear)) {
-    Log().Trace("Last transition didn't happen in current hour");
+    TRACE("Last transition didn't happen in current hour");
 
     if (DayStartHour() == nowHour) {
-      Log().Trace("Start of day hour; night to day transition should happen");
+      TRACE("Start of day hour; night to day transition should happen");
       Transition(IsDaytime());
       return;
     }
     else if (DayEndHour() == nowHour) {
-      Log().Trace("End of day hour; day to night transition should happen");
+      TRACE("End of day hour; day to night transition should happen");
       Transition(IsDaytime());
       return;
     }
     else {
-      Log().Trace("Current hour is not a transition hour");
+      TRACE("Current hour is not a transition hour");
     }
   }
   else {
-    Log().Trace("Transition already happened in current hour");
+    TRACE("Transition already happened in current hour");
   }
 
-  Log().Trace("No time transition happened (no transition conditions met)");
+  TRACE("No time transition happened (no transition conditions met)");
 }
 
 void Time::Transition(bool nightToDay)
 {
   if (nightToDay) {
-    Log().Trace("Transitioning from night to day");
+    TRACE("Transitioning from night to day");
     NightToDayTransitionTime(EpochTime());
     OnNightToDayTransition();
   }
   else {
-    Log().Trace("Transitioning from day to night");
+    TRACE("Transitioning from day to night");
     DayToNightTransitionTime(EpochTime());
     OnDayToNightTransition();
   }

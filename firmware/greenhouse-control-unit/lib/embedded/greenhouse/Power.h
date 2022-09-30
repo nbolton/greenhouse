@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../native/greenhouse/ISystem.h"
-#include "../Log.h"
+#include "../../common/log.h"
 #include "ISystem.h"
 
 namespace embedded {
@@ -12,7 +12,6 @@ enum PvModes { k_pvAuto, k_pvOn, k_pvOff };
 class Power {
 public:
   Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin);
-  const embedded::Log &Log() const { return m_log; }
   void Setup();
   void Loop();
   void InitPowerSource();
@@ -51,7 +50,6 @@ private:
 private:
   embedded::greenhouse::ISystem *m_embedded;
   native::greenhouse::ISystem *m_native;
-  embedded::Log m_log;
   int m_psuRelayPin;
   int m_pvRelayPin;
   int m_batteryLedPin;

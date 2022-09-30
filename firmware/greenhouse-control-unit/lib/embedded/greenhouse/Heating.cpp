@@ -1,5 +1,7 @@
 #include "Heating.h"
 
+#include <Arduino.h>
+
 namespace embedded {
 namespace greenhouse {
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ISystem.h"
-#include "Log.h"
+#include "../../common/log.h"
 
 #include <stdexcept>
 
@@ -13,7 +13,6 @@ class Heating {
 public:
   Heating();
   void Update();
-  const common::Log &Log() const { return m_log; }
   void HandleNightToDayTransition();
   void HandleDayToNightTransition();
 
@@ -65,7 +64,7 @@ public:
   // getters & setters
   virtual ISystem &System() const {
     if (m_system == nullptr) {
-      Log().Trace("System not set");
+      TRACE("System not set");
       throw std::runtime_error("System not set");
     }
     return *m_system;
@@ -73,7 +72,6 @@ public:
   void System(ISystem &value) { m_system = &value; }
 
 private:
-  common::Log m_log;
   ISystem *m_system;
   bool m_enabled;
   float m_dayWaterTemperature;

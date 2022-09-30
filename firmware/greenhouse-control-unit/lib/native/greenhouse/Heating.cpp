@@ -1,6 +1,6 @@
 #include "Heating.h"
 
-#include "../common/Log.h"
+#include "../common/log.h"
 #include "../common/common.h"
 
 using namespace common;
@@ -18,8 +18,8 @@ const float k_waterHeaterPowerUse = 3.4;                            // kW
 const float k_waterHeaterCostPerKwh = .20f * k_waterHeaterPowerUse; // 20p/kWh
 
 Heating::Heating() :
-  m_enabled(true),
   m_system(nullptr),
+  m_enabled(true),
   m_dayWaterTemperature(k_unknown),
   m_nightWaterTemperature(k_unknown),
   m_daySoilTemperature(k_unknown),
@@ -55,7 +55,7 @@ bool Heating::SwitchWaterHeater(bool on)
     }
 
     if ((runtime > 0) && (runtime >= limit)) {
-      Log().Trace("Blocking water heating switch on, runtime=%.2fm, limit=%dm", runtime, limit);
+      TRACE_F("Blocking water heating switch on, runtime=%.2fm, limit=%dm", runtime, limit);
       return false;
     }
   }
@@ -108,7 +108,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
   bool soilDeltaInBounds = (waterTemp >= soilTemp + k_waterSoilDeltaMin);
   bool airDeltaInBounds = (waterTemp >= airTemp + k_waterAirDeltaMin);
 
-  Log().Trace(
+  TRACE_F(
     "Water heater deltas in bounds, soil=%s, air=%s",
     soilDeltaInBounds ? "true" : "false",
     airDeltaInBounds ? "true" : "false");
@@ -119,7 +119,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
   if (soilTemp != k_unknown) {
     if (soilTemp < (soilTarget - k_soilTempMargin)) {
 
-      Log().Trace("Soil temp below");
+      TRACE("Soil temp below");
       soilHeatingRequired = true;
 
       if (soilDeltaInBounds) {
@@ -131,7 +131,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
     }
     else if (soilTemp > (soilTarget + k_soilTempMargin)) {
 
-      Log().Trace("Soil temp above");
+      TRACE("Soil temp above");
       soilHeatingRequired = false;
 
       SwitchSoilHeating(false);
@@ -141,7 +141,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
   if (airTemp != k_unknown) {
     if (airTemp < (airTarget - k_airTempMargin)) {
 
-      Log().Trace("Air temp below");
+      TRACE("Air temp below");
       airHeatingRequired = true;
 
       if (airDeltaInBounds) {
@@ -156,7 +156,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
     }
     else if (airTemp > (airTarget + k_airTempMargin)) {
 
-      Log().Trace("Air temp above");
+      TRACE("Air temp above");
       airHeatingRequired = false;
 
       SwitchAirHeating(false);
@@ -196,12 +196,12 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
 void Heating::Update()
 {
   if (System().Time().CurrentHour() == k_unknown) {
-    Log().Trace("Unable to update heating, time unknown");
+    TRACE("Unable to update heating, time unknown");
     return;
   }
 
   if (!Enabled()) {
-    Log().Trace("Unable to update heating, it is disabled");
+    TRACE("Unable to update heating, it is disabled");
     if (AirHeatingIsOn()) {
       SwitchAirHeating(false);
     }
@@ -218,7 +218,7 @@ void Heating::Update()
   }
 
   bool daytime = System().Time().IsDaytime();
-  Log().Trace(
+  TRACE_F(
     "Update heating systems, hour=%d, period=%s",
     System().Time().CurrentHour(),
     daytime ? "day" : "night");
@@ -241,7 +241,7 @@ void Heating::Update()
     runtime += (float)addSeconds / 60;
     m_waterHeaterCostCumulative += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
 
-    Log().Trace(
+    TRACE_F(
       "Advanced water heating runtime, add=%ds, day=%.2fm, night=%.2fm, cost=£%.2f",
       addSeconds,
       WaterHeaterDayRuntimeMinutes(),
@@ -249,7 +249,7 @@ void Heating::Update()
       WaterHeaterCostCumulative());
 
     if (runtime >= limit) {
-      Log().Trace(
+      TRACE_F(
         "Water heater %s runtime limit reached (%dm), switching off",
         daytime ? "day" : "night",
         limit);
@@ -268,11 +268,11 @@ void Heating::Update()
 
   // heat water to different temperature depending on if day or night
   if (daytime) {
-    Log().Trace("Daytime heating mode");
+    TRACE("Daytime heating mode");
     UpdatePeriod(DayWaterTemperature(), DaySoilTemperature(), DayAirTemperature());
   }
   else {
-    Log().Trace("Nighttime heating mode");
+    TRACE("Nighttime heating mode");
     UpdatePeriod(NightWaterTemperature(), NightSoilTemperature(), NightAirTemperature());
   }
   
@@ -285,7 +285,7 @@ void Heating::HandleNightToDayTransition()
   WaterHeaterCostCumulative(0);
   System().ReportWaterHeaterInfo();
   m_waterHeaterLastUpdate = k_unknownUL;
-  Log().Trace("Water heater day runtime was reset");
+  TRACE("Water heater day runtime was reset");
 }
 
 void Heating::HandleDayToNightTransition()
@@ -293,7 +293,7 @@ void Heating::HandleDayToNightTransition()
   WaterHeaterNightRuntimeMinutes(0);
   System().ReportWaterHeaterInfo();
   m_waterHeaterLastUpdate = k_unknownUL;
-  Log().Trace("Water heater night runtime was reset");
+  TRACE("Water heater night runtime was reset");
 }
 
 } // namespace greenhouse

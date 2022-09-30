@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common/Log.h"
+#include "../common/log.h"
 #include "../common/common.h"
 #include "Heating.h"
 #include "Time.h"
@@ -18,7 +18,6 @@ class System : public ISystem {
 public:
   System();
 
-  virtual const common::Log &Log() const { return m_log; }
   virtual native::greenhouse::Time &Time() = 0;
   virtual void Setup();
   virtual void Loop();
@@ -108,7 +107,6 @@ private:
   void ResetSoilMoistureAverage();
 
 private:
-  common::Log m_log;
   bool m_sensorWarningSent;
   bool m_autoMode;
   float m_openStart;

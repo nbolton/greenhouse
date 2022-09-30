@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../native/greenhouse/Time.h"
-#include "../embedded/Log.h"
+#include "../../common/log.h"
 
 #include <Arduino.h>
 
@@ -14,7 +14,6 @@ public:
   Time();
   void Setup();
   void Refresh();
-  const embedded::Log &Log() const { return m_log; }
   int CurrentHour() const;
   unsigned long EpochTime() const;
   unsigned long UptimeSeconds() const;
@@ -22,7 +21,6 @@ public:
   String FormattedCurrentTime();
 
 private:
-  embedded::Log m_log;
   bool m_timeClientOk;
 };
 

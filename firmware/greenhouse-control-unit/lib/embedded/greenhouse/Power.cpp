@@ -27,7 +27,6 @@ bool s_testState = false;
 Power::Power(int psuRelayPin, int pvRelayPin, int batteryLedPin, int psuLedPin) :
   m_embedded(nullptr),
   m_native(nullptr),
-  m_log(),
   m_psuRelayPin(psuRelayPin),
   m_pvRelayPin(pvRelayPin),
   m_batteryLedPin(batteryLedPin),
@@ -86,13 +85,13 @@ void Power::Loop()
     if (
       !m_pvPowerSource && (m_pvVoltageSwitchOn != k_unknown) &&
       (m_pvVoltageOutput >= m_pvVoltageSwitchOn)) {
-      Log().Trace(F("Switching PV on automatically (PSU off)"));
+      TRACE("Switching PV on automatically (PSU off)");
       SwitchPower(true);
     }
     else if (
       m_pvPowerSource && (m_pvVoltageSwitchOff != k_unknown) &&
       (m_pvVoltageOutput <= m_pvVoltageSwitchOff)) {
-      Log().Trace(F("Switching PSU on automatically (PV off)"));
+      TRACE("Switching PSU on automatically (PV off)");
       SwitchPower(false);
     }
   }
@@ -101,7 +100,7 @@ void Power::Loop()
 native::greenhouse::ISystem &Power::Native() const
 {
   if (m_native == nullptr) {
-    Log().Trace(F("Native system not set"));
+    TRACE("Native system not set");
     throw;
   }
   return *m_native;
@@ -110,7 +109,7 @@ native::greenhouse::ISystem &Power::Native() const
 embedded::greenhouse::ISystem &Power::Embedded() const
 {
   if (m_embedded == nullptr) {
-    Log().Trace(F("Embedded system not set"));
+    TRACE("Embedded system not set");
     throw;
   }
   return *m_embedded;
@@ -123,8 +122,8 @@ void Power::InitPowerSource()
   MeasureVoltage();
   float commonVoltage = ReadCommonVoltage();
   float psuVoltage = ReadPsuVoltage();
-  Log().Trace(
-    F("Init power source, common=%.2fV, psu=%.2fV, pv=%.2fV, min=%.2fV"),
+  TRACE_F(
+    "Init power source, common=%.2fV, psu=%.2fV, pv=%.2fV, min=%.2fV",
     commonVoltage,
     psuVoltage,
     m_pvVoltageOutput,
@@ -136,24 +135,24 @@ void Power::InitPowerSource()
 
   if ((m_pvVoltageSwitchOn != k_unknown) && pvSensorAboveMin && commonAboveMin) {
 
-    Log().Trace(F("Using PV on start (onboard voltage and PV above min)"));
+    TRACE("Using PV on start (onboard voltage and PV above min)");
     SwitchPower(true);
   }
   else if (psuAboveMin) {
 
     if (!pvSensorAboveMin) {
-      Log().Trace(F("PV voltage is below min"));
+      TRACE("PV voltage is below min");
     }
 
     if (!commonAboveMin) {
-      Log().Trace(F("Common voltage is below min"));
+      TRACE("Common voltage is below min");
     }
 
-    Log().Trace(F("Using PSU on start"));
+    TRACE("Using PSU on start");
     SwitchPower(false);
   }
   else {
-    Log().Trace(F("Unable to use PSU, no voltage"));
+    TRACE("Unable to use PSU, no voltage");
   }
 }
 
@@ -204,10 +203,10 @@ void Power::SwitchPower(bool pv)
   Embedded().Delay(k_switchDelay, "Relay");
 
   if (!pv) {
-    Log().Trace(F("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)"));
+    TRACE("PSU AC NC relay closed (PSU on), PV NC relay open (battery off)");
   }
   else {
-    Log().Trace(F("PV NC relay closed (battery on), PSU AC NC relay open (PSU off)"));
+    TRACE("PV NC relay closed (battery on), PSU AC NC relay open (PSU off)");
   }
 
   // false = closed (on the NC relay)
@@ -218,7 +217,7 @@ void Power::SwitchPower(bool pv)
   Embedded().ShiftRegister(m_batteryLedPin, pv);
 
   m_pvPowerSource = pv;
-  Log().Trace(F("Source: %s"), pv ? "PV" : "PSU");
+  TRACE_F("Source: %s", pv ? "PV" : "PSU");
   Embedded().OnPowerSwitch();
 }
 

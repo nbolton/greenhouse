@@ -8,7 +8,7 @@
 #define BIT_RATE 2000
 #define RX_PIN D0
 #define TX_PIN D4
-#define PTT_PIN 0 // using SR instead
+#define PTT_PIN -1 // using SR instead; TODO: does -1 effectively disable this feature?
 //#define DEBUG_LEDS
 
 #define SR_PIN_EN_TX 15
@@ -36,12 +36,12 @@ char modeString[10];
 unsigned long rxStart;
 unsigned long txLast;
 
-Radio::Radio() : m_log(), m_system(nullptr) {}
+Radio::Radio() : m_system(nullptr) {}
 
 void Radio::Setup()
 {
   if (!s_driver.init()) {
-    Log().Trace(F("Radio ASK init failed"));
+    TRACE("Radio ASK init failed");
     while (true) {
       // HCF
     }
@@ -94,7 +94,7 @@ void Radio::setSignal(Signal s_)
     break;
   }
 
-  Log().Trace(F("Radio signal: %s"), signalName);
+  TRACE_F("Radio signal: %s", signalName);
 
   if (s == Rx) {
     rxStart = millis();
@@ -117,7 +117,7 @@ void Radio::setMode(Mode _mode)
     strcpy(modeString, "<< pong");
     break;
   }
-  Log().Trace(F("Radio mode: %s"), modeString);
+  TRACE_F("Radio mode: %s", modeString);
 }
 
 void Radio::errorFlash(int times)
@@ -156,7 +156,7 @@ void Radio::tx()
   s_driver.send((uint8_t *)msg, strlen(msg));
   s_driver.waitPacketSent();
 
-  Log().Trace("Radio sent: %s", msg);
+  TRACE_F("Radio sent: %s", msg);
 
   sr(SR_PIN_EN_TX, false);
 
@@ -189,7 +189,7 @@ void Radio::rx()
 
     // terminate string so garbage isn't printed
     buf[buflen] = '\0';
-    Log().Trace(F("Radio recv: %s"), (char *)buf);
+    TRACE_F("Radio recv: %s", (char *)buf);
 
     if (mode != Pong) {
       recvOk++;
@@ -208,7 +208,7 @@ void Radio::rx()
 
         if (errorSince != 0) {
           rxErrors += errorSince;
-          Log().Trace("Radio errors: now=%d, sum=%d, ok=%d", errorSince, rxErrors, recvOk);
+          TRACE_F("Radio errors: now=%d, sum=%d, ok=%d", errorSince, rxErrors, recvOk);
           errorFlash(1);
         }
       }
@@ -237,7 +237,7 @@ void Radio::rx()
   if (diff > ERROR_PRINT_INTERVAL) {
     int errors = timeouts + rxErrors;
     errorRate = ((float)errors / (float)(recvOk + errors)) * 100;
-    Log().Trace("Radio error rate: %d%% (ok=%d, err=%d)", errorRate, recvOk, errors);
+    TRACE_F("Radio error rate: %d%% (ok=%d, err=%d)", errorRate, recvOk, errors);
     timeouts = 0;
     rxErrors = 0;
     recvOk = 0;
@@ -245,7 +245,7 @@ void Radio::rx()
   }
 
   if ((millis() - rxStart) > TIMEOUT_RX) {
-    Log().Trace("Radio timeout");
+    TRACE("Radio timeout");
     timeouts++;
     errorFlash(2);
 

@@ -120,7 +120,6 @@ System &System::Instance() { return *s_instance; }
 void System::Instance(System &ga) { s_instance = &ga; }
 
 System::System() :
-  m_log(),
   m_heating(),
   m_power(k_psuRelayPin, k_pvRelayPin, k_batteryLedPin, k_psuLedPin),
   m_insideAirTemperature(k_unknown),
@@ -154,18 +153,19 @@ void System::Setup()
 {
   ng::System::Setup();
 
+#if TRACE_EN
   if (k_trace) {
     Serial.begin(9600);
-
-    // wait for serial to connect before first trace
-    Delay(k_serialWaitDelay, "Serial wait");
+    delay(k_serialWaitDelay);
+    Serial.println("\n");
   }
+#endif // TRACE_EN
 
   if (k_enableLed) {
     pinMode(LED_BUILTIN, OUTPUT);
   }
 
-  Log().Trace(F("\n\nStarting system: %s"), BLYNK_DEVICE_NAME);
+  TRACE_F("Starting system: %s", BLYNK_DEVICE_NAME);
 
   InitShiftRegisters();
 
@@ -185,14 +185,16 @@ void System::Setup()
   InitSensors();
   InitADCs();
 
+#if RADIO_EN
   m_radio.System(this);
   m_radio.Setup();
+#endif
 
   Blynk.begin(k_auth, k_ssid, k_pass);
 
   ReportSwitchStates();
 
-  Log().Trace(F("System ready"));
+  TRACE("System ready");
   Blynk.virtualWrite(V52, "Ready");
   Beep(2, false);
 }
@@ -203,10 +205,12 @@ void System::Loop()
   // so keep shifting to ensure that it's state is persisted.
   s_shiftRegisters.shift();
 
+#if RADIO_EN
   m_radio.Loop();
   if (m_radio.Busy()) {
     return;
   }
+#endif
 
   // always run before actuator check
   ng::System::Loop();
@@ -234,17 +238,17 @@ void System::Loop()
 
     m_lastBlynkFailure = now;
     m_blynkFailures++;
-    Log().Trace(F("Blynk failed %d time(s)"), m_blynkFailures);
+    TRACE_F("Blynk failed %d time(s)", m_blynkFailures);
 
     if (m_blynkFailures >= k_blynkFailuresMax) {
-      Log().Trace(F("Restarting, too many Blynk failures"));
+      TRACE("Restarting, too many Blynk failures");
       Restart();
       return;
     }
   }
   else if (((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec) && (m_blynkFailures != 0)) {
     // no failures happened within last n - r seconds (n = now, r = recover time)
-    Log().Trace(F("Blynk is back to normal, resetting fail count"));
+    TRACE("Blynk is back to normal, resetting fail count");
     m_blynkFailures = 0;
   }
 
@@ -256,7 +260,7 @@ void System::Loop()
   // though circuit logic, but this will do for now.
   const bool srEnable = m_power.ReadCommonVoltage() >= k_shiftRegisterMinVoltage;
   if (srEnable != m_shiftRegisterEnabled) {
-    Log().Trace(F("Shift register %s"), srEnable ? "enabled" : "disabled");
+    TRACE_F("Shift register %s", srEnable ? "enabled" : "disabled");
     digitalWrite(k_shiftRegisterEnablePin, srEnable ? SR_ON : SR_OFF);
 
     m_shiftRegisterEnabled = srEnable;
@@ -276,7 +280,7 @@ void System::Loop()
     while (!m_callbackQueue.empty()) {
       Callback callback = m_callbackQueue.front();
 
-      Log().Trace("Callback function: %s", callback.m_name.c_str());
+      TRACE_F("Callback function: %s", callback.m_name.c_str());
 
       m_callbackQueue.pop();
 
@@ -284,10 +288,10 @@ void System::Loop()
         (this->*callback.m_function)();
       }
       else {
-        Log().Trace("Function pointer was null");
+        TRACE("Function pointer was null");
       }
 
-      Log().Trace("Callback queue remaining=%d", m_callbackQueue.size());
+      TRACE_F("Callback queue remaining=%d", m_callbackQueue.size());
     }
   }
 
@@ -311,7 +315,7 @@ void System::InitShiftRegisters()
   pinMode(k_shiftRegisterEnablePin, OUTPUT);
   digitalWrite(k_shiftRegisterEnablePin, SR_ON);
 
-  Log().Trace(F("Init shift"));
+  TRACE("Init shift");
   s_shiftRegisters.shift();
 
   if (k_shiftRegisterTestEnable) {
@@ -319,14 +323,14 @@ void System::InitShiftRegisters()
     const int from = k_shiftRegisterTestFrom;
     const int to = k_shiftRegisterTestTo + 1;
     while (true) {
-      Log().Trace(F("Test shift loop from=%d to=%d"), from, to);
+      TRACE_F("Test shift loop from=%d to=%d", from, to);
       for (int i = from; i < to; i++) {
 
-        Log().Trace(F("Test set SR pin %d"), i);
+        TRACE_F("Test set SR pin %d", i);
         s_shiftRegisters.set_shift(i);
         Delay(k_shiftRegisterTestOn, "SR test on");
 
-        Log().Trace(F("Test clear SR pin %d"), i);
+        TRACE_F("Test clear SR pin %d", i);
         s_shiftRegisters.clear_shift(i);
         Delay(k_shiftRegisterTestOff, "SR test off");
       }
@@ -347,9 +351,9 @@ void System::InitSensors()
 
 void System::InitADCs()
 {
-  s_adc0.name = "ADS1115 #0";
-  s_adc1.name = "ADS1115 #1";
-  s_adc2.name = "ADS1115 #2";
+  s_adc0.name = "ADS1115 #0 - Onboard";
+  s_adc1.name = "ADS1115 #1 - External";
+  s_adc2.name = "ADS1115 #2 - Battery";
   s_adc0.ads = ADS1115_WE(k_adcAddress0);
   s_adc1.ads = ADS1115_WE(k_adcAddress1);
   s_adc2.ads = ADS1115_WE(k_adcAddress2);
@@ -372,7 +376,7 @@ void System::InitADCs()
 
 void System::Refresh()
 {
-  Log().Trace(F("Refreshing (embedded)"));
+  TRACE("Refreshing (embedded)");
 
   Time().Refresh();
 
@@ -382,8 +386,8 @@ void System::Refresh()
 
   m_power.MeasureCurrent();
 
-  Log().Trace(F("Common voltage: %.2fV"), m_power.ReadCommonVoltage());
-  Log().Trace(F("PSU voltage: %.2fV"), m_power.ReadPsuVoltage());
+  TRACE_F("Common voltage: %.2fV", m_power.ReadCommonVoltage());
+  TRACE_F("PSU voltage: %.2fV", m_power.ReadPsuVoltage());
 
   Blynk.virtualWrite(V28, Power().PvPowerSource());
   Blynk.virtualWrite(V29, Power().PvVoltageSensor());
@@ -394,7 +398,7 @@ void System::Refresh()
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
 
-  Log().Trace(F("Refresh done (embedded)"));
+  TRACE("Refresh done (embedded)");
 }
 
 void System::FlashLed(LedFlashTimes times)
@@ -493,7 +497,7 @@ bool System::ReadSensors(int &failures)
       break;
     }
 
-    Log().Trace(F("Dallas sensor read failed, retrying (attempt %d)"), dallasRetry);
+    TRACE_F("Dallas sensor read failed, retrying (attempt %d)", dallasRetry);
     Delay(dallasRetryWait, "Dallas retry");
   }
 
@@ -525,12 +529,12 @@ bool System::ReadSoilMoistureSensor()
 void System::RunWindowActuator(bool extend)
 {
   if (extend) {
-    Log().Trace(F("Actuator set IN1, clear IN2"));
+    TRACE("Actuator set IN1, clear IN2");
     s_shiftRegisters.set(k_actuatorPin1);
     s_shiftRegisters.clear(k_actuatorPin2);
   }
   else {
-    Log().Trace(F("Actuator clear IN1, set IN2"));
+    TRACE("Actuator clear IN1, set IN2");
     s_shiftRegisters.clear(k_actuatorPin1);
     s_shiftRegisters.set(k_actuatorPin2);
   }
@@ -539,7 +543,7 @@ void System::RunWindowActuator(bool extend)
 
 void System::StopActuator()
 {
-  Log().Trace(F("Stopping actuator"));
+  TRACE("Stopping actuator");
   s_shiftRegisters.clear(k_actuatorPin1);
   s_shiftRegisters.clear(k_actuatorPin2);
   s_shiftRegisters.shift();
@@ -547,7 +551,7 @@ void System::StopActuator()
 
 void System::Delay(unsigned long ms, const char *reason)
 {
-  Log().Trace(F("%s delay: %dms"), reason, (int)ms);
+  TRACE_F("%s delay: %dms", reason, (int)ms);
   delay(ms);
 }
 
@@ -572,7 +576,7 @@ void System::Restart()
 
 void System::CaseFan(bool on)
 {
-  Log().Trace(F("Case fan %s"), on ? "on" : "off");
+  TRACE_F("Case fan %s", on ? "on" : "off");
 
   if (on) {
     s_shiftRegisters.set(k_caseFanPin);
@@ -581,18 +585,18 @@ void System::CaseFan(bool on)
     s_shiftRegisters.clear(k_caseFanPin);
   }
 
-  Log().Trace(F("Case fan shift"));
+  TRACE("Case fan shift");
   s_shiftRegisters.shift();
 }
 
 void System::Beep(int times, bool longBeep)
 {
   for (int i = 0; i < times; i++) {
-    Log().Trace(F("Beep set shift"));
+    TRACE("Beep set shift");
     s_shiftRegisters.set_shift(k_BeepPin);
     Delay(longBeep ? 200 : 100, "Beep on");
 
-    Log().Trace(F("Beep clear shift"));
+    TRACE("Beep clear shift");
     s_shiftRegisters.clear_shift(k_BeepPin);
     Delay(200, "Beep off");
   }
@@ -623,17 +627,17 @@ void System::SetSwitch(int index, bool on)
   int pin = k_switchPins[index];
 
   if (on) {
-    Log().Trace(F("Switch set: %d"), pin);
+    TRACE_F("Switch set: %d", pin);
     s_shiftRegisters.set(pin);
     m_switchState[index] = true;
   }
   else {
-    Log().Trace(F("Switch clear: %d"), pin);
+    TRACE_F("Switch clear: %d", pin);
     s_shiftRegisters.clear(pin);
     m_switchState[index] = false;
   }
 
-  Log().Trace(F("Switch shift"));
+  TRACE("Switch shift");
   s_shiftRegisters.shift();
 
   ReportSwitchStates();
@@ -644,11 +648,11 @@ void System::SetSwitch(int index, bool on)
 void System::ToggleSwitch(int switchIndex)
 {
   if (!m_switchState[switchIndex]) {
-    Log().Trace(F("Toggle switch on: %d"), switchIndex);
+    TRACE_F("Toggle switch on: %d", switchIndex);
     SetSwitch(switchIndex, true);
   }
   else {
-    Log().Trace(F("Toggle switch off: %d"), switchIndex);
+    TRACE_F("Toggle switch off: %d", switchIndex);
     SetSwitch(switchIndex, false);
   }
 }
@@ -656,7 +660,7 @@ void System::ToggleSwitch(int switchIndex)
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
-    Log().Trace(F("ADC not ready: %s"), adc.name.c_str());
+    TRACE_F("ADC not ready: %s", adc.name.c_str());
     return k_unknown;
   }
 
@@ -674,7 +678,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
   while (adc.ads.isBusy()) {
     Delay(10, "ADC wait");
     if (times++ > 10) {
-      Log().Trace(F("ADC is busy: %s"), adc.name.c_str());
+      TRACE("ADC is busy: %s"), adc.name.c_str());
       return k_unknown;
     }
   }
@@ -690,7 +694,7 @@ void System::ReportInfo(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Log().Trace(s_reportBuffer);
+  TRACE_C(s_reportBuffer);
   Blynk.logEvent("info", s_reportBuffer);
 }
 
@@ -703,7 +707,7 @@ void System::ReportWarning(const char *format, ...)
 
   // still log even if k_reportWarnings is off (the intent of k_reportWarnings
   // is to reduce noise on the blynk app during testing)
-  Log().Trace(s_reportBuffer);
+  TRACE_C(s_reportBuffer);
 
   if (!k_reportWarnings) {
     return;
@@ -719,7 +723,7 @@ void System::ReportCritical(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  Log().Trace(s_reportBuffer);
+  TRACE_C(s_reportBuffer);
   Blynk.logEvent("critical", s_reportBuffer);
 }
 
@@ -746,7 +750,7 @@ void System::ReportSystemInfo()
 
   // free heap
   int freeHeap = ESP.getFreeHeap();
-  Log().Trace(F("Free heap: %d bytes"), freeHeap);
+  TRACE_F("Free heap: %d bytes", freeHeap);
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
@@ -800,7 +804,7 @@ void System::OnSystemStarted()
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
   // have all of the correct initial values.
-  Log().Trace(F("First refresh"));
+  TRACE("First refresh");
   Refresh();
 
   FlashLed(k_ledStarted);
@@ -815,19 +819,19 @@ void System::OnSystemStarted()
 void System::ApplyRefreshRate()
 {
   if (m_refreshRate <= 0) {
-    Log().Trace(F("Invalid refresh rate: %ds"), m_refreshRate);
+    TRACE_F("Invalid refresh rate: %ds", m_refreshRate);
     return;
   }
 
-  Log().Trace(F("New refresh rate: %ds"), m_refreshRate);
+  TRACE_F("New refresh rate: %ds", m_refreshRate);
 
   if (m_timerId != k_unknown) {
-    Log().Trace(F("Deleting old timer: %d"), m_timerId);
+    TRACE_F("Deleting old timer: %d", m_timerId);
     s_refreshTimer.deleteTimer(m_timerId);
   }
 
   m_timerId = s_refreshTimer.setInterval(m_refreshRate * 1000L, refreshTimer);
-  Log().Trace(F("New refresh timer: %d"), m_timerId);
+  TRACE_F("New refresh timer: %d", m_timerId);
 }
 
 bool System::UpdateWeatherForecast()
@@ -835,35 +839,35 @@ bool System::UpdateWeatherForecast()
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
 
-  Log().Trace(F("Connecting to weather host: %s"), k_weatherHost);
+  TRACE_F("Connecting to weather host: %s", k_weatherHost);
   HttpClient httpClient(s_wifiClient, k_weatherHost, 80);
 
-  Log().Trace(F("Weather host get"));
+  TRACE("Weather host get");
   httpClient.get(uri);
 
   int statusCode = httpClient.responseStatusCode();
   if (isnan(statusCode)) {
-    Log().Trace(F("Weather host status is invalid"));
+    TRACE("Weather host status is invalid");
     return false;
   }
 
-  Log().Trace(F("Weather host status: %d"), statusCode);
+  TRACE_F("Weather host status: %d", statusCode);
   if (statusCode != 200) {
-    Log().Trace(F("Weather host error status"));
+    TRACE("Weather host error status");
     return false;
   }
 
   String response = httpClient.responseBody();
   int size = static_cast<int>(strlen(response.c_str()));
-  Log().Trace(F("Weather host response length: %d"), size);
+  TRACE_F("Weather host response length: %d", size);
 
   DeserializationError error = deserializeJson(s_weatherJson, response);
   if (error != DeserializationError::Ok) {
-    Log().Trace(F("Weather data error: %s"), error.c_str());
+    TRACE_F("Weather data error: %s", error.c_str());
     return false;
   }
 
-  Log().Trace(F("Deserialized weather JSON"));
+  TRACE("Deserialized weather JSON");
   int id = s_weatherJson["weather"][0]["id"];
   const char *main = s_weatherJson["weather"][0]["main"];
   int dt = s_weatherJson["dt"];
@@ -883,7 +887,7 @@ bool System::UpdateWeatherForecast()
     minuteString.c_str(),
     location);
 
-  Log().Trace(F("Weather forecast: code=%d, info='%s'"), id, s_weatherInfo);
+  TRACE_F("Weather forecast: code=%d, info='%s'", id, s_weatherInfo);
 
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
@@ -941,11 +945,11 @@ float System::ReadCommonVoltageSensor() { return ReadAdc(s_adc0, k_commonVoltage
 
 float System::ReadPsuVoltageSensor() { return ReadAdc(s_adc0, k_psuVoltagePin); }
 
-void System::PrintCommands() { Log().Trace(F("Commands\ns: status")); }
+void System::PrintCommands() { TRACE("Commands\ns: status"); }
 
 void System::PrintStatus()
 {
-  Log().Trace(F("Status\nBlynk: %s"), Blynk.connected() ? "Connected" : "Disconnected");
+  TRACE_F("Status\nBlynk: %s", Blynk.connected() ? "Connected" : "Disconnected");
 }
 
 void System::QueueToggleActiveSwitch() { m_toggleActiveSwitchQueue.push(m_activeSwitch); }

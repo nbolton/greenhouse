@@ -13,7 +13,6 @@ const int k_soilMoistureSampleMax = 10;
 const int k_windowActuatorLoopDelay = 100;
 
 System::System() :
-  m_log(),
   m_sensorWarningSent(false),
   m_autoMode(false),
   m_openStart(k_unknown),
@@ -51,12 +50,12 @@ void System::Loop()
   if (IsWindowActuatorRunning()) {
     const int windowTimeLeft = m_windowActuatorStopTime - Time().EpochTime();
     if (windowTimeLeft <= 0) {
-      Log().Trace("Actuator finished, overshoot: %ds", abs(windowTimeLeft));
+      TRACE_F("Actuator finished, overshoot: %ds", abs(windowTimeLeft));
       m_windowActuatorStopTime = k_unknownUL;
       StopActuator();
     }
     else {
-      Log().Trace("Actuator opening window, time left: %ds", windowTimeLeft);
+      TRACE_F("Actuator opening window, time left: %ds", windowTimeLeft);
       Delay(k_windowActuatorLoopDelay, "Actuator loop");
       return;
     }
@@ -65,7 +64,7 @@ void System::Loop()
 
 void System::Refresh()
 {
-  Log().Trace("Refreshing (native)");
+  TRACE("Refreshing (native)");
 
   Time().CheckTransition();
 
@@ -79,18 +78,18 @@ void System::Refresh()
       m_sensorWarningSent = true;
     }
     else {
-      Log().Trace("Sensors unavailable, failures: %d", sensorFailures);
+      TRACE_F("Sensors unavailable, failures: %d", sensorFailures);
     }
   }
 
-  Log().Trace(
+  TRACE_F(
     "Temperatures, inside=%.2f°C, outside=%.2f°C, soil=%.2f°C, water=%.2f°C",
     InsideAirTemperature(),
     OutsideAirTemperature(),
     SoilTemperature(),
     WaterTemperature());
 
-  Log().Trace(
+  TRACE_F(
     "Moisture, inside=%.2f%%, outside=%.2f%%, soil-now=%.2f%%, soil-avg=%.2f%%",
     InsideAirHumidity(),
     OutsideAirHumidity(),
@@ -130,7 +129,7 @@ void System::Refresh()
   else if (m_autoMode) {
     float soilTemperature = SoilTemperature();
 
-    Log().Trace(
+    TRACE_F(
       "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC last=%d timeframe=%dm",
       WindowProgressExpected(),
       soilTemperature,
@@ -150,7 +149,7 @@ void System::Refresh()
 
       if ((soilTemperature > openStart) && (soilTemperature < openFinish)) {
         // window should be semi-open
-        Log().Trace("Temperature in bounds");
+        TRACE("Temperature in bounds");
 
         float tempWidth = openFinish - openStart;
         float progressAsTemp = soilTemperature - openStart;
@@ -158,19 +157,19 @@ void System::Refresh()
       }
       else if (soilTemperature >= openFinish) {
         // window should be fully open
-        Log().Trace("Temperature above bounds");
+        TRACE("Temperature above bounds");
         m_windowProgressExpected = 100;
       }
       else {
         // window should be fully closed
-        Log().Trace("Temperature below bounds");
+        TRACE("Temperature below bounds");
         m_windowProgressExpected = 0;
       }
 
       windowMoved = ApplyWindowProgress();
     }
     else {
-      Log().Trace(
+      TRACE_F(
         "Window adjust didn't run, noUnknowns=%s, timeframeOk=%s",
         noUnknowns ? "true" : "false",
         timeframeOk ? "true" : "false");
@@ -189,7 +188,7 @@ void System::Refresh()
 
   ReportSystemInfo();
 
-  Log().Trace("Refresh done (native)");
+  TRACE("Refresh done (native)");
 }
 
 bool System::ApplyWindowProgress()
@@ -202,7 +201,7 @@ bool System::ApplyWindowProgress()
   float rounded = (round((positions / 100) * expected) / positions) * 100;
   bool changed = std::abs(rounded - actual) > 0.01f;
 
-  Log().Trace(
+  TRACE_F(
     "Apply window progress, "
     "positions=%d, expected=%.2f, rounded=%.2f, actual=%.2f, "
     "changed=%s, full=%s",
@@ -214,7 +213,7 @@ bool System::ApplyWindowProgress()
     fullExtent ? "true" : "false");
 
   if (positions == k_unknown) {
-    Log().Trace("Cannot apply window progress with unknown positions");
+    TRACE("Cannot apply window progress with unknown positions");
     return false;
   }
 
@@ -223,7 +222,7 @@ bool System::ApplyWindowProgress()
     float closeDelta = (actual - rounded) / 100;
     float openDelta = (rounded - actual) / 100;
 
-    Log().Trace("Testing window progress, open=%.2f, close=%.2f", openDelta, closeDelta);
+    TRACE_F("Testing window progress, open=%.2f, close=%.2f", openDelta, closeDelta);
 
     if (openDelta > 0) {
       OpenWindow(openDelta);
@@ -237,7 +236,7 @@ bool System::ApplyWindowProgress()
     }
   }
 
-  Log().Trace("No window progress change");
+  TRACE("No window progress change");
   return false;
 }
 
@@ -256,28 +255,28 @@ void System::AddWindowProgressActualDelta(float delta)
 
 void System::OpenWindow(float delta)
 {
-  Log().Trace("Opening window...");
-  Log().Trace("Delta: %.2f", delta);
+  TRACE("Opening window...");
+  TRACE_F("Delta: %.2f", delta);
 
   AddWindowProgressActualDelta(delta);
   ReportWindowProgress();
   AdjustWindow(true, delta);
 
   float percent = delta * 100;
-  Log().Trace("Window opened %.1f%%", percent);
+  TRACE_F("Window opened %.1f%%", percent);
 }
 
 void System::CloseWindow(float delta)
 {
-  Log().Trace("Closing window...");
-  Log().Trace("Delta: %.2f", delta);
+  TRACE("Closing window...");
+  TRACE_F("Delta: %.2f", delta);
 
   AddWindowProgressActualDelta(delta * -1);
   ReportWindowProgress();
   AdjustWindow(false, delta);
 
   float percent = delta * 100;
-  Log().Trace("Window closed %.1f%%", percent);
+  TRACE_F("Window closed %.1f%%", percent);
 }
 
 void System::AdjustWindow(bool open, float delta)
@@ -285,7 +284,7 @@ void System::AdjustWindow(bool open, float delta)
   RunWindowActuator(open);
 
   int runtime = m_windowActuatorRuntimeSec * delta;
-  Log().Trace("Actuator runtime set: %ds", runtime);
+  TRACE_F("Actuator runtime set: %ds", runtime);
 
   m_windowActuatorStopTime = Time().EpochTime() + runtime;
 }
@@ -293,9 +292,9 @@ void System::AdjustWindow(bool open, float delta)
 float System::CalculateMoisture(float analogValue) const
 {
   float percent = mapFloat(analogValue, SoilSensorDry(), SoilSensorWet(), 0, 100);
-  Log().Trace("Soil moisture, analog=%.4fV, percent=%.2f%%", analogValue, percent);
+  TRACE_F("Soil moisture, analog=%.4fV, percent=%.2f%%", analogValue, percent);
   if (percent < (k_moistureMargin * -1) || percent > (100 + k_moistureMargin)) {
-    Log().Trace("Invalid soil moisture value");
+    TRACE("Invalid soil moisture value");
     return k_unknown;
   }
   return percent;
@@ -322,11 +321,11 @@ void System::ResetSoilMoistureAverage()
 void System::SoilCalibrateWet()
 {
   if (!ReadSoilMoistureSensor()) {
-    Log().Trace("Unable to calibrate, failed to read soil moisture sensor");
+    TRACE("Unable to calibrate, failed to read soil moisture sensor");
     return;
   }
 
-  Log().Trace("Calibrating soil moisture wet: %.2fV", SoilSensor());
+  TRACE_F("Calibrating soil moisture wet: %.2fV", SoilSensor());
   SoilSensorWet(SoilSensor());
   ReportMoistureCalibration();
   ResetSoilMoistureAverage();
@@ -336,11 +335,11 @@ void System::SoilCalibrateWet()
 void System::SoilCalibrateDry()
 {
   if (!ReadSoilMoistureSensor()) {
-    Log().Trace("Unable to calibrate, failed to read soil moisture sensor");
+    TRACE("Unable to calibrate, failed to read soil moisture sensor");
     return;
   }
 
-  Log().Trace("Calibrating soil moisture dry: %.2fV", SoilSensor());
+  TRACE_F("Calibrating soil moisture dry: %.2fV", SoilSensor());
   SoilSensorDry(SoilSensor());
   ReportMoistureCalibration();
   ResetSoilMoistureAverage();
@@ -352,7 +351,7 @@ void System::AddSoilMoistureSample(float sample)
   m_soilMoistureSamples.push(sample);
   if (m_soilMoistureSamples.size() > SoilMoistureSampleMax()) {
     m_soilMoistureSamples.pop();
-    Log().Trace("Moisture samples reduced by 1, new size: %d", m_soilMoistureSamples.size());
+    TRACE_F("Moisture samples reduced by 1, new size: %d", m_soilMoistureSamples.size());
   }
 
   // we could use deque but this is fine for a short float list that isn't
@@ -366,7 +365,7 @@ void System::AddSoilMoistureSample(float sample)
   }
   m_soilMoistureAverage = total / size;
 
-  Log().Trace(
+  TRACE_F(
     "Calculating moisture average, total=%.0f, size=%d, avg=%.2f",
     total,
     size,
@@ -377,7 +376,7 @@ float System::SoilMoistureAverage() { return m_soilMoistureAverage; }
 
 void System::UpdateWindowProgress()
 {
-  Log().Trace(
+  TRACE_F(
     "Window progress new=%d, current=%d, actual=%d",
     m_windowProgress,
     m_windowProgressExpected,

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../native/greenhouse/System.h"
+#include "../../common/log.h"
 
-#include "../Log.h"
 #include "Heating.h"
 #include "Power.h"
 #include "Time.h"
@@ -62,8 +62,6 @@ public:
   void ApplyRefreshRate();
   void QueueCallback(CallbackFunction f, std::string name);
 
-  const embedded::Log &Log() const { return m_log; }
-
 protected:
   void ReportInfo(const char *m, ...);
   void ReportWarning(const char *m, ...);
@@ -119,7 +117,6 @@ private:
   void PrintStatus();
 
 private:
-  embedded::Log m_log;
   embedded::greenhouse::Time m_time;
   embedded::greenhouse::Heating m_heating;
   embedded::greenhouse::Power m_power;
@@ -147,7 +144,9 @@ private:
   int m_refreshRate;
   std::queue<Callback> m_callbackQueue;
   bool m_queueOnSystemStarted;
+#if RADIO_EN
   Radio m_radio;
+#endif //RADIO_EN
 };
 
 } // namespace greenhouse

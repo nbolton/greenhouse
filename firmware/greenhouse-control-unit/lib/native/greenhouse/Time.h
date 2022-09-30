@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common/Log.h"
+#include "../common/log.h"
 #include "../common/common.h"
 #include "ISystem.h"
 #include "ITime.h"
@@ -16,7 +16,6 @@ class Time : public ITime {
 public:
   Time();
   virtual void CheckTransition();
-  virtual const common::Log &Log() const { return m_log; }
   virtual unsigned long EpochTime() const { return k_unknown; }
   unsigned long UptimeSeconds() const { return k_unknown; }
   virtual int CurrentHour() const { return k_unknown; }
@@ -34,7 +33,7 @@ public:
   // getters & setters
   virtual ISystem &System() const {
     if (m_system == nullptr) {
-      Log().Trace("System not set");
+      TRACE("System not set");
       throw std::runtime_error("System not set");
     }
     return *m_system;
@@ -47,7 +46,6 @@ protected:
   virtual void OnDayToNightTransition();
 
 private:
-  common::Log m_log;
   ISystem *m_system;
   int m_dayStartHour;
   int m_dayEndHour;

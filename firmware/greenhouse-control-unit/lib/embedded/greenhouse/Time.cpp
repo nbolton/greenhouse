@@ -18,7 +18,7 @@ void Time::Setup() { s_timeClient.begin(); }
 
 void Time::Refresh()
 {
-  Log().Trace(F("Time refresh"));
+  TRACE("Time refresh");
   
   const int retryDelay = 1000;
   const int retryLimit = 5;
@@ -27,7 +27,7 @@ void Time::Refresh()
   do {
     m_timeClientOk = s_timeClient.update();
     if (!m_timeClientOk) {
-      Log().Trace(F("Time update failed (attempt %d)"), retryCount);
+      TRACE_F("Time update failed (attempt %d)", retryCount);
       System().Delay(retryDelay, "time update");
     }
   } while (!m_timeClientOk && retryCount++ < retryLimit);

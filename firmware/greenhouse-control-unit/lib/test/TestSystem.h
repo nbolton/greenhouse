@@ -39,38 +39,38 @@ public:
 
   bool ReadSensors()
   {
-    Log().Trace("Mock: ReadSensors, value=%s", m_mock_ReadDhtSensor ? "true" : "false");
+    TRACE_F("Mock: ReadSensors, value=%s", m_mock_ReadDhtSensor ? "true" : "false");
     return m_mock_ReadDhtSensor;
   }
 
   float WaterTemperature() const
   {
-    Log().Trace("Mock: WaterTemperature, value=%.2f", m_mock_WaterTemperature);
+    TRACE_F("Mock: WaterTemperature, value=%.2f", m_mock_WaterTemperature);
     return m_mock_WaterTemperature;
   }
 
   float SoilTemperature() const
   {
-    Log().Trace("Mock: SoilTemperature, value=%.2f", m_mock_SoilTemperature);
+    TRACE_F("Mock: SoilTemperature, value=%.2f", m_mock_SoilTemperature);
     return m_mock_SoilTemperature;
   }
 
   float InsideAirTemperature() const
   {
-    Log().Trace("Mock: InsideAirTemperature, value=%.2f", m_mock_InsideAirTemperature);
+    TRACE_F("Mock: InsideAirTemperature, value=%.2f", m_mock_InsideAirTemperature);
     return m_mock_InsideAirTemperature;
   }
 
   bool ReadSoilMoistureSensor()
   {
-    Log().Trace("Mock: ReadSoilMoistureSensor, value=%s", m_mock_ReadSoilMoistureSensor ? "true" : "false");
+    TRACE_F("Mock: ReadSoilMoistureSensor, value=%s", m_mock_ReadSoilMoistureSensor ? "true" : "false");
     return m_mock_ReadSoilMoistureSensor;
   }
 
   native::greenhouse::Time &Time()
   {
     if (m_mock_time != nullptr) {
-      Log().Trace("Mock: Time");
+      TRACE("Mock: Time");
       return *m_mock_time;
     }
 
@@ -81,7 +81,7 @@ public:
   native::greenhouse::Heating &Heating()
   {
     if (m_mock_heating != nullptr) {
-      Log().Trace("Mock: Heating");
+      TRACE("Mock: Heating");
       return *m_mock_heating;
     }
 
@@ -93,7 +93,7 @@ public:
 
   void OpenWindow(float delta)
   {
-    Log().Trace("Stub: OpenWindow, delta=%.2f", delta);
+    TRACE_F("Stub: OpenWindow, delta=%.2f", delta);
     m_calls_OpenWindow++;
     m_lastArg_OpenWindow_delta = delta;
 
@@ -102,7 +102,7 @@ public:
 
   void CloseWindow(float delta)
   {
-    Log().Trace("Stub: CloseWindow, delta=%.2f", delta);
+    TRACE_F("Stub: CloseWindow, delta=%.2f", delta);
     m_calls_CloseWindow++;
     m_lastArg_CloseWindow_delta = delta;
 
@@ -111,39 +111,39 @@ public:
 
   void RunWindowActuator(bool extend)
   {
-    Log().Trace("Stub: RunWindowActuator, extend=%s", extend ? "true" : "false");
+    TRACE_F("Stub: RunWindowActuator, extend=%s", extend ? "true" : "false");
     m_lastArg_RunWindowActuator_extend = extend;
     m_calls_RunWindowActuator++;
   }
 
   void StopActuator()
   {
-    Log().Trace("Stub: StopActuator");
+    TRACE("Stub: StopActuator");
     m_calls_StopActuator++;
   }
 
   void Delay(unsigned long ms, const char* reason)
   {
-    Log().Trace("Stub: Delay, ms=%d, reason=%s", static_cast<int>(ms), reason);
+    TRACE_F("Stub: Delay, ms=%d, reason=%s", static_cast<int>(ms), reason);
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }
 
   void ReportWarning(const char *m, ...)
   {
-    Log().Trace("Stub: ReportWarning");
+    TRACE("Stub: ReportWarning");
     m_calls_ReportWarning++;
   }
 
   void HandleNightToDayTransition()
   {
-    Log().Trace("Stub: HandleNightToDayTransition");
+    TRACE("Stub: HandleNightToDayTransition");
     m_calls_HandleNightToDayTransition++;
   }
 
   void HandleDayToNightTransition()
   {
-    Log().Trace("Stub: HandleDayToNightTransition");
+    TRACE("Stub: HandleDayToNightTransition");
     m_calls_HandleDayToNightTransition++;
   }
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../Log.h"
+#include "../../common/log.h"
 
 namespace embedded {
 namespace greenhouse {
@@ -26,9 +26,6 @@ public:
   bool Busy();
 
 private:
-  const embedded::Log &Log() const { return m_log; }
-
-private:
   void sr(int pin, bool set);
   void tx();
   void rx();
@@ -38,7 +35,6 @@ private:
   void toggleMode();
 
 private:
-  embedded::Log m_log;
   ISystem *m_system;
 };
 
