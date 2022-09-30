@@ -28,8 +28,15 @@ namespace eg = embedded::greenhouse;
 namespace embedded {
 namespace greenhouse {
 
-#define SR_ON HIGH // opposite due to bjt
-#define SR_OFF LOW 
+// SR OE` is inverted
+#define SR_ON HIGH
+#define SR_OFF LOW
+
+#define ADC_RETRY_MAX 5
+#define ADC_RETRY_DELAY 50
+
+#define DEBUG_DELAY 0
+#define ADC_DEBUG 0
 
 struct ADC {
   String name;
@@ -264,7 +271,7 @@ void System::Loop()
   // possibly through the inputs, which doesn't seem great. so, turn the shift
   // register off when it doesn't have any power. ideally this should be done
   // though circuit logic, but this will do for now.
-  const bool srEnable = m_power.ReadCommonVoltage() >= k_shiftRegisterMinVoltage;
+  const bool srEnable = ReadCommonVoltageSensor() >= k_shiftRegisterMinVoltage;
   if (srEnable != m_shiftRegisterEnabled) {
     TRACE_F("Shift register %s", srEnable ? "enabled" : "disabled");
     digitalWrite(k_shiftRegisterEnablePin, srEnable ? SR_ON : SR_OFF);
@@ -552,7 +559,9 @@ void System::StopActuator()
 
 void System::Delay(unsigned long ms, const char *reason)
 {
+#if DEBUG_DELAY
   TRACE_F("%s delay: %dms", reason, (int)ms);
+#endif // DEBUG_DELAY
   delay(ms);
 }
 
@@ -661,29 +670,38 @@ void System::ToggleSwitch(int switchIndex)
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
   if (!adc.ready) {
+#if ADC_DEBUG
     TRACE_F("ADC not ready: %s", adc.name.c_str());
-    return k_unknown;
+    TRACE("Retrying ADC init.");
+#endif // ADC_DEBUG
+
+    adc.ready = adc.ads.init();
+
+    if (!adc.ready) {
+#if ADC_DEBUG
+      TRACE("ADC still not ready, giving up.");
+#endif // ADC_DEBUG
+      return k_unknown;
+    }
   }
 
   // HACK: this keeps getting reset to default (possibly due to a power issue
   // when the relay switches), so force the volt range every time we're about to read.
-  s_adc0.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
-  s_adc1.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
-  s_adc2.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
+  adc.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
 
   adc.ads.setCompareChannels(channel);
   adc.ads.startSingleMeasurement();
 
-#ifdef ADC_WAIT
   int times = 0;
   while (adc.ads.isBusy()) {
-    Delay(10, "ADC wait");
-    if (times++ > 10) {
-      TRACE("ADC is busy: %s"), adc.name.c_str());
+    Delay(ADC_RETRY_DELAY, "ADC busy wait");
+    if (times++ > ADC_RETRY_MAX) {
+#if ADC_DEBUG
+      TRACE("ADC is busy, result unknown.");
+#endif // ADC_DEBUG
       return k_unknown;
     }
   }
-#endif
 
   return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 }
