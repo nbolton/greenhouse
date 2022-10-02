@@ -9,10 +9,10 @@ public:
   virtual void OnPowerSwitch() = 0;
   virtual void ExpanderWrite(int pin, int value) = 0;
   virtual void ShiftRegister(int pin, bool set) = 0;
-  virtual bool PowerSensorReady() = 0;
-  virtual float ReadPowerSensorVoltage() = 0;
-  virtual float ReadPowerSensorCurrent() = 0;
-  virtual float ReadCommonVoltageSensor() = 0;
+  virtual bool BatterySensorReady() = 0;
+  virtual float ReadBatteryVoltageSensorRaw() = 0;
+  virtual float ReadBatteryCurrentSensorRaw() = 0;
+  virtual float ReadLocalVoltageSensorRaw() = 0;
   //virtual float ReadPsuVoltageSensor() = 0;
 };
 

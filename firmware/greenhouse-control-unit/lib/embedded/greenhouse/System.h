@@ -53,10 +53,10 @@ public:
   void OnPowerSwitch();
   void ExpanderWrite(int pin, int value);
   void ShiftRegister(int pin, bool set);
-  bool PowerSensorReady();
-  float ReadPowerSensorVoltage();
-  float ReadPowerSensorCurrent();
-  float ReadCommonVoltageSensor();
+  bool BatterySensorReady();
+  float ReadBatteryVoltageSensorRaw();
+  float ReadBatteryCurrentSensorRaw();
+  float ReadLocalVoltageSensorRaw();
   //float ReadPsuVoltageSensor();
   void QueueToggleActiveSwitch();
   void ApplyRefreshRate();

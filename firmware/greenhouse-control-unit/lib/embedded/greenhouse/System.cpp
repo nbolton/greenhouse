@@ -58,7 +58,7 @@ const int k_shiftRegisterTestOff = 0;  // time between last clear and next shift
 const int k_shiftRegisterMinVoltage = 5;
 
 // msr pins
-const int k_pvRelayPin = 0;
+const int k_batteryRelayPin = 0;
 const int k_BeepPin = 1;
 const int k_caseFanPin = 2;
 const int k_psuRelayPin = 3;
@@ -68,16 +68,12 @@ const int k_actuatorPin1 = 7; // IN1
 const int k_actuatorPin2 = 6; // IN2
 const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
 
-// adc0 pins
-//const ADS1115_MUX k_psuVoltagePin = ADS1115_COMP_2_GND;
-const ADS1115_MUX k_commonVoltagePin = ADS1115_COMP_3_GND;
-
 // adc1 pins
-const ADS1115_MUX k_moisturePin = ADS1115_COMP_1_GND;
+const ADS1115_MUX k_localVoltagePin = ADS1115_COMP_3_GND;
 
 // adc2 pins
-const ADS1115_MUX k_pvVoltagePin = ADS1115_COMP_0_GND;
-const ADS1115_MUX k_pvCurrentPin = ADS1115_COMP_1_GND;
+const ADS1115_MUX k_batteryVoltagePin = ADS1115_COMP_0_GND;
+const ADS1115_MUX k_batteryCurrentPin = ADS1115_COMP_1_GND;
 
 const bool k_enableLed = false;
 const int k_shiftRegisterTotal = 2;
@@ -86,7 +82,6 @@ const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
 const uint8_t k_insideAirSensorAddress = 0x44;
 const uint8_t k_outsideAirSensorAddress = 0x45;
-//const int k_adcAddress0 = 0x4A;
 const int k_adcAddress1 = 0x48;
 const int k_adcAddress2 = 0x49;
 const float k_weatherLat = 54.203;
@@ -110,7 +105,7 @@ static char s_reportBuffer[200];
 static BlynkTimer s_refreshTimer;
 static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
-static ADC /*s_adc0,*/ s_adc1, s_adc2;
+static ADC s_adc1, s_adc2;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
@@ -128,7 +123,7 @@ void System::Instance(System &ga) { s_instance = &ga; }
 
 System::System() :
   m_heating(),
-  m_power(k_psuRelayPin, k_pvRelayPin, k_batteryLedPin, k_psuLedPin),
+  m_power(k_psuRelayPin, k_batteryRelayPin, k_batteryLedPin, k_psuLedPin),
   m_insideAirTemperature(k_unknown),
   m_insideAirHumidity(k_unknown),
   m_outsideAirTemperature(k_unknown),
@@ -273,6 +268,7 @@ void System::Loop()
   // though circuit logic, but this will do for now.
   const bool srEnable = Power().ReadLocalVoltage() >= k_shiftRegisterMinVoltage;
   if (srEnable != m_shiftRegisterEnabled) {
+    TRACE_F("Local voltage: %.2fV", Power().ReadLocalVoltage());
     TRACE_F("Shift register %s", srEnable ? "enabled" : "disabled");
     digitalWrite(k_shiftRegisterEnablePin, srEnable ? SR_ON : SR_OFF);
 
@@ -359,15 +355,6 @@ void System::InitSensors()
 
 void System::InitADCs()
 {
-#if 0
-  s_adc0.name = "ADS1115 #0 - n/a";
-  s_adc0.ads = ADS1115_WE(k_adcAddress0);
-  s_adc0.ready = s_adc0.ads.init();
-  if (!s_adc0.ready) {
-    ReportWarning("ADC not ready, init failed: %s", s_adc0.name.c_str());
-  }
-#endif
-
   s_adc1.name = "ADS1115 #1 - Onboard";
   s_adc1.ads = ADS1115_WE(k_adcAddress1);
   s_adc1.ready = s_adc1.ads.init();
@@ -395,14 +382,13 @@ void System::Refresh()
 
   m_power.MeasureCurrent();
 
-  TRACE_F("Local voltage: %.2fV", m_power.ReadCommonVoltage());
-  //TRACE_F("PSU voltage: %.2fV", m_power.ReadPsuVoltage());
+  TRACE_F("Local voltage: %.2fV", m_power.ReadLocalVoltage());
 
-  Blynk.virtualWrite(V28, Power().PvPowerSource());
-  Blynk.virtualWrite(V29, Power().PvVoltageSensor());
-  Blynk.virtualWrite(V30, Power().PvVoltageOutput());
-  Blynk.virtualWrite(V42, Power().PvCurrentSensor());
-  Blynk.virtualWrite(V43, Power().PvCurrentOutput());
+  Blynk.virtualWrite(V28, Power().BatteryPowerSource());
+  Blynk.virtualWrite(V29, Power().BatteryVoltageSensor());
+  Blynk.virtualWrite(V30, Power().BatteryVoltageOutput());
+  Blynk.virtualWrite(V42, Power().BatteryCurrentSensor());
+  Blynk.virtualWrite(V43, Power().BatteryCurrentOutput());
   Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
@@ -531,7 +517,7 @@ bool System::ReadSensors(int &failures)
 
 bool System::ReadSoilMoistureSensor()
 {
-  SoilSensor(ReadAdc(s_adc1, k_moisturePin));
+  SoilSensor(k_unknown);
   return (SoilSensor() != k_unknown);
 }
 
@@ -933,14 +919,14 @@ void System::ReportMoistureCalibration()
 void System::UpdateCaseFan()
 {
   // turn case fan on when any switch is on or if PSU is in use
-  bool caseFanOn = (s_switchOnCount > 0) || (!Power().PvPowerSource());
+  bool caseFanOn = (s_switchOnCount > 0) || (!Power().BatteryPowerSource());
   CaseFan(caseFanOn);
 }
 
 void System::OnPowerSwitch()
 {
   UpdateCaseFan();
-  Blynk.virtualWrite(V28, Power().PvPowerSource());
+  Blynk.virtualWrite(V28, Power().BatteryPowerSource());
 }
 
 void System::ExpanderWrite(int pin, int value) { s_io1.digitalWrite(pin, value); }
@@ -955,15 +941,13 @@ void System::ShiftRegister(int pin, bool set)
   }
 }
 
-bool System::PowerSensorReady() { return s_adc2.ready; }
+bool System::BatterySensorReady() { return s_adc2.ready; }
 
-float System::ReadPowerSensorVoltage() { return ReadAdc(s_adc2, k_pvVoltagePin); }
+float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_adc2, k_batteryVoltagePin); }
 
-float System::ReadPowerSensorCurrent() { return ReadAdc(s_adc2, k_pvCurrentPin); }
+float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_adc2, k_batteryCurrentPin); }
 
-float System::ReadCommonVoltageSensor() { return ReadAdc(s_adc1, k_commonVoltagePin); }
-
-//float System::ReadPsuVoltageSensor() { return ReadAdc(s_adc1, k_psuVoltagePin); }
+float System::ReadLocalVoltageSensorRaw() { return ReadAdc(s_adc1, k_localVoltagePin); }
 
 void System::PrintCommands() { TRACE("Commands\ns: status"); }
 
@@ -1095,27 +1079,27 @@ BLYNK_WRITE(V31) { eg::s_instance->Time().DayStartHour(param.asInt()); }
 
 BLYNK_WRITE(V32) { eg::s_instance->Time().DayEndHour(param.asInt()); }
 
-BLYNK_WRITE(V34) { eg::s_instance->Power().PvVoltageSensorMin(param.asFloat()); }
+BLYNK_WRITE(V34) { eg::s_instance->Power().BatteryVoltageSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V35) { eg::s_instance->Power().PvVoltageSensorMax(param.asFloat()); }
+BLYNK_WRITE(V35) { eg::s_instance->Power().BatteryVoltageSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V36) { eg::s_instance->Power().PvVoltageOutputMin(param.asFloat()); }
+BLYNK_WRITE(V36) { eg::s_instance->Power().BatteryVoltageOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V37) { eg::s_instance->Power().PvVoltageOutputMax(param.asFloat()); }
+BLYNK_WRITE(V37) { eg::s_instance->Power().BatteryVoltageOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V38) { eg::s_instance->Power().PvCurrentSensorMin(param.asFloat()); }
+BLYNK_WRITE(V38) { eg::s_instance->Power().BatteryCurrentSensorMin(param.asFloat()); }
 
-BLYNK_WRITE(V39) { eg::s_instance->Power().PvCurrentSensorMax(param.asFloat()); }
+BLYNK_WRITE(V39) { eg::s_instance->Power().BatteryCurrentSensorMax(param.asFloat()); }
 
-BLYNK_WRITE(V40) { eg::s_instance->Power().PvCurrentOutputMin(param.asFloat()); }
+BLYNK_WRITE(V40) { eg::s_instance->Power().BatteryCurrentOutputMin(param.asFloat()); }
 
-BLYNK_WRITE(V41) { eg::s_instance->Power().PvCurrentOutputMax(param.asFloat()); }
+BLYNK_WRITE(V41) { eg::s_instance->Power().BatteryCurrentOutputMax(param.asFloat()); }
 
-BLYNK_WRITE(V44) { eg::s_instance->Power().PvVoltageSwitchOn(param.asFloat()); }
+BLYNK_WRITE(V44) { eg::s_instance->Power().BatteryVoltageSwitchOn(param.asFloat()); }
 
-BLYNK_WRITE(V45) { eg::s_instance->Power().PvVoltageSwitchOff(param.asFloat()); }
+BLYNK_WRITE(V45) { eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) { eg::s_instance->Power().PvMode((embedded::greenhouse::PvModes)param.asInt()); }
+BLYNK_WRITE(V47) { eg::s_instance->Power().BatteryMode((embedded::greenhouse::BatteryModes)param.asInt()); }
 
 BLYNK_WRITE(V48) { eg::s_instance->WindowAdjustPositions(param.asInt()); }
 
