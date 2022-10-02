@@ -4046,6 +4046,11 @@
     (uuid ffa7a221-d4ac-4398-8976-53417da6820a)
   )
 
+  (text "TODO: Swap D4 and D8. \nD8 tends to be undefined at boot,\nwhich turns the SR on and off randomly. \nThis wouldn't matter for RAD_TX, since\nthe TX module will be disabled."
+    (at 186.69 86.36 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 06214b4a-ede1-47ae-8b15-a2f3a80f343d)
+  )
   (text "On when using battery" (at 104.14 363.22 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 150acdc1-b712-4e27-98d1-32195ff7e94a)
@@ -4438,7 +4443,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 9266e251-fcb2-4e84-8d82-037250160d94)
   )
-  (label "RAD_TX" (at 200.66 111.76 180)
+  (label "RAD_TX_DATA" (at 200.66 111.76 180)
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid 9b82df83-6901-4f7e-8da8-6aef52a68497)
   )
