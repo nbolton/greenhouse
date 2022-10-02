@@ -271,7 +271,7 @@ void System::Loop()
   // possibly through the inputs, which doesn't seem great. so, turn the shift
   // register off when it doesn't have any power. ideally this should be done
   // though circuit logic, but this will do for now.
-  const bool srEnable = ReadCommonVoltageSensor() >= k_shiftRegisterMinVoltage;
+  const bool srEnable = Power().ReadLocalVoltage() >= k_shiftRegisterMinVoltage;
   if (srEnable != m_shiftRegisterEnabled) {
     TRACE_F("Shift register %s", srEnable ? "enabled" : "disabled");
     digitalWrite(k_shiftRegisterEnablePin, srEnable ? SR_ON : SR_OFF);
