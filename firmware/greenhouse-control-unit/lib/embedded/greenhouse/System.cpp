@@ -93,6 +93,7 @@ const int k_loopDelay = 1000;
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
 const int k_serialWaitDelay = 1000;    // 1s
+const int k_leftWindowNodeSwitch = 1;
 const int k_rightWindowNodeSwitch = 2;
 
 static System *s_instance = nullptr;
@@ -172,6 +173,7 @@ void System::Setup()
 
   InitShiftRegisters();
 
+  System().SetSwitch(k_leftWindowNodeSwitch, true);
   System().SetSwitch(k_rightWindowNodeSwitch, true);
 
   Beep(1, false);
@@ -190,7 +192,7 @@ void System::Setup()
 
 #if RADIO_EN
   m_radio.System(this);
-  m_radio.Setup();
+  m_radio.Init();
 #endif
 
   Blynk.begin(k_auth, k_ssid, k_pass);
@@ -215,10 +217,6 @@ void System::Loop()
 
   // always run before actuator check
   ng::System::Loop();
-
-  if (IsWindowActuatorRunning()) {
-    return;
-  }
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -444,7 +442,7 @@ bool System::ReadSensors(int &failures)
   }
 
   TRACE("Reading soil temperatures");
-  radio::Node rightWindow = m_radio.Node(radio::k_nodeRightWindow);
+  radio::Node& rightWindow = m_radio.Node(radio::k_nodeRightWindow);
   const int tempDevs = rightWindow.GetTempDevs();
   TRACE_F("Soil temperatures devices: %d", tempDevs);
   float tempSum = 0;
@@ -493,27 +491,18 @@ bool System::ReadSoilMoistureSensor()
   return (SoilSensor() != k_unknown);
 }
 
-void System::RunWindowActuator(bool extend)
+void System::RunWindowActuator(bool extend, int runtimeSec)
 {
+  //radio::Node& left = m_radio.Node(radio::k_nodeLeftWindow);
+  radio::Node& right = m_radio.Node(radio::k_nodeRightWindow);
   if (extend) {
-    TRACE("Actuator set IN1, clear IN2");
-    s_shiftRegisters.set(k_actuatorPin1);
-    s_shiftRegisters.clear(k_actuatorPin2);
+    //left.MotorRun(radio::k_windowExtend, runtimeSec);
+    right.MotorRun(radio::k_windowExtend, runtimeSec);
   }
   else {
-    TRACE("Actuator clear IN1, set IN2");
-    s_shiftRegisters.clear(k_actuatorPin1);
-    s_shiftRegisters.set(k_actuatorPin2);
+    //left.MotorRun(radio::k_windowRetract, runtimeSec);
+    right.MotorRun(radio::k_windowRetract, runtimeSec);
   }
-  s_shiftRegisters.shift();
-}
-
-void System::StopActuator()
-{
-  TRACE("Stopping actuator");
-  s_shiftRegisters.clear(k_actuatorPin1);
-  s_shiftRegisters.clear(k_actuatorPin2);
-  s_shiftRegisters.shift();
 }
 
 void System::Delay(unsigned long ms, const char *reason)
@@ -716,7 +705,7 @@ void System::ReportSensorValues()
   Blynk.virtualWrite(V46, WaterTemperature());
 }
 
-void System::ReportWindowProgress() { Blynk.virtualWrite(V9, WindowProgressExpected()); }
+void System::ReportWindowOpenPercent() { Blynk.virtualWrite(V9, WindowOpenPercentExpected()); }
 
 void System::ReportSystemInfo()
 {
@@ -1024,8 +1013,8 @@ BLYNK_WRITE(V8) { eg::s_instance->OpenFinish(param.asFloat()); }
 
 BLYNK_WRITE(V9)
 {
-  eg::s_instance->WindowProgress(param.asInt());
-  eg::s_instance->QueueCallback(&eg::System::UpdateWindowProgress, "Window progress");
+  eg::s_instance->WindowOpenPercent(param.asInt());
+  eg::s_instance->QueueCallback(&eg::System::UpdateWindowOpenPercent, "Window open percent");
 }
 
 BLYNK_WRITE(V14) { eg::s_instance->TestMode(param.asInt() == 1); }

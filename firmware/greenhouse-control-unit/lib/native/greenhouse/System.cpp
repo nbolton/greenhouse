@@ -17,8 +17,9 @@ System::System() :
   m_autoMode(false),
   m_openStart(k_unknown),
   m_openFinish(k_unknown),
-  m_windowProgressExpected(k_unknown),
-  m_windowProgressActual(k_unknown),
+  m_applyWindowOpenPercent(false),
+  m_windowOpenPercentExpected(k_unknown),
+  m_windowOpenPercentActual(k_unknown),
   m_testMode(false),
   m_soilMostureWarning(k_unknown),
   m_windowActuatorRuntimeSec(0),
@@ -45,22 +46,7 @@ void System::Setup()
   Heating().System(*this);
 }
 
-void System::Loop()
-{
-  if (IsWindowActuatorRunning()) {
-    const int windowTimeLeft = m_windowActuatorStopTime - Time().EpochTime();
-    if (windowTimeLeft <= 0) {
-      TRACE_F("Actuator finished, overshoot: %ds", abs(windowTimeLeft));
-      m_windowActuatorStopTime = k_unknownUL;
-      StopActuator();
-    }
-    else {
-      TRACE_F("Actuator opening window, time left: %ds", windowTimeLeft);
-      Delay(k_windowActuatorLoopDelay, "Actuator loop");
-      return;
-    }
-  }
-}
+void System::Loop() {}
 
 void System::Refresh()
 {
@@ -120,10 +106,10 @@ void System::Refresh()
   float openFinish = m_openFinish;
 
   if ((WeatherCode() != k_unknown) && IsRaining()) {
-    if (WindowProgressExpected() > 0) {
+    if (WindowOpenPercentExpected() > 0) {
       // close windows on rain even if in manual mode (it may get left on by accident)
       ReportInfo("Weather forecast is rain, closing window");
-      CloseWindow((float)WindowProgressExpected() / 100);
+      CloseWindow((float)WindowOpenPercentExpected() / 100);
     }
   }
   else if (m_autoMode) {
@@ -131,7 +117,7 @@ void System::Refresh()
 
     TRACE_F(
       "Auto mode, wp=%d%% t=%.2fC os=%.2fC of=%.2fC last=%d timeframe=%dm",
-      WindowProgressExpected(),
+      WindowOpenPercentExpected(),
       soilTemperature,
       openStart,
       openFinish,
@@ -139,7 +125,8 @@ void System::Refresh()
       m_windowAdjustTimeframe);
 
     int timeframeSec = m_windowAdjustTimeframe * 60;
-    bool timeframeOk = (m_windowAdjustTimeframe == k_unknown) ||
+    bool timeframeOk = (Time().EpochTime() == k_unknownUL) ||
+                       (m_windowAdjustTimeframe == k_unknown) ||
                        (m_windowAdjustLast == k_unknownUL) ||
                        ((int)(Time().EpochTime() - m_windowAdjustLast) > timeframeSec);
     bool noUnknowns =
@@ -152,21 +139,22 @@ void System::Refresh()
         TRACE("Temperature in bounds");
 
         float tempWidth = openFinish - openStart;
-        float progressAsTemp = soilTemperature - openStart;
-        m_windowProgressExpected = (progressAsTemp / tempWidth) * 100;
+        float openPercentAsTemp = soilTemperature - openStart;
+        m_windowOpenPercentExpected = (openPercentAsTemp / tempWidth) * 100;
       }
       else if (soilTemperature >= openFinish) {
         // window should be fully open
         TRACE("Temperature above bounds");
-        m_windowProgressExpected = 100;
+        m_windowOpenPercentExpected = 100;
       }
       else {
         // window should be fully closed
         TRACE("Temperature below bounds");
-        m_windowProgressExpected = 0;
+        m_windowOpenPercentExpected = 0;
       }
+      TRACE_F("Window open percent expected: %d%%", m_windowOpenPercentExpected);
 
-      windowMoved = ApplyWindowProgress();
+      windowMoved = ApplyWindowOpenPercent();
     }
     else {
       TRACE_F(
@@ -183,7 +171,7 @@ void System::Refresh()
   // app was out of focus, so if window isn't opened or closed, report the
   // current window state back.
   if (!windowMoved) {
-    ReportWindowProgress();
+    ReportWindowOpenPercent();
   }
 
   ReportSystemInfo();
@@ -191,18 +179,18 @@ void System::Refresh()
   TRACE("Refresh done (native)");
 }
 
-bool System::ApplyWindowProgress()
+bool System::ApplyWindowOpenPercent()
 {
   const float positions = WindowAdjustPositions();
-  const float expected = WindowProgressExpected();
-  const float actual = WindowProgressActual();
+  const float expected = WindowOpenPercentExpected();
+  const float actual = WindowOpenPercentActual();
 
   bool fullExtent = (expected == 0) || (expected == 1);
   float rounded = (round((positions / 100) * expected) / positions) * 100;
-  bool changed = std::abs(rounded - actual) > 0.01f;
+  bool changed = std::abs(expected - actual) > 0.01f;
 
   TRACE_F(
-    "Apply window progress, "
+    "Apply window open percent, "
     "positions=%d, expected=%.2f, rounded=%.2f, actual=%.2f, "
     "changed=%s, full=%s",
     (int)positions,
@@ -212,8 +200,18 @@ bool System::ApplyWindowProgress()
     changed ? "true" : "false",
     fullExtent ? "true" : "false");
 
+  if (expected == k_unknown) {
+    TRACE("Skip apply window open percent, unknown expected");
+    return false;
+  }
+
+  if (actual == k_unknown) {
+    TRACE("Skip apply window open percent, unknown actual");
+    return false;
+  }
+
   if (positions == k_unknown) {
-    TRACE("Cannot apply window progress with unknown positions");
+    TRACE("Skip apply window open percent, unknown positions");
     return false;
   }
 
@@ -222,7 +220,7 @@ bool System::ApplyWindowProgress()
     float closeDelta = (actual - rounded) / 100;
     float openDelta = (rounded - actual) / 100;
 
-    TRACE_F("Testing window progress, open=%.2f, close=%.2f", openDelta, closeDelta);
+    TRACE_F("Testing window open percent, open=%.2f, close=%.2f", openDelta, closeDelta);
 
     if (openDelta > 0) {
       OpenWindow(openDelta);
@@ -236,13 +234,13 @@ bool System::ApplyWindowProgress()
     }
   }
 
-  TRACE("No window progress change");
+  TRACE("No window open percent change");
   return false;
 }
 
-void System::AddWindowProgressActualDelta(float delta)
+void System::AddWindowOpenPercentActualDelta(float delta)
 {
-  int wp = m_windowProgressActual;
+  int wp = m_windowOpenPercentActual;
   wp += delta * 100;
   if (wp < 0) {
     wp = 0;
@@ -250,16 +248,15 @@ void System::AddWindowProgressActualDelta(float delta)
   else if (wp > 100) {
     wp = 100;
   }
-  m_windowProgressActual = wp;
+  m_windowOpenPercentActual = wp;
 }
 
 void System::OpenWindow(float delta)
 {
-  TRACE("Opening window...");
-  TRACE_F("Delta: %.2f", delta);
+  TRACE_F("Opening window, delta=%.2f", delta);
 
-  AddWindowProgressActualDelta(delta);
-  ReportWindowProgress();
+  ReportWindowOpenPercent();
+  AddWindowOpenPercentActualDelta(delta);
   AdjustWindow(true, delta);
 
   float percent = delta * 100;
@@ -268,11 +265,10 @@ void System::OpenWindow(float delta)
 
 void System::CloseWindow(float delta)
 {
-  TRACE("Closing window...");
-  TRACE_F("Delta: %.2f", delta);
+  TRACE_F("Closing window, delta=%.2f", delta);
 
-  AddWindowProgressActualDelta(delta * -1);
-  ReportWindowProgress();
+  AddWindowOpenPercentActualDelta(delta * -1);
+  ReportWindowOpenPercent();
   AdjustWindow(false, delta);
 
   float percent = delta * 100;
@@ -281,12 +277,18 @@ void System::CloseWindow(float delta)
 
 void System::AdjustWindow(bool open, float delta)
 {
-  RunWindowActuator(open);
+  float runtime = m_windowActuatorRuntimeSec * delta;
+  TRACE_F(
+    "Running window actuator: delta=%.2f, max=%.2fs, runtime=%.2fs",
+    delta,
+    m_windowActuatorRuntimeSec,
+    runtime);
 
-  int runtime = m_windowActuatorRuntimeSec * delta;
-  TRACE_F("Actuator runtime set: %ds", runtime);
+  if (runtime < 1) {
+    runtime = 1;
+  }
 
-  m_windowActuatorStopTime = Time().EpochTime() + runtime;
+  RunWindowActuator(open, (int)runtime);
 }
 
 float System::CalculateMoisture(float analogValue) const
@@ -298,6 +300,22 @@ float System::CalculateMoisture(float analogValue) const
     return k_unknown;
   }
   return percent;
+}
+
+void System::WindowOpenPercent(int value)
+{
+  if (m_windowOpenPercentExpected == k_unknown) {
+    // must be the first time we got the value from blynk.
+    m_windowOpenPercentActual = value;
+  }
+  else {
+    // if not the first time, apply the window open percent.
+    // only apply window open percent if it's not the 1st time;
+    // otherwise the window will always open from 0 on start,
+    // and the position might be something else.
+    m_applyWindowOpenPercent = true;
+  }
+  m_windowOpenPercentExpected = value;
 }
 
 bool System::IsRaining() const { return WeatherCode() < k_dryWeatherCode; }
@@ -312,8 +330,7 @@ void System::HandleDayToNightTransition() { Heating().HandleDayToNightTransition
 
 void System::ResetSoilMoistureAverage()
 {
-  while (!m_soilMoistureSamples.empty())
-  {
+  while (!m_soilMoistureSamples.empty()) {
     m_soilMoistureSamples.pop();
   }
 }
@@ -374,25 +391,10 @@ void System::AddSoilMoistureSample(float sample)
 
 float System::SoilMoistureAverage() { return m_soilMoistureAverage; }
 
-void System::UpdateWindowProgress()
+void System::UpdateWindowOpenPercent()
 {
-  TRACE_F(
-    "Window progress new=%d, current=%d, actual=%d",
-    m_windowProgress,
-    m_windowProgressExpected,
-    m_windowProgressActual);
-
-  int firstTime = m_windowProgressExpected == k_unknown;
-  m_windowProgressExpected = m_windowProgress;
-
-  if (firstTime) {
-    m_windowProgressActual = m_windowProgressExpected;
-  }
-  else {
-    // only apply window progress if it's not the 1st time;
-    // otherwise the window will always open from 0 on start,
-    // and the position might be something else.
-    ApplyWindowProgress();
+  if (m_applyWindowOpenPercent) {
+    ApplyWindowOpenPercent();
   }
 }
 

@@ -31,11 +31,11 @@ public:
 public:
   void AddSoilMoistureSample(float sample);
   float SoilMoistureAverage();
-  void UpdateWindowProgress();
+  void UpdateWindowOpenPercent();
 
 protected:
   virtual void ReportSensorValues() {}
-  virtual void ReportWindowProgress() {}
+  virtual void ReportWindowOpenPercent() {}
   virtual void ReportSystemInfo() {}
   virtual void ReportWarnings() {}
   virtual void ReportWeather() {}
@@ -47,16 +47,14 @@ protected:
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual float CalculateMoisture(float analogValue) const;
-  virtual bool ApplyWindowProgress();
-  virtual void AddWindowProgressActualDelta(float delta);
+  virtual bool ApplyWindowOpenPercent();
+  virtual void AddWindowOpenPercentActualDelta(float delta);
   virtual void AdjustWindow(bool open, float delta);
-  virtual void RunWindowActuator(bool extend) {}
-  virtual void StopActuator() {}
+  virtual void RunWindowActuator(bool extend, int runtimeSec) {}
   virtual void Delay(unsigned long ms, const char *reason) {}
   virtual bool UpdateWeatherForecast() { return false; }
   virtual void HandleNightToDayTransition();
   virtual void HandleDayToNightTransition();
-  virtual bool IsWindowActuatorRunning() { return m_windowActuatorStopTime != k_unknownUL; }
 
 public:
   // getters & setters
@@ -68,8 +66,6 @@ public:
   virtual float SoilTemperature() const { return k_unknown; }
   virtual float WaterTemperature() const { return k_unknown; }
   virtual float SoilMoisture() const { return k_unknown; }
-  virtual int WindowProgressExpected() const { return m_windowProgressExpected; }
-  virtual int WindowProgressActual() const { return m_windowProgressActual; }
   virtual void AutoMode(bool value) { m_autoMode = value; }
   virtual bool AutoMode() const { return m_autoMode; }
   virtual void OpenStart(float value) { m_openStart = value; }
@@ -81,7 +77,7 @@ public:
   virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
   virtual float SoilMostureWarning() const { return m_soilMostureWarning; }
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
-  virtual int WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
+  virtual float WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
   virtual void WeatherCode(int value) { m_weatherCode = value; }
   virtual int WeatherCode() const { return m_weatherCode; }
   virtual void WeatherInfo(std::string value) { m_weatherInfo = value; }
@@ -100,7 +96,9 @@ public:
   virtual int WindowAdjustPositions() { return m_windowAdjustPositions; }
   virtual void WindowAdjustTimeframe(int value) { m_windowAdjustTimeframe = value; }
   virtual int WindowAdjustTimeframe() { return m_windowAdjustTimeframe; }
-  virtual void WindowProgress(int value) { m_windowProgress = value; }
+  virtual void WindowOpenPercent(int value);
+  virtual int WindowOpenPercentExpected() const { return m_windowOpenPercentExpected; }
+  virtual int WindowOpenPercentActual() const { return m_windowOpenPercentActual; }
 
 private:
   bool IsRaining() const;
@@ -111,9 +109,9 @@ private:
   bool m_autoMode;
   float m_openStart;
   float m_openFinish;
-  int m_windowProgress;
-  int m_windowProgressExpected;
-  int m_windowProgressActual;
+  bool m_applyWindowOpenPercent;
+  int m_windowOpenPercentExpected;
+  int m_windowOpenPercentActual;
   bool m_testMode;
   float m_soilMostureWarning;
   float m_windowActuatorRuntimeSec;

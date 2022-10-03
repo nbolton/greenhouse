@@ -16,7 +16,6 @@ public:
     m_calls_OpenWindow(0),
     m_calls_CloseWindow(0),
     m_calls_RunWindowActuator(0),
-    m_calls_StopActuator(0),
     m_calls_SystemDelay(0),
     m_calls_ReportWarning(0),
     m_calls_HandleNightToDayTransition(0),
@@ -109,17 +108,11 @@ public:
     System::CloseWindow(delta);
   }
 
-  void RunWindowActuator(bool extend)
+  void RunWindowActuator(bool extend, int runtimeSec)
   {
     TRACE_F("Stub: RunWindowActuator, extend=%s", extend ? "true" : "false");
     m_lastArg_RunWindowActuator_extend = extend;
     m_calls_RunWindowActuator++;
-  }
-
-  void StopActuator()
-  {
-    TRACE("Stub: StopActuator");
-    m_calls_StopActuator++;
   }
 
   void Delay(unsigned long ms, const char* reason)
@@ -166,7 +159,6 @@ public:
   int m_calls_OpenWindow;
   int m_calls_CloseWindow;
   int m_calls_RunWindowActuator;
-  int m_calls_StopActuator;
   int m_calls_SystemDelay;
   int m_calls_ReportWarning;
   int m_calls_HandleNightToDayTransition;

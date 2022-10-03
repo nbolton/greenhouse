@@ -8,7 +8,7 @@
 #include <gh_protocol.h>
 
 #define TEMP_DEVS_MAX 4
-#define NODES_MAX 2
+#define RADIO_NODES_MAX 2
 #define UNKNOWN_ADDRESS 255
 
 namespace embedded {
@@ -35,6 +35,8 @@ class Node;
 
 enum NodeId { k_nodeLeftWindow = 0, k_nodeRightWindow = 1 };
 
+enum MotorDirection { k_windowExtend = GH_MOTOR_FORWARD, k_windowRetract = GH_MOTOR_REVERSE };
+
 struct TempData {
   int devs;
   float temps[TEMP_DEVS_MAX];
@@ -47,11 +49,12 @@ struct TempDataCallbackArg {
 
 class Node {
 public:
-  Node() : m_address(UNKNOWN_ADDRESS) {}
+  Node();
+  void Init(Radio &radio, byte address);
   int GetTempDevs();
   float GetTemp(byte index);
-  void Radio(Radio &radio) { m_radio = &radio; }
-  void Address(byte address) { m_address = address; }
+  bool MotorRun(MotorDirection direction, byte seconds);
+  bool MotorSpeed(byte speed);
 
 protected:
   embedded::greenhouse::Radio &Radio()
@@ -76,17 +79,17 @@ class ISystem;
 class Radio {
 public:
   Radio();
-  void Setup();
+  void Init();
   void System(ISystem *system) { m_system = system; }
-  bool Send(radio::SendDesc &sendDesc);
-  const radio::Node &Node(radio::NodeId index) const { return m_nodes[index]; }
+  bool Send(radio::SendDesc sendDesc);
+  radio::Node &Node(radio::NodeId index);
 
 private:
   void sr(int pin, bool set);
 
 private:
   ISystem *m_system;
-  radio::Node m_nodes[NODES_MAX];
+  radio::Node m_nodes[RADIO_NODES_MAX];
 };
 
 } // namespace greenhouse

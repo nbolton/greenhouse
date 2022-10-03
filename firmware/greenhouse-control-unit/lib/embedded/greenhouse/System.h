@@ -67,7 +67,7 @@ protected:
   void ReportWarning(const char *m, ...);
   void ReportCritical(const char *m, ...);
   void ReportSensorValues();
-  void ReportWindowProgress();
+  void ReportWindowOpenPercent();
   void ReportSystemInfo();
   void ReportWarnings();
   void ReportWeather();
@@ -78,8 +78,7 @@ protected:
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
   bool ReadSoilMoistureSensor();
-  void RunWindowActuator(bool extend);
-  void StopActuator();
+  void RunWindowActuator(bool extend, int runtimeSec);
   void Delay(unsigned long ms, const char *reason);
   bool UpdateWeatherForecast();
   void HandleNightToDayTransition();
