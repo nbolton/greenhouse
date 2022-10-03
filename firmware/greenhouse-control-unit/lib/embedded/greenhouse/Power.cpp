@@ -33,7 +33,7 @@ Power::Power(int psuRelayPin, int batteryRelayPin, int batteryLedPin, int psuLed
   m_psuLedPin(psuLedPin),
   m_batteryPowerSource(false),
   m_batteryVoltageSwitchOn(k_unknown),
-  m_batteryVoltageSwitchOff(k_unknown),
+  m_batteryVoltageMin(k_unknown),
   m_batteryVoltageSensor(k_unknown),
   m_batteryVoltageOutput(k_unknown),
   m_batteryVoltageSensorMin(0),
@@ -96,8 +96,8 @@ void Power::Loop()
       SwitchPower(true);
     }
     else if (
-      m_batteryPowerSource && (m_batteryVoltageSwitchOff != k_unknown) &&
-      (m_batteryVoltageOutput <= m_batteryVoltageSwitchOff)) {
+      m_batteryPowerSource && (m_batteryVoltageMin != k_unknown) &&
+      (m_batteryVoltageOutput <= m_batteryVoltageMin)) {
       TRACE("Switching PSU on automatically (battery off)");
       SwitchPower(false);
     }
@@ -124,17 +124,16 @@ embedded::greenhouse::ISystem &Power::Embedded() const
 
 void Power::InitPowerSource()
 {
-  const float sensorMin = m_batteryVoltageSwitchOff;
-
   MeasureVoltage();
   m_lastLocalVoltage = ReadLocalVoltage();
   TRACE_F(
-    "Init power source, local=%.2fV, battery=%.2fV, min=%.2fV",
+    "Init power source, local=%.2fV (min=%.2fV), battery=%.2fV (min=%.2fV)",
     m_lastLocalVoltage,
+    k_localVoltageMin,
     m_batteryVoltageOutput,
-    sensorMin);
+    m_batteryVoltageMin);
 
-  bool batteryVoltageAboveMin = m_batteryVoltageOutput >= sensorMin;
+  bool batteryVoltageAboveMin = m_batteryVoltageOutput >= m_batteryVoltageMin;
   bool localVoltageAboveMin = m_lastLocalVoltage >= k_localVoltageMin;
 
   if ((m_batteryVoltageSwitchOn != k_unknown) && batteryVoltageAboveMin && localVoltageAboveMin) {

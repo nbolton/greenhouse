@@ -29,7 +29,7 @@ public:
   void BatteryCurrentOutputMin(float value) { m_batteryCurrentOutputMin = value; }
   void BatteryCurrentOutputMax(float value) { m_batteryCurrentOutputMax = value; }
   void BatteryVoltageSwitchOn(float value) { m_batteryVoltageSwitchOn = value; }
-  void BatteryVoltageSwitchOff(float value) { m_batteryVoltageSwitchOff = value; }
+  void BatteryVoltageSwitchOff(float value) { m_batteryVoltageMin = value; }
   bool BatteryPowerSource() { return m_batteryPowerSource; }
   float BatteryVoltageSensor() { return m_batteryVoltageSensor; }
   float BatteryVoltageOutput() { return m_batteryVoltageOutput; }
@@ -56,7 +56,7 @@ private:
   int m_psuLedPin;
   bool m_batteryPowerSource;
   float m_batteryVoltageSwitchOn;
-  float m_batteryVoltageSwitchOff;
+  float m_batteryVoltageMin;
   float m_batteryVoltageSensor;
   float m_batteryVoltageOutput;
   float m_batteryVoltageSensorMin;
