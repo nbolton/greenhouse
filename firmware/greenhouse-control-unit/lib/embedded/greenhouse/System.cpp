@@ -28,9 +28,8 @@ namespace eg = embedded::greenhouse;
 namespace embedded {
 namespace greenhouse {
 
-// SR OE` is inverted
-#define SR_ON HIGH
-#define SR_OFF LOW
+#define SR_ON LOW
+#define SR_OFF HIGH
 
 #define ADC_RETRY_MAX 5
 #define ADC_RETRY_DELAY 50
@@ -46,10 +45,10 @@ struct ADC {
 
 // regular pins
 const int k_oneWirePin = D3;
-const int k_shiftRegisterLatchPin = D5;  // RCLK (12)
-const int k_shiftRegisterDataPin = D6;   // SER (14)
-const int k_shiftRegisterClockPin = D7;  // SRCLK (11)
-const int k_shiftRegisterEnablePin = D8; // OE (13)
+const int k_shiftRegisterEnablePin = D5; // OE (13)
+const int k_shiftRegisterSerialPin = D6;   // SER (14)
+const int k_shiftRegisterShiftClockPin = D7;  // SRCLK (11)
+const int k_shiftRegisterStoreClockPin = D8;  // RCLK (12)
 const bool k_shiftRegisterTestEnable = false;
 const int k_shiftRegisterTestFrom = 0; // min 0
 const int k_shiftRegisterTestTo = 15;  // max 15
@@ -98,7 +97,7 @@ const int k_serialWaitDelay = 1000;    // 1s
 static System *s_instance = nullptr;
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
-  k_shiftRegisterTotal, k_shiftRegisterLatchPin, k_shiftRegisterClockPin, k_shiftRegisterDataPin);
+  k_shiftRegisterTotal, k_shiftRegisterStoreClockPin, k_shiftRegisterShiftClockPin, k_shiftRegisterSerialPin);
 static OneWire s_oneWire(k_oneWirePin);
 static DallasTemperature s_dallas(&s_oneWire);
 static char s_reportBuffer[200];
@@ -142,7 +141,6 @@ System::System() :
   m_activeSwitch(k_unknown),
   m_blynkFailures(0),
   m_lastBlynkFailure(0),
-  m_shiftRegisterEnabled(true),
   m_refreshRate(k_unknown),
   m_queueOnSystemStarted(false),
   m_lastLoop(0)
@@ -262,19 +260,6 @@ void System::Loop()
 
   Power().Loop();
 
-  // the shift register seems to draw power through from the microcontroller,
-  // possibly through the inputs, which doesn't seem great. so, turn the shift
-  // register off when it doesn't have any power. ideally this should be done
-  // though circuit logic, but this will do for now.
-  const bool srEnable = Power().ReadLocalVoltage() >= k_shiftRegisterMinVoltage;
-  if (srEnable != m_shiftRegisterEnabled) {
-    TRACE_F("Local voltage: %.2fV", Power().ReadLocalVoltage());
-    TRACE_F("Shift register %s", srEnable ? "enabled" : "disabled");
-    digitalWrite(k_shiftRegisterEnablePin, srEnable ? SR_ON : SR_OFF);
-
-    m_shiftRegisterEnabled = srEnable;
-  }
-
   while (!m_toggleActiveSwitchQueue.empty()) {
     int queuedSwitch = m_toggleActiveSwitchQueue.front();
     m_toggleActiveSwitchQueue.pop();
@@ -312,9 +297,9 @@ void System::Loop()
 
 void System::InitShiftRegisters()
 {
-  pinMode(k_shiftRegisterLatchPin, OUTPUT);
-  pinMode(k_shiftRegisterClockPin, OUTPUT);
-  pinMode(k_shiftRegisterDataPin, OUTPUT);
+  pinMode(k_shiftRegisterStoreClockPin, OUTPUT);
+  pinMode(k_shiftRegisterShiftClockPin, OUTPUT);
+  pinMode(k_shiftRegisterSerialPin, OUTPUT);
 
   pinMode(k_shiftRegisterEnablePin, OUTPUT);
   digitalWrite(k_shiftRegisterEnablePin, SR_ON);

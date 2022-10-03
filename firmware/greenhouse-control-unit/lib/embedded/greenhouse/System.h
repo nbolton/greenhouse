@@ -140,7 +140,6 @@ private:
   int m_blynkFailures;
   unsigned long m_lastBlynkFailure;
   std::queue<int> m_toggleActiveSwitchQueue;
-  bool m_shiftRegisterEnabled;
   int m_refreshRate;
   std::queue<Callback> m_callbackQueue;
   bool m_queueOnSystemStarted;
