@@ -10,6 +10,8 @@
 #define TX_PIN D4
 #define PTT_PIN -1 // using SR instead; TODO: does -1 effectively disable this feature?
 //#define DEBUG_LEDS
+//#define RADIO_TRACE
+//#define TOGGLE_MODE
 
 #define SR_PIN_EN_TX 15
 #define SR_PIN_LED_ERR 1
@@ -22,6 +24,13 @@
 #define ERROR_PRINT_INTERVAL 10000
 #define SIGNAL_SWITCH 1
 #define TX_INTERVAL 5000
+
+#ifndef RADIO_TRACE
+#undef TRACE
+#define TRACE(l)
+#undef TRACE_F
+#define TRACE_F(...)
+#endif // RADIO_TRACE
 
 namespace embedded {
 namespace greenhouse {
@@ -74,6 +83,7 @@ void Radio::setSignal(Signal s_)
 {
   s = s_;
 
+#ifdef RADIO_TRACE
   const char* signalName;
   switch (s)
   {
@@ -93,6 +103,7 @@ void Radio::setSignal(Signal s_)
     signalName = "?";
     break;
   }
+#endif // RADIO_TRACE
 
   TRACE_F("Radio signal: %s", signalName);
 
@@ -131,8 +142,6 @@ void Radio::errorFlash(int times)
   }
 #endif
 }
-
-#define TOGGLE_MODE
 
 void Radio::toggleMode()
 {
