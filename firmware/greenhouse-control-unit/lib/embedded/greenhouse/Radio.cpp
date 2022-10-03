@@ -84,9 +84,8 @@ void Radio::setSignal(Signal s_)
   s = s_;
 
 #ifdef RADIO_TRACE
-  const char* signalName;
-  switch (s)
-  {
+  const char *signalName;
+  switch (s) {
   case Tx:
     signalName = "tx";
     break;
@@ -98,7 +97,7 @@ void Radio::setSignal(Signal s_)
   case Idle:
     signalName = "idle";
     break;
-  
+
   default:
     signalName = "?";
     break;
