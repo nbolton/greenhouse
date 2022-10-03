@@ -44,11 +44,11 @@ struct ADC {
 };
 
 // regular pins
-const int k_oneWirePin = D3;
-const int k_shiftRegisterEnablePin = D5; // OE (13)
-const int k_shiftRegisterSerialPin = D6;   // SER (14)
-const int k_shiftRegisterShiftClockPin = D7;  // SRCLK (11)
-const int k_shiftRegisterStoreClockPin = D8;  // RCLK (12)
+// const int k_oneWirePin = D3;
+const int k_shiftRegisterEnablePin = D5;     // OE (13)
+const int k_shiftRegisterSerialPin = D6;     // SER (14)
+const int k_shiftRegisterShiftClockPin = D7; // SRCLK (11)
+const int k_shiftRegisterStoreClockPin = D8; // RCLK (12)
 const bool k_shiftRegisterTestEnable = false;
 const int k_shiftRegisterTestFrom = 0; // min 0
 const int k_shiftRegisterTestTo = 15;  // max 15
@@ -93,13 +93,15 @@ const int k_loopDelay = 1000;
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
 const int k_serialWaitDelay = 1000;    // 1s
+const int k_rightWindowNodeSwitch = 2;
 
 static System *s_instance = nullptr;
 static PCF8574 s_io1(k_ioAddress);
 static MultiShiftRegister s_shiftRegisters(
-  k_shiftRegisterTotal, k_shiftRegisterStoreClockPin, k_shiftRegisterShiftClockPin, k_shiftRegisterSerialPin);
-static OneWire s_oneWire(k_oneWirePin);
-static DallasTemperature s_dallas(&s_oneWire);
+  k_shiftRegisterTotal,
+  k_shiftRegisterStoreClockPin,
+  k_shiftRegisterShiftClockPin,
+  k_shiftRegisterSerialPin);
 static char s_reportBuffer[200];
 static BlynkTimer s_refreshTimer;
 static Adafruit_SHT31 s_insideAirSensor;
@@ -170,6 +172,8 @@ void System::Setup()
 
   InitShiftRegisters();
 
+  System().SetSwitch(k_rightWindowNodeSwitch, true);
+
   Beep(1, false);
   CaseFan(true); // on by default
 
@@ -180,8 +184,6 @@ void System::Setup()
   m_power.Setup();
 
   m_time.Setup();
-
-  s_dallas.begin();
 
   InitSensors();
   InitADCs();
@@ -202,21 +204,14 @@ void System::Setup()
 
 void System::Loop()
 {
-  // HACK: the shift register gets into an undefined state sometimes,
-  // so keep shifting to ensure that it's state is persisted.
-  s_shiftRegisters.shift();
-
-#if RADIO_EN
-  m_radio.Loop();
-  if (m_radio.Busy()) {
-    return;
-  }
-#endif
-
   if (millis() < (m_lastLoop + k_loopDelay)) {
     return;
   }
   m_lastLoop = millis();
+
+  // HACK: the shift register gets into an undefined state sometimes,
+  // so keep shifting to ensure that it's state is persisted.
+  s_shiftRegisters.shift();
 
   // always run before actuator check
   ng::System::Loop();
@@ -448,37 +443,29 @@ bool System::ReadSensors(int &failures)
     failures++;
   }
 
-  bool dallasOk = false;
-  int dallasRetry = 0;
-  const int dallasRetryMax = 5;
-  const int dallasRetryWait = 100;
-
-  while (!dallasOk) {
-
-    s_dallas.requestTemperatures();
-
-    m_soilTemperature = s_dallas.getTempCByIndex(k_soilProbeIndex);
-    m_waterTemperature = s_dallas.getTempCByIndex(k_waterProbeIndex);
-
-    dallasOk = true;
-    if (m_soilTemperature == DEVICE_DISCONNECTED_C) {
-      m_soilTemperature = k_unknown;
-      failures++;
-      dallasOk = false;
+  TRACE("Reading soil temperatures");
+  radio::Node rightWindow = m_radio.Node(radio::k_nodeRightWindow);
+  const int tempDevs = rightWindow.GetTempDevs();
+  TRACE_F("Soil temperatures devices: %d", tempDevs);
+  float tempSum = 0;
+  for (int i = 0; i < tempDevs; i++) {
+    const float t = rightWindow.GetTemp(i);
+    if (t != k_unknown) {
+      tempSum += t;
+      TRACE_F("Soil temperature sensor %d: %.2f", i, t);
     }
-
-    if (m_waterTemperature == DEVICE_DISCONNECTED_C) {
-      m_waterTemperature = k_unknown;
-      failures++;
-      dallasOk = false;
+    else {
+      TRACE_F("Soil temperature sensor %d: unknown", i);
     }
+  }
 
-    if (dallasOk || (++dallasRetry > dallasRetryMax)) {
-      break;
-    }
-
-    TRACE_F("Dallas sensor read failed, retrying (attempt %d)", dallasRetry);
-    Delay(dallasRetryWait, "Dallas retry");
+  if (tempSum > 0) {
+    m_soilTemperature = tempSum / tempDevs;
+    TRACE_F("Soil temperature average: %.2f", m_soilTemperature);
+  }
+  else {
+    m_soilTemperature = k_unknown;
+    TRACE("Soil temperatures unknown");
   }
 
   ReadSoilMoistureSensor();
@@ -1084,7 +1071,10 @@ BLYNK_WRITE(V44) { eg::s_instance->Power().BatteryVoltageSwitchOn(param.asFloat(
 
 BLYNK_WRITE(V45) { eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) { eg::s_instance->Power().BatteryMode((embedded::greenhouse::BatteryModes)param.asInt()); }
+BLYNK_WRITE(V47)
+{
+  eg::s_instance->Power().BatteryMode((embedded::greenhouse::BatteryModes)param.asInt());
+}
 
 BLYNK_WRITE(V48) { eg::s_instance->WindowAdjustPositions(param.asInt()); }
 

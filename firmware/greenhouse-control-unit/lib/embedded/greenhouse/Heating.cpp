@@ -5,9 +5,13 @@
 namespace embedded {
 namespace greenhouse {
 
+//#define PUMPS_EN
+
 const int k_fanSwitch = 0;
+#ifdef PUMPS_EN
 const int k_pumpSwitch1 = 1;
 const int k_pumpSwitch2 = 2;
+#endif // PUMPS_EN
 const int k_utilitySwitch = 3;
 
 Heating::Heating() {}
@@ -18,12 +22,14 @@ bool Heating::SwitchWaterHeater(bool on)
     return false;
   }
 
+#ifdef PUMPS_EN
   if (on) {
     System().SetSwitch(k_pumpSwitch1, true);
   }
   else {
     System().SetSwitch(k_pumpSwitch1, false);
   }
+#endif // PUMPS_EN
 
   return true;
 }
@@ -34,6 +40,7 @@ bool Heating::SwitchSoilHeating(bool on)
     return false;
   }
 
+#ifdef PUMPS_EN
   if (on) {
     System().SetSwitch(k_pumpSwitch2, true);
   }
@@ -44,6 +51,7 @@ bool Heating::SwitchSoilHeating(bool on)
       System().SetSwitch(k_pumpSwitch2, false);
     }
   }
+#endif // PUMPS_EN
 
   return true;
 }
@@ -54,6 +62,7 @@ bool Heating::SwitchAirHeating(bool on)
     return false;
   }
 
+#ifdef PUMPS_EN
   if (on) {
     System().SetSwitch(k_fanSwitch, true);
     System().SetSwitch(k_pumpSwitch2, true);
@@ -67,6 +76,7 @@ bool Heating::SwitchAirHeating(bool on)
       System().SetSwitch(k_pumpSwitch2, false);
     }
   }
+#endif // PUMPS_EN
 
   return true;
 }

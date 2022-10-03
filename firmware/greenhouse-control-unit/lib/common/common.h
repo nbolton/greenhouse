@@ -8,4 +8,7 @@ const unsigned long k_unknownUL = -1;
 // float version of Arduino map()
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
 
+// infinite loop, useful for fatal errors
+void halt();
+
 }

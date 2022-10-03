@@ -2,28 +2,23 @@
 
 #include "Radio.h"
 
+#include "../../common/common.h"
 #include "ISystem.h"
+
 #include <RH_ASK.h>
+
+#define RADIO_TRACE
 
 #define BIT_RATE 2000
 #define RX_PIN D0
 #define TX_PIN D4
-#define PTT_PIN -1 // using SR instead; TODO: does -1 effectively disable this feature?
-//#define DEBUG_LEDS
-//#define RADIO_TRACE
-//#define TOGGLE_MODE
-
+#define PTT_PIN -1 // disable; using SR instead
 #define SR_PIN_EN_TX 15
-#define SR_PIN_LED_ERR 1
-#define SR_PIN_LED_RX 5
-#define SR_PIN_LED_TX 4
-
-#define DELAY_RX 100
-#define DELAY_TX 100
-#define TIMEOUT_RX 2000
-#define ERROR_PRINT_INTERVAL 10000
-#define SIGNAL_SWITCH 1
-#define TX_INTERVAL 5000
+#define RX_TIMEOUT 2000
+#define TX_WAIT_DELAY 20
+#define TEMP_OFFSET -1.2
+#define TEMP_UNKNOWN 255
+#define TX_RETRY_MAX 5
 
 #ifndef RADIO_TRACE
 #undef TRACE
@@ -35,241 +30,197 @@
 namespace embedded {
 namespace greenhouse {
 
-RH_ASK s_driver(BIT_RATE, RX_PIN, TX_PIN, PTT_PIN);
+static RH_ASK s_driver(BIT_RATE, RX_PIN, TX_PIN, PTT_PIN);
+static uint8_t s_rxBuf[GH_LENGTH];
+static uint8_t s_txBuf[GH_LENGTH];
+static uint8_t s_sequence = 1; // start at 1; reciever starts at 0
 
-int sequence = 0, i = 0, t = 0, lastPing = 0, lastZing = 0, recvOk = 0, rxErrors = 0, errorRate = 0,
-    timeouts = 0;
-Mode mode;
-Signal s;
-char modeString[10];
-unsigned long rxStart;
-unsigned long txLast;
+void printBuffer(const __FlashStringHelper *prompt, const uint8_t *buf, uint8_t len);
 
 Radio::Radio() : m_system(nullptr) {}
 
 void Radio::Setup()
 {
   if (!s_driver.init()) {
-    TRACE("Radio ASK init failed");
-    while (true) {
-      // HCF
-    }
+    TRACE("Fatal: Radio driver init failed");
+    common::halt();
   }
 
-  setMode(Ping);
-  setSignal((mode == Ping) || (mode == Zing) ? Tx : Rx);
+  for (int i = 0; i < NODES_MAX; i++) {
+    m_nodes[i].Radio(*this);
+  }
+
+  m_nodes[radio::k_nodeRightWindow].Address(GH_ADDR_NODE_1);
+  m_nodes[radio::k_nodeLeftWindow].Address(GH_ADDR_NODE_2);
 }
-
-void Radio::Loop()
-{
-  if (s == Tx) {
-    tx();
-  }
-  else if (s == Rx) {
-    rx();
-  }
-  else {
-    if (millis() >= (txLast + TX_INTERVAL)) {
-      setSignal(Tx);
-    }
-  }
-}
-
-bool Radio::Busy() { return s == Rx; }
 
 void Radio::sr(int pin, bool set) { m_system->ShiftRegister(pin, set); }
 
-void Radio::setSignal(Signal s_)
+bool Radio::Send(radio::SendDesc &sendDesc)
 {
-  s = s_;
+  bool rx = false;
+  for (int i = 0; i < TX_RETRY_MAX; i++) {
+    
+    TRACE_F("Radio sending, attempt: %d of %d", i + 1, TX_RETRY_MAX);
 
-#ifdef RADIO_TRACE
-  const char *signalName;
-  switch (s) {
-  case Tx:
-    signalName = "tx";
-    break;
+    sr(SR_PIN_EN_TX, true);
+    delay(TX_WAIT_DELAY);
 
-  case Rx:
-    signalName = "rx";
-    break;
+    GH_TO(s_txBuf) = sendDesc.to;
+    GH_FROM(s_txBuf) = GH_ADDR_MAIN;
+    GH_CMD(s_txBuf) = sendDesc.cmd;
+    GH_DATA_1(s_txBuf) = sendDesc.data1;
+    GH_DATA_2(s_txBuf) = sendDesc.data2;
 
-  case Idle:
-    signalName = "idle";
-    break;
+    s_sequence = s_sequence % 256;
+    GH_SEQ(s_txBuf) = s_sequence;
 
-  default:
-    signalName = "?";
-    break;
-  }
-#endif // RADIO_TRACE
+    s_driver.send(s_txBuf, GH_LENGTH);
+    s_driver.waitPacketSent();
+    printBuffer(F("Radio sent data: "), s_txBuf, GH_LENGTH);
 
-  TRACE_F("Radio signal: %s", signalName);
+    sr(SR_PIN_EN_TX, false);
 
-  if (s == Rx) {
-    rxStart = millis();
-  }
-}
-
-void Radio::setMode(Mode _mode)
-{
-  mode = _mode;
-  switch (mode) {
-  case Ping:
-    strcpy(modeString, "ping >>");
-    break;
-
-  case Zing:
-    strcpy(modeString, "zing >>");
-    break;
-
-  case Pong:
-    strcpy(modeString, "<< pong");
-    break;
-  }
-  TRACE_F("Radio mode: %s", modeString);
-}
-
-void Radio::errorFlash(int times)
-{
-#ifdef DEBUG_LEDS
-  for (int i = 0; i < times; i++) {
-    sr(SR_PIN_LED_ERR, true);
-    delay(100);
-    sr(SR_PIN_LED_ERR, false);
-    delay(100);
-  }
-#endif
-}
-
-void Radio::toggleMode()
-{
-#ifdef TOGGLE_MODE
-  // toggle between ping and zing
-  setMode(mode == Ping ? Zing : Ping);
-#endif
-}
-
-void Radio::tx()
-{
-  sr(SR_PIN_EN_TX, true);
-
-  if (mode == Ping || mode == Pong) {
-    sequence++;
-  }
-
-  char msg[50];
-  sprintf(msg, "%s %d", modeString, sequence % 10);
-
-  s_driver.send((uint8_t *)msg, strlen(msg));
-  s_driver.waitPacketSent();
-
-  TRACE_F("Radio sent: %s", msg);
-
-  sr(SR_PIN_EN_TX, false);
-
-#ifdef DEBUG_LEDS
-  sr(SR_PIN_LED_TX, true);
-  delay(100);
-  sr(SR_PIN_LED_TX, false);
-#endif
-
-  delay(DELAY_TX);
-
-#if SIGNAL_SWITCH
-  setSignal(Rx);
-#endif
-
-  txLast = millis();
-}
-
-void Radio::rx()
-{
-  uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
-  uint8_t buflen = sizeof(buf);
+    unsigned long start = millis();
+    while (millis() < (start + RX_TIMEOUT)) {
+      uint8_t s_rxBufLen = sizeof(s_rxBuf);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  if (s_driver.recv(buf, &buflen)) // Non-blocking
+      if (s_driver.recv(s_rxBuf, &s_rxBufLen)) {
 #pragma GCC diagnostic pop
-  {
-    rxStart = millis();
 
-    // terminate string so garbage isn't printed
-    buf[buflen] = '\0';
-    TRACE_F("Radio recv: %s", (char *)buf);
+        printBuffer(F("Radio got data: "), s_rxBuf, GH_LENGTH);
 
-    if (mode != Pong) {
-      recvOk++;
+        if (GH_TO(s_rxBuf) == GH_ADDR_MAIN) {
+          if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
+            TRACE_F("Radio error code: %d", GH_DATA_1(s_rxBuf));
+          }
+          else if (GH_CMD(s_rxBuf) != sendDesc.expectCmd) {
+            TRACE("Radio error, unexpected command");
+          }
+          else if (sendDesc.okCallback != NULL) {
+            sendDesc.okCallbackReturn = sendDesc.okCallback(sendDesc.okCallbackArg);
+          }
 
-      int *last = (mode == Ping) ? &lastPing : &lastZing;
-
-      i = buf[buflen - 1] - 48;
-      if ((*last != -1) && (i != *last + 1)) {
-        int errorSince;
-        if (i < *last) {
-          errorSince = i - (*last - 9);
+          rx = true;
+          break;
         }
         else {
-          errorSince = i - *last - 1;
-        }
-
-        if (errorSince != 0) {
-          rxErrors += errorSince;
-          TRACE_F("Radio errors: now=%d, sum=%d, ok=%d", errorSince, rxErrors, recvOk);
-          errorFlash(1);
+          TRACE("Radio ignoring message (address mismatch)");
+          // don't report an error, this is fine
         }
       }
-      *last = i;
-
-#ifdef DEBUG_LEDS
-      sr(SR_PIN_LED_RX, true);
-      delay(100);
-      sr(SR_PIN_LED_RX, false);
-#endif
-
-      delay(DELAY_RX);
-
-#if SIGNAL_SWITCH
-
-      if ((mode == Ping) || (mode == Zing)) {
-        toggleMode();
-      }
-
-      setSignal(Idle);
-#endif
+      delay(1); // prevent WDT reset
     }
-  }
 
-  int diff = millis() - t;
-  if (diff > ERROR_PRINT_INTERVAL) {
-    int errors = timeouts + rxErrors;
-    errorRate = ((float)errors / (float)(recvOk + errors)) * 100;
-    TRACE_F("Radio error rate: %d%% (ok=%d, err=%d)", errorRate, recvOk, errors);
-    timeouts = 0;
-    rxErrors = 0;
-    recvOk = 0;
-    t = millis();
-  }
-
-  if ((millis() - rxStart) > TIMEOUT_RX) {
-    TRACE("Radio timeout");
-    timeouts++;
-    errorFlash(2);
-
-    if ((mode == Ping) || (mode == Zing)) {
-      toggleMode();
-
-      // only tx if ping; if both tx they would get stuck trying to
-      // talk to eachother at the same time.
-      setSignal(Tx);
+    if (rx) {
+      break;
     }
     else {
-      // restart timeout
-      rxStart = millis();
+      TRACE("Radio error, timeout");
     }
   }
+
+  return rx;
 }
+
+// begin node class
+
+namespace radio {
+
+bool tempDevsOk(void *arg)
+{
+  radio::TempData *data = (radio::TempData *)arg;
+  data->devs = GH_DATA_1(s_rxBuf);
+  TRACE_F("Got temperature device count: ", data->devs);
+  return true;
+}
+
+bool tempDataOk(void* argV) {
+  TempDataCallbackArg* arg = (TempDataCallbackArg*)argV;
+  const uint8_t a = GH_DATA_1(s_rxBuf);
+  const uint8_t b = GH_DATA_2(s_rxBuf);
+  TRACE_F("Got temperature data, a=%d b=%d", a, b);
+  if (b != TEMP_UNKNOWN) {
+    arg->data->temps[arg->dev] = b * 16.0 + a / 16.0;
+  }
+  return true;
+}
+
+int Node::GetTempDevs()
+{
+  TRACE("Getting temperature device count");
+
+  radio::SendDesc sd;
+  sd.to = m_address;
+  sd.cmd = GH_CMD_TEMP_DEVS_REQ;
+  sd.expectCmd = GH_CMD_TEMP_DEVS_RSP;
+  sd.okCallback = &tempDevsOk;
+  sd.okCallbackArg = &m_tempData;
+  
+  m_tempData.devs = common::k_unknown;
+
+  if (Radio().Send(sd)) {
+    return m_tempData.devs;
+  }
+  else {
+    return common::k_unknown;
+  }
+}
+
+float Node::GetTemp(byte index) {
+  TRACE_F("Getting temperature value from device: %d", index);
+
+  
+  SendDesc sd;
+  sd.to = m_address;
+  sd.cmd = GH_CMD_TEMP_DATA_REQ;
+  sd.expectCmd = GH_CMD_TEMP_DATA_RSP;
+  sd.data1 = index;
+
+  TempDataCallbackArg arg;
+  arg.dev = index;
+  arg.data = &m_tempData;
+  sd.okCallbackArg = &arg;
+  sd.okCallback = &tempDataOk;
+  
+  m_tempData.temps[index] = common::k_unknown;
+  
+  if (Radio().Send(sd)) {
+    return m_tempData.temps[index];
+  }
+  else {
+    return common::k_unknown;
+  }
+}
+
+} // namespace radio
+
+// end Node classs
+
+// begin free functions
+
+#ifdef RADIO_TRACE
+
+void printBuffer(const __FlashStringHelper *prompt, const uint8_t *buf, uint8_t len)
+{
+  Serial.print(prompt);
+  for (uint8_t i = 0; i < len; i++) {
+    if (i % 16 == 15) {
+      Serial.println(buf[i], HEX);
+    }
+    else {
+      Serial.print(buf[i], HEX);
+      Serial.print(F(" "));
+    }
+  }
+  Serial.println(F(""));
+}
+
+#endif
+
+// end free functions
 
 } // namespace greenhouse
 } // namespace embedded
