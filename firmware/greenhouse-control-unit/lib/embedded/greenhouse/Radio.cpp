@@ -203,19 +203,21 @@ float Node::GetTemp(byte index) {
 
 #ifdef RADIO_TRACE
 
-void printBuffer(const __FlashStringHelper *prompt, const uint8_t *buf, uint8_t len)
+void printBuffer(const __FlashStringHelper *prompt, const uint8_t *data, uint8_t len)
 {
-  Serial.print(prompt);
+  char printBuf[100];
+  strcpy(printBuf, String(prompt).c_str());
+  int printLen = strlen(printBuf);
   for (uint8_t i = 0; i < len; i++) {
-    if (i % 16 == 15) {
-      Serial.println(buf[i], HEX);
-    }
-    else {
-      Serial.print(buf[i], HEX);
-      Serial.print(F(" "));
+    sprintf(printBuf + printLen, "%02X", (unsigned int)data[i]);
+    printLen += 2;
+
+    if (i != len - 1) {
+      printBuf[printLen++] = ' ';
     }
   }
-  Serial.println(F(""));
+  printBuf[printLen] = '\0';
+  TRACE_C(printBuf);
 }
 
 #endif
