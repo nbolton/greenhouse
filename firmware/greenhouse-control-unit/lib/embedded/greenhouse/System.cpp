@@ -334,7 +334,7 @@ void System::InitSensors()
   }
 
   if (!s_outsideAirSensor.begin(k_outsideAirSensorAddress)) {
-    ReportWarning("Inside air sensor not found");
+    ReportWarning("Outside air sensor not found");
   }
 }
 
