@@ -21,7 +21,7 @@ void Time::Refresh()
   TRACE("Time refresh");
   
   const int retryDelay = 1000;
-  const int retryLimit = 5;
+  const int retryLimit = 0;
   int retryCount = 1;
 
   do {
