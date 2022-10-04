@@ -57,7 +57,6 @@ public:
   float ReadBatteryVoltageSensorRaw();
   float ReadBatteryCurrentSensorRaw();
   float ReadLocalVoltageSensorRaw();
-  //float ReadPsuVoltageSensor();
   void QueueToggleActiveSwitch();
   void ApplyRefreshRate();
   void QueueCallback(CallbackFunction f, std::string name);

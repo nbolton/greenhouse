@@ -33,7 +33,6 @@ namespace greenhouse {
 
 #define ADC_RETRY_MAX 5
 #define ADC_RETRY_DELAY 50
-
 #define DEBUG_DELAY 0
 #define ADC_DEBUG 0
 
@@ -93,8 +92,6 @@ const int k_loopDelay = 1000;
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
 const int k_serialWaitDelay = 1000;    // 1s
-const int k_leftWindowNodeSwitch = 1;
-const int k_rightWindowNodeSwitch = 2;
 
 static System *s_instance = nullptr;
 static PCF8574 s_io1(k_ioAddress);
@@ -173,8 +170,9 @@ void System::Setup()
 
   InitShiftRegisters();
 
-  System().SetSwitch(k_leftWindowNodeSwitch, true);
-  System().SetSwitch(k_rightWindowNodeSwitch, true);
+#if RADIO_EN
+  m_radio.Init(this);
+#endif
 
   Beep(1, false);
   CaseFan(true); // on by default
@@ -189,11 +187,6 @@ void System::Setup()
 
   InitSensors();
   InitADCs();
-
-#if RADIO_EN
-  m_radio.System(this);
-  m_radio.Init();
-#endif
 
   Blynk.begin(k_auth, k_ssid, k_pass);
 
@@ -217,6 +210,8 @@ void System::Loop()
 
   // always run before actuator check
   ng::System::Loop();
+
+  m_radio.Update();
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -416,6 +411,7 @@ float System::SoilMoisture() const
 bool System::ReadSensors(int &failures)
 {
   if (TestMode()) {
+    TRACE("Test mode: Skipping sensor read");
     return true;
   }
 

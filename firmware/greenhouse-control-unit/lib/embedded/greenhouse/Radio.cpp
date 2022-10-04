@@ -19,6 +19,11 @@
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
 #define TX_RETRY_MAX 5
+#define INIT_WAIT 500
+#define KEEP_ALIVE_TIME 60000 // 60s
+
+const int k_leftWindowNodeSwitch = 1;
+const int k_rightWindowNodeSwitch = 2;
 
 #ifndef RADIO_TRACE
 #undef TRACE
@@ -37,11 +42,18 @@ static uint8_t s_sequence = 1; // start at 1; reciever starts at 0
 
 void printBuffer(const __FlashStringHelper *prompt, const uint8_t *data, uint8_t dataLen);
 
-Radio::Radio() : m_system(nullptr) {}
+Radio::Radio() : m_system(nullptr), m_requests(0), m_errors(0) {}
 
-void Radio::Init()
+void Radio::Init(ISystem *system)
 {
   TRACE("Radio init");
+  m_system = system;
+
+  m_system->SetSwitch(k_leftWindowNodeSwitch, true);
+  m_system->SetSwitch(k_rightWindowNodeSwitch, true);
+
+  // wait for nodes to wake up
+  m_system->Delay(INIT_WAIT, "Radio start wait");
 
   if (!s_driver.init()) {
     TRACE("Fatal: Radio driver init failed");
@@ -49,7 +61,14 @@ void Radio::Init()
   }
 
   m_nodes[radio::k_nodeRightWindow].Init(*this, GH_ADDR_NODE_1);
-  m_nodes[radio::k_nodeLeftWindow].Init(*this, GH_ADDR_NODE_2);
+  // m_nodes[radio::k_nodeLeftWindow].Init(*this, GH_ADDR_NODE_2);
+}
+
+void Radio::Update()
+{
+  for (int i = 0; i < RADIO_NODES_MAX; i++) {
+    m_nodes[i].Update();
+  }
 }
 
 radio::Node &Radio::Node(radio::NodeId index)
@@ -73,7 +92,7 @@ void stepSequence()
   }
 }
 
-bool Radio::Send(radio::SendDesc sendDesc)
+bool Radio::Send(radio::SendDesc &sendDesc)
 {
   bool rx = false;
   for (int i = 0; i < TX_RETRY_MAX; i++) {
@@ -97,6 +116,8 @@ bool Radio::Send(radio::SendDesc sendDesc)
     s_sequence = s_sequence % 256;
     GH_SEQ(s_txBuf) = s_sequence;
 
+    m_requests++;
+
     s_driver.send(s_txBuf, GH_LENGTH);
     s_driver.waitPacketSent();
     printBuffer(F("Radio sent data: "), s_txBuf, GH_LENGTH);
@@ -116,13 +137,15 @@ bool Radio::Send(radio::SendDesc sendDesc)
 
         if (GH_TO(s_rxBuf) == GH_ADDR_MAIN) {
           if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
-            TRACE_F("Radio error code: %d", GH_DATA_1(s_rxBuf));
+            TRACE_F("Error: Code from node: %d", GH_DATA_1(s_rxBuf));
+            m_errors++;
           }
           else if (GH_CMD(s_rxBuf) != sendDesc.expectCmd) {
-            TRACE("Radio error, unexpected command");
+            TRACE("Error: Radio got unexpected command");
+            m_errors++;
           }
           else if (sendDesc.okCallback != NULL) {
-            sendDesc.okCallbackReturn = sendDesc.okCallback(sendDesc.okCallbackArg);
+            sendDesc.okCallbackResult = sendDesc.okCallback(sendDesc.okCallbackArg);
           }
 
           rx = true;
@@ -140,11 +163,14 @@ bool Radio::Send(radio::SendDesc sendDesc)
       break;
     }
     else {
-      TRACE("Radio error, timeout");
+      TRACE("Error: Radio timeout");
+      m_errors++;
     }
   }
 
   stepSequence();
+
+  TRACE_F("Radio stats, rx=%s, errors=%d, requests=%d", BOOL_FS(rx), m_errors, m_requests);
 
   return rx;
 }
@@ -153,13 +179,76 @@ bool Radio::Send(radio::SendDesc sendDesc)
 
 namespace radio {
 
-Node::Node() : m_radio(nullptr), m_address(UNKNOWN_ADDRESS) {}
+Node::Node() :
+  m_radio(nullptr),
+  m_address(UNKNOWN_ADDRESS),
+  m_helloOk(false),
+  m_keepAliveExpiry(common::k_unknownUL)
+{
+}
 
 void Node::Init(embedded::greenhouse::Radio &radio, byte address)
 {
   TRACE_F("Init radio node, address=%02X", address);
   m_radio = &radio;
   m_address = address;
+  if (hello()) {
+    TRACE_F("Radio node online: %02X", m_address);
+  }
+  else {
+    TRACE_F("Radio node offline: %02X", m_address);
+  }
+}
+
+void Node::Update() { keepAlive(); }
+
+bool Node::Online() { return m_helloOk && !keepAliveExpired(); }
+
+bool Node::keepAliveExpired() { return millis() > m_keepAliveExpiry; }
+
+bool Node::keepAlive()
+{
+  if (keepAliveExpired()) {
+    TRACE_F("Radio keep alive expired, saying hello to node: %02X", m_address);
+    if (!hello()) {
+      TRACE_F("Error: Radio keep alive failed, node offline: %02X", m_address);
+      return false;
+    }
+  }
+  return true;
+}
+
+bool helloOk(void *arg)
+{
+  const int rxSeq = GH_SEQ(s_rxBuf);
+  if (rxSeq != s_sequence) {
+    TRACE_F("Error: Radio ack invalid, sequence: %d!=%d", rxSeq, s_sequence);
+    return false;
+  }
+
+  return true;
+}
+
+bool Node::hello()
+{
+  TRACE_F("Radio saying hello to %02X", m_address);
+
+  SendDesc sd;
+  sd.to = GH_ADDR_NODE_1;
+  sd.cmd = GH_CMD_HELLO;
+  sd.okCallback = &helloOk;
+  bool rxOk = Radio().Send(sd);
+
+  m_helloOk = rxOk && sd.okCallbackResult;
+  if (!m_helloOk) {
+    TRACE_F(
+      "Error: Radio hello failed, rx=%s, ack=%s", BOOL_FS(rxOk), BOOL_FS(sd.okCallbackResult));
+  }
+  else {
+    m_keepAliveExpiry = millis() + KEEP_ALIVE_TIME;
+  }
+
+  return m_helloOk;
 }
 
 bool tempDevsOk(void *arg)
@@ -172,6 +261,10 @@ bool tempDevsOk(void *arg)
 
 int Node::GetTempDevs()
 {
+  if (!keepAlive()) {
+    return common::k_unknown;
+  }
+
   TRACE("Getting temperature device count");
 
   radio::SendDesc sd;
@@ -205,6 +298,10 @@ bool tempDataOk(void *argV)
 
 float Node::GetTemp(byte index)
 {
+  if (!keepAlive()) {
+    return common::k_unknown;
+  }
+
   TRACE_F("Getting temperature value from device: %d", index);
 
   SendDesc sd;
@@ -231,6 +328,10 @@ float Node::GetTemp(byte index)
 
 bool Node::MotorRun(MotorDirection direction, byte seconds)
 {
+  if (!keepAlive()) {
+    return false;
+  }
+
   TRACE_F("Radio sending motor run: direction=%d seconds=%d", direction, seconds);
   SendDesc sd;
   sd.to = m_address;
@@ -242,6 +343,10 @@ bool Node::MotorRun(MotorDirection direction, byte seconds)
 
 bool Node::MotorSpeed(byte speed)
 {
+  if (!keepAlive()) {
+    return false;
+  }
+
   TRACE_F("Radio sending motor speed: speed=%d", speed);
   SendDesc sd;
   sd.to = m_address;

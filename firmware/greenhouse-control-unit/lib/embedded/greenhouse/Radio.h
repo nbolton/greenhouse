@@ -8,7 +8,7 @@
 #include <gh_protocol.h>
 
 #define TEMP_DEVS_MAX 4
-#define RADIO_NODES_MAX 2
+#define RADIO_NODES_MAX 1//2
 #define UNKNOWN_ADDRESS 255
 
 namespace embedded {
@@ -27,13 +27,14 @@ struct SendDesc {
   byte data2 = 0;
   byte expectCmd = GH_CMD_ACK;
   callback okCallback = NULL;
-  bool okCallbackReturn = false;
+  bool okCallbackResult = false;
   void *okCallbackArg = NULL;
 };
 
 class Node;
 
-enum NodeId { k_nodeLeftWindow = 0, k_nodeRightWindow = 1 };
+//enum NodeId { k_nodeLeftWindow = 0, k_nodeRightWindow = 1 };
+enum NodeId { k_nodeRightWindow = 0 };
 
 enum MotorDirection { k_windowExtend = GH_MOTOR_FORWARD, k_windowRetract = GH_MOTOR_REVERSE };
 
@@ -51,6 +52,8 @@ class Node {
 public:
   Node();
   void Init(Radio &radio, byte address);
+  void Update();
+  bool Online();
   int GetTempDevs();
   float GetTemp(byte index);
   bool MotorRun(MotorDirection direction, byte seconds);
@@ -67,9 +70,16 @@ protected:
   }
 
 private:
+  bool hello();
+  bool keepAlive();
+  bool keepAliveExpired();
+
+private:
   embedded::greenhouse::Radio *m_radio;
   TempData m_tempData;
   byte m_address;
+  bool m_helloOk;
+  unsigned long m_keepAliveExpiry;
 };
 
 } // namespace radio
@@ -79,9 +89,9 @@ class ISystem;
 class Radio {
 public:
   Radio();
-  void Init();
-  void System(ISystem *system) { m_system = system; }
-  bool Send(radio::SendDesc sendDesc);
+  void Init(ISystem *system);
+  void Update();
+  bool Send(radio::SendDesc& sendDesc);
   radio::Node &Node(radio::NodeId index);
 
 private:
@@ -90,6 +100,8 @@ private:
 private:
   ISystem *m_system;
   radio::Node m_nodes[RADIO_NODES_MAX];
+  int m_requests;
+  int m_errors;
 };
 
 } // namespace greenhouse

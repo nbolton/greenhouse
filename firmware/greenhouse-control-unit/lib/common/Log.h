@@ -8,6 +8,7 @@
 #define TRACE(line) common::log::traceFlash(F(line))
 #define TRACE_F(format, ...) common::log::traceFlash(F(format), __VA_ARGS__)
 #define TRACE_C(line) common::log::trace(line)
+#define BOOL_FS(b) String(b ? F("true") : F("false")).c_str()
 
 #else
 

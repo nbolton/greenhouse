@@ -13,7 +13,7 @@ public:
   virtual float ReadBatteryVoltageSensorRaw() = 0;
   virtual float ReadBatteryCurrentSensorRaw() = 0;
   virtual float ReadLocalVoltageSensorRaw() = 0;
-  //virtual float ReadPsuVoltageSensor() = 0;
+  virtual void SetSwitch(int i, bool on) = 0;
 };
 
 } // namespace greenhouse
