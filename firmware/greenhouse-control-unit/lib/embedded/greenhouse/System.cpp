@@ -232,7 +232,9 @@ void System::Loop()
     }
   }
 
-  unsigned long now = Time().EpochTime();
+  const unsigned long now = Time().UptimeSeconds();
+  const bool recoveredWithinTimeframe = ((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec);
+
   if (!Blynk.run()) {
 
     m_lastBlynkFailure = now;
@@ -245,7 +247,7 @@ void System::Loop()
       return;
     }
   }
-  else if (((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec) && (m_blynkFailures != 0)) {
+  else if (recoveredWithinTimeframe && (m_blynkFailures != 0)) {
     // no failures happened within last n - r seconds (n = now, r = recover time)
     TRACE("Blynk is back to normal, resetting fail count");
     m_blynkFailures = 0;
@@ -442,7 +444,7 @@ bool System::ReadSensors(int &failures)
   }
 
   TRACE("Reading soil temperatures");
-  radio::Node& rightWindow = m_radio.Node(radio::k_nodeRightWindow);
+  radio::Node &rightWindow = m_radio.Node(radio::k_nodeRightWindow);
   const int tempDevs = rightWindow.GetTempDevs();
   TRACE_F("Soil temperatures devices: %d", tempDevs);
   float tempSum = 0;
@@ -493,14 +495,14 @@ bool System::ReadSoilMoistureSensor()
 
 void System::RunWindowActuator(bool extend, int runtimeSec)
 {
-  //radio::Node& left = m_radio.Node(radio::k_nodeLeftWindow);
-  radio::Node& right = m_radio.Node(radio::k_nodeRightWindow);
+  // radio::Node& left = m_radio.Node(radio::k_nodeLeftWindow);
+  radio::Node &right = m_radio.Node(radio::k_nodeRightWindow);
   if (extend) {
-    //left.MotorRun(radio::k_windowExtend, runtimeSec);
+    // left.MotorRun(radio::k_windowExtend, runtimeSec);
     right.MotorRun(radio::k_windowExtend, runtimeSec);
   }
   else {
-    //left.MotorRun(radio::k_windowRetract, runtimeSec);
+    // left.MotorRun(radio::k_windowRetract, runtimeSec);
     right.MotorRun(radio::k_windowRetract, runtimeSec);
   }
 }

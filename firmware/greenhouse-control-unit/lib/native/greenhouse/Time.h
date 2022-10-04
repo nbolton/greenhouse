@@ -16,6 +16,7 @@ class Time : public ITime {
 public:
   Time();
   virtual void CheckTransition();
+  virtual bool IsValid() const { return false; }
   virtual unsigned long EpochTime() const { return k_unknown; }
   unsigned long UptimeSeconds() const { return k_unknown; }
   virtual int CurrentHour() const { return k_unknown; }

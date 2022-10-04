@@ -24,7 +24,7 @@ bool Time::IsDaytime() const
 void Time::CheckTransition()
 {
   // if time unknown, we can't do anything.
-  if (EpochTime() == k_unknownUL) {
+  if (!IsValid()) {
     TRACE("Epoch unknown, can't check time transition");
     return;
   }

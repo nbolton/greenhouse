@@ -125,10 +125,9 @@ void System::Refresh()
       m_windowAdjustTimeframe);
 
     int timeframeSec = m_windowAdjustTimeframe * 60;
-    bool timeframeOk = (Time().EpochTime() == k_unknownUL) ||
-                       (m_windowAdjustTimeframe == k_unknown) ||
+    bool timeframeOk = (m_windowAdjustTimeframe == k_unknown) ||
                        (m_windowAdjustLast == k_unknownUL) ||
-                       ((int)(Time().EpochTime() - m_windowAdjustLast) > timeframeSec);
+                       ((int)(Time().UptimeSeconds() - m_windowAdjustLast) > timeframeSec);
     bool noUnknowns =
       (soilTemperature != k_unknown) && (m_openStart != k_unknown) && (m_openFinish != k_unknown);
 
@@ -224,12 +223,12 @@ bool System::ApplyWindowOpenPercent()
 
     if (openDelta > 0) {
       OpenWindow(openDelta);
-      m_windowAdjustLast = Time().EpochTime();
+      m_windowAdjustLast = Time().UptimeSeconds();
       return true;
     }
     else if (closeDelta > 0) {
       CloseWindow(closeDelta);
-      m_windowAdjustLast = Time().EpochTime();
+      m_windowAdjustLast = Time().UptimeSeconds();
       return true;
     }
   }

@@ -7,35 +7,46 @@
 namespace embedded {
 namespace greenhouse {
 
+const int retryDelay = 1000;
+const int k_maxSetupRetry = 5;
+const int k_maxUpdateRetry = 5;
+
 using namespace common;
 
 static WiFiUDP s_ntpUdp;
 static NTPClient s_timeClient(s_ntpUdp);
 
-Time::Time() : m_timeClientOk(false) {}
+Time::Time() : m_timeClientOk(false), m_success(0), m_errors(0) {}
 
 void Time::Setup() { s_timeClient.begin(); }
 
 void Time::Refresh()
 {
-  TRACE("Time refresh");
-  
-  const int retryDelay = 1000;
-  const int retryLimit = 0;
-  int retryCount = 1;
+  TRACE("Doing time update");
+  m_timeClientOk = s_timeClient.update();
 
-  do {
-    m_timeClientOk = s_timeClient.update();
-    if (!m_timeClientOk) {
-      TRACE_F("Time update failed (attempt %d)", retryCount);
-      System().Delay(retryDelay, "time update");
-    }
-  } while (!m_timeClientOk && retryCount++ < retryLimit);
+  if (!m_timeClientOk) {
+    TRACE("Error: Time update failed");
+    m_errors++;
+  }
+  else {
+    m_success++;
+  }
+
+  TRACE_F(
+    "Time update stats, last=%s, success=%d, errors=%d",
+    m_timeClientOk ? "ok" : "fail",
+    m_success,
+    m_errors);
+
+  TRACE_F("Time is: %s", FormattedCurrentTime().c_str());
 }
+
+unsigned long Time::UptimeSeconds() const { return millis() / 1000; }
 
 int Time::CurrentHour() const
 {
-  if (!m_timeClientOk) {
+  if (!IsValid()) {
     return k_unknown;
   }
   return s_timeClient.getHours();
@@ -43,16 +54,17 @@ int Time::CurrentHour() const
 
 unsigned long Time::EpochTime() const
 {
-  if (!m_timeClientOk) {
+  if (!IsValid()) {
     return k_unknown;
   }
   return s_timeClient.getEpochTime();
 }
 
-unsigned long Time::UptimeSeconds() const { return millis() / 1000; }
-
 String Time::FormattedCurrentTime()
 {
+  if (!IsValid()) {
+    return "Unknown";
+  }
   return s_timeClient.getFormattedTime() + " UTC";
 }
 

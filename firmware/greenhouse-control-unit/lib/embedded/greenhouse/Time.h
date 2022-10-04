@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../native/greenhouse/Time.h"
 #include "../../common/log.h"
+#include "../../native/greenhouse/Time.h"
 
 #include <Arduino.h>
 
@@ -14,14 +14,20 @@ public:
   Time();
   void Setup();
   void Refresh();
+  unsigned long UptimeSeconds() const;
   int CurrentHour() const;
   unsigned long EpochTime() const;
-  unsigned long UptimeSeconds() const;
   String FormattedUptime();
   String FormattedCurrentTime();
+  bool IsValid() const { return m_success > 0; }
+
+private:
+  void update(int maxRetry);
 
 private:
   bool m_timeClientOk;
+  int m_success;
+  int m_errors;
 };
 
 } // namespace greenhouse
