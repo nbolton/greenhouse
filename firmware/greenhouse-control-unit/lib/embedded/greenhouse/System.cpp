@@ -92,6 +92,8 @@ const int k_loopDelay = 1000;
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
 const int k_serialWaitDelay = 1000;    // 1s
+const int k_leftWindowNodeSwitch = 1;
+const int k_rightWindowNodeSwitch = 2;
 
 static System *s_instance = nullptr;
 static PCF8574 s_io1(k_ioAddress);
@@ -170,12 +172,11 @@ void System::Setup()
 
   InitShiftRegisters();
 
-#if RADIO_EN
-  m_radio.Init(this);
-#endif
-
   Beep(1, false);
   CaseFan(true); // on by default
+
+  SetSwitch(k_leftWindowNodeSwitch, true);
+  SetSwitch(k_rightWindowNodeSwitch, true);
 
   Wire.begin();
 
@@ -189,6 +190,10 @@ void System::Setup()
   InitADCs();
 
   Blynk.begin(k_auth, k_ssid, k_pass);
+
+#if RADIO_EN
+  m_radio.Init(this);
+#endif
 
   ReportSwitchStates();
 
@@ -359,7 +364,7 @@ void System::Refresh()
 
   TRACE_F("Local voltage: %.2fV", m_power.ReadLocalVoltage());
 
-  Blynk.virtualWrite(V28, Power().BatteryPowerSource());
+  Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
   Blynk.virtualWrite(V29, Power().BatteryVoltageSensor());
   Blynk.virtualWrite(V30, Power().BatteryVoltageOutput());
   Blynk.virtualWrite(V42, Power().BatteryCurrentSensor());
@@ -763,7 +768,7 @@ void System::OnLastWrite()
 
 void System::OnSystemStarted()
 {
-  Power().InitPowerSource();
+  //Power().InitPowerSource();
 
   // run first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -878,14 +883,14 @@ void System::ReportMoistureCalibration()
 void System::UpdateCaseFan()
 {
   // turn case fan on when any switch is on or if PSU is in use
-  bool caseFanOn = (s_switchOnCount > 0) || (!Power().BatteryPowerSource());
+  bool caseFanOn = (s_switchOnCount > 0) || (!Power().Mode());
   CaseFan(caseFanOn);
 }
 
 void System::OnPowerSwitch()
 {
   UpdateCaseFan();
-  Blynk.virtualWrite(V28, Power().BatteryPowerSource());
+  Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
 
 void System::ExpanderWrite(int pin, int value) { s_io1.digitalWrite(pin, value); }
@@ -1060,7 +1065,7 @@ BLYNK_WRITE(V45) { eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat
 
 BLYNK_WRITE(V47)
 {
-  eg::s_instance->Power().BatteryMode((embedded::greenhouse::BatteryModes)param.asInt());
+  eg::s_instance->Power().Mode((embedded::greenhouse::PowerMode)param.asInt());
 }
 
 BLYNK_WRITE(V48) { eg::s_instance->WindowAdjustPositions(param.asInt()); }

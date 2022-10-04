@@ -19,11 +19,7 @@
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
 #define TX_RETRY_MAX 5
-#define INIT_WAIT 500
 #define KEEP_ALIVE_TIME 60000 // 60s
-
-const int k_leftWindowNodeSwitch = 1;
-const int k_rightWindowNodeSwitch = 2;
 
 #ifndef RADIO_TRACE
 #undef TRACE
@@ -48,12 +44,6 @@ void Radio::Init(ISystem *system)
 {
   TRACE("Radio init");
   m_system = system;
-
-  m_system->SetSwitch(k_leftWindowNodeSwitch, true);
-  m_system->SetSwitch(k_rightWindowNodeSwitch, true);
-
-  // wait for nodes to wake up
-  m_system->Delay(INIT_WAIT, "Radio start wait");
 
   if (!s_driver.init()) {
     TRACE("Fatal: Radio driver init failed");

@@ -15,7 +15,7 @@ namespace greenhouse {
 const float k_localVoltageMin = 9.5;
 const float k_localVoltageMapIn = 1.184;
 const float k_localVoltageMapOut = 10.0;
-const int k_switchDelay = 1000;  // delay between switching both relays
+const int k_switchDelay = 1000; // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
 
@@ -27,13 +27,14 @@ bool s_testState = false;
 Power::Power(int psuRelayPin, int batteryRelayPin, int batteryLedPin, int psuLedPin) :
   m_embedded(nullptr),
   m_native(nullptr),
+  m_mode(PowerMode::k_powerModeUnknown),
+  m_source(PowerSource::k_powerSourceBoth),
   m_psuRelayPin(psuRelayPin),
   m_batteryRelayPin(batteryRelayPin),
   m_batteryLedPin(batteryLedPin),
   m_psuLedPin(psuLedPin),
-  m_batteryPowerSource(false),
   m_batteryVoltageSwitchOn(k_unknown),
-  m_batteryVoltageMin(k_unknown),
+  m_batteryVoltageSwitchOff(k_unknown),
   m_batteryVoltageSensor(k_unknown),
   m_batteryVoltageOutput(k_unknown),
   m_batteryVoltageSensorMin(0),
@@ -47,8 +48,7 @@ Power::Power(int psuRelayPin, int batteryRelayPin, int batteryLedPin, int psuLed
   m_batteryCurrentOutputMin(0),
   m_batteryCurrentOutputMax(k_unknown),
   m_lastLocalVoltage(k_unknown),
-  //m_lastPsuVoltage(k_unknown),
-  m_batteryMode(BatteryModes::k_batteryAuto)
+  m_lastBatteryVoltage(k_unknown)
 {
 }
 
@@ -59,49 +59,6 @@ void Power::Setup()
   // circuit default state is both power sources connected
   Embedded().ShiftRegister(m_psuLedPin, true);
   Embedded().ShiftRegister(m_batteryLedPin, true);
-}
-
-void Power::Loop()
-{
-  MeasureVoltage();
-  
-  float localVoltage = ReadLocalVoltage();
-  if (abs(m_lastLocalVoltage - localVoltage) > VOLTAGE_DIFF_DELTA) {
-    TRACE_F("Local voltage changed: %.2fV", localVoltage);
-  }
-  m_lastLocalVoltage = localVoltage;
-
-  if (localVoltage <= k_localVoltageMin) {
-    if (m_batteryPowerSource) {
-      Native().ReportWarning("Local voltage drop detected: %.2fV", localVoltage);
-      SwitchPower(false);
-    }
-  }
-  else if (BatteryMode() != BatteryModes::k_batteryAuto) {
-    if (!m_batteryPowerSource && (BatteryMode() == BatteryModes::k_batteryOn)) {
-      Native().ReportWarning("Battery mode is manual (battery on)");
-      SwitchPower(true);
-    }
-    else if (m_batteryPowerSource && (BatteryMode() == BatteryModes::k_batteryOff)) {
-      Native().ReportWarning("Battery mode is manual (battery off)");
-      SwitchPower(false);
-    }
-  }
-  else if (m_batteryVoltageOutput != k_unknown) {
-
-    if (
-      !m_batteryPowerSource && (m_batteryVoltageSwitchOn != k_unknown) &&
-      (m_batteryVoltageOutput >= m_batteryVoltageSwitchOn)) {
-      TRACE("Switching to battery automatically (PSU off)");
-      SwitchPower(true);
-    }
-    else if (
-      m_batteryPowerSource && (m_batteryVoltageMin != k_unknown) &&
-      (m_batteryVoltageOutput <= m_batteryVoltageMin)) {
-      TRACE("Switching PSU on automatically (battery off)");
-      SwitchPower(false);
-    }
-  }
 }
 
 native::greenhouse::ISystem &Power::Native() const
@@ -122,37 +79,70 @@ embedded::greenhouse::ISystem &Power::Embedded() const
   return *m_embedded;
 }
 
-void Power::InitPowerSource()
+void Power::Loop()
 {
   MeasureVoltage();
-  m_lastLocalVoltage = ReadLocalVoltage();
-  TRACE_F(
-    "Init power source, local=%.2fV (min=%.2fV), battery=%.2fV (min=%.2fV)",
-    m_lastLocalVoltage,
-    k_localVoltageMin,
-    m_batteryVoltageOutput,
-    m_batteryVoltageMin);
 
-  bool batteryVoltageAboveMin = m_batteryVoltageOutput >= m_batteryVoltageMin;
-  bool localVoltageAboveMin = m_lastLocalVoltage >= k_localVoltageMin;
+  const float localVoltage = ReadLocalVoltage();
+  const bool localVoltageChanged = abs(m_lastLocalVoltage - localVoltage) > VOLTAGE_DIFF_DELTA;
+  if (localVoltageChanged) {
+    TRACE_F("Local voltage changed: %.2fV", localVoltage);
+  }
+  m_lastLocalVoltage = localVoltage;
 
-  if ((m_batteryVoltageSwitchOn != k_unknown) && batteryVoltageAboveMin && localVoltageAboveMin) {
+  const float batteryVoltage = m_batteryVoltageOutput;
+  const bool batteryVoltageChanged = abs(m_lastBatteryVoltage - batteryVoltage) > VOLTAGE_DIFF_DELTA;
+  if (batteryVoltageChanged) {
+    TRACE_F("Battery voltage changed: %.2fV", batteryVoltage);
+  }
+  m_lastBatteryVoltage = m_batteryVoltageOutput;
 
-    TRACE("Using battery on start (onboard voltage and battery above min)");
-    SwitchPower(true);
+  if (localVoltageChanged && (localVoltage <= k_localVoltageMin)) {
+    Native().ReportWarning("Local voltage drop detected: %.2fV", localVoltage);
+    if (m_source == PowerSource::k_powerSourceBattery) {
+      switchSource(PowerSource::k_powerSourcePsu);
+    }
+    else if (m_source == PowerSource::k_powerSourcePsu) {
+      switchSource(PowerSource::k_powerSourceBattery);
+    }
+  }
+  else if (Mode() != PowerMode::k_powerModeAuto) {
+    if (Mode() == PowerMode::k_powerModeManualBattery) {
+      if (m_source != PowerSource::k_powerSourceBattery) {
+        Native().ReportWarning("Power mode is manual (battery)");
+        switchSource(PowerSource::k_powerSourceBattery);
+      }
+    }
+    else if (Mode() == PowerMode::k_powerModeManualPsu) {
+      if (m_source != PowerSource::k_powerSourcePsu) {
+        Native().ReportWarning("Power mode is manual (PSU)");
+        switchSource(PowerSource::k_powerSourcePsu);
+      }
+    }
   }
   else {
+    const bool vBattKnown = (m_batteryVoltageOutput != k_unknown);
+    const bool vBattOnKnown = (m_batteryVoltageSwitchOn != k_unknown);
+    const bool vBattOffKnown = (m_batteryVoltageSwitchOff != k_unknown);
 
-    if (!batteryVoltageAboveMin) {
-      TRACE("Battery voltage is below min");
+    const bool switchToBattery =
+      vBattKnown && vBattOnKnown && (m_batteryVoltageOutput >= m_batteryVoltageSwitchOn);
+
+    const bool switchToPsu =
+      !vBattKnown || (vBattOffKnown && (m_batteryVoltageOutput <= m_batteryVoltageSwitchOff));
+
+    if (switchToBattery) {
+      if (m_source != PowerSource::k_powerSourceBattery) {
+        TRACE("Switching to battery automatically (PSU off)");
+        switchSource(PowerSource::k_powerSourceBattery);
+      }
     }
-
-    if (!localVoltageAboveMin) {
-      TRACE("Local voltage is below min");
+    else if (switchToPsu) {
+      if (m_source != PowerSource::k_powerSourcePsu) {
+        TRACE("Switching PSU on automatically (battery off)");
+        switchSource(PowerSource::k_powerSourcePsu);
+      }
     }
-
-    TRACE("Using PSU on start");
-    SwitchPower(false);
   }
 }
 
@@ -190,8 +180,10 @@ void Power::MeasureCurrent()
     m_batteryCurrentOutputMax);
 }
 
-void Power::SwitchPower(bool useBattery)
+void Power::switchSource(PowerSource source)
 {
+  m_source = source;
+
   // first, close both NC relays to ensure constant power
   Embedded().ShiftRegister(m_psuRelayPin, false);
   Embedded().ShiftRegister(m_batteryRelayPin, false);
@@ -202,22 +194,27 @@ void Power::SwitchPower(bool useBattery)
   // if on PSU, allow the battery relay to close first.
   Embedded().Delay(k_switchDelay, "Relay");
 
-  if (!useBattery) {
+  if (source == PowerSource::k_powerSourcePsu) {
     TRACE("PSU AC NC relay closed (PSU on), battery NC relay open (battery off)");
+    TRACE("Power source: PSU");
+  }
+  else if (source == PowerSource::k_powerSourceBattery) {
+    TRACE("Battery NC relay closed (battery on), PSU AC NC relay open (PSU off)");
+    TRACE("Power source: Battery");
   }
   else {
-    TRACE("Battery NC relay closed (battery on), PSU AC NC relay open (PSU off)");
+    TRACE("Battery NC relay closed (battery on), PSU AC NC relay closed (PSU on)");
+    TRACE("Power source: Both (PSU and battery)");
   }
 
-  // false = closed (on the NC relay)
-  Embedded().ShiftRegister(m_psuRelayPin, useBattery);
-  Embedded().ShiftRegister(m_batteryRelayPin, !useBattery);
+  // both relays are NC (normally closed), so to disconnect a source,
+  // pass true which will open the relay.
+  Embedded().ShiftRegister(m_psuRelayPin, m_source != k_powerSourcePsu);
+  Embedded().ShiftRegister(m_batteryRelayPin, m_source != k_powerSourceBattery);
 
-  Embedded().ShiftRegister(m_psuLedPin, !useBattery);
-  Embedded().ShiftRegister(m_batteryLedPin, useBattery);
+  Embedded().ShiftRegister(m_psuLedPin, m_source == k_powerSourcePsu);
+  Embedded().ShiftRegister(m_batteryLedPin, m_source == k_powerSourceBattery);
 
-  m_batteryPowerSource = useBattery;
-  TRACE_F("Source: %s", useBattery ? "Battery" : "PSU");
   TRACE_F("Local voltage: %.2fV", ReadLocalVoltage());
   Embedded().OnPowerSwitch();
 }
