@@ -35,6 +35,7 @@ namespace greenhouse {
 #define ADC_RETRY_DELAY 50
 #define DEBUG_DELAY 0
 #define ADC_DEBUG 0
+#define LOOP_DELAY 10
 
 struct ADC {
   String name;
@@ -88,7 +89,7 @@ const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char *k_weatherHost = "api.openweathermap.org";
 const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const uint8_t k_ioAddress = 0x20;
-const int k_loopDelay = 1000;
+const int k_loopFrequency = 1000; // 1s
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
 const int k_serialWaitDelay = 1000;    // 1s
@@ -204,7 +205,8 @@ void System::Setup()
 
 void System::Loop()
 {
-  if (millis() < (m_lastLoop + k_loopDelay)) {
+  if (millis() < (m_lastLoop + k_loopFrequency)) {
+    delay(LOOP_DELAY);
     return;
   }
   m_lastLoop = millis();
@@ -447,7 +449,7 @@ bool System::ReadSensors(int &failures)
   TRACE("Reading soil temperatures");
   radio::Node &rightWindow = m_radio.Node(radio::k_nodeRightWindow);
   const int tempDevs = rightWindow.GetTempDevs();
-  TRACE_F("Soil temperatures devices: %d", tempDevs);
+  TRACE_F("Soil temperature devices: %d", tempDevs);
   float tempSum = 0;
   for (int i = 0; i < tempDevs; i++) {
     const float t = rightWindow.GetTemp(i);

@@ -113,14 +113,13 @@ bool handleRx() {
 
     case GH_CMD_TEMP_DEVS_REQ: {
       GH_CMD(txBuf) = GH_CMD_TEMP_DEVS_RSP;
-      GH_DATA_1(txBuf) = scanTempDevs();
+      GH_DATA_1(txBuf) = temp_devs();
     } break;
 
     case GH_CMD_TEMP_DATA_REQ: {
       GH_CMD(txBuf) = GH_CMD_TEMP_DATA_RSP;
-      readTempDev(GH_DATA_1(rxBuf));
-      GH_DATA_1(txBuf) = tempData(0);
-      GH_DATA_2(txBuf) = tempData(1);
+      GH_DATA_1(txBuf) = temp_data(GH_DATA_1(rxBuf), 0);
+      GH_DATA_2(txBuf) = temp_data(GH_DATA_1(rxBuf), 1);
     } break;
 
 #endif  // TEMP_EN

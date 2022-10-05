@@ -245,7 +245,7 @@ bool tempDevsOk(void *arg)
 {
   radio::TempData *data = (radio::TempData *)arg;
   data->devs = GH_DATA_1(s_rxBuf);
-  TRACE_F("Got temperature device count: ", data->devs);
+  TRACE_F("Got temperature device count: %d", data->devs);
   return true;
 }
 

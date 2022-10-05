@@ -2,6 +2,7 @@
 #include "motor.h"
 #include "radio.h"
 #include "sr.h"
+#include "temp.h"
 
 void setup() {
 #if MOTOR_EN
@@ -33,4 +34,8 @@ void loop() {
 #if MOTOR_EN
   motor_loop();
 #endif  // MOTOR_EN
+
+#if TEMP_EN
+  temp_loop();
+#endif  // TEMP_EN
 }

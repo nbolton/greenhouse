@@ -4,8 +4,8 @@
 
 #if TEMP_EN
 
-byte scanTempDevs();
-void readTempDev(int addrIndex);
-byte tempData(byte i);
+void temp_loop();
+byte temp_devs();
+byte temp_data(byte dev, byte part);
 
 #endif // TEMP_EN
