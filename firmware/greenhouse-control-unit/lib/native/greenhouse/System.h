@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../common/log.h"
 #include "../common/common.h"
+#include "../common/log.h"
 #include "Heating.h"
 #include "Time.h"
 
@@ -27,6 +27,7 @@ public:
   virtual void ReportCritical(const char *m, ...) {}
   virtual void SoilCalibrateWet();
   virtual void SoilCalibrateDry();
+  virtual void WindowFullClose();
 
 public:
   void AddSoilMoistureSample(float sample);
@@ -47,10 +48,9 @@ protected:
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
   virtual float CalculateMoisture(float analogValue) const;
-  virtual bool ApplyWindowOpenPercent();
-  virtual void AddWindowOpenPercentActualDelta(float delta);
-  virtual void AdjustWindow(bool open, float delta);
-  virtual void RunWindowActuator(bool extend, int runtimeSec) {}
+  virtual void ApplyWindowOpenPercent();
+  virtual void ChangeWindowOpenPercentActual(float delta);
+  virtual void RunWindowActuator(bool extend, float delta) {}
   virtual void Delay(unsigned long ms, const char *reason) {}
   virtual bool UpdateWeatherForecast() { return false; }
   virtual void HandleNightToDayTransition();
@@ -79,7 +79,7 @@ public:
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
   virtual float WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
   virtual void WeatherCode(int value) { m_weatherCode = value; }
-  virtual int WeatherCode() const { return m_weatherCode; }
+  virtual int WeatherCode() const;
   virtual void WeatherInfo(std::string value) { m_weatherInfo = value; }
   virtual const std::string &WeatherInfo() const { return m_weatherInfo; }
   virtual void SystemStarted(bool value) { m_systemStarted = value; }
@@ -94,11 +94,13 @@ public:
   virtual float SoilMoistureSampleMax() { return m_soilMoistureSampleMax; }
   virtual void WindowAdjustPositions(int value) { m_windowAdjustPositions = value; }
   virtual int WindowAdjustPositions() { return m_windowAdjustPositions; }
-  virtual void WindowAdjustTimeframe(int value) { m_windowAdjustTimeframe = value; }
-  virtual int WindowAdjustTimeframe() { return m_windowAdjustTimeframe; }
+  virtual void WindowAdjustTimeframeSec(int value) { m_windowAdjustTimeframeSec = value; }
+  virtual int WindowAdjustTimeframeSec() { return m_windowAdjustTimeframeSec; }
   virtual void WindowOpenPercent(int value);
   virtual int WindowOpenPercentExpected() const { return m_windowOpenPercentExpected; }
   virtual int WindowOpenPercentActual() const { return m_windowOpenPercentActual; }
+  virtual void FakeWeatherCode(int value) { m_fakeWeatherCode = value; }
+  virtual int FakeWeatherCode() const { return m_fakeWeatherCode; }
 
 private:
   bool IsRaining() const;
@@ -128,9 +130,10 @@ private:
   std::queue<float> m_soilMoistureSamples;
   float m_soilMoistureAverage;
   int m_windowAdjustPositions;
-  int m_windowAdjustTimeframe;
+  int m_windowAdjustTimeframeSec;
   unsigned long m_windowAdjustLast;
   unsigned long m_windowActuatorStopTime;
+  int m_fakeWeatherCode;
 };
 
 } // namespace greenhouse

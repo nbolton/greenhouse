@@ -496,8 +496,20 @@ bool System::ReadSoilMoistureSensor()
   return (SoilSensor() != k_unknown);
 }
 
-void System::RunWindowActuator(bool extend, int runtimeSec)
+void System::RunWindowActuator(bool extend, float delta)
 {
+  int runtimeSec = WindowActuatorRuntimeSec() * delta;
+  TRACE_F(
+    "Running window actuator: delta=%.2f, max=%.2fs, runtime=%.2fs",
+    delta,
+    WindowActuatorRuntimeSec(),
+    runtimeSec);
+
+  // round up from less than 1
+  if (runtimeSec < 1) {
+    runtimeSec = 1;
+  }
+
   // radio::Node& left = m_radio.Node(radio::k_nodeLeftWindow);
   radio::Node &right = m_radio.Node(radio::k_nodeRightWindow);
   if (extend) {
@@ -770,7 +782,7 @@ void System::OnLastWrite()
 
 void System::OnSystemStarted()
 {
-  //Power().InitPowerSource();
+  // Power().InitPowerSource();
 
   // run first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -808,6 +820,10 @@ void System::ApplyRefreshRate()
 
 bool System::UpdateWeatherForecast()
 {
+  if (TestMode()) {
+    return true;
+  }
+
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
 
@@ -1065,10 +1081,7 @@ BLYNK_WRITE(V44) { eg::s_instance->Power().BatteryVoltageSwitchOn(param.asFloat(
 
 BLYNK_WRITE(V45) { eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47)
-{
-  eg::s_instance->Power().Mode((embedded::greenhouse::PowerMode)param.asInt());
-}
+BLYNK_WRITE(V47) { eg::s_instance->Power().Mode((embedded::greenhouse::PowerMode)param.asInt()); }
 
 BLYNK_WRITE(V48) { eg::s_instance->WindowAdjustPositions(param.asInt()); }
 
@@ -1136,7 +1149,16 @@ BLYNK_WRITE(V72)
 
 BLYNK_WRITE(V73) { eg::s_instance->Heating().Enabled(param.asInt() == 1); }
 
-BLYNK_WRITE(V74) { eg::s_instance->WindowAdjustTimeframe(param.asInt()); }
+BLYNK_WRITE(V74) { eg::s_instance->WindowAdjustTimeframeSec(param.asInt()); }
+
+BLYNK_WRITE(V75) { eg::s_instance->FakeWeatherCode(param.asInt()); }
+
+BLYNK_WRITE(V76)
+{
+  if (param.asInt()) {
+    eg::s_instance->QueueCallback(&eg::System::WindowFullClose, "Window full close");
+  }
+}
 
 // used only as the last value
 BLYNK_WRITE(V127) { eg::s_instance->OnLastWrite(); }

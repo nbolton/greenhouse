@@ -108,7 +108,7 @@ public:
     System::CloseWindow(delta);
   }
 
-  void RunWindowActuator(bool extend, int runtimeSec)
+  void RunWindowActuator(bool extend, float delta)
   {
     TRACE_F("Stub: RunWindowActuator, extend=%s", extend ? "true" : "false");
     m_lastArg_RunWindowActuator_extend = extend;
