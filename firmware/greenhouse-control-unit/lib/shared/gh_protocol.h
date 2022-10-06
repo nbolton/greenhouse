@@ -4,15 +4,17 @@
 #define GH_ADDR_NODE_1 0x02
 #define GH_ADDR_NODE_2 0x03
 
-#define GH_CMD_ACK 0x01            // generic response
-#define GH_CMD_ERROR 0x02          // something bad happened (d1: code)
-#define GH_CMD_HELLO 0x03          // say hello (d1: sequence)
-#define GH_CMD_TEMP_DEVS_REQ 0x10  // request temp device count
-#define GH_CMD_TEMP_DEVS_RSP 0x11  // respond temp device count
-#define GH_CMD_TEMP_DATA_REQ 0x12  // request temp data (d1: device index)
-#define GH_CMD_TEMP_DATA_RSP 0x13  // respond temp data (d1 + d2: raw ow data)
-#define GH_CMD_MOTOR_SPEED 0x20    // motor speed (d1: pwm duty)
-#define GH_CMD_MOTOR_RUN 0x21      // motor run (d1: direction, d2: time)
+#define GH_CMD_ACK 0x01              // generic response
+#define GH_CMD_ERROR 0x02            // something bad happened (d1: code)
+#define GH_CMD_HELLO 0x03            // say hello (d1: sequence)
+#define GH_CMD_TEMP_DEVS_REQ 0x10    // request temp device count
+#define GH_CMD_TEMP_DEVS_RSP 0x11    // respond temp device count
+#define GH_CMD_TEMP_DATA_REQ 0x12    // request temp data (d1: device index)
+#define GH_CMD_TEMP_DATA_RSP 0x13    // respond temp data (d1 + d2: raw ow data)
+#define GH_CMD_MOTOR_SPEED 0x20      // motor speed (d1: pwm duty)
+#define GH_CMD_MOTOR_RUN 0x21        // motor run (d1: direction, d2: time)
+#define GH_CMD_MOTOR_STATE_REQ 0x22  // request motor state
+#define GH_CMD_MOTOR_STATE_RSP 0x23  // respond motor state (d1: true = running)
 
 #define GH_ERROR_BAD_CMD 0x01        // invalid command
 #define GH_ERROR_BAD_SEQ 0x02        // duplicate sequence

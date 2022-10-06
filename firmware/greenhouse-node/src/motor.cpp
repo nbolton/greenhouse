@@ -25,7 +25,7 @@ void motor_loop() {
   testMotor();
 #else
 
-  if (millis() >= motorStop) {
+  if (!motor_on()) {
     clear(SR_PIN_MOTOR_A);
     clear(SR_PIN_MOTOR_B);
     shift();
@@ -56,6 +56,10 @@ bool motor_run(byte dir, byte secs) {
   }
   shift();
   return true;
+}
+
+bool motor_on() {
+  return millis() < motorStop;
 }
 
 #if MOTOR_TEST

@@ -100,7 +100,6 @@ bool isDupeRx() {
 
 bool handleRx() {
   switch (GH_CMD(rxBuf)) {
-    
 #if HELLO_EN
 
     case GH_CMD_HELLO: {
@@ -138,6 +137,11 @@ bool handleRx() {
         GH_CMD(txBuf) = GH_CMD_ERROR;
         GH_DATA_1(txBuf) = GH_ERROR_BAD_MOTOR_CMD;
       }
+    } break;
+
+    case GH_CMD_MOTOR_STATE_REQ: {
+      GH_CMD(txBuf) = GH_CMD_MOTOR_STATE_RSP;
+      GH_DATA_1(txBuf) = (byte)motor_on();
     } break;
 
 #endif  // MOTOR_EN

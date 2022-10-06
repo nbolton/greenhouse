@@ -498,27 +498,18 @@ bool System::ReadSoilMoistureSensor()
 
 void System::RunWindowActuator(bool extend, float delta)
 {
-  int runtimeSec = WindowActuatorRuntimeSec() * delta;
+  int runtimeSec = ceilf(WindowActuatorRuntimeSec() * delta);
   TRACE_F(
     "Running window actuator: delta=%.2f, max=%.2fs, runtime=%.2fs",
     delta,
     WindowActuatorRuntimeSec(),
     runtimeSec);
 
-  // round up from less than 1
-  if (runtimeSec < 1) {
-    runtimeSec = 1;
-  }
-
-  // radio::Node& left = m_radio.Node(radio::k_nodeLeftWindow);
-  radio::Node &right = m_radio.Node(radio::k_nodeRightWindow);
   if (extend) {
-    // left.MotorRun(radio::k_windowExtend, runtimeSec);
-    right.MotorRun(radio::k_windowExtend, runtimeSec);
+    m_radio.MotorRunAll(radio::k_windowExtend, runtimeSec);
   }
   else {
-    // left.MotorRun(radio::k_windowRetract, runtimeSec);
-    right.MotorRun(radio::k_windowRetract, runtimeSec);
+    m_radio.MotorRunAll(radio::k_windowRetract, runtimeSec);
   }
 }
 

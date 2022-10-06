@@ -178,18 +178,20 @@ void System::Refresh()
 void System::WindowFullClose()
 {
   m_windowOpenPercentExpected = 0;
-  RunWindowActuator(false, 1);
+  CloseWindow(1);
+  ReportWindowOpenPercent();
 }
 
 void System::ApplyWindowOpenPercent()
 {
+  const float changeThreshold = 0.02f;
   const float positions = WindowAdjustPositions();
   const float expected = WindowOpenPercentExpected();
   const float actual = WindowOpenPercentActual();
 
-  bool fullExtent = (expected == 0) || (expected == 1);
-  float rounded = (round((positions / 100) * expected) / positions) * 100;
-  bool changed = std::abs(expected - actual) > 0.01f;
+  const bool fullExtent = (expected == 0) || (expected == 1);
+  const float rounded = (round((positions / 100) * expected) / positions) * 100;
+  bool const changed = std::abs(expected - actual) > changeThreshold;
 
   TRACE_F(
     "Apply window open percent, "

@@ -8,7 +8,7 @@
 #include <gh_protocol.h>
 
 #define TEMP_DEVS_MAX 4
-#define RADIO_NODES_MAX 1//2
+#define RADIO_NODES_MAX 1 // 2
 #define UNKNOWN_ADDRESS 255
 
 namespace embedded {
@@ -33,7 +33,7 @@ struct SendDesc {
 
 class Node;
 
-//enum NodeId { k_nodeLeftWindow = 0, k_nodeRightWindow = 1 };
+// enum NodeId { k_nodeLeftWindow = 0, k_nodeRightWindow = 1 };
 enum NodeId { k_nodeRightWindow = 0 };
 
 enum MotorDirection { k_windowExtend = GH_MOTOR_FORWARD, k_windowRetract = GH_MOTOR_REVERSE };
@@ -58,6 +58,8 @@ public:
   float GetTemp(byte index);
   bool MotorRun(MotorDirection direction, byte seconds);
   bool MotorSpeed(byte speed);
+  bool MotorState(bool &state);
+  byte Address() const { return m_address; }
 
 protected:
   embedded::greenhouse::Radio &Radio()
@@ -91,8 +93,9 @@ public:
   Radio();
   void Init(ISystem *system);
   void Update();
-  bool Send(radio::SendDesc& sendDesc);
+  bool Send(radio::SendDesc &sendDesc);
   radio::Node &Node(radio::NodeId index);
+  void MotorRunAll(radio::MotorDirection direction, byte seconds);
 
 private:
   void sr(int pin, bool set);

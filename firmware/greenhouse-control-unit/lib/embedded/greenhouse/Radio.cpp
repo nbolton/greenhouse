@@ -165,6 +165,43 @@ bool Radio::Send(radio::SendDesc &sendDesc)
   return rx;
 }
 
+void Radio::MotorRunAll(radio::MotorDirection direction, byte seconds)
+{
+  // const int windowNodes = 2;
+  const int windowNodes = 1;
+  const int motorBusyWait = 1000;
+  const int busyCheckMax = 60;
+
+  radio::NodeId nodes[windowNodes];
+  nodes[0] = radio::k_nodeRightWindow;
+  // nodes[1] = m_radio.Node(radio::k_nodeLeftWindow);
+
+  for (int i = 0; i < windowNodes; i++) {
+    radio::Node &node = Node(nodes[i]);
+
+    int busyChecks = 0;
+    bool motorBusy = false, motorStateRx = false;
+    do {
+      if (busyChecks++ >= busyCheckMax) {
+        TRACE_F("Error: Radio motor run busy checks exceeded maximum, node=%02X", node.Address());
+        break;
+      }
+      motorStateRx = node.MotorState(motorBusy);
+      if (!motorStateRx) {
+        break;
+      }
+      if (motorBusy) {
+        TRACE("Motor is busy, waiting");
+        m_system->Delay(motorBusyWait, "Motor busy wait");
+      }
+    } while (motorBusy);
+
+    if (motorStateRx && !motorBusy) {
+      node.MotorRun(direction, seconds);
+    }
+  }
+}
+
 // begin node class
 
 namespace radio {
@@ -205,7 +242,7 @@ bool Node::keepAlive()
       return false;
     }
   }
-  return true;
+  return m_helloOk;
 }
 
 bool helloOk(void *arg)
@@ -230,12 +267,12 @@ bool Node::hello()
   bool rxOk = Radio().Send(sd);
 
   m_helloOk = rxOk && sd.okCallbackResult;
-  if (!m_helloOk) {
-    TRACE_F(
-      "Error: Radio hello failed, rx=%s, ack=%s", BOOL_FS(rxOk), BOOL_FS(sd.okCallbackResult));
+  if (m_helloOk) {
+    m_keepAliveExpiry = millis() + KEEP_ALIVE_TIME;
   }
   else {
-    m_keepAliveExpiry = millis() + KEEP_ALIVE_TIME;
+    TRACE_F(
+      "Error: Radio hello failed, rx=%s, ack=%s", BOOL_FS(rxOk), BOOL_FS(sd.okCallbackResult));
   }
 
   return m_helloOk;
@@ -343,6 +380,25 @@ bool Node::MotorSpeed(byte speed)
   sd.cmd = GH_CMD_MOTOR_SPEED;
   sd.data1 = speed;
   return Radio().Send(sd);
+}
+
+bool Node::MotorState(bool &state)
+{
+  if (!keepAlive()) {
+    return false;
+  }
+
+  TRACE("Radio requesting motor state");
+  SendDesc sd;
+  sd.to = m_address;
+  sd.cmd = GH_CMD_MOTOR_STATE_REQ;
+  sd.expectCmd = GH_CMD_MOTOR_STATE_RSP;
+  if (Radio().Send(sd)) {
+    state = GH_DATA_1(s_rxBuf);
+    TRACE_F("Radio got motor state, running=%s", BOOL_FS(state));
+    return true;
+  }
+  return false;
 }
 
 } // namespace radio
