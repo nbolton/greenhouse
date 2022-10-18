@@ -2980,6 +2980,25 @@
     (pin "1" (uuid 012e138a-c5b5-49d3-9d01-36e17cb03eec))
   )
 
+  (symbol (lib_id "Connector:Conn_01x02_Male") (at 45.72 62.23 0) (mirror x) (unit 1)
+    (in_bom yes) (on_board yes) (fields_autoplaced)
+    (uuid d9d1085b-9b15-4340-9b95-610882d9fee3)
+    (property "Reference" "J2" (id 0) (at 44.45 59.6899 0)
+      (effects (font (size 1.27 1.27)) (justify right))
+    )
+    (property "Value" "JST_XH_2.54mm_1x2" (id 1) (at 44.45 62.2299 0)
+      (effects (font (size 1.27 1.27)) (justify right))
+    )
+    (property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical" (id 2) (at 45.72 62.23 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "~" (id 3) (at 45.72 62.23 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 5cf252db-7483-49ae-b6c8-f356c13be727))
+    (pin "2" (uuid 841e5065-99c9-4676-989a-90c5b324b4d4))
+  )
+
   (symbol (lib_id "power:GND") (at 227.33 133.35 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid dd2d9820-cb7f-4145-b630-21bae4e6e9f9)
@@ -3044,21 +3063,6 @@
     )
     (pin "1" (uuid ce5d8469-dae9-40cb-9f6b-570a12531668))
     (pin "2" (uuid d0a5d380-3078-4a0f-9e94-ec7c79d40814))
-  )
-
-  (symbol (lib_id "Connector:Conn_01x02_Male") (at 45.72 59.69 0) (unit 1)
-    (in_bom yes) (on_board yes) (fields_autoplaced)
-    (uuid ea9fe40b-c59e-4c0b-9cb7-bdacd16d2c47)
-    (property "Reference" "J2" (id 0) (at 46.355 54.61 0))
-    (property "Value" "JST_XH_2.54mm_1x2" (id 1) (at 46.355 57.15 0))
-    (property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical" (id 2) (at 45.72 59.69 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (id 3) (at 45.72 59.69 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 23eb62a5-2a6a-45c8-bd63-d60e9d6210cb))
-    (pin "2" (uuid cad69f78-0f51-4c16-9b4b-e52e73c67f38))
   )
 
   (symbol (lib_id "Device:R_Small_US") (at 259.08 148.59 270) (mirror x) (unit 1)
@@ -3236,7 +3240,7 @@
     (path "/64c39fd2-36c7-4cd2-b0b8-1a1e70b12069"
       (reference "J1") (unit 1) (value "Molex_KK_396_1x2") (footprint "Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical")
     )
-    (path "/ea9fe40b-c59e-4c0b-9cb7-bdacd16d2c47"
+    (path "/d9d1085b-9b15-4340-9b95-610882d9fee3"
       (reference "J2") (unit 1) (value "JST_XH_2.54mm_1x2") (footprint "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical")
     )
     (path "/5445894f-4880-497e-9742-4bc058d8a3fd"
