@@ -1,3 +1,5 @@
+#if IO_I2C_EN
+
 #include <TinyWireM.h>
 #include "A85_PCF8574.h"
 
@@ -64,3 +66,5 @@ bool A85_PCF8574::getBit(uint8_t bit) {
 	return (byteValue & (1<<bit)) != 0;
 } // End of getBit
 // End of file
+
+#endif // IO_I2C_EN

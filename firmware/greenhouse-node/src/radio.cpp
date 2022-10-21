@@ -7,14 +7,12 @@
 #include "leds.h"
 #include "motor.h"
 #include "pins.h"
-#include "sr.h"
+#include "io.h"
 #include "temp.h"
 
 // caution! compile RH_ASK.cpp with RH_ASK_ATTINY_USE_TIMER1 uncommented.
 // otherwise TIMER0 will be used, and delay()/millis() stop working.
 #include <RH_ASK.h>
-
-#define GH_ADDR GH_ADDR_NODE_1  // unique to device
 
 #define TX_BIT_RATE 2000
 #define TX_WAIT_DELAY 20
@@ -61,9 +59,9 @@ void radio_loop() {
 
   uint8_t rxBufLen = GH_LENGTH;
   if (driver.recv(rxBuf, &rxBufLen)) {
-    if (GH_TO(rxBuf) == GH_ADDR) {
+    if (GH_TO(rxBuf) == RADIO_ADDR) {
       GH_TO(txBuf) = GH_FROM(rxBuf);
-      GH_FROM(txBuf) = GH_ADDR;
+      GH_FROM(txBuf) = RADIO_ADDR;
       GH_SEQ(txBuf) = GH_SEQ(rxBuf);
 
       // by default, send commnad back to say what we're replying to.
@@ -100,14 +98,11 @@ bool isDupeRx() {
 
 bool handleRx() {
   switch (GH_CMD(rxBuf)) {
-#if HELLO_EN
 
     case GH_CMD_HELLO: {
       // nothing to do; ack is the default.
     } break;
-
-#endif  // HELLO_EN
-
+    
 #if TEMP_EN
 
     case GH_CMD_TEMP_DEVS_REQ: {

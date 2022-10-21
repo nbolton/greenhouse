@@ -5,7 +5,7 @@
 
 #include "attiny.h"
 #include "pins.h"
-#include "sr.h"
+#include "io.h"
 
 #define MOTOR_PWM 200
 

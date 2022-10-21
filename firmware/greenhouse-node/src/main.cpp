@@ -1,7 +1,7 @@
 #include "leds.h"
 #include "motor.h"
 #include "radio.h"
-#include "sr.h"
+#include "io.h"
 #include "temp.h"
 
 void setup() {
@@ -9,9 +9,9 @@ void setup() {
   motor_init();
 #endif  // MOTOR_EN
 
-#if SR_EN
-  sr_init();
-#endif  // SR_EN
+#if IO_EN
+  io_init();
+#endif  // IO_EN
 
 #if LED_DEBUG
   leds_startPre();

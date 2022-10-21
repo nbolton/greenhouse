@@ -8,7 +8,7 @@
 #include <gh_protocol.h>
 
 #define TEMP_DEVS_MAX 4
-#define RADIO_NODES_MAX 1 // 2
+#define RADIO_NODES_MAX 2
 #define UNKNOWN_ADDRESS 255
 
 namespace embedded {
@@ -18,13 +18,17 @@ class Radio;
 
 namespace radio {
 
-typedef bool (*callback)(void *arg);
+struct SendDesc;
+
+typedef bool (*callback)(SendDesc& sendDesc);
 
 struct SendDesc {
   byte to = 0;
   byte cmd = 0;
   byte data1 = 0;
   byte data2 = 0;
+  byte seq = 0;
+  int errors = 0;
   byte expectCmd = GH_CMD_ACK;
   callback okCallback = NULL;
   bool okCallbackResult = false;
@@ -33,8 +37,7 @@ struct SendDesc {
 
 class Node;
 
-// enum NodeId { k_nodeLeftWindow = 0, k_nodeRightWindow = 1 };
-enum NodeId { k_nodeRightWindow = 0 };
+enum NodeId { k_nodeRightWindow = 0, k_nodeLeftWindow = 1 };
 
 enum MotorDirection { k_windowExtend = GH_MOTOR_FORWARD, k_windowRetract = GH_MOTOR_REVERSE };
 
@@ -75,6 +78,8 @@ private:
   bool hello();
   bool keepAlive();
   bool keepAliveExpired();
+  void stepSequence();
+  bool send(radio::SendDesc &sendDesc);
 
 private:
   embedded::greenhouse::Radio *m_radio;
@@ -82,6 +87,9 @@ private:
   byte m_address;
   bool m_helloOk;
   unsigned long m_keepAliveExpiry;
+  unsigned long m_nextReconnect;
+  uint8_t m_sequence;
+  int m_errors;
 };
 
 } // namespace radio
