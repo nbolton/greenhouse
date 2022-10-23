@@ -5,10 +5,6 @@
 #include "temp.h"
 
 void setup() {
-#if MOTOR_EN
-  motor_init();
-#endif  // MOTOR_EN
-
 #if IO_EN
   io_init();
 #endif  // IO_EN
@@ -16,6 +12,10 @@ void setup() {
 #if LED_DEBUG
   leds_startPre();
 #endif  // LED_DEBUG
+
+#if MOTOR_EN
+  motor_init();
+#endif  // MOTOR_EN
 
 #if RADIO_EN
   radio_init();
