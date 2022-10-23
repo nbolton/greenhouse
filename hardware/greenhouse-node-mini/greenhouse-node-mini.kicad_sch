@@ -2054,11 +2054,6 @@
     (effects (font (size 3 3)) (justify left bottom))
     (uuid 362a8f47-2dce-4bda-807c-5d0b93ccfc80)
   )
-  (text "Could use bypass caps, but maybe not needed\nTODO: Measure noise on 5V and 10V"
-    (at 171.45 161.29 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
-    (uuid 8fe7d1e4-c037-4f0b-9b84-6dfeb3177744)
-  )
   (text "Power" (at 26.67 19.05 0)
     (effects (font (size 3 3)) (justify left bottom))
     (uuid 910d013d-7373-47a4-9ff6-5f17d7ecb8db)
@@ -2067,8 +2062,8 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid b5793203-f653-44a0-b8a6-b69ae6ba8dab)
   )
-  (text "Bridge of flyback diodes\n\"fast recovery (trr ≤ 200 nsec)\" \n\"2 A types\"\nUF5410 = 50ns"
-    (at 220.98 83.82 0)
+  (text "Bridge of flyback diodes\n\"fast recovery (trr ≤ 200 nsec)\""
+    (at 222.25 80.01 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid ddf1d79e-be75-4d66-ad5b-eadfb1e3c9c8)
   )
