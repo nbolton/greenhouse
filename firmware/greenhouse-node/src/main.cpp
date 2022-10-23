@@ -1,7 +1,7 @@
+#include "io.h"
 #include "leds.h"
 #include "motor.h"
 #include "radio.h"
-#include "io.h"
 #include "temp.h"
 
 void setup() {
