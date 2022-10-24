@@ -14,11 +14,11 @@
 #define TX_PIN D4
 #define PTT_PIN -1 // disable; using SR instead
 #define SR_PIN_EN_TX 15
-#define RX_TIMEOUT 2000
+#define RX_TIMEOUT 1000
 #define TX_WAIT_DELAY 20
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
-#define TX_RETRY_MAX 5
+#define TX_RETRY_MAX 10
 //#define KEEP_ALIVE_TIME 60000 // 60s
 #define KEEP_ALIVE_TIME 10000 // 10s
 //#define RECONNECT_TIME 60000  // 60s
@@ -106,8 +106,13 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
     sr(SR_PIN_EN_TX, false);
 
+    // linear timeout increase; 433MHz is a very busy frequency,
+    // and we don't want to fight with another retry loop.
+    const int timeout = (RX_TIMEOUT * (i + 1));
+    TRACE_F("Radio waiting for response, timeout: %dms", timeout);
+
     unsigned long start = millis();
-    while (millis() < (start + RX_TIMEOUT)) {
+    while (millis() < (start + timeout)) {
       uint8_t s_rxBufLen = sizeof(s_rxBuf);
 
 #pragma GCC diagnostic push
