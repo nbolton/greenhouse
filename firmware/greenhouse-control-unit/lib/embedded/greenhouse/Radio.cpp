@@ -19,9 +19,7 @@
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
 #define TX_RETRY_MAX 10
-//#define KEEP_ALIVE_TIME 60000 // 60s
-#define KEEP_ALIVE_TIME 10000 // 10s
-//#define RECONNECT_TIME 60000  // 60s
+#define KEEP_ALIVE_TIME 60000 // 60s
 #define RECONNECT_TIME 10000 // 10s
 
 #ifndef RADIO_TRACE
@@ -61,6 +59,18 @@ void Radio::Update()
   for (int i = 0; i < RADIO_NODES_MAX; i++) {
     m_nodes[i].Update();
   }
+}
+
+String Radio::DebugInfo() {
+  String debug;
+  for (int i = 0; i < RADIO_NODES_MAX; i++) {
+    radio::Node& node = m_nodes[i];
+    char buf[200];
+    String f = String(F("%d:{addr=%02Xh, err=%d} "));
+    sprintf(buf, f.c_str(), i, node.Address(), node.Errors());
+    debug += buf;
+  }
+  return debug;
 }
 
 radio::Node &Radio::Node(radio::NodeId index)

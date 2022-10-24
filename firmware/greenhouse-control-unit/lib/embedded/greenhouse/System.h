@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../../native/greenhouse/System.h"
 #include "../../common/log.h"
+#include "../../native/greenhouse/System.h"
 
 #include "Heating.h"
 #include "Power.h"
-#include "Time.h"
 #include "Radio.h"
+#include "Time.h"
 
 #include <ADS1115_WE.h>
 #include <Arduino.h>
@@ -19,11 +19,7 @@ namespace greenhouse {
 const int k_switchCount = 4;
 struct ADC;
 
-enum LedFlashTimes {
-  k_ledRefresh = 1,
-  k_ledStarted = 2,
-  k_ledRestart = 3
-};
+enum LedFlashTimes { k_ledRefresh = 1, k_ledStarted = 2, k_ledRestart = 3 };
 
 class System : public native::greenhouse::System, ISystem {
 
@@ -60,6 +56,7 @@ public:
   void QueueToggleActiveSwitch();
   void ApplyRefreshRate();
   void QueueCallback(CallbackFunction f, std::string name);
+  void WindowSpeedUpdate();
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -101,6 +98,10 @@ public:
   void FakeSoilMoisture(float value) { m_fakeSoilMoisture = value; }
   void ActiveSwitch(int value) { m_activeSwitch = value; }
   bool RefreshBusy() const { return m_refreshBusy; }
+  int WindowSpeedLeft() const { return m_windowSpeedLeft; }
+  void WindowSpeedLeft(int value) { m_windowSpeedLeft = value; }
+  int WindowSpeedRight() const { return m_windowSpeedRight; }
+  void WindowSpeedRight(int value) { m_windowSpeedRight = value; }
 
 private:
   void Beep(int times, bool longBeep);
@@ -142,9 +143,11 @@ private:
   std::queue<Callback> m_callbackQueue;
   bool m_queueOnSystemStarted;
   unsigned long m_lastLoop;
+  int m_windowSpeedLeft;
+  int m_windowSpeedRight;
 #if RADIO_EN
   Radio m_radio;
-#endif //RADIO_EN
+#endif // RADIO_EN
 };
 
 } // namespace greenhouse

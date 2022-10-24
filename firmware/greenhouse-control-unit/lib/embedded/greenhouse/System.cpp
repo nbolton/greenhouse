@@ -146,7 +146,9 @@ System::System() :
   m_lastBlynkFailure(0),
   m_refreshRate(k_unknown),
   m_queueOnSystemStarted(false),
-  m_lastLoop(0)
+  m_lastLoop(0),
+  m_windowSpeedLeft(k_unknown),
+  m_windowSpeedRight(k_unknown)
 {
   for (int i = 0; i < k_switchCount; i++) {
     m_switchState[i] = false;
@@ -374,6 +376,8 @@ void System::Refresh()
   Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
+
+  Blynk.virtualWrite(V77, m_radio.DebugInfo());
 
   TRACE("Refresh done (embedded)");
 }
@@ -936,6 +940,13 @@ void System::QueueCallback(CallbackFunction f, std::string name)
   m_callbackQueue.push(Callback(f, name));
 }
 
+void System::WindowSpeedUpdate() {
+  radio::Node& left = m_radio.Node(radio::k_nodeLeftWindow);
+  radio::Node& right = m_radio.Node(radio::k_nodeRightWindow);
+  left.MotorSpeed(WindowSpeedLeft());
+  right.MotorSpeed(WindowSpeedRight());
+}
+
 } // namespace greenhouse
 } // namespace embedded
 
@@ -994,6 +1005,8 @@ BLYNK_CONNECTED()
     V72,
     V73,
     V74,
+    V78,
+    V79,
     V127 /* last */);
 }
 
@@ -1153,3 +1166,15 @@ BLYNK_WRITE(V76)
 
 // used only as the last value
 BLYNK_WRITE(V127) { eg::s_instance->OnLastWrite(); }
+
+BLYNK_WRITE(V78)
+{
+  eg::s_instance->WindowSpeedLeft(param.asInt());
+  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate, "Window speed update");
+}
+
+BLYNK_WRITE(V79)
+{
+  eg::s_instance->WindowSpeedRight(param.asInt());
+  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate, "Window speed update");
+}

@@ -63,6 +63,7 @@ public:
   bool MotorSpeed(byte speed);
   bool MotorState(bool &state);
   byte Address() const { return m_address; }
+  int Errors() const { return m_errors; }
 
 protected:
   embedded::greenhouse::Radio &Radio()
@@ -101,6 +102,7 @@ public:
   Radio();
   void Init(ISystem *system);
   void Update();
+  String DebugInfo();
   bool Send(radio::SendDesc &sendDesc);
   radio::Node &Node(radio::NodeId index);
   void MotorRunAll(radio::MotorDirection direction, byte seconds);
