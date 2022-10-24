@@ -90,7 +90,7 @@ bool Radio::Send(radio::SendDesc &sendDesc)
   for (int i = 0; i < TX_RETRY_MAX; i++) {
 
     TRACE_F(
-      "Radio sending, attempt=%d, to=%02X, cmd=%02X, seq=%d",
+      "Radio sending, attempt=%d, to=%02Xh, cmd=%02Xh, seq=%d",
       i + 1,
       sendDesc.to,
       sendDesc.cmd,
@@ -138,7 +138,7 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
         if (GH_TO(s_rxBuf) == GH_ADDR_MAIN) {
           if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
-            TRACE_F("Error: Code from node %02X: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
+            TRACE_F("Error: Code from node %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
             m_errors++;
             sendDesc.errors++;
           }
@@ -199,7 +199,7 @@ void Radio::MotorRunAll(radio::MotorDirection direction, byte seconds)
     bool motorBusy = false, motorStateRx = false;
     do {
       if (busyChecks++ >= busyCheckMax) {
-        TRACE_F("Error: Radio motor run busy checks exceeded maximum, node=%02X", node.Address());
+        TRACE_F("Error: Radio motor run busy checks exceeded maximum, node=%02Xh", node.Address());
         break;
       }
       motorStateRx = node.MotorState(motorBusy);
@@ -235,14 +235,14 @@ Node::Node() :
 
 void Node::Init(embedded::greenhouse::Radio &radio, byte address)
 {
-  TRACE_F("Init radio node, address=%02X", address);
+  TRACE_F("Init radio node, address=%02Xh", address);
   m_radio = &radio;
   m_address = address;
   if (hello()) {
-    TRACE_F("Radio node online: %02X", m_address);
+    TRACE_F("Radio node online: %02Xh", m_address);
   }
   else {
-    TRACE_F("Radio node offline: %02X", m_address);
+    TRACE_F("Radio node offline: %02Xh", m_address);
   }
 }
 
@@ -253,12 +253,12 @@ void Node::Update()
   }
   else {
     if (millis() > m_nextReconnect) {
-      TRACE_F("Reconnecting to node: %02X", m_address);
+      TRACE_F("Reconnecting to node: %02Xh", m_address);
       if (hello()) {
-        TRACE_F("Radio node online: %02X", m_address);
+        TRACE_F("Radio node online: %02Xh", m_address);
       }
       else {
-        TRACE_F("Failed to reconnect to node: %02X", m_address);
+        TRACE_F("Failed to reconnect to node: %02Xh", m_address);
       }
     }
   }
@@ -281,9 +281,9 @@ bool Node::keepAliveExpired() { return millis() > m_keepAliveExpiry; }
 bool Node::keepAlive()
 {
   if (keepAliveExpired()) {
-    TRACE_F("Radio keep alive expired, saying hello to node: %02X", m_address);
+    TRACE_F("Radio keep alive expired, saying hello to node: %02Xh", m_address);
     if (!hello()) {
-      TRACE_F("Error: Radio keep alive failed, node offline: %02X", m_address);
+      TRACE_F("Error: Radio keep alive failed, node offline: %02Xh", m_address);
       return false;
     }
   }
@@ -306,14 +306,14 @@ bool Node::send(radio::SendDesc &sendDesc)
   sendDesc.seq = m_sequence;
   bool ok = Radio().Send(sendDesc);
   m_errors += sendDesc.errors;
-  TRACE_F("Total errors for node %02X: %d", m_address, m_errors);
+  TRACE_F("Total errors for node %02Xh: %d", m_address, m_errors);
   stepSequence();
   return ok;
 }
 
 bool Node::hello()
 {
-  TRACE_F("Radio saying hello to %02X", m_address);
+  TRACE_F("Radio saying hello to %02Xh", m_address);
 
   SendDesc sd;
   sd.to = m_address;
@@ -372,7 +372,7 @@ bool tempDataOk(SendDesc &sendDesc)
   TempDataCallbackArg *arg = (TempDataCallbackArg *)sendDesc.okCallbackArg;
   const uint8_t a = GH_DATA_1(s_rxBuf);
   const uint8_t b = GH_DATA_2(s_rxBuf);
-  TRACE_F("Got temperature data, a=%02X b=%02X", a, b);
+  TRACE_F("Got temperature data, a=%02Xh b=%02Xh", a, b);
   if (b != TEMP_UNKNOWN) {
     arg->data->temps[arg->dev] = b * 16.0 + a / 16.0;
   }
@@ -471,7 +471,7 @@ void printBuffer(const __FlashStringHelper *prompt, const uint8_t *data, uint8_t
   strcpy(printBuf, String(prompt).c_str());
   int printLen = strlen(printBuf);
   for (uint8_t i = 0; i < dataLen; i++) {
-    sprintf(printBuf + printLen, "%02X", (unsigned int)data[i]);
+    sprintf(printBuf + printLen, "%02Xh", (unsigned int)data[i]);
     printLen += 2;
 
     if (i != dataLen - 1) {
