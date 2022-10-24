@@ -118,7 +118,11 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
     // linear timeout increase; 433MHz is a very busy frequency,
     // and we don't want to fight with another retry loop.
-    const int timeout = (RX_TIMEOUT * (i + 1));
+    // don't wait for long on the last retry.
+    int timeout = RX_TIMEOUT;
+    if (i != (TX_RETRY_MAX - 1)) {
+      timeout *= i + 1;
+    }
     TRACE_F("Radio waiting for response, timeout: %dms", timeout);
 
     unsigned long start = millis();
