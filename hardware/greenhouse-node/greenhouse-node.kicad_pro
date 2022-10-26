@@ -386,8 +386,6 @@
         "name": "4A",
         "nets": [
           "+10V",
-          "/motor/Motor_1",
-          "/motor/Motor_2",
           "GND"
         ],
         "pcb_color": "rgba(0, 0, 0, 0.000)",
