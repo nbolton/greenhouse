@@ -2058,10 +2058,6 @@
     (effects (font (size 3 3)) (justify left bottom))
     (uuid 910d013d-7373-47a4-9ff6-5f17d7ecb8db)
   )
-  (text "TODO: Adjust LED R values for I2C IO" (at 27.94 194.31 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
-    (uuid b5793203-f653-44a0-b8a6-b69ae6ba8dab)
-  )
   (text "Bridge of flyback diodes\n\"fast recovery (trr ≤ 200 nsec)\""
     (at 222.25 80.01 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
