@@ -8,7 +8,7 @@
   (title_block
     (title "Greenhouse control unit")
     (date "2022-03-27")
-    (rev "1")
+    (rev "2")
   )
 
   (layers
