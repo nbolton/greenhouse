@@ -6,8 +6,8 @@
 
   (title_block
     (title "Greenhouse control unit")
-    (date "2022-03-27")
-    (rev "1")
+    (date "2022-10-30")
+    (rev "2")
   )
 
   (lib_symbols
@@ -4045,7 +4045,7 @@
     (property "Datasheet" "~" (id 3) (at 340.36 177.8 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Module" "RFM9x LoRa" (id 4) (at 341.63 180.3399 0)
+    (property "Module" "RFM9x LoRa module" (id 4) (at 341.63 180.3399 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (pin "1" (uuid 3fc691d8-646e-466c-8be4-f66d24b39ab9))
