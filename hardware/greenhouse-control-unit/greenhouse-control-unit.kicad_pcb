@@ -212,11 +212,11 @@
     (property "Sheetname" "")
     (path "/c7bafe92-8eff-4d9d-b043-3a011a8680b6")
     (attr through_hole)
-    (fp_text reference "J3" (at -2.286 1.9) (layer "F.SilkS")
+    (fp_text reference "J3" (at -0.1224 2.1925) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 1735794e-8bbc-4b41-85e2-0082e11a9848)
     )
-    (fp_text value "Buck_Conn_01x01_Female" (at 1.6276 -2.05) (layer "F.Fab")
+    (fp_text value "Buck_Conn_01x01_Female" (at -8.5044 5.4945) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 9b65fdf1-a633-4c03-a3b4-aa045471c950)
     )
@@ -320,15 +320,15 @@
     (property "Sheetname" "")
     (path "/9c2828bb-2b7a-4ca4-a47f-e141546c830b")
     (attr through_hole)
-    (fp_text reference "J2" (at 1.506 -2.54) (layer "F.SilkS")
+    (fp_text reference "J2" (at 0.1136 -2.5015) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp aaa66df7-aa7d-4afb-8646-913bb71e1198)
     )
-    (fp_text value "Buck_Conn_01x01_Female" (at 0 -2.05) (layer "F.Fab")
+    (fp_text value "Buck_Conn_01x01_Female" (at 8.4956 -5.2955) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 6b4a9379-1da9-4736-87ea-937ffc80905b)
     )
-    (fp_text user "${REFERENCE}" (at 0 2.25) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at 0 -2.5015) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 075aa2a3-9670-4bc9-b21a-7548455f088c)
     )
@@ -354,11 +354,11 @@
     (property "Sheetname" "")
     (path "/30ed1b00-f151-4615-9987-7ee76b56e64c")
     (attr through_hole)
-    (fp_text reference "J1" (at 2.268 1.9) (layer "F.SilkS")
+    (fp_text reference "J1" (at -0.1404 2.1925) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp e0176391-9b6d-4a9e-b5f1-733ed2032fea)
     )
-    (fp_text value "Buck_Conn_01x01_Female" (at 0 -2.05) (layer "F.Fab")
+    (fp_text value "Buck_Conn_01x01_Female" (at 8.4956 4.2245) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 987f3958-1626-415a-9fd3-c9b3fc9d75de)
     )
@@ -590,11 +590,11 @@
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp c34035b3-14bc-4f27-9d55-15cf02d33432)
     )
-    (fp_text value "10nF" (at 2.5 2.5 90) (layer "F.Fab")
+    (fp_text value "10nF" (at 3.81 -3.81 180) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 1f048a59-2136-4388-b56c-336229dd28cb)
     )
-    (fp_text user "${REFERENCE}" (at 2.246 0.508 90) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at 2.54 0 180) (layer "F.Fab")
       (effects (font (size 0.94 0.94) (thickness 0.141)))
       (tstamp 034f2ee9-370e-4b39-8188-5cc4093e7b77)
     )
@@ -632,11 +632,11 @@
     (property "Sheetname" "")
     (path "/5357994b-4f7f-427c-9ac3-7bcbcc4a8a94")
     (attr through_hole)
-    (fp_text reference "J6" (at 1.98 -6.31) (layer "F.SilkS")
+    (fp_text reference "J6" (at 1.928 6.604) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp abc47acb-1014-4dc0-b4ea-4c6ec1f014cb)
     )
-    (fp_text value "Molex_KK-396_01x02" (at 1.98 6.1) (layer "F.Fab")
+    (fp_text value "Molex_KK-396_01x02" (at 7.262 2.54 90) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp ea3686cf-49e2-4eee-bcb5-157cb4912daa)
     )
@@ -699,11 +699,11 @@
     (property "Sheetname" "")
     (path "/ab8c1269-ccb7-406f-a043-b4d752d2d67f")
     (attr through_hole)
-    (fp_text reference "J8" (at 13.97 -4.12) (layer "F.SilkS")
+    (fp_text reference "J8" (at 13.97 4.064) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 16cff3e8-3080-4592-ae43-53c1cb829122)
     )
-    (fp_text value "Molex_KK-254_01x12" (at 13.97 4.08) (layer "F.Fab")
+    (fp_text value "Molex_KK-254_01x12" (at 13.97 -3.81) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp b7dd2a49-0387-4ad6-b4c9-7354e222318e)
     )
@@ -816,11 +816,11 @@
     (property "Sheetname" "")
     (path "/6e6b96f4-ad5c-4afe-a712-afced2d8ea0a")
     (attr through_hole)
-    (fp_text reference "R6" (at 9.906 0 90) (layer "F.SilkS")
+    (fp_text reference "R6" (at 9.906 -0.254 180) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 015191ed-79f5-41ea-99ce-dd8cf307d762)
     )
-    (fp_text value "220k" (at 11.43 0 90) (layer "F.Fab")
+    (fp_text value "220k" (at -3.048 0 180) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp d537957b-3d59-4ac3-848f-bf1e7c645912)
     )
@@ -923,15 +923,15 @@
     (property "Sheetname" "")
     (path "/511745f1-d0fa-4f46-87b1-22cd4080fa9c")
     (attr through_hole)
-    (fp_text reference "J4" (at -1.778 -2.54) (layer "F.SilkS")
+    (fp_text reference "J4" (at -0.1224 -2.5015) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 7fdb819d-5cd7-4bf4-8dd8-452ebe4ff3b2)
     )
-    (fp_text value "Buck_Conn_01x01_Female" (at 0 -2.05) (layer "F.Fab")
+    (fp_text value "Buck_Conn_01x01_Female" (at -8.5044 -4.0255) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 9ce56ff3-4a46-4be6-8f12-f90a81cb850a)
     )
-    (fp_text user "${REFERENCE}" (at 0 2.25) (layer "F.Fab")
+    (fp_text user "${REFERENCE}" (at -0.1224 -2.5015) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp b02fd735-fb4d-44db-ae80-b6b88fb8fc18)
     )
@@ -1718,11 +1718,11 @@
     (property "Sheetname" "")
     (path "/c551cebd-0bd3-47ba-856a-e27d4df314b5")
     (attr through_hole)
-    (fp_text reference "J5" (at 1.98 -6.31) (layer "F.SilkS")
+    (fp_text reference "J5" (at 1.98 6.499) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 59501395-780b-47e4-8967-9f965674a799)
     )
-    (fp_text value "Molex_KK-396_01x02" (at 1.98 6.1) (layer "F.Fab")
+    (fp_text value "Molex_KK-396_01x02" (at 7.314 2.435 90) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 293534a1-9613-4dcd-a048-ce9a885cba35)
     )
@@ -2239,11 +2239,11 @@
     (property "Sheetname" "")
     (path "/47527e0b-7bb0-4b6f-a4d0-d033c29db61d")
     (attr through_hole)
-    (fp_text reference "J7" (at 21.78 -6.31) (layer "F.SilkS")
+    (fp_text reference "J7" (at 21.78 6.604) (layer "F.SilkS")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp f9acc4f2-e918-475f-b8d3-558affb8c3e8)
     )
-    (fp_text value "Molex_KK-396_01x12" (at 21.78 6.1) (layer "F.Fab")
+    (fp_text value "Molex_KK-396_01x12" (at 21.78 -6.35) (layer "F.Fab")
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp ea720a8c-9a07-4d6c-adc7-fc4b83f5af5a)
     )
@@ -2752,7 +2752,7 @@
   (gr_rect (start 171.626 122.7205) (end 149.126 104.7205) (layer "Dwgs.User") (width 0.15) (fill none) (tstamp affeb918-17a6-4202-92af-976bff713760))
   (gr_rect (start 104.214 105.031) (end 94.091 129.531) (layer "Dwgs.User") (width 0.15) (fill none) (tstamp eadfd7fe-bd64-4a2a-9199-521567e93b3b))
   (gr_rect locked (start 72.1356 44.4645) (end 222.1356 134.4645) (layer "Edge.Cuts") (width 0.2) (fill none) (tstamp d039718a-5f93-4d2d-b957-a40b11652989))
-  (gr_text "OUT" (at 195.9656 129.0705) (layer "F.SilkS") (tstamp 2350c629-d5fa-4d10-85c8-f0b284e53e2d)
+  (gr_text "OUT" (at 195.58 129.286) (layer "F.SilkS") (tstamp 2350c629-d5fa-4d10-85c8-f0b284e53e2d)
     (effects (font (size 1.5 1.5) (thickness 0.25)))
   )
   (gr_text "Wemos D1 Mini" (at 160.556 94.1455) (layer "F.SilkS") (tstamp 6b7bcaa8-116d-42db-a90a-b4fe18f5a6fd)
@@ -23905,6 +23905,19 @@
       725fa0ba-0908-4afd-bde8-62ebb33d4133
     )
   )
+  (group "" (id 33efb779-86b3-4dc7-a688-56746aa6da68)
+    (members
+      0b376148-9c85-464f-b399-0656d5bfa0a3
+      167ac4c4-2361-4ec1-9b5e-42fdf85d75f3
+      1858edc6-fb7b-4262-a293-ea5a3fb081f4
+      2350c629-d5fa-4d10-85c8-f0b284e53e2d
+      5d2bd3a3-33ad-4190-ab27-83cfc7852596
+      6b3bf5ef-8eea-4ba5-8798-6a310013b108
+      8d3c9ae7-a390-4a71-aed1-567e25c5f448
+      b1bf97d5-b481-4b4e-8378-afa031f15952
+      fdbdc6f0-e71e-41d2-99ef-d0c5b26b0092
+    )
+  )
   (group "" (id 4fdb1ed8-6342-4ede-8c2e-551e4eacee8a)
     (members
       11e68a16-aa03-4027-bddd-d9a8eedb64dc
@@ -23930,19 +23943,6 @@
       9aebe978-859f-4fe3-8e30-4e165d69f8cc
       a37ab503-3240-440c-9ce2-07ac013cdbed
       d2eea209-c699-473a-afc8-9db25bca9999
-    )
-  )
-  (group "" (id a3962fd7-4391-4655-b1b7-3de3f864c746)
-    (members
-      0b376148-9c85-464f-b399-0656d5bfa0a3
-      167ac4c4-2361-4ec1-9b5e-42fdf85d75f3
-      1858edc6-fb7b-4262-a293-ea5a3fb081f4
-      2350c629-d5fa-4d10-85c8-f0b284e53e2d
-      5d2bd3a3-33ad-4190-ab27-83cfc7852596
-      6b3bf5ef-8eea-4ba5-8798-6a310013b108
-      8d3c9ae7-a390-4a71-aed1-567e25c5f448
-      b1bf97d5-b481-4b4e-8378-afa031f15952
-      fdbdc6f0-e71e-41d2-99ef-d0c5b26b0092
     )
   )
   (group "" (id fffd4ae6-8077-4aa8-b5e9-1c522972149d)
