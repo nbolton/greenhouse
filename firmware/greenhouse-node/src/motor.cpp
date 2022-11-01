@@ -57,37 +57,29 @@ bool motor_on() { return millis() < motorStop; }
 
 #if MOTOR_TEST
 
-#define TEST_DELAY 200
+#define TEST_DELAY 500
 
 void testMotor(int pwm) {
   analogWrite(PIN_MOTOR_PWM, pwm);
 
+  set(SR_PIN_MOTOR_B);
+  shift();
+
+  delay(TEST_DELAY);
+
+  clear(SR_PIN_MOTOR_B);
   set(SR_PIN_MOTOR_A);
   shift();
+
   delay(TEST_DELAY);
 
   clear(SR_PIN_MOTOR_A);
   shift();
-  delay(TEST_DELAY);
-
-  set(SR_PIN_MOTOR_B);
-  shift();
-  delay(TEST_DELAY);
-
-  clear(SR_PIN_MOTOR_B);
-  shift();
-  delay(TEST_DELAY);
 }
 
 void testMotor() {
-  int pwm = 64;
-  for (int i = 0; i < 4; i++) {
-    testMotor(pwm);
-    pwm += 64;
-    if (pwm > 255) {
-      pwm = 255;
-    }
-  }
+  testMotor(200);
+  testMotor(255);
 }
 
 #endif  // MOTOR_TEST
