@@ -167,19 +167,22 @@ void Power::Loop()
 
 void Power::MeasureVoltage()
 {
-  if (
-    !Embedded().BatterySensorReady() || m_batteryVoltageSensorMax == k_unknown ||
-    m_batteryVoltageOutputMax == k_unknown) {
+  if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
     return;
   }
 
   m_batteryVoltageSensor = Embedded().ReadBatteryVoltageSensorRaw();
-  m_batteryVoltageOutput = mapFloat(
-    m_batteryVoltageSensor,
-    m_batteryVoltageSensorMin,
-    m_batteryVoltageSensorMax,
-    m_batteryVoltageOutputMin,
-    m_batteryVoltageOutputMax);
+  if (m_batteryVoltageSensor != k_unknown) {
+    m_batteryVoltageOutput = mapFloat(
+      m_batteryVoltageSensor,
+      m_batteryVoltageSensorMin,
+      m_batteryVoltageSensorMax,
+      m_batteryVoltageOutputMin,
+      m_batteryVoltageOutputMax);
+  }
+  else {
+    m_batteryVoltageOutput = k_unknown;
+  }
 }
 
 void Power::MeasureCurrent()

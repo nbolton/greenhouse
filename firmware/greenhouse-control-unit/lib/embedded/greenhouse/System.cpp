@@ -31,10 +31,9 @@ namespace greenhouse {
 #define SR_ON LOW
 #define SR_OFF HIGH
 
-#define ADC_RETRY_MAX 5
-#define ADC_RETRY_DELAY 50
+#define ADC_RETRY_MAX 10
+#define ADC_RETRY_DELAY 1
 #define DEBUG_DELAY 0
-#define ADC_DEBUG 0
 #define LOOP_DELAY 10
 
 struct ADC {
@@ -46,10 +45,7 @@ struct ADC {
 #define IO_PIN_BEEP_SW P2
 #define IO_PIN_FAN_SW P3
 
-// adc1 pins
-const ADS1115_MUX k_localVoltagePin = ADS1115_COMP_3_GND;
-
-// adc2 pins
+// external adc pins
 const ADS1115_MUX k_batteryVoltagePin = ADS1115_COMP_0_GND;
 const ADS1115_MUX k_batteryCurrentPin = ADS1115_COMP_1_GND;
 
@@ -59,8 +55,7 @@ const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
 const uint8_t k_insideAirSensorAddress = 0x44;
 const uint8_t k_outsideAirSensorAddress = 0x45;
-const int k_adcAddress1 = 0x48;
-const int k_adcAddress2 = 0x49;
+const int k_externalAdcAddress = 0x49;
 const float k_weatherLat = 54.203;
 const float k_weatherLon = -4.408;
 const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
@@ -80,7 +75,7 @@ static char s_reportBuffer[200];
 static BlynkTimer s_refreshTimer;
 static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
-static ADC s_adc1, s_adc2;
+static ADC s_externalAdc;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
@@ -158,7 +153,7 @@ void System::Setup()
   m_power.Setup();
 
   InitSensors();
-  InitADCs();
+  InitExternalADC();
 
   TRACE("Init Blynk");
   Blynk.begin(k_auth, k_ssid, k_pass);
@@ -288,22 +283,15 @@ void System::InitSensors()
   }
 }
 
-void System::InitADCs()
+void System::InitExternalADC()
 {
-  TRACE("Init ADCs");
+  TRACE("Init external ADC");
 
-  s_adc1.name = "ADS1115 #1 - Onboard";
-  s_adc1.ads = ADS1115_WE(k_adcAddress1);
-  s_adc1.ready = s_adc1.ads.init();
-  if (!s_adc1.ready) {
-    ReportWarning("ADC not ready, init failed: %s", s_adc1.name.c_str());
-  }
-
-  s_adc2.name = "ADS1115 #2 - Battery";
-  s_adc2.ads = ADS1115_WE(k_adcAddress2);
-  s_adc2.ready = s_adc2.ads.init();
-  if (!s_adc2.ready) {
-    ReportWarning("ADC not ready, init failed: %s", s_adc2.name.c_str());
+  s_externalAdc.name = "Battery";
+  s_externalAdc.ads = ADS1115_WE(k_externalAdcAddress);
+  s_externalAdc.ready = s_externalAdc.ads.init();
+  if (!s_externalAdc.ready) {
+    ReportWarning("ADC init failed: %s", s_externalAdc.name.c_str());
   }
 }
 
@@ -409,7 +397,7 @@ bool System::ReadSensors(int &failures)
   TRACE("Reading soil temperatures");
   radio::Node &rightWindow = m_radio.Node(radio::k_nodeRightWindow);
   const int tempDevs = rightWindow.GetTempDevs();
-  
+
   TRACE_F("Soil temperature devices: %d", tempDevs);
   float tempSum = 0;
   for (int i = 0; i < tempDevs; i++) {
@@ -431,7 +419,7 @@ bool System::ReadSensors(int &failures)
     m_soilTemperature = k_unknown;
     TRACE("Soil temperatures unknown");
   }
-#else 
+#else
   m_soilTemperature = k_unknown;
 #endif // RADIO_EN
 
@@ -519,17 +507,24 @@ void System::Beep(int times, bool longBeep)
 
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
+//#define ADC_DEBUG 1
+
+#if ADC_DEBUG
+  TRACE_F("Reading ADC: %s", adc.name.c_str());
+#endif
+
   if (!adc.ready) {
 #if ADC_DEBUG
-    TRACE_F("ADC not ready: %s", adc.name.c_str());
-    TRACE("Retrying ADC init.");
+    TRACE("ADC: Re-init");
 #endif // ADC_DEBUG
 
     adc.ready = adc.ads.init();
-
-    if (!adc.ready) {
+    if (adc.ready) {
+      TRACE("ADC: Ready again");
+    }
+    else {
 #if ADC_DEBUG
-      TRACE("ADC still not ready, giving up.");
+      TRACE("ADC: Re-init failed");
 #endif // ADC_DEBUG
       return k_unknown;
     }
@@ -544,16 +539,25 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
   int times = 0;
   while (adc.ads.isBusy()) {
-    Delay(ADC_RETRY_DELAY, "ADC busy wait");
     if (times++ > ADC_RETRY_MAX) {
+      // assume ADC not ready if failed many times. should cause re-init.
+      adc.ready = false;
 #if ADC_DEBUG
-      TRACE("ADC is busy, result unknown.");
+      TRACE_F("ADC: Not ready after %d", times);
 #endif // ADC_DEBUG
       return k_unknown;
     }
+
+    Delay(ADC_RETRY_DELAY, "ADC busy wait");
   }
 
-  return adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
+  float f = adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
+
+#if ADC_DEBUG
+  TRACE_F("ADC: Got result: %.2fV", f);
+#endif
+
+  return f;
 }
 
 void System::ReportInfo(const char *format, ...)
@@ -798,11 +802,11 @@ void System::OnPowerSwitch()
 
 void System::WriteIO(uint8_t pin, uint8_t value) { s_io1.digitalWrite(pin, value); }
 
-bool System::BatterySensorReady() { return s_adc2.ready; }
+bool System::BatterySensorReady() { return s_externalAdc.ready; }
 
-float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_adc2, k_batteryVoltagePin); }
+float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_externalAdc, k_batteryVoltagePin); }
 
-float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_adc2, k_batteryCurrentPin); }
+float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_externalAdc, k_batteryCurrentPin); }
 
 void System::PrintCommands() { TRACE("Commands\ns: status"); }
 

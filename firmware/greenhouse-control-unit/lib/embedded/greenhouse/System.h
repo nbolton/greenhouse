@@ -102,7 +102,7 @@ private:
   void Actuator(bool forward, int s, int t);
   float ReadAdc(ADC &adc, ADS1115_MUX channel);
   void InitSensors();
-  void InitADCs();
+  void InitExternalADC();
   void UpdateCaseFan();
   void PrintCommands();
   void PrintStatus();
