@@ -4,7 +4,6 @@
 
 #include "Heating.h"
 #include "ISystem.h"
-#include "MultiShiftRegister.h"
 #include "common.h"
 #include "gh_config.h"
 
@@ -12,12 +11,13 @@
 #include <Arduino.h>
 #include <ArduinoHttpClient.h>
 #include <ArduinoJson.h>
-#include <BlynkSimpleEsp8266.h>
+#include <BlynkSimpleEsp32.h>
 #include <DallasTemperature.h>
-#include <ESP8266WiFi.h>
 #include <OneWire.h>
 #include <PCF8574.h>
 #include <SPI.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
 #include <Wire.h>
 
 using namespace common;
@@ -43,29 +43,8 @@ struct ADC {
   bool ready = false;
 };
 
-// regular pins
-// const int k_oneWirePin = D3;
-const int k_shiftRegisterEnablePin = D5;     // OE (13)
-const int k_shiftRegisterSerialPin = D6;     // SER (14)
-const int k_shiftRegisterShiftClockPin = D7; // SRCLK (11)
-const int k_shiftRegisterStoreClockPin = D8; // RCLK (12)
-const bool k_shiftRegisterTestEnable = false;
-const int k_shiftRegisterTestFrom = 0; // min 0
-const int k_shiftRegisterTestTo = 15;  // max 15
-const int k_shiftRegisterTestOn = 500; // time between shift and clear
-const int k_shiftRegisterTestOff = 0;  // time between last clear and next shift
-const int k_shiftRegisterMinVoltage = 5;
-
-// msr pins
-const int k_batteryRelayPin = 0;
-const int k_BeepPin = 1;
-const int k_caseFanPin = 2;
-const int k_psuRelayPin = 3;
-const int k_batteryLedPin = 4;
-const int k_psuLedPin = 5;
-const int k_actuatorPin1 = 7; // IN1
-const int k_actuatorPin2 = 6; // IN2
-const int k_switchPins[] = {0 + 8, 1 + 8, 2 + 8, 3 + 8};
+#define IO_PIN_BEEP_SW P2
+#define IO_PIN_FAN_SW P3
 
 // adc1 pins
 const ADS1115_MUX k_localVoltagePin = ADS1115_COMP_3_GND;
@@ -75,7 +54,6 @@ const ADS1115_MUX k_batteryVoltagePin = ADS1115_COMP_0_GND;
 const ADS1115_MUX k_batteryCurrentPin = ADS1115_COMP_1_GND;
 
 const bool k_enableLed = false;
-const int k_shiftRegisterTotal = 2;
 const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
@@ -98,11 +76,6 @@ const int k_rightWindowNodeSwitch = 2;
 
 static System *s_instance = nullptr;
 static PCF8574 s_io1(k_ioAddress);
-static MultiShiftRegister s_shiftRegisters(
-  k_shiftRegisterTotal,
-  k_shiftRegisterStoreClockPin,
-  k_shiftRegisterShiftClockPin,
-  k_shiftRegisterSerialPin);
 static char s_reportBuffer[200];
 static BlynkTimer s_refreshTimer;
 static Adafruit_SHT31 s_insideAirSensor;
@@ -111,7 +84,6 @@ static ADC s_adc1, s_adc2;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
-static int s_switchOnCount = 0;
 
 // free-function declarations
 
@@ -125,7 +97,7 @@ void System::Instance(System &ga) { s_instance = &ga; }
 
 System::System() :
   m_heating(),
-  m_power(k_psuRelayPin, k_batteryRelayPin, k_batteryLedPin, k_psuLedPin),
+  m_power(),
   m_insideAirTemperature(k_unknown),
   m_insideAirHumidity(k_unknown),
   m_outsideAirTemperature(k_unknown),
@@ -141,7 +113,6 @@ System::System() :
   m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
   m_soilMoistureWarningSent(false),
-  m_activeSwitch(k_unknown),
   m_blynkFailures(0),
   m_lastBlynkFailure(0),
   m_refreshRate(k_unknown),
@@ -150,9 +121,6 @@ System::System() :
   m_windowSpeedLeft(k_unknown),
   m_windowSpeedRight(k_unknown)
 {
-  for (int i = 0; i < k_switchCount; i++) {
-    m_switchState[i] = false;
-  }
 }
 
 void System::Setup()
@@ -173,32 +141,35 @@ void System::Setup()
 
   TRACE_F("Starting system: %s", BLYNK_DEVICE_NAME);
 
-  InitShiftRegisters();
+  TRACE("Init I2C");
+  if (!Wire.begin()) {
+    TRACE("I2C init failed");
+    Restart();
+  }
+
+  InitIO();
 
   Beep(1, false);
   CaseFan(true); // on by default
 
-  SetSwitch(k_leftWindowNodeSwitch, true);
-  SetSwitch(k_rightWindowNodeSwitch, true);
-
-  Wire.begin();
-
+  TRACE("Init power");
   m_power.Embedded(*this);
   m_power.Native(*this);
   m_power.Setup();
 
-  m_time.Setup();
-
   InitSensors();
   InitADCs();
 
+  TRACE("Init Blynk");
   Blynk.begin(k_auth, k_ssid, k_pass);
 
-#if RADIO_EN
-  m_radio.Init(this);
-#endif
+  TRACE("Init time");
+  m_time.Setup();
 
-  ReportSwitchStates();
+#if RADIO_EN
+  TRACE("Init radio");
+  m_radio.Init(this);
+#endif // RADIO_EN
 
   TRACE("System ready");
   Blynk.virtualWrite(V52, "Ready");
@@ -213,14 +184,12 @@ void System::Loop()
   }
   m_lastLoop = millis();
 
-  // HACK: the shift register gets into an undefined state sometimes,
-  // so keep shifting to ensure that it's state is persisted.
-  s_shiftRegisters.shift();
-
   // always run before actuator check
   ng::System::Loop();
 
+#if RADIO_EN
   m_radio.Update();
+#endif // RADIO_EN
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -259,13 +228,6 @@ void System::Loop()
 
   Power().Loop();
 
-  while (!m_toggleActiveSwitchQueue.empty()) {
-    int queuedSwitch = m_toggleActiveSwitchQueue.front();
-    m_toggleActiveSwitchQueue.pop();
-
-    ToggleSwitch(queuedSwitch);
-  }
-
   // may or may not queue a refresh
   s_refreshTimer.run();
 
@@ -294,40 +256,29 @@ void System::Loop()
   }
 }
 
-void System::InitShiftRegisters()
+void System::InitIO()
 {
-  pinMode(k_shiftRegisterStoreClockPin, OUTPUT);
-  pinMode(k_shiftRegisterShiftClockPin, OUTPUT);
-  pinMode(k_shiftRegisterSerialPin, OUTPUT);
+  TRACE("Init PCF8574 IO");
 
-  pinMode(k_shiftRegisterEnablePin, OUTPUT);
-  digitalWrite(k_shiftRegisterEnablePin, SR_ON);
+  s_io1.pinMode(P0, OUTPUT);
+  s_io1.pinMode(P1, OUTPUT);
+  s_io1.pinMode(P2, OUTPUT);
+  s_io1.pinMode(P3, OUTPUT);
+  s_io1.pinMode(P4, OUTPUT);
+  s_io1.pinMode(P5, OUTPUT);
+  s_io1.pinMode(P6, OUTPUT);
+  s_io1.pinMode(P7, OUTPUT);
 
-  TRACE("Init shift");
-  s_shiftRegisters.shift();
-
-  if (k_shiftRegisterTestEnable) {
-    digitalWrite(k_shiftRegisterEnablePin, SR_ON);
-    const int from = k_shiftRegisterTestFrom;
-    const int to = k_shiftRegisterTestTo + 1;
-    while (true) {
-      TRACE_F("Test shift loop from=%d to=%d", from, to);
-      for (int i = from; i < to; i++) {
-
-        TRACE_F("Test set SR pin %d", i);
-        s_shiftRegisters.set_shift(i);
-        Delay(k_shiftRegisterTestOn, "SR test on");
-
-        TRACE_F("Test clear SR pin %d", i);
-        s_shiftRegisters.clear_shift(i);
-        Delay(k_shiftRegisterTestOff, "SR test off");
-      }
-    }
+  if (!s_io1.begin()) {
+    TRACE("PCF8574 failed");
+    Restart();
   }
 }
 
 void System::InitSensors()
 {
+  TRACE("Init sensors");
+
   if (!s_insideAirSensor.begin(k_insideAirSensorAddress)) {
     ReportWarning("Inside air sensor not found");
   }
@@ -339,6 +290,8 @@ void System::InitSensors()
 
 void System::InitADCs()
 {
+  TRACE("Init ADCs");
+
   s_adc1.name = "ADS1115 #1 - Onboard";
   s_adc1.ads = ADS1115_WE(k_adcAddress1);
   s_adc1.ready = s_adc1.ads.init();
@@ -377,7 +330,9 @@ void System::Refresh()
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
 
+#if RADIO_EN
   Blynk.virtualWrite(V77, m_radio.DebugInfo());
+#endif // RADIO_EN
 
   TRACE("Refresh done (embedded)");
 }
@@ -450,9 +405,11 @@ bool System::ReadSensors(int &failures)
     failures++;
   }
 
+#if RADIO_EN
   TRACE("Reading soil temperatures");
   radio::Node &rightWindow = m_radio.Node(radio::k_nodeRightWindow);
   const int tempDevs = rightWindow.GetTempDevs();
+  
   TRACE_F("Soil temperature devices: %d", tempDevs);
   float tempSum = 0;
   for (int i = 0; i < tempDevs; i++) {
@@ -474,6 +431,9 @@ bool System::ReadSensors(int &failures)
     m_soilTemperature = k_unknown;
     TRACE("Soil temperatures unknown");
   }
+#else 
+  m_soilTemperature = k_unknown;
+#endif // RADIO_EN
 
   ReadSoilMoistureSensor();
   if (SoilSensor() == k_unknown) {
@@ -509,12 +469,14 @@ void System::RunWindowActuator(bool extend, float delta)
     WindowActuatorRuntimeSec(),
     runtimeSec);
 
+#if RADIO_EN
   if (extend) {
     m_radio.MotorRunAll(radio::k_windowExtend, runtimeSec);
   }
   else {
     m_radio.MotorRunAll(radio::k_windowRetract, runtimeSec);
   }
+#endif // RADIO_EN
 }
 
 void System::Delay(unsigned long ms, const char *reason)
@@ -533,97 +495,25 @@ void System::Restart()
   ReportWarning("System restarting");
   Blynk.virtualWrite(V52, "Restarting");
 
-  for (int i = 0; i < k_switchCount; i++) {
-    SetSwitch(i, false);
-  }
-
   Blynk.disconnect();
-  wdt_disable();
-  wdt_enable(WDTO_15MS);
-  while (1) {
-  }
+  esp_restart();
 }
 
 void System::CaseFan(bool on)
 {
   TRACE_F("Case fan %s", on ? "on" : "off");
-
-  if (on) {
-    s_shiftRegisters.set(k_caseFanPin);
-  }
-  else {
-    s_shiftRegisters.clear(k_caseFanPin);
-  }
-
-  TRACE("Case fan shift");
-  s_shiftRegisters.shift();
+  s_io1.digitalWrite(IO_PIN_FAN_SW, on);
 }
 
 void System::Beep(int times, bool longBeep)
 {
+  TRACE_F("Beep %d times (%s)", times, longBeep ? "long" : "short");
   for (int i = 0; i < times; i++) {
-    TRACE("Beep set shift");
-    s_shiftRegisters.set_shift(k_BeepPin);
+    s_io1.digitalWrite(IO_PIN_BEEP_SW, LOW);
     Delay(longBeep ? 200 : 100, "Beep on");
 
-    TRACE("Beep clear shift");
-    s_shiftRegisters.clear_shift(k_BeepPin);
+    s_io1.digitalWrite(IO_PIN_BEEP_SW, HIGH);
     Delay(200, "Beep off");
-  }
-}
-
-void System::ReportSwitchStates()
-{
-  String switchStates;
-  s_switchOnCount = 0;
-  for (int i = 0; i < k_switchCount; i++) {
-    bool on = m_switchState[i];
-    if (on) {
-      s_switchOnCount++;
-    }
-    switchStates += "S";
-    switchStates += i;
-    switchStates += "=";
-    switchStates += on ? "On" : "Off";
-    if (i != (k_switchCount - 1)) {
-      switchStates += ", ";
-    }
-  }
-  Blynk.virtualWrite(V33, switchStates);
-}
-
-void System::SetSwitch(int index, bool on)
-{
-  int pin = k_switchPins[index];
-
-  if (on) {
-    TRACE_F("Switch set: %d", pin);
-    s_shiftRegisters.set(pin);
-    m_switchState[index] = true;
-  }
-  else {
-    TRACE_F("Switch clear: %d", pin);
-    s_shiftRegisters.clear(pin);
-    m_switchState[index] = false;
-  }
-
-  TRACE("Switch shift");
-  s_shiftRegisters.shift();
-
-  ReportSwitchStates();
-
-  UpdateCaseFan();
-}
-
-void System::ToggleSwitch(int switchIndex)
-{
-  if (!m_switchState[switchIndex]) {
-    TRACE_F("Toggle switch on: %d", switchIndex);
-    SetSwitch(switchIndex, true);
-  }
-  else {
-    TRACE_F("Toggle switch off: %d", switchIndex);
-    SetSwitch(switchIndex, false);
   }
 }
 
@@ -895,8 +785,8 @@ void System::ReportMoistureCalibration()
 
 void System::UpdateCaseFan()
 {
-  // turn case fan on when any switch is on or if PSU is in use
-  bool caseFanOn = (s_switchOnCount > 0) || (!Power().Mode());
+  // turn case fan on when PSU is in use
+  bool caseFanOn = Power().Source() != PowerSource::k_powerSourceBattery;
   CaseFan(caseFanOn);
 }
 
@@ -906,17 +796,7 @@ void System::OnPowerSwitch()
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
 
-void System::ExpanderWrite(int pin, int value) { s_io1.digitalWrite(pin, value); }
-
-void System::ShiftRegister(int pin, bool set)
-{
-  if (set) {
-    s_shiftRegisters.set_shift(pin);
-  }
-  else {
-    s_shiftRegisters.clear_shift(pin);
-  }
-}
+void System::WriteIO(uint8_t pin, uint8_t value) { s_io1.digitalWrite(pin, value); }
 
 bool System::BatterySensorReady() { return s_adc2.ready; }
 
@@ -933,18 +813,19 @@ void System::PrintStatus()
   TRACE_F("Status\nBlynk: %s", Blynk.connected() ? "Connected" : "Disconnected");
 }
 
-void System::QueueToggleActiveSwitch() { m_toggleActiveSwitchQueue.push(m_activeSwitch); }
-
 void System::QueueCallback(CallbackFunction f, std::string name)
 {
   m_callbackQueue.push(Callback(f, name));
 }
 
-void System::WindowSpeedUpdate() {
-  radio::Node& left = m_radio.Node(radio::k_nodeLeftWindow);
-  radio::Node& right = m_radio.Node(radio::k_nodeRightWindow);
+void System::WindowSpeedUpdate()
+{
+#if RADIO_EN
+  radio::Node &left = m_radio.Node(radio::k_nodeLeftWindow);
+  radio::Node &right = m_radio.Node(radio::k_nodeRightWindow);
   left.MotorSpeed(WindowSpeedLeft());
   right.MotorSpeed(WindowSpeedRight());
+#endif // RADIO_EN
 }
 
 } // namespace greenhouse
@@ -1051,15 +932,6 @@ BLYNK_WRITE(V18) { eg::s_instance->FakeSoilTemperature(param.asFloat()); }
 BLYNK_WRITE(V22) { eg::s_instance->FakeSoilMoisture(param.asFloat()); }
 
 BLYNK_WRITE(V23) { eg::s_instance->FakeInsideHumidity(param.asFloat()); }
-
-BLYNK_WRITE(V24) { eg::s_instance->ActiveSwitch(param.asInt()); }
-
-BLYNK_WRITE(V25)
-{
-  if (param.asInt() == 1) {
-    eg::s_instance->QueueToggleActiveSwitch();
-  }
-}
 
 BLYNK_WRITE(V31) { eg::s_instance->Time().DayStartHour(param.asInt()); }
 

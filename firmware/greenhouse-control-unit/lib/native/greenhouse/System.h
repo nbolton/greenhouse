@@ -42,7 +42,6 @@ protected:
   virtual void ReportWeather() {}
   virtual void ReportWaterHeaterInfo() {}
   virtual void ReportMoistureCalibration() {}
-  virtual void SetSwitch(int index, bool on) {}
   virtual bool ReadSensors(int &failures) { return false; }
   virtual bool ReadSoilMoistureSensor() { return false; }
   virtual void OpenWindow(float delta);

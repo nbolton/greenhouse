@@ -23,7 +23,6 @@ public:
   virtual float InsideAirTemperature() const = 0;
   virtual float SoilTemperature() const = 0;
   virtual float WaterTemperature() const = 0;
-  virtual void SetSwitch(int i, bool on) = 0;
   virtual void Delay(unsigned long ms, const char* reason) = 0;
 
   virtual ITime &Time() = 0;

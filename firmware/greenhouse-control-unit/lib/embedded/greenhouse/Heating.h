@@ -17,7 +17,6 @@ protected:
   bool SwitchWaterHeater(bool on);
   bool SwitchSoilHeating(bool on);
   bool SwitchAirHeating(bool on);
-  bool SwitchUtility(bool on);
 };
 
 } // namespace greenhouse

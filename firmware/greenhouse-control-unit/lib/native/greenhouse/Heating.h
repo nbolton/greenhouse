@@ -20,7 +20,6 @@ protected:
   virtual bool SwitchWaterHeater(bool on);
   virtual bool SwitchSoilHeating(bool on);
   virtual bool SwitchAirHeating(bool on);
-  virtual bool SwitchUtility(bool on);
 
 public:
   // getters & setters

@@ -3,6 +3,7 @@
 #include "common.h"
 
 #include <Arduino.h>
+#include <PCF8574.h>
 
 using namespace common;
 
@@ -11,6 +12,16 @@ namespace greenhouse {
 
 #define VOLTAGE_DIFF_DELTA .1f
 #define TRACE_SENSOR_RAW 0
+
+#define IO_PIN_BATT_SW P0
+#define IO_PIN_PSU_SW P1
+#define IO_PIN_BATT_LED P4
+#define IO_PIN_PSU_LED P5
+
+#define SWITCH_ON HIGH
+#define SWITCH_OFF LOW
+#define LED_ON LOW
+#define LED_OFF HIGH
 
 const float k_localVoltageMin = 9.5;
 const float k_localVoltageMapIn = 1.184;
@@ -24,15 +35,11 @@ bool s_testState = false;
 
 // member functions
 
-Power::Power(int psuRelayPin, int batteryRelayPin, int batteryLedPin, int psuLedPin) :
+Power::Power() :
   m_embedded(nullptr),
   m_native(nullptr),
   m_mode(PowerMode::k_powerModeUnknown),
   m_source(PowerSource::k_powerSourceBoth),
-  m_psuRelayPin(psuRelayPin),
-  m_batteryRelayPin(batteryRelayPin),
-  m_batteryLedPin(batteryLedPin),
-  m_psuLedPin(psuLedPin),
   m_batteryVoltageSwitchOn(k_unknown),
   m_batteryVoltageSwitchOff(k_unknown),
   m_batteryVoltageSensor(k_unknown),
@@ -57,8 +64,8 @@ void Power::Setup()
   s_instance = this;
 
   // circuit default state is both power sources connected
-  Embedded().ShiftRegister(m_psuLedPin, true);
-  Embedded().ShiftRegister(m_batteryLedPin, true);
+  Embedded().WriteIO(IO_PIN_PSU_LED, LED_ON);
+  Embedded().WriteIO(IO_PIN_BATT_LED, LED_ON);
 }
 
 native::greenhouse::ISystem &Power::Native() const
@@ -91,7 +98,8 @@ void Power::Loop()
   m_lastLocalVoltage = localVoltage;
 
   const float batteryVoltage = m_batteryVoltageOutput;
-  const bool batteryVoltageChanged = abs(m_lastBatteryVoltage - batteryVoltage) > VOLTAGE_DIFF_DELTA;
+  const bool batteryVoltageChanged =
+    abs(m_lastBatteryVoltage - batteryVoltage) > VOLTAGE_DIFF_DELTA;
   if (batteryVoltageChanged) {
     TRACE_F("Battery voltage changed: %.2fV", batteryVoltage);
   }
@@ -184,11 +192,11 @@ void Power::switchSource(PowerSource source)
 {
   m_source = source;
 
-  // first, close both NC relays to ensure constant power
-  Embedded().ShiftRegister(m_psuRelayPin, false);
-  Embedded().ShiftRegister(m_batteryRelayPin, false);
-  Embedded().ShiftRegister(m_psuLedPin, true);
-  Embedded().ShiftRegister(m_batteryLedPin, true);
+  // first, ensure constant power; close PSU NC relay and turn on battery FET
+  Embedded().WriteIO(IO_PIN_PSU_SW, SWITCH_ON);
+  Embedded().WriteIO(IO_PIN_BATT_SW, SWITCH_ON);
+  Embedded().WriteIO(IO_PIN_PSU_LED, LED_ON);
+  Embedded().WriteIO(IO_PIN_BATT_LED, LED_ON);
 
   // if on battery, give the PSU time to power up, or,
   // if on PSU, allow the battery relay to close first.
@@ -209,11 +217,11 @@ void Power::switchSource(PowerSource source)
 
   // both relays are NC (normally closed), so to disconnect a source,
   // pass true which will open the relay.
-  Embedded().ShiftRegister(m_psuRelayPin, m_source != k_powerSourcePsu);
-  Embedded().ShiftRegister(m_batteryRelayPin, m_source != k_powerSourceBattery);
+  Embedded().WriteIO(IO_PIN_PSU_SW, m_source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
+  Embedded().WriteIO(IO_PIN_BATT_SW, m_source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
 
-  Embedded().ShiftRegister(m_psuLedPin, m_source == k_powerSourcePsu);
-  Embedded().ShiftRegister(m_batteryLedPin, m_source == k_powerSourceBattery);
+  Embedded().WriteIO(IO_PIN_PSU_LED, m_source == k_powerSourcePsu ? LED_ON : LED_OFF);
+  Embedded().WriteIO(IO_PIN_BATT_LED, m_source == k_powerSourceBattery ? LED_ON : LED_OFF);
 
   TRACE_F("Local voltage: %.2fV", ReadLocalVoltage());
   Embedded().OnPowerSwitch();

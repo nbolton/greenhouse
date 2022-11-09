@@ -1,3 +1,7 @@
+#if RADIO_ASK || RADIO_HC12
+#define RADIO_EN 1
+#endif
+
 #if RADIO_EN
 
 #pragma once
@@ -83,6 +87,7 @@ private:
   bool send(radio::SendDesc &sendDesc);
 
 private:
+  bool m_init;
   embedded::greenhouse::Radio *m_radio;
   TempData m_tempData;
   byte m_address;

@@ -19,7 +19,7 @@ enum PowerMode {
 
 class Power {
 public:
-  Power(int psuRelayPin, int batteryRelayPin, int batteryLedPin, int psuLedPin);
+  Power();
   void Setup();
   void Loop();
   void InitPowerSource();
@@ -59,10 +59,6 @@ private:
   native::greenhouse::ISystem *m_native;
   PowerMode m_mode;
   PowerSource m_source;
-  int m_psuRelayPin;
-  int m_batteryRelayPin;
-  int m_batteryLedPin;
-  int m_psuLedPin;
   float m_batteryVoltageSwitchOn;
   float m_batteryVoltageSwitchOff;
   float m_batteryVoltageSensor;
