@@ -2879,7 +2879,7 @@
   (symbol (lib_id "Connector:Conn_01x05_Female") (at 297.18 64.77 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 03526edb-5f75-4d50-986c-9ed8ba07008e)
-    (property "Reference" "J?" (id 0) (at 298.45 64.7699 0)
+    (property "Reference" "J6" (id 0) (at 298.45 64.7699 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Value" "Conn_01x05_Female" (id 1) (at 297.18 72.39 0))
@@ -3358,7 +3358,7 @@
   (symbol (lib_id "power:GND") (at 278.13 63.5 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 5490da7d-ed65-440d-ac44-76ef4a92730b)
-    (property "Reference" "#PWR?" (id 0) (at 278.13 69.85 0)
+    (property "Reference" "#PWR0111" (id 0) (at 278.13 69.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (id 1) (at 278.13 68.58 0))
@@ -3405,7 +3405,7 @@
   (symbol (lib_id "power:+5V") (at 278.13 58.42 0) (mirror y) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 62a9d125-308e-4e87-85cc-8951bfc63530)
-    (property "Reference" "#PWR?" (id 0) (at 278.13 62.23 0)
+    (property "Reference" "#PWR0112" (id 0) (at 278.13 62.23 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+5V" (id 1) (at 278.13 53.34 0))
@@ -4326,10 +4326,10 @@
       (reference "#PWR0110") (unit 1) (value "+12V") (footprint "")
     )
     (path "/5490da7d-ed65-440d-ac44-76ef4a92730b"
-      (reference "#PWR?") (unit 1) (value "GND") (footprint "")
+      (reference "#PWR0111") (unit 1) (value "GND") (footprint "")
     )
     (path "/62a9d125-308e-4e87-85cc-8951bfc63530"
-      (reference "#PWR?") (unit 1) (value "+5V") (footprint "")
+      (reference "#PWR0112") (unit 1) (value "+5V") (footprint "")
     )
     (path "/695ccbcc-4a44-4a1f-b5e4-e7c0459755d8"
       (reference "C1") (unit 1) (value "100uF") (footprint "Capacitor_THT:C_Radial_D5.0mm_H7.0mm_P2.00mm")
@@ -4406,11 +4406,11 @@
     (path "/d23f2718-7b0c-422c-8b10-4aeeca192dfc"
       (reference "J5") (unit 1) (value "Conn_01x04_Male") (footprint "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical")
     )
+    (path "/03526edb-5f75-4d50-986c-9ed8ba07008e"
+      (reference "J6") (unit 1) (value "Conn_01x05_Female") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical")
+    )
     (path "/bb0bf186-e26b-4d1b-9e6a-a6542e7c66a7"
       (reference "J7") (unit 1) (value "Conn_01x02_Male") (footprint "Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical")
-    )
-    (path "/03526edb-5f75-4d50-986c-9ed8ba07008e"
-      (reference "J?") (unit 1) (value "Conn_01x05_Female") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical")
     )
     (path "/12a683d0-a64c-4803-a34c-fe334bd2d471"
       (reference "Q1") (unit 1) (value "BC549C") (footprint "Package_TO_SOT_THT:TO-92_Inline")
