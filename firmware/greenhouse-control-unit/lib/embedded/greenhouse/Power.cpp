@@ -10,8 +10,10 @@ using namespace common;
 namespace embedded {
 namespace greenhouse {
 
+#define PIN_LOCAL_VOLTAGE 34
 #define VOLTAGE_DIFF_DELTA .1f
-#define TRACE_SENSOR_RAW 0
+//#define TRACE_SENSOR_RAW 1
+#define VOLTAGE_DROP_WAIT 10000 // 10s
 
 #define IO_PIN_BATT_SW P0
 #define IO_PIN_PSU_SW P1
@@ -24,7 +26,7 @@ namespace greenhouse {
 #define LED_OFF HIGH
 
 const float k_localVoltageMin = 9.5;
-const float k_localVoltageMapIn = 1.184;
+const float k_localVoltageMapIn = 1880;
 const float k_localVoltageMapOut = 10.0;
 const int k_switchDelay = 1000; // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
@@ -55,7 +57,8 @@ Power::Power() :
   m_batteryCurrentOutputMin(0),
   m_batteryCurrentOutputMax(k_unknown),
   m_lastLocalVoltage(k_unknown),
-  m_lastBatteryVoltage(k_unknown)
+  m_lastBatteryVoltage(k_unknown),
+  m_nextVoltageDropSwitch(k_unknownUL)
 {
 }
 
@@ -105,50 +108,58 @@ void Power::Loop()
   }
   m_lastBatteryVoltage = m_batteryVoltageOutput;
 
-  if (localVoltageChanged && (localVoltage <= k_localVoltageMin)) {
-    Native().ReportWarning("Local voltage drop detected: %.2fV", localVoltage);
-    if (m_source == PowerSource::k_powerSourceBattery) {
-      switchSource(PowerSource::k_powerSourcePsu);
-    }
-    else if (m_source == PowerSource::k_powerSourcePsu) {
-      switchSource(PowerSource::k_powerSourceBattery);
-    }
-  }
-  else if (Mode() != PowerMode::k_powerModeAuto) {
-    if (Mode() == PowerMode::k_powerModeManualBattery) {
-      if (m_source != PowerSource::k_powerSourceBattery) {
-        Native().ReportWarning("Power mode is manual (battery)");
-        switchSource(PowerSource::k_powerSourceBattery);
-      }
-    }
-    else if (Mode() == PowerMode::k_powerModeManualPsu) {
-      if (m_source != PowerSource::k_powerSourcePsu) {
-        Native().ReportWarning("Power mode is manual (PSU)");
+  if ((m_nextVoltageDropSwitch == k_unknownUL) || (millis() > m_nextVoltageDropSwitch)) {
+    if (localVoltage <= k_localVoltageMin) {
+      Native().ReportWarning("Local voltage drop detected: %.2fV", localVoltage);
+      if (m_source == PowerSource::k_powerSourceBattery) {
+        TRACE("Auto switching from battery to PSU");
         switchSource(PowerSource::k_powerSourcePsu);
       }
-    }
-  }
-  else {
-    const bool vBattKnown = (m_batteryVoltageOutput != k_unknown);
-    const bool vBattOnKnown = (m_batteryVoltageSwitchOn != k_unknown);
-    const bool vBattOffKnown = (m_batteryVoltageSwitchOff != k_unknown);
-
-    const bool switchToBattery =
-      vBattKnown && vBattOnKnown && (m_batteryVoltageOutput >= m_batteryVoltageSwitchOn);
-
-    const bool switchToPsu =
-      !vBattKnown || (vBattOffKnown && (m_batteryVoltageOutput <= m_batteryVoltageSwitchOff));
-
-    if (switchToBattery) {
-      if (m_source != PowerSource::k_powerSourceBattery) {
-        TRACE("Switching to battery automatically (PSU off)");
+      else if (m_source == PowerSource::k_powerSourcePsu) {
+        TRACE("Auto switching from PSU to battery");
         switchSource(PowerSource::k_powerSourceBattery);
       }
+      else {
+        TRACE("Not auto switching; other source");
+      }
+      m_nextVoltageDropSwitch = millis() + VOLTAGE_DROP_WAIT;
     }
-    else if (switchToPsu) {
-      if (m_source != PowerSource::k_powerSourcePsu) {
-        TRACE("Switching PSU on automatically (battery off)");
-        switchSource(PowerSource::k_powerSourcePsu);
+    else if (Mode() != PowerMode::k_powerModeAuto) {
+      if (Mode() == PowerMode::k_powerModeManualBattery) {
+        if (m_source != PowerSource::k_powerSourceBattery) {
+          Native().ReportWarning("Power mode is manual (battery)");
+          switchSource(PowerSource::k_powerSourceBattery);
+        }
+      }
+      else if (Mode() == PowerMode::k_powerModeManualPsu) {
+        if (m_source != PowerSource::k_powerSourcePsu) {
+          Native().ReportWarning("Power mode is manual (PSU)");
+          switchSource(PowerSource::k_powerSourcePsu);
+        }
+      }
+    }
+    else {
+      const bool vBattKnown = (m_batteryVoltageOutput != k_unknown);
+      const bool vBattOnKnown = (m_batteryVoltageSwitchOn != k_unknown);
+      const bool vBattOffKnown = (m_batteryVoltageSwitchOff != k_unknown);
+
+      const bool switchToBattery =
+        vBattKnown && vBattOnKnown && (m_batteryVoltageOutput >= m_batteryVoltageSwitchOn);
+
+      const bool switchToPsu =
+        !vBattKnown || (vBattOffKnown && (m_batteryVoltageOutput <= m_batteryVoltageSwitchOff));
+
+      if (switchToBattery) {
+        if (m_source != PowerSource::k_powerSourceBattery) {
+          TRACE("Switching to battery automatically (PSU off)");
+          switchSource(PowerSource::k_powerSourceBattery);
+        }
+      }
+      else if (switchToPsu) {
+        if (m_source != PowerSource::k_powerSourcePsu) {
+          TRACE("Switching PSU on automatically (battery off)");
+          switchSource(PowerSource::k_powerSourcePsu);
+        }
       }
     }
   }
@@ -229,7 +240,7 @@ void Power::switchSource(PowerSource source)
 
 float Power::ReadLocalVoltage()
 {
-  float f = Embedded().ReadLocalVoltageSensorRaw();
+  float f = analogReadMilliVolts(PIN_LOCAL_VOLTAGE);
   if (f == k_unknown) {
     return k_unknown;
   }

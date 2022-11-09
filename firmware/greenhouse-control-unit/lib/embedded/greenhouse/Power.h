@@ -75,6 +75,7 @@ private:
   float m_batteryCurrentOutputMax;
   float m_lastLocalVoltage;
   float m_lastBatteryVoltage;
+  unsigned long m_nextVoltageDropSwitch;
 };
 
 } // namespace greenhouse

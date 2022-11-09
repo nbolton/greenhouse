@@ -48,7 +48,6 @@ public:
   bool BatterySensorReady();
   float ReadBatteryVoltageSensorRaw();
   float ReadBatteryCurrentSensorRaw();
-  float ReadLocalVoltageSensorRaw();
   void ApplyRefreshRate();
   void QueueCallback(CallbackFunction f, std::string name);
   void WindowSpeedUpdate();

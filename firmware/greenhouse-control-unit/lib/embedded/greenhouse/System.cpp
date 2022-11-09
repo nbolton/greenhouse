@@ -804,8 +804,6 @@ float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_adc2, k_batteryVo
 
 float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_adc2, k_batteryCurrentPin); }
 
-float System::ReadLocalVoltageSensorRaw() { return ReadAdc(s_adc1, k_localVoltagePin); }
-
 void System::PrintCommands() { TRACE("Commands\ns: status"); }
 
 void System::PrintStatus()

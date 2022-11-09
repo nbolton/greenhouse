@@ -11,7 +11,6 @@ public:
   virtual bool BatterySensorReady() = 0;
   virtual float ReadBatteryVoltageSensorRaw() = 0;
   virtual float ReadBatteryCurrentSensorRaw() = 0;
-  virtual float ReadLocalVoltageSensorRaw() = 0;
 };
 
 } // namespace greenhouse
