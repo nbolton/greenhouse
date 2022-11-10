@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 namespace embedded {
 namespace greenhouse {
 
@@ -11,6 +13,8 @@ public:
   virtual bool BatterySensorReady() = 0;
   virtual float ReadBatteryVoltageSensorRaw() = 0;
   virtual float ReadBatteryCurrentSensorRaw() = 0;
+  virtual void LowerPumpOn(bool pumpOn) = 0;
+  virtual void LowerPumpStatus(const char *message) = 0;
 };
 
 } // namespace greenhouse

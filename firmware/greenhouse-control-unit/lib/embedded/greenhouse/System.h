@@ -5,6 +5,7 @@
 
 #include "Heating.h"
 #include "Power.h"
+#include "PumpRadio.h"
 #include "Radio.h"
 #include "Time.h"
 
@@ -51,6 +52,8 @@ public:
   void ApplyRefreshRate();
   void QueueCallback(CallbackFunction f, std::string name);
   void WindowSpeedUpdate();
+  void LowerPumpOn(bool pumpOn);
+  void LowerPumpStatus(const char *message);
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -78,6 +81,7 @@ public:
   embedded::greenhouse::Time &Time() { return m_time; }
   native::greenhouse::Heating &Heating() { return m_heating; }
   embedded::greenhouse::Power &Power() { return m_power; }
+  embedded::greenhouse::PumpRadio &PumpRadio() { return m_pumpRadio; }
   float InsideAirTemperature() const { return m_insideAirTemperature; }
   float InsideAirHumidity() const;
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }
@@ -111,6 +115,7 @@ private:
   embedded::greenhouse::Time m_time;
   embedded::greenhouse::Heating m_heating;
   embedded::greenhouse::Power m_power;
+  embedded::greenhouse::PumpRadio m_pumpRadio;
   float m_insideAirTemperature;
   float m_insideAirHumidity;
   float m_outsideAirTemperature;

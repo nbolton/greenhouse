@@ -166,6 +166,8 @@ void System::Setup()
   m_radio.Init(this);
 #endif // RADIO_EN
 
+  m_pumpRadio.Init(this);
+
   TRACE("System ready");
   Blynk.virtualWrite(V52, "Ready");
   Beep(2, false);
@@ -185,6 +187,8 @@ void System::Loop()
 #if RADIO_EN
   m_radio.Update();
 #endif // RADIO_EN
+
+  m_pumpRadio.Update();
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -507,7 +511,7 @@ void System::Beep(int times, bool longBeep)
 
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
-//#define ADC_DEBUG 1
+  //#define ADC_DEBUG 1
 
 #if ADC_DEBUG
   TRACE_F("Reading ADC: %s", adc.name.c_str());
@@ -830,6 +834,10 @@ void System::WindowSpeedUpdate()
 #endif // RADIO_EN
 }
 
+void System::LowerPumpOn(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
+
+void System::LowerPumpStatus(const char *message) { Blynk.virtualWrite(V81, message); }
+
 } // namespace greenhouse
 } // namespace embedded
 
@@ -890,6 +898,8 @@ BLYNK_CONNECTED()
     V74,
     V78,
     V79,
+    V80,
+    V82,
     V127 /* last */);
 }
 
@@ -1051,4 +1061,29 @@ BLYNK_WRITE(V79)
 {
   eg::s_instance->WindowSpeedRight(param.asInt());
   eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate, "Window speed update");
+}
+
+BLYNK_WRITE(V80)
+{
+  const bool pumpOn = static_cast<bool>(param.asInt());
+  if (pumpOn) {
+    Blynk.logEvent("info", F("Manually switching pump on."));
+  }
+  else {
+    Blynk.logEvent("info", F("Manually switching pump off."));
+  }
+  eg::s_instance->PumpRadio().SwitchPump(pumpOn);
+}
+
+BLYNK_WRITE(V82)
+{
+  const bool tankFull = static_cast<bool>(param.asInt());
+  if (tankFull) {
+    Blynk.logEvent("info", F("Tank is full, auto switching pump off."));
+  }
+  else {
+    Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
+  }
+  // tank not full? switch pump on
+  eg::s_instance->PumpRadio().SwitchPump(!tankFull);
 }

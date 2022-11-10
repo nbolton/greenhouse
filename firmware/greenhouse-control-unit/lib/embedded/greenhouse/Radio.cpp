@@ -1,5 +1,7 @@
 #include "Radio.h"
 
+//#define RADIO_TRACE
+
 #if RADIO_EN
 
 #include "../../common/common.h"
@@ -12,8 +14,6 @@
 #if RADIO_HC12
 #include <SoftwareSerial.h>
 #endif // RADIO_HC12
-
-#define RADIO_TRACE
 
 #define PIN_RX 14
 #define PIN_TX 27
@@ -179,7 +179,7 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 #endif // RADIO_ASK
 
 #if RADIO_HC12
-      if (s_hc12.available()) {
+        if (s_hc12.available()) {
           s_rxBufLen = s_hc12.readBytes(s_rxBuf, GH_LENGTH);
           if (s_rxBufLen != GH_LENGTH) {
             TRACE_F(
@@ -525,14 +525,13 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
   } // namespace radio
 
-  // end Node classs
+  // end Node class
 
   // begin free functions
 
-#ifdef RADIO_TRACE
-
   void printBuffer(const __FlashStringHelper *prompt, const uint8_t *data, uint8_t dataLen)
   {
+#ifdef RADIO_TRACE
     char printBuf[100];
     strcpy(printBuf, String(prompt).c_str());
     int printLen = strlen(printBuf);
@@ -546,9 +545,8 @@ bool Radio::Send(radio::SendDesc &sendDesc)
     }
     printBuf[printLen] = '\0';
     TRACE_C(printBuf);
-  }
-
 #endif
+  }
 
   // end free functions
 
