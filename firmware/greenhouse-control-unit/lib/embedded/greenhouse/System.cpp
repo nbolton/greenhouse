@@ -404,10 +404,12 @@ bool System::ReadSensors(int &failures)
 
   TRACE_F("Soil temperature devices: %d", tempDevs);
   float tempSum = 0;
+  int tempValues = 0;
   for (int i = 0; i < tempDevs; i++) {
     const float t = rightWindow.GetTemp(i);
     if (t != k_unknown) {
       tempSum += t;
+      tempValues++;
       TRACE_F("Soil temperature sensor %d: %.2f", i, t);
     }
     else {
@@ -415,8 +417,8 @@ bool System::ReadSensors(int &failures)
     }
   }
 
-  if (tempSum > 0) {
-    m_soilTemperature = tempSum / tempDevs;
+  if (tempValues > 0) {
+    m_soilTemperature = tempSum / tempValues;
     TRACE_F("Soil temperature average: %.2f", m_soilTemperature);
   }
   else {

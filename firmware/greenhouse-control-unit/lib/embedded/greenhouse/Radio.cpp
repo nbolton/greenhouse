@@ -1,6 +1,6 @@
 #include "Radio.h"
 
-//#define RADIO_TRACE
+#define RADIO_TRACE
 
 #if RADIO_EN
 
@@ -195,7 +195,7 @@ bool Radio::Send(radio::SendDesc &sendDesc)
           printBuffer(F("Radio got data: "), s_rxBuf, GH_LENGTH);
 
           if ((GH_TO(s_rxBuf) == GH_ADDR_MAIN) && (GH_FROM(s_rxBuf) == sendDesc.to)) {
-            TRACE_F("Response time: %dms", millis() - start);
+            TRACE_F("Radio response time: %lums", millis() - start);
             if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
               TRACE_F("Error: Code from node %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
               m_errors++;
