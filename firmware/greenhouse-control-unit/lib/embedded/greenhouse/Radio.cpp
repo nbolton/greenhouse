@@ -197,18 +197,27 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
           if ((GH_TO(s_rxBuf) == GH_ADDR_MAIN) && (GH_FROM(s_rxBuf) == sendDesc.to)) {
             TRACE_F("Radio response time: %lums", millis() - start);
+            
             if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
               TRACE_F("Error: Code from node %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
               m_errors++;
               sendDesc.errors++;
+              continue;
             }
             else if (GH_CMD(s_rxBuf) != sendDesc.expectCmd) {
               TRACE("Error: Radio got unexpected command");
               m_errors++;
               sendDesc.errors++;
+              continue;
             }
             else if (sendDesc.okCallback != NULL) {
               sendDesc.okCallbackResult = sendDesc.okCallback(sendDesc);
+              if (!sendDesc.okCallbackResult) {
+                TRACE("Error: Radio OK callback failed");
+                m_errors++;
+                sendDesc.errors++;
+                continue;
+              }
             }
 
             rx = true;
