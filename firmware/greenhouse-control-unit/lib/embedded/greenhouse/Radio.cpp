@@ -150,6 +150,8 @@ bool Radio::Send(radio::SendDesc &sendDesc)
     s_hc12.write(s_txBuf, GH_LENGTH);
 #endif
 
+    unsigned long start = millis();
+
     printBuffer(F("Radio sent data: "), s_txBuf, GH_LENGTH);
 
 #if RADIO_ASK
@@ -167,7 +169,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 #endif // LINEAR_TIMEOUT
     TRACE_F("Radio waiting for response, timeout: %dms", timeout);
 
-    unsigned long start = millis();
     while (millis() < (start + timeout)) {
       uint8_t s_rxBufLen = sizeof(s_rxBuf);
 
