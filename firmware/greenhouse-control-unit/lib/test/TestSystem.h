@@ -27,8 +27,7 @@ public:
     m_mock_ReadDhtSensor(false),
     m_mock_WaterTemperature(0),
     m_mock_SoilTemperature(0),
-    m_mock_InsideAirTemperature(0),
-    m_mock_ReadSoilMoistureSensor(false)
+    m_mock_InsideAirTemperature(0)
   {
     Heating().System(*this);
     Time().System(*this);
@@ -58,12 +57,6 @@ public:
   {
     TRACE_F("Mock: InsideAirTemperature, value=%.2f", m_mock_InsideAirTemperature);
     return m_mock_InsideAirTemperature;
-  }
-
-  bool ReadSoilMoistureSensor()
-  {
-    TRACE_F("Mock: ReadSoilMoistureSensor, value=%s", m_mock_ReadSoilMoistureSensor ? "true" : "false");
-    return m_mock_ReadSoilMoistureSensor;
   }
 
   native::greenhouse::Time &Time()
@@ -140,10 +133,6 @@ public:
     m_calls_HandleDayToNightTransition++;
   }
 
-  // expose protected members to public
-
-  float CalculateMoisture(float value) const { return System::CalculateMoisture(value); }
-
   // mock values
 
   native::greenhouse::Heating *m_mock_heating;
@@ -152,7 +141,6 @@ public:
   float m_mock_WaterTemperature;
   float m_mock_SoilTemperature;
   float m_mock_InsideAirTemperature;
-  bool m_mock_ReadSoilMoistureSensor;
 
   // call counters (init to 0)
 

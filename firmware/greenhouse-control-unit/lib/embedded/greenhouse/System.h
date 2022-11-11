@@ -65,11 +65,9 @@ protected:
   void ReportWarnings();
   void ReportWeather();
   void ReportWaterHeaterInfo();
-  void ReportMoistureCalibration();
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
-  bool ReadSoilMoistureSensor();
   void RunWindowActuator(bool extend, float delta);
   void Delay(unsigned long ms, const char *reason);
   bool UpdateWeatherForecast();
@@ -87,12 +85,10 @@ public:
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }
   float OutsideAirHumidity() const { return m_outsideAirHumidity; }
   float SoilTemperature() const;
-  float SoilMoisture() const;
   float WaterTemperature() const { return m_waterTemperature; }
   void RefreshRate(int value) { m_refreshRate = value; }
   void FakeInsideHumidity(float value) { m_fakeInsideHumidity = value; }
   void FakeSoilTemperature(float value) { m_fakeSoilTemperature = value; }
-  void FakeSoilMoisture(float value) { m_fakeSoilMoisture = value; }
   bool RefreshBusy() const { return m_refreshBusy; }
   int WindowSpeedLeft() const { return m_windowSpeedLeft; }
   void WindowSpeedLeft(int value) { m_windowSpeedLeft = value; }
@@ -126,11 +122,8 @@ private:
   int m_led;
   float m_fakeInsideHumidity;
   float m_fakeSoilTemperature;
-  float m_fakeSoilMoisture;
   bool m_refreshBusy;
-  float m_soilMoisture;
   bool m_insideHumidityWarningSent;
-  bool m_soilMoistureWarningSent;
   int m_blynkFailures;
   unsigned long m_lastBlynkFailure;
   int m_refreshRate;

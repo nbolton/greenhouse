@@ -103,11 +103,8 @@ System::System() :
   m_led(LOW),
   m_fakeInsideHumidity(k_unknown),
   m_fakeSoilTemperature(k_unknown),
-  m_fakeSoilMoisture(k_unknown),
   m_refreshBusy(false),
-  m_soilMoisture(k_unknown),
   m_insideHumidityWarningSent(false),
-  m_soilMoistureWarningSent(false),
   m_blynkFailures(0),
   m_lastBlynkFailure(0),
   m_refreshRate(k_unknown),
@@ -358,14 +355,6 @@ float System::SoilTemperature() const
   return m_soilTemperature;
 }
 
-float System::SoilMoisture() const
-{
-  if (TestMode()) {
-    return m_fakeSoilMoisture;
-  }
-  return m_soilMoisture;
-}
-
 bool System::ReadSensors(int &failures)
 {
   if (TestMode()) {
@@ -429,29 +418,7 @@ bool System::ReadSensors(int &failures)
   m_soilTemperature = k_unknown;
 #endif // RADIO_EN
 
-  ReadSoilMoistureSensor();
-  if (SoilSensor() == k_unknown) {
-    m_soilMoisture = k_unknown;
-    failures++;
-  }
-  else {
-    float moisture = CalculateMoisture(SoilSensor());
-    if (moisture == k_unknown) {
-      failures++;
-    }
-    else {
-      AddSoilMoistureSample(moisture);
-      m_soilMoisture = SoilMoistureAverage();
-    }
-  }
-
   return failures == 0;
-}
-
-bool System::ReadSoilMoistureSensor()
-{
-  SoilSensor(k_unknown);
-  return (SoilSensor() != k_unknown);
 }
 
 void System::RunWindowActuator(bool extend, float delta)
@@ -613,7 +580,6 @@ void System::ReportSensorValues()
   Blynk.virtualWrite(V19, OutsideAirTemperature());
   Blynk.virtualWrite(V20, OutsideAirHumidity());
   Blynk.virtualWrite(V11, SoilTemperature());
-  Blynk.virtualWrite(V21, SoilMoistureAverage());
   Blynk.virtualWrite(V46, WaterTemperature());
 }
 
@@ -641,7 +607,6 @@ void System::HandleNightToDayTransition()
 
   ng::System::HandleNightToDayTransition();
 
-  m_soilMoistureWarningSent = false;
   m_insideHumidityWarningSent = false;
 
   Blynk.virtualWrite(V64, Time().NightToDayTransitionTime());
@@ -658,13 +623,6 @@ void System::ReportWarnings()
 {
   if (!SystemStarted()) {
     return;
-  }
-
-  bool moistureKnown = (m_soilMoisture != k_unknown);
-  bool moistureLow = (m_soilMoisture <= SoilMostureWarning());
-  if (!m_soilMoistureWarningSent && moistureKnown && moistureLow) {
-    ReportWarning("Soil moisture low (%.2f%%)", m_soilMoisture);
-    m_soilMoistureWarningSent = true;
   }
 }
 
@@ -785,12 +743,6 @@ void System::ReportWaterHeaterInfo()
   Blynk.virtualWrite(V62, Heating().WaterHeaterDayRuntimeMinutes());
   Blynk.virtualWrite(V67, Heating().WaterHeaterNightRuntimeMinutes());
   Blynk.virtualWrite(V63, Heating().WaterHeaterCostCumulative());
-}
-
-void System::ReportMoistureCalibration()
-{
-  Blynk.virtualWrite(V69, SoilSensorWet());
-  Blynk.virtualWrite(V70, SoilSensorDry());
 }
 
 void System::UpdateCaseFan()
@@ -939,11 +891,7 @@ BLYNK_WRITE(V9)
 
 BLYNK_WRITE(V14) { eg::s_instance->TestMode(param.asInt() == 1); }
 
-BLYNK_WRITE(V17) { eg::s_instance->SoilMostureWarning(param.asFloat()); }
-
 BLYNK_WRITE(V18) { eg::s_instance->FakeSoilTemperature(param.asFloat()); }
-
-BLYNK_WRITE(V22) { eg::s_instance->FakeSoilMoisture(param.asFloat()); }
 
 BLYNK_WRITE(V23) { eg::s_instance->FakeInsideHumidity(param.asFloat()); }
 
@@ -1016,24 +964,6 @@ BLYNK_WRITE(V68)
   }
   else {
     eg::s_instance->Time().DayToNightTransitionTime(k_unknownUL);
-  }
-}
-
-BLYNK_WRITE(V69) { eg::s_instance->SoilSensorWet(param.asFloat()); }
-
-BLYNK_WRITE(V70) { eg::s_instance->SoilSensorDry(param.asFloat()); }
-
-BLYNK_WRITE(V71)
-{
-  if (param.asInt() != 0) {
-    eg::s_instance->QueueCallback(&eg::System::SoilCalibrateWet, "Soil calibrate (wet)");
-  }
-}
-
-BLYNK_WRITE(V72)
-{
-  if (param.asInt() != 0) {
-    eg::s_instance->QueueCallback(&eg::System::SoilCalibrateDry, "Soil calibrate (dry)");
   }
 }
 

@@ -25,13 +25,9 @@ public:
   virtual void ReportInfo(const char *m, ...) {}
   virtual void ReportWarning(const char *m, ...) {}
   virtual void ReportCritical(const char *m, ...) {}
-  virtual void SoilCalibrateWet();
-  virtual void SoilCalibrateDry();
   virtual void WindowFullClose();
 
 public:
-  void AddSoilMoistureSample(float sample);
-  float SoilMoistureAverage();
   void UpdateWindowOpenPercent();
 
 protected:
@@ -41,12 +37,9 @@ protected:
   virtual void ReportWarnings() {}
   virtual void ReportWeather() {}
   virtual void ReportWaterHeaterInfo() {}
-  virtual void ReportMoistureCalibration() {}
   virtual bool ReadSensors(int &failures) { return false; }
-  virtual bool ReadSoilMoistureSensor() { return false; }
   virtual void OpenWindow(float delta);
   virtual void CloseWindow(float delta);
-  virtual float CalculateMoisture(float analogValue) const;
   virtual void ApplyWindowOpenPercent();
   virtual void ChangeWindowOpenPercentActual(float delta);
   virtual void RunWindowActuator(bool extend, float delta) {}
@@ -64,7 +57,6 @@ public:
   virtual float OutsideAirHumidity() const { return k_unknown; }
   virtual float SoilTemperature() const { return k_unknown; }
   virtual float WaterTemperature() const { return k_unknown; }
-  virtual float SoilMoisture() const { return k_unknown; }
   virtual void AutoMode(bool value) { m_autoMode = value; }
   virtual bool AutoMode() const { return m_autoMode; }
   virtual void OpenStart(float value) { m_openStart = value; }
@@ -73,8 +65,6 @@ public:
   virtual float OpenFinish() const { return m_openFinish; }
   virtual void TestMode(bool value) { m_testMode = value; }
   virtual bool TestMode() const { return m_testMode; }
-  virtual void SoilMostureWarning(float value) { m_soilMostureWarning = value; }
-  virtual float SoilMostureWarning() const { return m_soilMostureWarning; }
   virtual void WindowActuatorRuntimeSec(float value) { m_windowActuatorRuntimeSec = value; }
   virtual float WindowActuatorRuntimeSec() const { return m_windowActuatorRuntimeSec; }
   virtual void WeatherCode(int value) { m_weatherCode = value; }
@@ -83,14 +73,6 @@ public:
   virtual const std::string &WeatherInfo() const { return m_weatherInfo; }
   virtual void SystemStarted(bool value) { m_systemStarted = value; }
   virtual bool SystemStarted() const { return m_systemStarted; }
-  virtual void SoilSensorWet(float value) { m_soilSensorWet = value; }
-  virtual float SoilSensorWet() const { return m_soilSensorWet; }
-  virtual void SoilSensorDry(float value) { m_soilSensorDry = value; }
-  virtual float SoilSensorDry() const { return m_soilSensorDry; }
-  virtual void SoilSensor(float value) { m_soilSensor = value; }
-  virtual float SoilSensor() const { return m_soilSensor; }
-  virtual void SoilMoistureSampleMax(int value) { m_soilMoistureSampleMax = value; }
-  virtual float SoilMoistureSampleMax() { return m_soilMoistureSampleMax; }
   virtual void WindowAdjustPositions(int value) { m_windowAdjustPositions = value; }
   virtual int WindowAdjustPositions() { return m_windowAdjustPositions; }
   virtual void WindowAdjustTimeframeSec(int value) { m_windowAdjustTimeframeSec = value; }
@@ -103,7 +85,6 @@ public:
 
 private:
   bool IsRaining() const;
-  void ResetSoilMoistureAverage();
 
 private:
   bool m_sensorWarningSent;
@@ -125,9 +106,6 @@ private:
   float m_soilSensorWet; // V, in water
   float m_soilSensorDry; // V, in air
   float m_soilSensor;    // V, latest
-  int m_soilMoistureSampleMax;
-  std::queue<float> m_soilMoistureSamples;
-  float m_soilMoistureAverage;
   int m_windowAdjustPositions;
   int m_windowAdjustTimeframeSec;
   unsigned long m_windowAdjustLast;

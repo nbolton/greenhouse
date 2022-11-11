@@ -8,8 +8,6 @@ namespace native {
 namespace greenhouse {
 
 const int k_dryWeatherCode = 701; // anything less is snow/rain
-const int k_moistureMargin = 20;
-const int k_soilMoistureSampleMax = 10;
 const int k_windowActuatorLoopDelay = 100;
 
 System::System() :
@@ -31,8 +29,6 @@ System::System() :
   m_weatherErrorReportSent(false),
   m_soilSensorWet(k_unknown),
   m_soilSensorDry(k_unknown),
-  m_soilMoistureSampleMax(k_soilMoistureSampleMax),
-  m_soilMoistureAverage(0),
   m_windowAdjustPositions(k_unknown),
   m_windowAdjustTimeframeSec(k_unknown),
   m_windowAdjustLast(k_unknownUL),
@@ -77,11 +73,9 @@ void System::Refresh()
     WaterTemperature());
 
   TRACE_F(
-    "Moisture, inside=%.2f%%, outside=%.2f%%, soil-now=%.2f%%, soil-avg=%.2f%%",
+    "Humidity, inside=%.2f%%, outside=%.2f%%",
     InsideAirHumidity(),
-    OutsideAirHumidity(),
-    SoilMoisture(),
-    SoilMoistureAverage());
+    OutsideAirHumidity());
 
   ReportSensorValues();
   ReportWarnings();
@@ -278,17 +272,6 @@ void System::CloseWindow(float delta)
   TRACE_F("Window closed by %.1f%%", percent);
 }
 
-float System::CalculateMoisture(float analogValue) const
-{
-  float percent = mapFloat(analogValue, SoilSensorDry(), SoilSensorWet(), 0, 100);
-  TRACE_F("Soil moisture, analog=%.4fV, percent=%.2f%%", analogValue, percent);
-  if (percent < (k_moistureMargin * -1) || percent > (100 + k_moistureMargin)) {
-    TRACE("Invalid soil moisture value");
-    return k_unknown;
-  }
-  return percent;
-}
-
 void System::WindowOpenPercent(int value)
 {
   if (m_windowOpenPercentExpected == k_unknown) {
@@ -314,69 +297,6 @@ void System::HandleNightToDayTransition()
 }
 
 void System::HandleDayToNightTransition() { Heating().HandleDayToNightTransition(); }
-
-void System::ResetSoilMoistureAverage()
-{
-  while (!m_soilMoistureSamples.empty()) {
-    m_soilMoistureSamples.pop();
-  }
-}
-
-void System::SoilCalibrateWet()
-{
-  if (!ReadSoilMoistureSensor()) {
-    TRACE("Unable to calibrate, failed to read soil moisture sensor");
-    return;
-  }
-
-  TRACE_F("Calibrating soil moisture wet: %.2fV", SoilSensor());
-  SoilSensorWet(SoilSensor());
-  ReportMoistureCalibration();
-  ResetSoilMoistureAverage();
-  Refresh();
-}
-
-void System::SoilCalibrateDry()
-{
-  if (!ReadSoilMoistureSensor()) {
-    TRACE("Unable to calibrate, failed to read soil moisture sensor");
-    return;
-  }
-
-  TRACE_F("Calibrating soil moisture dry: %.2fV", SoilSensor());
-  SoilSensorDry(SoilSensor());
-  ReportMoistureCalibration();
-  ResetSoilMoistureAverage();
-  Refresh();
-}
-
-void System::AddSoilMoistureSample(float sample)
-{
-  m_soilMoistureSamples.push(sample);
-  if (m_soilMoistureSamples.size() > SoilMoistureSampleMax()) {
-    m_soilMoistureSamples.pop();
-    TRACE_F("Moisture samples reduced by 1, new size: %d", m_soilMoistureSamples.size());
-  }
-
-  // we could use deque but this is fine for a short float list that isn't
-  // accessed very often.
-  float total = 0;
-  const int size = m_soilMoistureSamples.size();
-  std::queue<float> temp = m_soilMoistureSamples;
-  while (!temp.empty()) {
-    total += temp.front();
-    temp.pop();
-  }
-  m_soilMoistureAverage = total / size;
-
-  TRACE_F(
-    "Calculating moisture average, total=%.0f, size=%d, avg=%.2f",
-    total,
-    size,
-    m_soilMoistureAverage);
-}
-
-float System::SoilMoistureAverage() { return m_soilMoistureAverage; }
 
 void System::UpdateWindowOpenPercent()
 {
