@@ -18,6 +18,7 @@
 #define PIN_RX 14
 #define PIN_TX 27
 #define LINEAR_TIMEOUT 0
+#define MOTOR_RETRY_MAX 5
 
 #if RADIO_ASK
 #define BIT_RATE 2000
@@ -197,7 +198,7 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
           if ((GH_TO(s_rxBuf) == GH_ADDR_MAIN) && (GH_FROM(s_rxBuf) == sendDesc.to)) {
             TRACE_F("Radio response time: %lums", millis() - start);
-            
+
             if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
               TRACE_F("Error: Code from node %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
               m_errors++;
@@ -283,7 +284,12 @@ bool Radio::Send(radio::SendDesc &sendDesc)
       } while (motorBusy);
 
       if (motorStateRx && !motorBusy) {
-        node.MotorRun(direction, seconds);
+        for (int i = 0; i < MOTOR_RETRY_MAX; i++) {
+          if (node.MotorRun(direction, seconds)) {
+            break;
+          }
+          m_system->Delay(1000, "Window motor retry");
+        }
       }
     }
   }
