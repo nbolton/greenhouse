@@ -148,6 +148,15 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 #endif // RADIO_ASK
 
 #if RADIO_HC12
+    // clear anything left in the RX buffer, otherwise when we're
+    // checking for a response, we may get an out of sync message.
+    int bitsDumped = 0;
+    while (s_hc12.read() != -1) {
+      bitsDumped++;
+    }
+
+    TRACE_F("Radio read bits dumped: %d", bitsDumped);
+
     s_hc12.write(s_txBuf, GH_LENGTH);
 #endif
 
