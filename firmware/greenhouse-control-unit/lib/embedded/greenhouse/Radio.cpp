@@ -285,12 +285,7 @@ bool Radio::Send(radio::SendDesc &sendDesc)
       } while (motorBusy);
 
       if (motorStateRx && !motorBusy) {
-        for (int i = 0; i < MOTOR_RETRY_MAX; i++) {
-          if (node.MotorRun(direction, seconds)) {
-            break;
-          }
-          m_system->Delay(1000, "Window motor retry");
-        }
+        node.MotorRun(direction, seconds);
       }
     }
   }
