@@ -28,7 +28,7 @@ namespace greenhouse {
 const float k_localVoltageMin = 9.5;
 const float k_localVoltageMapIn = 1880;
 const float k_localVoltageMapOut = 10.0;
-const int k_switchDelay = 1000; // delay between switching both relays
+const int k_switchDelay = 2000; // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
 
