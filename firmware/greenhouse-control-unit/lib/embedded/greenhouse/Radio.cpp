@@ -17,7 +17,7 @@
 
 #define PIN_RX 14
 #define PIN_TX 27
-#define LINEAR_TIMEOUT 0
+#define LINEAR_TIMEOUT 1
 #define MOTOR_RETRY_MAX 5
 
 #if RADIO_ASK
@@ -34,7 +34,7 @@
 #define TX_WAIT_DELAY 20
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
-#define TX_RETRY_MAX 5
+#define TX_RETRY_MAX 10
 #define KEEP_ALIVE_TIME 60000 // 60s
 #define RECONNECT_TIME 10000  // 10s
 
@@ -164,7 +164,8 @@ bool Radio::Send(radio::SendDesc &sendDesc)
     // linear timeout increase; 433MHz is a very busy frequency,
     // and we don't want to fight with another retry loop.
     // don't wait for long on the last retry.
-    if (i != (TX_RETRY_MAX - 1)) {
+    if ((i != 0) && (i != (TX_RETRY_MAX - 1))) {
+      TRACE("Radio response timout increased");
       timeout *= i + 1;
     }
 #endif // LINEAR_TIMEOUT
@@ -185,7 +186,7 @@ bool Radio::Send(radio::SendDesc &sendDesc)
           s_rxBufLen = s_hc12.readBytes(s_rxBuf, GH_LENGTH);
           if (s_rxBufLen != GH_LENGTH) {
             TRACE_F(
-              "Error: Receive buffer underrun while waiting for %02Xh: %d",
+              "Error: Buffer underrun while waiting for %02Xh: %d",
               sendDesc.to,
               GH_DATA_1(s_rxBuf));
             m_errors++;
@@ -194,10 +195,10 @@ bool Radio::Send(radio::SendDesc &sendDesc)
           }
 #endif // RADIO_HC12
 
+          TRACE_F("Radio response time: %lums", millis() - start);
           printBuffer(F("Radio got data: "), s_rxBuf, GH_LENGTH);
 
           if ((GH_TO(s_rxBuf) == GH_ADDR_MAIN) && (GH_FROM(s_rxBuf) == sendDesc.to)) {
-            TRACE_F("Radio response time: %lums", millis() - start);
 
             if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
               TRACE_F("Error: Code from node %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
