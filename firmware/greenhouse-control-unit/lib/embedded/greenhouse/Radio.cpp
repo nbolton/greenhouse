@@ -7,10 +7,6 @@
 #include "../../common/common.h"
 #include "ISystem.h"
 
-#if RADIO_ASK
-#include <RH_ASK.h>
-#endif // RADIO_ASK
-
 #if RADIO_HC12
 #include <SoftwareSerial.h>
 #endif // RADIO_HC12
@@ -19,12 +15,6 @@
 #define PIN_TX 27
 #define LINEAR_TIMEOUT 1
 #define MOTOR_RETRY_MAX 5
-
-#if RADIO_ASK
-#define BIT_RATE 2000
-#define PTT_PIN -1 // disable; using SR instead
-#define SR_PIN_EN_TX 15
-#endif // RADIO_ASK
 
 #if RADIO_HC12
 #define BAUD 9600
@@ -48,10 +38,6 @@
 namespace embedded {
 namespace greenhouse {
 
-#if RADIO_ASK
-static RH_ASK s_driver(BIT_RATE, PIN_RX, PIN_TX, PTT_PIN);
-#endif // RADIO_ASK
-
 #if RADIO_HC12
 static SoftwareSerial s_hc12(PIN_TX, PIN_RX);
 #endif // RADIO_HC12
@@ -67,13 +53,6 @@ void Radio::Init(ISystem *system)
 {
   TRACE("Radio init");
   m_system = system;
-
-#if RADIO_ASK
-  if (!s_driver.init()) {
-    TRACE("Fatal: Radio driver init failed");
-    common::halt();
-  }
-#endif // RADIO_ASK
 
 #if RADIO_HC12
   s_hc12.begin(BAUD);
@@ -126,11 +105,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
       sendDesc.cmd,
       sendDesc.seq);
 
-#if RADIO_ASK
-    sr(SR_PIN_EN_TX, true);
-    delay(TX_WAIT_DELAY);
-#endif // RADIO_ASK
-
     GH_TO(s_txBuf) = sendDesc.to;
     GH_FROM(s_txBuf) = GH_ADDR_MAIN;
     GH_CMD(s_txBuf) = sendDesc.cmd;
@@ -141,11 +115,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
     GH_SEQ(s_txBuf) = sendDesc.seq;
 
     m_requests++;
-
-#if RADIO_ASK
-    s_driver.send(s_txBuf, GH_LENGTH);
-    s_driver.waitPacketSent();
-#endif // RADIO_ASK
 
 #if RADIO_HC12
     // clear anything left in the RX buffer, otherwise when we're
@@ -164,10 +133,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
     printBuffer(F("Radio sent data: "), s_txBuf, GH_LENGTH);
 
-#if RADIO_ASK
-    sr(SR_PIN_EN_TX, false);
-#endif // RADIO_ASK
-
     int timeout = RX_TIMEOUT;
 #if LINEAR_TIMEOUT
     // linear timeout increase; 433MHz is a very busy frequency,
@@ -182,13 +147,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
     while (millis() < (start + timeout)) {
       uint8_t s_rxBufLen = sizeof(s_rxBuf);
-
-#if RADIO_ASK
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-      if (s_driver.recv(s_rxBuf, &s_rxBufLen)) {
-#pragma GCC diagnostic pop
-#endif // RADIO_ASK
 
 #if RADIO_HC12
         if (s_hc12.available()) {
