@@ -7,19 +7,13 @@
 #include "../../common/common.h"
 #include "ISystem.h"
 
-#if RADIO_HC12
 #include <SoftwareSerial.h>
-#endif // RADIO_HC12
 
 #define PIN_RX 14
 #define PIN_TX 27
 #define LINEAR_TIMEOUT 1
 #define MOTOR_RETRY_MAX 5
-
-#if RADIO_HC12
 #define BAUD 9600
-#endif // RADIO_HC12
-
 #define RX_TIMEOUT 500
 #define TX_WAIT_DELAY 20
 #define TEMP_OFFSET -1.2
@@ -38,10 +32,7 @@
 namespace embedded {
 namespace greenhouse {
 
-#if RADIO_HC12
 static SoftwareSerial s_hc12(PIN_TX, PIN_RX);
-#endif // RADIO_HC12
-
 static uint8_t s_rxBuf[GH_LENGTH];
 static uint8_t s_txBuf[GH_LENGTH];
 
@@ -54,9 +45,7 @@ void Radio::Init(ISystem *system)
   TRACE("Radio init");
   m_system = system;
 
-#if RADIO_HC12
   s_hc12.begin(BAUD);
-#endif // RADIO_HC12
 
   m_nodes[radio::k_nodeRightWindow].Init(*this, GH_ADDR_NODE_1);
   m_nodes[radio::k_nodeLeftWindow].Init(*this, GH_ADDR_NODE_2);
@@ -116,7 +105,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
 
     m_requests++;
 
-#if RADIO_HC12
     // clear anything left in the RX buffer, otherwise when we're
     // checking for a response, we may get an out of sync message.
     int bitsDumped = 0;
@@ -127,7 +115,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
     TRACE_F("Radio read bits dumped: %d", bitsDumped);
 
     s_hc12.write(s_txBuf, GH_LENGTH);
-#endif
 
     unsigned long start = millis();
 
@@ -148,7 +135,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
     while (millis() < (start + timeout)) {
       uint8_t s_rxBufLen = sizeof(s_rxBuf);
 
-#if RADIO_HC12
       if (s_hc12.available()) {
         s_rxBufLen = s_hc12.readBytes(s_rxBuf, GH_LENGTH);
         if (s_rxBufLen != GH_LENGTH) {
@@ -158,7 +144,6 @@ bool Radio::Send(radio::SendDesc &sendDesc)
           sendDesc.errors++;
           break;
         }
-#endif // RADIO_HC12
 
         TRACE_F("Radio response time: %lums", millis() - start);
         printBuffer(F("Radio got data: "), s_rxBuf, GH_LENGTH);
