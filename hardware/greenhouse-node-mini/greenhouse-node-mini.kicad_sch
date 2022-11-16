@@ -6,11 +6,11 @@
 
   (title_block
     (title "Greenhouse Node Mini")
-    (date "2022-10-20")
+    (date "2022-11-16")
     (rev "1")
     (company "Nick Bolton")
     (comment 1 "Controls an H-bridge with an ATtiny")
-    (comment 2 "Uses 433MHz RX and TX radio modules")
+    (comment 2 "Uses 433MHz HC-12 radio module")
   )
 
   (lib_symbols
@@ -2394,7 +2394,7 @@
   (symbol (lib_id "power:+12V") (at 231.14 91.44 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 19f0c9e2-930b-48cd-8952-a0bdf4e9ff45)
-    (property "Reference" "#PWR?" (id 0) (at 231.14 95.25 0)
+    (property "Reference" "#PWR0117" (id 0) (at 231.14 95.25 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+12V" (id 1) (at 231.14 86.36 0))
@@ -3048,7 +3048,7 @@
   (symbol (lib_id "power:+10V") (at 73.66 31.75 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 915e99b7-0119-4924-8a0d-a2b6659e97e8)
-    (property "Reference" "#PWR?" (id 0) (at 73.66 35.56 0)
+    (property "Reference" "#PWR0107" (id 0) (at 73.66 35.56 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+10V" (id 1) (at 73.66 26.67 0))
@@ -3517,6 +3517,9 @@
     (path "/b96befdd-b750-4b4f-b6d6-d2136194962e"
       (reference "#PWR0106") (unit 1) (value "GND") (footprint "")
     )
+    (path "/915e99b7-0119-4924-8a0d-a2b6659e97e8"
+      (reference "#PWR0107") (unit 1) (value "+10V") (footprint "")
+    )
     (path "/e51d3bc9-bbb8-4038-b9ed-88a2e20e5589"
       (reference "#PWR0108") (unit 1) (value "GND") (footprint "")
     )
@@ -3544,6 +3547,9 @@
     (path "/34c70920-ae13-49f9-a4d0-683bcfb47855"
       (reference "#PWR0116") (unit 1) (value "+5V") (footprint "")
     )
+    (path "/19f0c9e2-930b-48cd-8952-a0bdf4e9ff45"
+      (reference "#PWR0117") (unit 1) (value "+12V") (footprint "")
+    )
     (path "/f98750c9-4733-44fc-81ad-abfb0939cc0d"
       (reference "#PWR0118") (unit 1) (value "+12V") (footprint "")
     )
@@ -3552,12 +3558,6 @@
     )
     (path "/228d7f02-8d49-44ae-90fe-3588c30eef2b"
       (reference "#PWR0120") (unit 1) (value "+12V") (footprint "")
-    )
-    (path "/19f0c9e2-930b-48cd-8952-a0bdf4e9ff45"
-      (reference "#PWR?") (unit 1) (value "+12V") (footprint "")
-    )
-    (path "/915e99b7-0119-4924-8a0d-a2b6659e97e8"
-      (reference "#PWR?") (unit 1) (value "+10V") (footprint "")
     )
     (path "/695ccbcc-4a44-4a1f-b5e4-e7c0459755d8"
       (reference "C1") (unit 1) (value "100uF") (footprint "Capacitor_THT:C_Radial_D5.0mm_H7.0mm_P2.00mm")

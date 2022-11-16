@@ -5,6 +5,13 @@
   )
 
   (paper "A5")
+  (title_block
+    (title "Greenhouse Node Mini")
+    (date "2022-11-16")
+    (rev "1")
+    (company "Nick Bolton")
+  )
+
   (layers
     (0 "F.Cu" signal)
     (1 "In1.Cu" power)
@@ -2400,6 +2407,15 @@
     (effects (font (size 1.5 1.5) (thickness 0.3)))
   )
 
+  (via (at 123.317 40.513) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp 0a52fedd-967a-423d-aaaf-3875f20f935b))
+  (via (at 125.857 40.513) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp 0e1c6bbc-4cc4-4ce9-b48a-8292bb286da8))
+  (via (at 120.777 40.513) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp 199ade13-7442-4da9-8eea-a8e7681e2aee))
+  (via (at 125.857 45.593) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp 48a8c1f5-4bcb-4560-9762-44aaefee4419))
+  (via (at 120.777 43.053) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp 5da0928a-9939-439c-bcbe-74de097058a8))
+  (via (at 123.317 43.053) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp b4856fa9-d711-4b3f-8ccf-343375c62dce))
+  (via (at 123.317 45.593) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp b8381d48-3c5b-401b-ac19-279d8173864c))
+  (via (at 125.857 43.053) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp bca99a8e-598f-436a-9158-7a050d1f7ca4))
+  (via (at 120.777 45.593) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 0) (tstamp f0f3907b-44e3-4106-9f24-d8ce836b6bb0))
   (segment (start 115.062 49.657) (end 115.062 52.944) (width 0.5) (layer "F.Cu") (net 1) (tstamp 48e57c55-5424-4ca3-b0c3-c882dc9c926c))
   (segment (start 81.1 76.3) (end 81.1 73.7) (width 2) (layer "F.Cu") (net 5) (tstamp 2e54513d-74c4-48a2-969f-344010c9c678))
   (segment (start 78 71.48) (end 80.1342 73.6142) (width 2) (layer "F.Cu") (net 5) (tstamp 3edf50fa-0b2d-414d-ae10-eb5933cc94e9))
@@ -21832,6 +21848,19 @@
     (members
       3a71e4f8-929c-487e-bcb7-5543a8ce30cd
       e814289c-3278-44a0-8da4-e29d3d24fd78
+    )
+  )
+  (group "" (id cad44c02-7fd2-4e9a-b93a-e1b73d6a3ee6)
+    (members
+      0a52fedd-967a-423d-aaaf-3875f20f935b
+      0e1c6bbc-4cc4-4ce9-b48a-8292bb286da8
+      199ade13-7442-4da9-8eea-a8e7681e2aee
+      48a8c1f5-4bcb-4560-9762-44aaefee4419
+      5da0928a-9939-439c-bcbe-74de097058a8
+      b4856fa9-d711-4b3f-8ccf-343375c62dce
+      b8381d48-3c5b-401b-ac19-279d8173864c
+      bca99a8e-598f-436a-9158-7a050d1f7ca4
+      f0f3907b-44e3-4106-9f24-d8ce836b6bb0
     )
   )
   (group "" (id fb883074-217e-4403-ac91-8b39f22e1f70)
