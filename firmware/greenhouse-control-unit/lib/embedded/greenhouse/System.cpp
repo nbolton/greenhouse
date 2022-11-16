@@ -35,6 +35,7 @@ namespace greenhouse {
 #define ADC_RETRY_DELAY 1
 #define DEBUG_DELAY 0
 #define LOOP_DELAY 10
+#define SOIL_TEMP_FAIL_MAX 10
 
 struct ADC {
   String name;
@@ -98,6 +99,7 @@ System::System() :
   m_outsideAirTemperature(k_unknown),
   m_outsideAirHumidity(k_unknown),
   m_soilTemperature(k_unknown),
+  m_soilTemperatureFailures(0),
   m_waterTemperature(k_unknown),
   m_timerId(k_unknown),
   m_led(LOW),
@@ -178,12 +180,16 @@ void System::Loop()
   }
   m_lastLoop = millis();
 
-  // always run before actuator check
-  ng::System::Loop();
+  // run early so that refresh is queued on time.
+  s_refreshTimer.run();
 
 #if RADIO_EN
+  // run first for keep alive
   m_radio.Update();
 #endif // RADIO_EN
+
+  // always run before actuator check
+  ng::System::Loop();
 
   m_pumpRadio.Update();
 
@@ -223,9 +229,6 @@ void System::Loop()
   }
 
   Power().Loop();
-
-  // may or may not queue a refresh
-  s_refreshTimer.run();
 
   if (SystemStarted()) {
     while (!m_callbackQueue.empty()) {
@@ -323,6 +326,8 @@ void System::Refresh()
   Blynk.virtualWrite(V77, m_radio.DebugInfo());
 #endif // RADIO_EN
 
+  UpdateSoilTemp();
+
   TRACE("Refresh done (embedded)");
 }
 
@@ -386,6 +391,11 @@ bool System::ReadSensors(int &failures)
     failures++;
   }
 
+  return failures == 0;
+}
+
+void System::UpdateSoilTemp()
+{
 #if RADIO_EN
   TRACE("Reading soil temperatures");
   radio::Node &rightWindow = m_radio.Node(radio::k_nodeRightWindow);
@@ -407,10 +417,13 @@ bool System::ReadSensors(int &failures)
   }
 
   if (tempValues > 0) {
+    m_soilTemperatureFailures = 0;
     m_soilTemperature = tempSum / tempValues;
     TRACE_F("Soil temperature average: %.2f", m_soilTemperature);
   }
-  else {
+  else if (++m_soilTemperatureFailures > SOIL_TEMP_FAIL_MAX) {
+    // only report -1 if there are a number of failures
+    m_soilTemperatureFailures = 0;
     m_soilTemperature = k_unknown;
     TRACE("Soil temperatures unknown");
   }
@@ -418,7 +431,7 @@ bool System::ReadSensors(int &failures)
   m_soilTemperature = k_unknown;
 #endif // RADIO_EN
 
-  return failures == 0;
+  Blynk.virtualWrite(V11, SoilTemperature());
 }
 
 void System::RunWindowActuator(bool extend, float delta)
@@ -579,8 +592,6 @@ void System::ReportSensorValues()
   Blynk.virtualWrite(V2, InsideAirHumidity());
   Blynk.virtualWrite(V19, OutsideAirTemperature());
   Blynk.virtualWrite(V20, OutsideAirHumidity());
-  Blynk.virtualWrite(V11, SoilTemperature());
-  Blynk.virtualWrite(V46, WaterTemperature());
 }
 
 void System::ReportWindowOpenPercent() { Blynk.virtualWrite(V9, WindowOpenPercentExpected()); }

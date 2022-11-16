@@ -68,6 +68,7 @@ protected:
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
+  void UpdateSoilTemp();
   void RunWindowActuator(bool extend, float delta);
   void Delay(unsigned long ms, const char *reason);
   bool UpdateWeatherForecast();
@@ -117,6 +118,7 @@ private:
   float m_outsideAirTemperature;
   float m_outsideAirHumidity;
   float m_soilTemperature;
+  int m_soilTemperatureFailures;
   float m_waterTemperature;
   int m_timerId;
   int m_led;

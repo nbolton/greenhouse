@@ -11,13 +11,13 @@
 
 #define PIN_RX 14
 #define PIN_TX 27
-#define LINEAR_TIMEOUT 1
 #define BAUD 9600
 #define RX_TIMEOUT 500
 #define TX_WAIT_DELAY 20
+#define TX_RETRY_MAX 5
+#define LINEAR_TIMEOUT 1
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
-#define TX_RETRY_MAX 10
 #define KEEP_ALIVE_TIME 60000 // 60s
 #define RECONNECT_TIME 10000  // 10s
 
