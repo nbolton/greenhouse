@@ -228,11 +228,11 @@
         )
       )
     )
-    (symbol "Connector:Conn_01x01_Female" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
+    (symbol "Connector:Conn_01x01_Male" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
       (property "Reference" "J" (id 0) (at 0 2.54 0)
         (effects (font (size 1.27 1.27)))
       )
-      (property "Value" "Conn_01x01_Female" (id 1) (at 0 -2.54 0)
+      (property "Value" "Conn_01x01_Male" (id 1) (at 0 -2.54 0)
         (effects (font (size 1.27 1.27)))
       )
       (property "Footprint" "" (id 2) (at 0 0 0)
@@ -250,20 +250,20 @@
       (property "ki_fp_filters" "Connector*:*" (id 6) (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (symbol "Conn_01x01_Female_1_1"
+      (symbol "Conn_01x01_Male_1_1"
         (polyline
           (pts
-            (xy -1.27 0)
-            (xy -0.508 0)
+            (xy 1.27 0)
+            (xy 0.8636 0)
           )
           (stroke (width 0.1524) (type default) (color 0 0 0 0))
           (fill (type none))
         )
-        (arc (start 0 0.508) (mid -0.508 0) (end 0 -0.508)
+        (rectangle (start 0.8636 0.127) (end 0 -0.127)
           (stroke (width 0.1524) (type default) (color 0 0 0 0))
-          (fill (type none))
+          (fill (type outline))
         )
-        (pin passive line (at -5.08 0 0) (length 3.81)
+        (pin passive line (at 5.08 0 180) (length 3.81)
           (name "Pin_1" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
@@ -2398,6 +2398,7 @@
     )
   )
 
+
   (junction (at 312.42 88.9) (diameter 0) (color 0 0 0 0)
     (uuid 27936170-44c0-44a9-937b-a31a90a6ed6d)
   )
@@ -3985,11 +3986,11 @@
     (pin "3" (uuid f6b1d3ed-cd26-4798-b6e2-500dd811bf2c))
   )
 
-  (symbol (lib_id "Connector:Conn_01x01_Female") (at 213.36 68.58 180) (unit 1)
+  (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 68.58 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 30ed1b00-f151-4615-9987-7ee76b56e64c)
-    (property "Reference" "J1" (id 0) (at 213.995 63.5 0))
-    (property "Value" "Buck_Conn_01x01_Female" (id 1) (at 213.995 66.04 0))
+    (property "Reference" "J?" (id 0) (at 213.995 63.5 0))
+    (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 66.04 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 68.58 0)
       (effects (font (size 1.27 1.27)) hide)
     )
@@ -4224,11 +4225,11 @@
     (pin "1" (uuid 1e1bdf33-5418-47a5-8957-f290dc702eda))
   )
 
-  (symbol (lib_id "Connector:Conn_01x01_Female") (at 213.36 92.71 180) (unit 1)
+  (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 92.71 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 511745f1-d0fa-4f46-87b1-22cd4080fa9c)
-    (property "Reference" "J4" (id 0) (at 213.995 87.63 0))
-    (property "Value" "Buck_Conn_01x01_Female" (id 1) (at 213.995 90.17 0))
+    (property "Reference" "J?" (id 0) (at 213.995 87.63 0))
+    (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 90.17 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 92.71 0)
       (effects (font (size 1.27 1.27)) hide)
     )
@@ -4783,11 +4784,11 @@
     (pin "5" (uuid b4a58218-ccbc-46cd-af97-0729437e07d5))
   )
 
-  (symbol (lib_id "Connector:Conn_01x01_Female") (at 213.36 76.2 180) (unit 1)
+  (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 76.2 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 9c2828bb-2b7a-4ca4-a47f-e141546c830b)
-    (property "Reference" "J2" (id 0) (at 213.995 71.12 0))
-    (property "Value" "Buck_Conn_01x01_Female" (id 1) (at 213.995 73.66 0))
+    (property "Reference" "J?" (id 0) (at 213.995 71.12 0))
+    (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 73.66 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 76.2 0)
       (effects (font (size 1.27 1.27)) hide)
     )
@@ -5179,11 +5180,11 @@
     (pin "1" (uuid 9b423a07-0980-45a7-8dc7-b4eae0aadaa7))
   )
 
-  (symbol (lib_id "Connector:Conn_01x01_Female") (at 213.36 85.09 180) (unit 1)
-    (in_bom yes) (on_board yes)
+  (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 85.09 0) (unit 1)
+    (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid c7bafe92-8eff-4d9d-b043-3a011a8680b6)
-    (property "Reference" "J3" (id 0) (at 213.995 80.01 0))
-    (property "Value" "Buck_Conn_01x01_Female" (id 1) (at 213.995 82.55 0))
+    (property "Reference" "J?" (id 0) (at 213.995 80.01 0))
+    (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 82.55 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 85.09 0)
       (effects (font (size 1.27 1.27)) hide)
     )
@@ -5715,18 +5716,6 @@
     (path "/26ab1162-16d0-49df-8ca5-5a6a1be3d60b"
       (reference "H4") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3mm")
     )
-    (path "/30ed1b00-f151-4615-9987-7ee76b56e64c"
-      (reference "J1") (unit 1) (value "Buck_Conn_01x01_Female") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
-    )
-    (path "/9c2828bb-2b7a-4ca4-a47f-e141546c830b"
-      (reference "J2") (unit 1) (value "Buck_Conn_01x01_Female") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
-    )
-    (path "/c7bafe92-8eff-4d9d-b043-3a011a8680b6"
-      (reference "J3") (unit 1) (value "Buck_Conn_01x01_Female") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
-    )
-    (path "/511745f1-d0fa-4f46-87b1-22cd4080fa9c"
-      (reference "J4") (unit 1) (value "Buck_Conn_01x01_Female") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
-    )
     (path "/c551cebd-0bd3-47ba-856a-e27d4df314b5"
       (reference "J5") (unit 1) (value "Molex_KK-396_01x02") (footprint "Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical")
     )
@@ -5756,6 +5745,18 @@
     )
     (path "/9bdd9f5d-a188-4b61-926a-f9d636e54e2c"
       (reference "J16") (unit 1) (value "Conn_01x05_Female") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical")
+    )
+    (path "/30ed1b00-f151-4615-9987-7ee76b56e64c"
+      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
+    )
+    (path "/511745f1-d0fa-4f46-87b1-22cd4080fa9c"
+      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
+    )
+    (path "/9c2828bb-2b7a-4ca4-a47f-e141546c830b"
+      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
+    )
+    (path "/c7bafe92-8eff-4d9d-b043-3a011a8680b6"
+      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
     )
     (path "/3134301d-59d9-4029-8639-0e93140b505d"
       (reference "Q1") (unit 1) (value "BC547") (footprint "Package_TO_SOT_THT:TO-92_Inline")
