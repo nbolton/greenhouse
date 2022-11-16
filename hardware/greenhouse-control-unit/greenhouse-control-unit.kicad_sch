@@ -2460,6 +2460,24 @@
     (uuid ff16f45e-fac4-4d95-9270-1bbdcca67aa3)
   )
 
+  (no_connect (at 340.36 93.98) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 91.44) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 367.03 76.2) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 367.03 81.28) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 367.03 78.74) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 96.52) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 99.06) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 104.14) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 106.68) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 109.22) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 76.2) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 78.74) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 81.28) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 340.36 88.9) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 367.03 101.6) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 367.03 104.14) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 367.03 86.36) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
+  (no_connect (at 367.03 88.9) (uuid 153786cf-9f43-405e-8043-ec4e9a916416))
   (no_connect (at 332.74 204.47) (uuid 18f61370-2ff3-4b4f-8196-99e8dbfa8a66))
   (no_connect (at 332.74 194.31) (uuid 299171e8-6055-42ff-a784-6d53a728ad57))
   (no_connect (at 171.45 226.06) (uuid 38d40f06-fe43-4566-a8d4-647732aa3f2a))
@@ -3989,7 +4007,7 @@
   (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 68.58 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 30ed1b00-f151-4615-9987-7ee76b56e64c)
-    (property "Reference" "J?" (id 0) (at 213.995 63.5 0))
+    (property "Reference" "J1" (id 0) (at 213.995 63.5 0))
     (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 66.04 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 68.58 0)
       (effects (font (size 1.27 1.27)) hide)
@@ -4228,7 +4246,7 @@
   (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 92.71 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 511745f1-d0fa-4f46-87b1-22cd4080fa9c)
-    (property "Reference" "J?" (id 0) (at 213.995 87.63 0))
+    (property "Reference" "J4" (id 0) (at 213.995 87.63 0))
     (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 90.17 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 92.71 0)
       (effects (font (size 1.27 1.27)) hide)
@@ -4787,7 +4805,7 @@
   (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 76.2 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 9c2828bb-2b7a-4ca4-a47f-e141546c830b)
-    (property "Reference" "J?" (id 0) (at 213.995 71.12 0))
+    (property "Reference" "J2" (id 0) (at 213.995 71.12 0))
     (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 73.66 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 76.2 0)
       (effects (font (size 1.27 1.27)) hide)
@@ -5183,7 +5201,7 @@
   (symbol (lib_id "Connector:Conn_01x01_Male") (at 213.36 85.09 0) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid c7bafe92-8eff-4d9d-b043-3a011a8680b6)
-    (property "Reference" "J?" (id 0) (at 213.995 80.01 0))
+    (property "Reference" "J3" (id 0) (at 213.995 80.01 0))
     (property "Value" "Conn_01x01_Male" (id 1) (at 213.995 82.55 0))
     (property "Footprint" "Connector_Pin:Pin_D1.0mm_L10.0mm" (id 2) (at 213.36 85.09 0)
       (effects (font (size 1.27 1.27)) hide)
@@ -5716,6 +5734,18 @@
     (path "/26ab1162-16d0-49df-8ca5-5a6a1be3d60b"
       (reference "H4") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3mm")
     )
+    (path "/30ed1b00-f151-4615-9987-7ee76b56e64c"
+      (reference "J1") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
+    )
+    (path "/9c2828bb-2b7a-4ca4-a47f-e141546c830b"
+      (reference "J2") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
+    )
+    (path "/c7bafe92-8eff-4d9d-b043-3a011a8680b6"
+      (reference "J3") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
+    )
+    (path "/511745f1-d0fa-4f46-87b1-22cd4080fa9c"
+      (reference "J4") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
+    )
     (path "/c551cebd-0bd3-47ba-856a-e27d4df314b5"
       (reference "J5") (unit 1) (value "Molex_KK-396_01x02") (footprint "Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical")
     )
@@ -5745,18 +5775,6 @@
     )
     (path "/9bdd9f5d-a188-4b61-926a-f9d636e54e2c"
       (reference "J16") (unit 1) (value "Conn_01x05_Female") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical")
-    )
-    (path "/30ed1b00-f151-4615-9987-7ee76b56e64c"
-      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
-    )
-    (path "/511745f1-d0fa-4f46-87b1-22cd4080fa9c"
-      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
-    )
-    (path "/9c2828bb-2b7a-4ca4-a47f-e141546c830b"
-      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
-    )
-    (path "/c7bafe92-8eff-4d9d-b043-3a011a8680b6"
-      (reference "J?") (unit 1) (value "Conn_01x01_Male") (footprint "Connector_Pin:Pin_D1.0mm_L10.0mm")
     )
     (path "/3134301d-59d9-4029-8639-0e93140b505d"
       (reference "Q1") (unit 1) (value "BC547") (footprint "Package_TO_SOT_THT:TO-92_Inline")
