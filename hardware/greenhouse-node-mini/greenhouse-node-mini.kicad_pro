@@ -55,7 +55,19 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "silk_over_copper|66040000|76200000|1a1dc396-04bc-4c1e-9c14-63c452701155|db3e2837-6765-443b-a073-783933140519",
+        "silk_over_copper|72736200|74000000|611cbbb1-4ebd-41d3-98fb-bfb02369aeec|45b7fe01-a2fa-40c2-a3a2-4a9ae7c34dba",
+        "silk_overlap|82883000|58314200|611cbbb1-4ebd-41d3-98fb-bfb02369aeec|3c0e161b-77de-41cd-8057-090b9a285b00",
+        "silk_overlap|82883000|58314200|611cbbb1-4ebd-41d3-98fb-bfb02369aeec|951f92e3-c509-40e8-964b-37dd7e0e82bf",
+        "silk_overlap|82883000|58314200|951f92e3-c509-40e8-964b-37dd7e0e82bf|611cbbb1-4ebd-41d3-98fb-bfb02369aeec",
+        "silk_overlap|82883000|66684200|611cbbb1-4ebd-41d3-98fb-bfb02369aeec|b73bc21e-e4fc-434c-9782-67f831579d00",
+        "silk_overlap|82883000|70383200|1df88bde-ee9c-4b31-90f5-5e91fa88d17a|611cbbb1-4ebd-41d3-98fb-bfb02369aeec",
+        "silk_overlap|82883000|70383200|611cbbb1-4ebd-41d3-98fb-bfb02369aeec|1df88bde-ee9c-4b31-90f5-5e91fa88d17a",
+        "silk_overlap|82883000|78752600|611cbbb1-4ebd-41d3-98fb-bfb02369aeec|2022f2c2-2d52-4762-8871-c3aaafed73b6",
+        "silk_overlap|82883000|78752600|611cbbb1-4ebd-41d3-98fb-bfb02369aeec|951f92e3-c509-40e8-964b-37dd7e0e82bf",
+        "silk_overlap|82883000|78754200|2022f2c2-2d52-4762-8871-c3aaafed73b6|611cbbb1-4ebd-41d3-98fb-bfb02369aeec"
+      ],
       "meta": {
         "version": 2
       },
@@ -377,12 +389,12 @@
       {
         "bus_width": 12.0,
         "clearance": 0.2,
-        "diff_pair_gap": 25.0,
+        "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 2.0,
+        "diff_pair_width": 0.2,
         "line_style": 0,
-        "microvia_diameter": 3.0,
-        "microvia_drill": 1.0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
         "name": "4A",
         "nets": [
           "+10V",
@@ -394,19 +406,19 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 2.0,
-        "via_diameter": 5.0,
-        "via_drill": 3.0,
+        "via_diameter": 0.8,
+        "via_drill": 0.4,
         "wire_width": 6.0
       },
       {
         "bus_width": 12.0,
         "clearance": 0.2,
-        "diff_pair_gap": 0.5,
+        "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.1,
+        "diff_pair_width": 0.2,
         "line_style": 0,
-        "microvia_diameter": 0.6,
-        "microvia_drill": 0.2,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
         "name": "5V",
         "nets": [
           "+5V"
@@ -414,8 +426,8 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.5,
-        "via_diameter": 1.6,
-        "via_drill": 0.8,
+        "via_diameter": 0.8,
+        "via_drill": 0.4,
         "wire_width": 6.0
       }
     ],
