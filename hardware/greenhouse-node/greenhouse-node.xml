@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>C:\Projects\nbolton\greenhouse\hardware\greenhouse-node\greenhouse-node.kicad_sch</source>
-    <date>30/11/2022 09:28:03</date>
+    <date>30/11/2022 10:47:27</date>
     <tool>Eeschema (6.0.2)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -279,40 +279,40 @@
       <tstamps>7777eff8-e376-4a73-bf94-1c9cb6090cd7</tstamps>
     </comp>
     <comp ref="Q3">
-      <value>IRF9530N</value>
+      <value>IRF4905</value>
       <footprint>Package_TO_SOT_THT:TO-220-3_Horizontal_TabDown</footprint>
-      <datasheet>https://www.infineon.com/dgdl/irf9530npbf.pdf?fileId=5546d462533600a401535611b9931dc1</datasheet>
-      <libsource lib="Transistor_FET" part="IRF9540N" description="-23A Id, -100V Vds, 117mOhm Rds, P-Channel HEXFET Power MOSFET, TO-220"/>
+      <datasheet>http://www.infineon.com/dgdl/irf4905.pdf?fileId=5546d462533600a4015355e32165197c</datasheet>
+      <libsource lib="Transistor_FET" part="IRF4905" description="-74A Id, -55V Vds, Single P-Channel HEXFET Power MOSFET, 20mOhm Ron, TO-220AB"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="greenhouse-node.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>cb41f2ec-679f-4a12-8f0b-65fa299c837f</tstamps>
     </comp>
     <comp ref="Q4">
-      <value>IRF530N</value>
+      <value>FDP7030BL</value>
       <footprint>Package_TO_SOT_THT:TO-220-3_Horizontal_TabDown</footprint>
-      <datasheet>https://www.infineon.com/dgdl/irf530npbf.pdf?fileId=5546d462533600a4015355e386b1199a</datasheet>
-      <libsource lib="Transistor_FET" part="IRF540N" description="33A Id, 100V Vds, HEXFET N-Channel MOSFET, TO-220"/>
+      <datasheet>https://www.farnell.com/datasheets/245431.pdf</datasheet>
+      <libsource lib="Nick" part="FDP7030BL" description="60A Id, 30V Vds, N-Channel Logic Level PowerTrench MOSFET, TO-220"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="greenhouse-node.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>d39f074e-8f8c-4b3c-b31d-033d6fff8545</tstamps>
     </comp>
     <comp ref="Q5">
-      <value>IRF9530N</value>
+      <value>IRF4905</value>
       <footprint>Package_TO_SOT_THT:TO-220-3_Horizontal_TabDown</footprint>
-      <datasheet>https://www.infineon.com/dgdl/irf9530npbf.pdf?fileId=5546d462533600a401535611b9931dc1</datasheet>
-      <libsource lib="Transistor_FET" part="IRF9540N" description="-23A Id, -100V Vds, 117mOhm Rds, P-Channel HEXFET Power MOSFET, TO-220"/>
+      <datasheet>http://www.infineon.com/dgdl/irf4905.pdf?fileId=5546d462533600a4015355e32165197c</datasheet>
+      <libsource lib="Transistor_FET" part="IRF4905" description="-74A Id, -55V Vds, Single P-Channel HEXFET Power MOSFET, 20mOhm Ron, TO-220AB"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="greenhouse-node.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>4b536438-0ca3-4ec1-936d-43519ce680c6</tstamps>
     </comp>
     <comp ref="Q6">
-      <value>IRF530N</value>
+      <value>FDP7030BL</value>
       <footprint>Package_TO_SOT_THT:TO-220-3_Horizontal_TabDown</footprint>
-      <datasheet>https://www.infineon.com/dgdl/irf530npbf.pdf?fileId=5546d462533600a4015355e386b1199a</datasheet>
-      <libsource lib="Transistor_FET" part="IRF540N" description="33A Id, 100V Vds, HEXFET N-Channel MOSFET, TO-220"/>
+      <datasheet>https://www.farnell.com/datasheets/245431.pdf</datasheet>
+      <libsource lib="Nick" part="FDP7030BL" description="60A Id, 30V Vds, N-Channel Logic Level PowerTrench MOSFET, TO-220"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="greenhouse-node.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
@@ -781,6 +781,24 @@
         <field name="Datasheet">~</field>
       </fields>
     </libpart>
+    <libpart lib="Nick" part="FDP7030BL">
+      <description>60A Id, 30V Vds, N-Channel Logic Level PowerTrench MOSFET, TO-220</description>
+      <docs>https://www.farnell.com/datasheets/245431.pdf</docs>
+      <footprints>
+        <fp>TO?220*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">Q</field>
+        <field name="Value">FDP7030BL</field>
+        <field name="Footprint">Package_TO_SOT_THT:TO-220-3_Vertical</field>
+        <field name="Datasheet">https://www.farnell.com/datasheets/245431.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="G" type="input"/>
+        <pin num="2" name="D" type="passive"/>
+        <pin num="3" name="S" type="passive"/>
+      </pins>
+    </libpart>
     <libpart lib="Regulator_Linear" part="L7805">
       <description>Positive 1.5A 35V Linear Regulator, Fixed Output 5V, TO-220/TO-263/TO-252</description>
       <docs>http://www.st.com/content/ccc/resource/technical/document/datasheet/41/4f/b3/b0/12/d4/47/88/CD00000444.pdf/files/CD00000444.pdf/jcr:content/translations/en.CD00000444.pdf</docs>
@@ -831,35 +849,17 @@
         <pin num="3" name="E" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Transistor_FET" part="IRF540N">
-      <description>33A Id, 100V Vds, HEXFET N-Channel MOSFET, TO-220</description>
-      <docs>http://www.irf.com/product-info/datasheets/data/irf540n.pdf</docs>
+    <libpart lib="Transistor_FET" part="IRF4905">
+      <description>-74A Id, -55V Vds, Single P-Channel HEXFET Power MOSFET, 20mOhm Ron, TO-220AB</description>
+      <docs>http://www.infineon.com/dgdl/irf4905.pdf?fileId=5546d462533600a4015355e32165197c</docs>
       <footprints>
         <fp>TO?220*</fp>
       </footprints>
       <fields>
         <field name="Reference">Q</field>
-        <field name="Value">IRF540N</field>
+        <field name="Value">IRF4905</field>
         <field name="Footprint">Package_TO_SOT_THT:TO-220-3_Vertical</field>
-        <field name="Datasheet">http://www.irf.com/product-info/datasheets/data/irf540n.pdf</field>
-      </fields>
-      <pins>
-        <pin num="1" name="G" type="input"/>
-        <pin num="2" name="D" type="passive"/>
-        <pin num="3" name="S" type="passive"/>
-      </pins>
-    </libpart>
-    <libpart lib="Transistor_FET" part="IRF9540N">
-      <description>-23A Id, -100V Vds, 117mOhm Rds, P-Channel HEXFET Power MOSFET, TO-220</description>
-      <docs>http://www.irf.com/product-info/datasheets/data/irf9540n.pdf</docs>
-      <footprints>
-        <fp>TO?220*</fp>
-      </footprints>
-      <fields>
-        <field name="Reference">Q</field>
-        <field name="Value">IRF9540N</field>
-        <field name="Footprint">Package_TO_SOT_THT:TO-220-3_Vertical</field>
-        <field name="Datasheet">http://www.irf.com/product-info/datasheets/data/irf9540n.pdf</field>
+        <field name="Datasheet">http://www.infineon.com/dgdl/irf4905.pdf?fileId=5546d462533600a4015355e32165197c</field>
       </fields>
       <pins>
         <pin num="1" name="G" type="input"/>
@@ -883,6 +883,9 @@
     </library>
     <library logical="Mechanical">
       <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Mechanical.kicad_sym</uri>
+    </library>
+    <library logical="Nick">
+      <uri>C:/Projects/KiCad/6.0/symbols/Nick.kicad_sym</uri>
     </library>
     <library logical="Regulator_Linear">
       <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Regulator_Linear.kicad_sym</uri>
@@ -1124,16 +1127,16 @@
       <node ref="R14" pin="1" pintype="passive"/>
     </net>
     <net code="40" name="unconnected-(U1-Pad13)">
-      <node ref="U1" pin="13" pinfunction="AREF/PA0" pintype="bidirectional"/>
+      <node ref="U1" pin="13" pinfunction="AREF/PA0" pintype="bidirectional+no_connect"/>
     </net>
     <net code="41" name="unconnected-(U3-Pad6)">
-      <node ref="U3" pin="6" pinfunction="QG" pintype="tri_state"/>
+      <node ref="U3" pin="6" pinfunction="QG" pintype="tri_state+no_connect"/>
     </net>
     <net code="42" name="unconnected-(U3-Pad7)">
-      <node ref="U3" pin="7" pinfunction="QH" pintype="tri_state"/>
+      <node ref="U3" pin="7" pinfunction="QH" pintype="tri_state+no_connect"/>
     </net>
     <net code="43" name="unconnected-(U3-Pad9)">
-      <node ref="U3" pin="9" pinfunction="QH'" pintype="output"/>
+      <node ref="U3" pin="9" pinfunction="QH'" pintype="output+no_connect"/>
     </net>
   </nets>
 </export>
