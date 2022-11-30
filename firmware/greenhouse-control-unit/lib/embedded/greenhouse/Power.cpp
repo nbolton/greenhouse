@@ -12,7 +12,7 @@ namespace greenhouse {
 
 #define PIN_LOCAL_VOLTAGE 34
 #define VOLTAGE_DIFF_DELTA .1f
-//#define TRACE_SENSOR_RAW 1
+#define TRACE_SENSOR_RAW 1
 #define VOLTAGE_DROP_WAIT 10000 // 10s
 
 #define IO_PIN_BATT_SW P0
@@ -172,6 +172,9 @@ void Power::MeasureVoltage()
   }
 
   m_batteryVoltageSensor = Embedded().ReadBatteryVoltageSensorRaw();
+#if TRACE_SENSOR_RAW
+  TRACE_F("Battery voltage sensor raw: %.4f", m_batteryVoltageSensor);
+#endif // TRACE_SENSOR_RAW
   if (m_batteryVoltageSensor != k_unknown) {
     m_batteryVoltageOutput = mapFloat(
       m_batteryVoltageSensor,
@@ -194,6 +197,9 @@ void Power::MeasureCurrent()
   }
 
   m_batteryCurrentSensor = Embedded().ReadBatteryCurrentSensorRaw();
+#if TRACE_SENSOR_RAW
+  TRACE_F("Battery current sensor raw: %.4f", m_batteryCurrentSensor);
+#endif // TRACE_SENSOR_RAW
   m_batteryCurrentOutput = mapFloat(
     m_batteryCurrentSensor,
     m_batteryCurrentSensorMin,
