@@ -12,7 +12,6 @@ namespace greenhouse {
 
 #define PIN_LOCAL_VOLTAGE 34
 #define VOLTAGE_DIFF_DELTA .1f
-#define TRACE_SENSOR_RAW 1
 #define VOLTAGE_DROP_WAIT 10000 // 10s
 
 #define IO_PIN_BATT_SW P0
