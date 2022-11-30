@@ -5480,7 +5480,7 @@
     (property "Reference" "C1" (id 0) (at 166.37 257.2638 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "100uF" (id 1) (at 166.37 259.8038 0)
+    (property "Value" "220uF" (id 1) (at 166.37 259.8038 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "Capacitor_THT:CP_Radial_D6.3mm_P2.50mm" (id 2) (at 163.83 259.08 0)
@@ -5696,7 +5696,7 @@
       (reference "BZ1") (unit 1) (value "10mA beep") (footprint "Buzzer_Beeper:Buzzer_12x9.5RM7.6")
     )
     (path "/efe2628e-3c45-47e8-8d6b-7fc7f60ac03a"
-      (reference "C1") (unit 1) (value "100uF") (footprint "Capacitor_THT:CP_Radial_D6.3mm_P2.50mm")
+      (reference "C1") (unit 1) (value "220uF") (footprint "Capacitor_THT:CP_Radial_D6.3mm_P2.50mm")
     )
     (path "/3caa8576-ddd4-4b5f-ae0c-e72223d045f8"
       (reference "C2") (unit 1) (value "10nF") (footprint "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm")
