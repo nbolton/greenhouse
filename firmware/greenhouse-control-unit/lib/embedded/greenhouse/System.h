@@ -108,6 +108,7 @@ private:
   void UpdateCaseFan();
   void PrintCommands();
   void PrintStatus();
+  void ReportPower();
 
 private:
   embedded::greenhouse::Time m_time;
