@@ -30,6 +30,7 @@ const float k_localVoltageMapOut = 10.0;
 const int k_switchDelay = 2000; // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
+const int k_lowBatteryMeasureInterval = 600000; // 10 mins
 
 static Power *s_instance = nullptr;
 bool s_testState = false;
@@ -57,7 +58,8 @@ Power::Power() :
   m_batteryCurrentOutputMax(k_unknown),
   m_lastLocalVoltage(k_unknown),
   m_lastBatteryVoltage(k_unknown),
-  m_nextVoltageDropSwitch(k_unknownUL)
+  m_nextVoltageDropSwitch(k_unknownUL),
+  m_lastMeasure(k_unknown)
 {
 }
 
@@ -86,6 +88,20 @@ embedded::greenhouse::ISystem &Power::Embedded() const
     throw;
   }
   return *m_embedded;
+}
+
+bool Power::batteryIsLow() const
+{
+  const bool vBattKnown = (m_batteryVoltageOutput != k_unknown);
+  const bool vBattOffKnown = (m_batteryVoltageSwitchOff != k_unknown);
+  return !vBattKnown || (vBattOffKnown && (m_batteryVoltageOutput <= m_batteryVoltageSwitchOff));
+}
+
+bool Power::batteryIsCharged() const
+{
+  const bool vBattKnown = (m_batteryVoltageOutput != k_unknown);
+  const bool vBattOnKnown = (m_batteryVoltageSwitchOn != k_unknown);
+  return vBattKnown && vBattOnKnown && (m_batteryVoltageOutput >= m_batteryVoltageSwitchOn);
 }
 
 void Power::Loop()
@@ -138,23 +154,13 @@ void Power::Loop()
       }
     }
     else {
-      const bool vBattKnown = (m_batteryVoltageOutput != k_unknown);
-      const bool vBattOnKnown = (m_batteryVoltageSwitchOn != k_unknown);
-      const bool vBattOffKnown = (m_batteryVoltageSwitchOff != k_unknown);
-
-      const bool switchToBattery =
-        vBattKnown && vBattOnKnown && (m_batteryVoltageOutput >= m_batteryVoltageSwitchOn);
-
-      const bool switchToPsu =
-        !vBattKnown || (vBattOffKnown && (m_batteryVoltageOutput <= m_batteryVoltageSwitchOff));
-
-      if (switchToBattery) {
+      if (batteryIsCharged()) {
         if (m_source != PowerSource::k_powerSourceBattery) {
           TRACE("Switching to battery automatically (PSU off)");
           switchSource(PowerSource::k_powerSourceBattery);
         }
       }
-      else if (switchToPsu) {
+      else if (batteryIsLow()) {
         if (m_source != PowerSource::k_powerSourcePsu) {
           TRACE("Switching PSU on automatically (battery off)");
           switchSource(PowerSource::k_powerSourcePsu);
@@ -164,8 +170,20 @@ void Power::Loop()
   }
 }
 
+// #define TRACE_BATTERY
+
 void Power::MeasureVoltage()
 {
+  // slow battery measurement down if low battery to save power
+  const unsigned long next = (m_lastMeasure + k_lowBatteryMeasureInterval);
+  if (batteryIsLow() && (millis() < next)) {
+#ifdef TRACE_BATTERY
+    TRACE_F("Low battery, skipping measurement for %lus", (next - millis()) / 1000);
+#endif // TRACE_BATTERY
+    return;
+  }
+  m_lastMeasure = millis();
+
   if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
     return;
   }
@@ -237,7 +255,8 @@ void Power::switchSource(PowerSource source)
   // both relays are NC (normally closed), so to disconnect a source,
   // pass true which will open the relay.
   Embedded().WriteOnboardIO(IO_PIN_PSU_SW, m_source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
-  Embedded().WriteOnboardIO(IO_PIN_BATT_SW, m_source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
+  Embedded().WriteOnboardIO(
+    IO_PIN_BATT_SW, m_source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
 
   Embedded().WriteOnboardIO(IO_PIN_PSU_LED, m_source == k_powerSourcePsu ? LED_ON : LED_OFF);
   Embedded().WriteOnboardIO(IO_PIN_BATT_LED, m_source == k_powerSourceBattery ? LED_ON : LED_OFF);
