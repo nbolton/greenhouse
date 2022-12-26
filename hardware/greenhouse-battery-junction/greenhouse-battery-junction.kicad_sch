@@ -2182,7 +2182,7 @@
     (pin "1" (uuid 41ec686a-81c3-40c0-abe2-d09d8b0adea9))
   )
 
-  (symbol (lib_id "Transistor_FET:IRF9540N") (at 236.22 41.91 0) (unit 1)
+  (symbol (lib_id "Transistor_FET:IRF9540N") (at 236.22 41.91 0) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 69994704-2599-4f0d-817d-77dda1390c9f)
     (property "Reference" "Q?" (id 0) (at 242.57 40.6399 0)
@@ -2191,7 +2191,7 @@
     (property "Value" "IRF9530N" (id 1) (at 242.57 43.1799 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Package_TO_SOT_THT:TO-220-3_Vertical" (id 2) (at 241.3 43.815 0)
+    (property "Footprint" "Package_TO_SOT_THT:TO-220-3_Vertical" (id 2) (at 241.3 40.005 0)
       (effects (font (size 1.27 1.27) italic) (justify left) hide)
     )
     (property "Datasheet" "https://www.infineon.com/dgdl/irf9530npbf.pdf?fileId=5546d462533600a401535611b9931dc1" (id 3) (at 236.22 41.91 0)
