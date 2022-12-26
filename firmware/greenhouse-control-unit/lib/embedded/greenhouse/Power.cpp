@@ -66,8 +66,8 @@ void Power::Setup()
   s_instance = this;
 
   // circuit default state is both power sources connected
-  Embedded().WriteIO(IO_PIN_PSU_LED, LED_ON);
-  Embedded().WriteIO(IO_PIN_BATT_LED, LED_ON);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_ON);
+  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, LED_ON);
 }
 
 native::greenhouse::ISystem &Power::Native() const
@@ -212,10 +212,10 @@ void Power::switchSource(PowerSource source)
   m_source = source;
 
   // first, ensure constant power; close PSU NC relay and turn on battery FET
-  Embedded().WriteIO(IO_PIN_PSU_SW, SWITCH_ON);
-  Embedded().WriteIO(IO_PIN_BATT_SW, SWITCH_ON);
-  Embedded().WriteIO(IO_PIN_PSU_LED, LED_ON);
-  Embedded().WriteIO(IO_PIN_BATT_LED, LED_ON);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_SW, SWITCH_ON);
+  Embedded().WriteOnboardIO(IO_PIN_BATT_SW, SWITCH_ON);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_ON);
+  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, LED_ON);
 
   // if on battery, give the PSU time to power up, or,
   // if on PSU, allow the battery relay to close first.
@@ -236,11 +236,11 @@ void Power::switchSource(PowerSource source)
 
   // both relays are NC (normally closed), so to disconnect a source,
   // pass true which will open the relay.
-  Embedded().WriteIO(IO_PIN_PSU_SW, m_source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
-  Embedded().WriteIO(IO_PIN_BATT_SW, m_source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_SW, m_source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_BATT_SW, m_source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
 
-  Embedded().WriteIO(IO_PIN_PSU_LED, m_source == k_powerSourcePsu ? LED_ON : LED_OFF);
-  Embedded().WriteIO(IO_PIN_BATT_LED, m_source == k_powerSourceBattery ? LED_ON : LED_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, m_source == k_powerSourcePsu ? LED_ON : LED_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, m_source == k_powerSourceBattery ? LED_ON : LED_OFF);
 
   TRACE_F("Local voltage: %.2fV", ReadLocalVoltage());
   Embedded().OnPowerSwitch();

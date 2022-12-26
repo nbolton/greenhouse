@@ -45,7 +45,7 @@ public:
   void OnSystemStarted();
   void Restart();
   void OnPowerSwitch();
-  void WriteIO(uint8_t pin, uint8_t value);
+  void WriteOnboardIO(uint8_t pin, uint8_t value);
   bool BatterySensorReady();
   float ReadBatteryVoltageSensorRaw();
   float ReadBatteryCurrentSensorRaw();
@@ -54,6 +54,7 @@ public:
   void WindowSpeedUpdate();
   void LowerPumpOn(bool pumpOn);
   void LowerPumpStatus(const char *message);
+  void SwitchLights(bool on);
 
 protected:
   void ReportInfo(const char *m, ...);

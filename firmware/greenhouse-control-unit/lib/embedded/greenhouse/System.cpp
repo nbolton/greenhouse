@@ -46,6 +46,9 @@ struct ADC {
 #define IO_PIN_BEEP_SW P2
 #define IO_PIN_FAN_SW P3
 
+#define EXT_IO_PIN_VOLTAGE_SENSOR P0
+#define EXT_IO_PIN_LIGHT P1
+
 // external adc pins
 const ADS1115_MUX k_batteryVoltagePin = ADS1115_COMP_0_GND;
 const ADS1115_MUX k_batteryCurrentPin = ADS1115_COMP_1_GND;
@@ -62,7 +65,8 @@ const float k_weatherLon = -4.408;
 const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char *k_weatherHost = "api.openweathermap.org";
 const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
-const uint8_t k_ioAddress = 0x20;
+const uint8_t k_onboardIoAddress1 = 0x20;
+const uint8_t k_externalIoAddress1 = 0x21;
 const int k_loopFrequency = 1000; // 1s
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
@@ -71,7 +75,8 @@ const int k_leftWindowNodeSwitch = 1;
 const int k_rightWindowNodeSwitch = 2;
 
 static System *s_instance = nullptr;
-static PCF8574 s_io1(k_ioAddress);
+static PCF8574 s_onboardIo1(k_onboardIoAddress1);
+static PCF8574 s_externalIo1(k_externalIoAddress1);
 static char s_reportBuffer[200];
 static BlynkTimer s_refreshTimer;
 static Adafruit_SHT31 s_insideAirSensor;
@@ -257,19 +262,35 @@ void System::Loop()
 
 void System::InitIO()
 {
-  TRACE("Init PCF8574 IO");
+  TRACE("Init onboard PCF8574 IO");
 
-  s_io1.pinMode(P0, OUTPUT);
-  s_io1.pinMode(P1, OUTPUT);
-  s_io1.pinMode(P2, OUTPUT);
-  s_io1.pinMode(P3, OUTPUT);
-  s_io1.pinMode(P4, OUTPUT);
-  s_io1.pinMode(P5, OUTPUT);
-  s_io1.pinMode(P6, OUTPUT);
-  s_io1.pinMode(P7, OUTPUT);
+  s_onboardIo1.pinMode(P0, OUTPUT);
+  s_onboardIo1.pinMode(P1, OUTPUT);
+  s_onboardIo1.pinMode(P2, OUTPUT);
+  s_onboardIo1.pinMode(P3, OUTPUT);
+  s_onboardIo1.pinMode(P4, OUTPUT);
+  s_onboardIo1.pinMode(P5, OUTPUT);
+  s_onboardIo1.pinMode(P6, OUTPUT);
+  s_onboardIo1.pinMode(P7, OUTPUT);
 
-  if (!s_io1.begin()) {
-    TRACE("PCF8574 failed");
+  if (!s_onboardIo1.begin()) {
+    TRACE("Onboard PCF8574 failed");
+    Restart();
+  }
+
+  TRACE("Init external PCF8574 IO");
+
+  s_externalIo1.pinMode(P0, OUTPUT);
+  s_externalIo1.pinMode(P1, OUTPUT);
+  s_externalIo1.pinMode(P2, OUTPUT);
+  s_externalIo1.pinMode(P3, OUTPUT);
+  s_externalIo1.pinMode(P4, OUTPUT);
+  s_externalIo1.pinMode(P5, OUTPUT);
+  s_externalIo1.pinMode(P6, OUTPUT);
+  s_externalIo1.pinMode(P7, OUTPUT);
+
+  if (!s_externalIo1.begin()) {
+    TRACE("External PCF8574 failed");
     Restart();
   }
 }
@@ -476,24 +497,24 @@ void System::Restart()
 void System::CaseFan(bool on)
 {
   TRACE_F("Case fan %s", on ? "on" : "off");
-  s_io1.digitalWrite(IO_PIN_FAN_SW, on);
+  s_onboardIo1.digitalWrite(IO_PIN_FAN_SW, on);
 }
 
 void System::Beep(int times, bool longBeep)
 {
   TRACE_F("Beep %d times (%s)", times, longBeep ? "long" : "short");
   for (int i = 0; i < times; i++) {
-    s_io1.digitalWrite(IO_PIN_BEEP_SW, LOW);
+    s_onboardIo1.digitalWrite(IO_PIN_BEEP_SW, LOW);
     Delay(longBeep ? 200 : 100, "Beep on");
 
-    s_io1.digitalWrite(IO_PIN_BEEP_SW, HIGH);
+    s_onboardIo1.digitalWrite(IO_PIN_BEEP_SW, HIGH);
     Delay(200, "Beep off");
   }
 }
 
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
-  //#define ADC_DEBUG 1
+  // #define ADC_DEBUG 1
 
 #if ADC_DEBUG
   TRACE_F("Reading ADC: %s", adc.name.c_str());
@@ -769,11 +790,17 @@ void System::OnPowerSwitch()
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
 
-void System::WriteIO(uint8_t pin, uint8_t value) { s_io1.digitalWrite(pin, value); }
+void System::WriteOnboardIO(uint8_t pin, uint8_t value) { s_onboardIo1.digitalWrite(pin, value); }
 
 bool System::BatterySensorReady() { return s_externalAdc.ready; }
 
-float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_externalAdc, k_batteryVoltagePin); }
+float System::ReadBatteryVoltageSensorRaw()
+{
+  s_externalIo1.digitalWrite(EXT_IO_PIN_VOLTAGE_SENSOR, LOW);
+  float v = ReadAdc(s_externalAdc, k_batteryVoltagePin);
+  s_externalIo1.digitalWrite(EXT_IO_PIN_VOLTAGE_SENSOR, HIGH);
+  return v;
+}
 
 float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_externalAdc, k_batteryCurrentPin); }
 
@@ -802,6 +829,11 @@ void System::WindowSpeedUpdate()
 void System::LowerPumpOn(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
 
 void System::LowerPumpStatus(const char *message) { Blynk.virtualWrite(V81, message); }
+
+void System::SwitchLights(bool on)
+{
+  s_externalIo1.digitalWrite(EXT_IO_PIN_LIGHT, on ? LOW : HIGH);
+}
 
 } // namespace greenhouse
 } // namespace embedded
@@ -901,6 +933,8 @@ BLYNK_WRITE(V9)
 }
 
 BLYNK_WRITE(V14) { eg::s_instance->TestMode(param.asInt() == 1); }
+
+BLYNK_WRITE(V17) { eg::s_instance->SwitchLights(param.asInt() == 1); }
 
 BLYNK_WRITE(V18) { eg::s_instance->FakeSoilTemperature(param.asFloat()); }
 

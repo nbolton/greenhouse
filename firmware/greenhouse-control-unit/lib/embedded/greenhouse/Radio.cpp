@@ -79,7 +79,7 @@ radio::Node &Radio::Node(radio::NodeId index)
   return m_nodes[index];
 }
 
-void Radio::sr(int pin, bool set) { m_system->WriteIO(pin, set); }
+void Radio::sr(int pin, bool set) { m_system->WriteOnboardIO(pin, set); }
 
 bool Radio::Send(radio::SendDesc &sendDesc)
 {

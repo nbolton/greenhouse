@@ -3438,6 +3438,11 @@
     (effects (font (size 2 2)) (justify left bottom))
     (uuid 4665e977-20ca-416b-97fb-d1d69dc093bd)
   )
+  (text "Design flaw: Even when PSU AC is d/c,\nPSU+12V will draw 100mA from Batt+12V.\nPossible solution is back-to-back P-MOS:\nhttps://www.circuitlab.com/editor/#?id=54h9w3b4hb4x"
+    (at 138.43 101.6 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 501ec4d2-61fc-4774-9a30-18cd7ae98cbd)
+  )
   (text "Active HIGH" (at 302.26 257.81 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 5aceb587-0661-427b-bb60-af121147b0a9)
@@ -5465,7 +5470,7 @@
   )
 
   (symbol (lib_id "power:PWR_FLAG") (at 177.8 88.9 270) (unit 1)
-    (in_bom yes) (on_board yes) (fields_autoplaced)
+    (in_bom yes) (on_board yes)
     (uuid e51ebc69-290a-402d-be0d-6d5f24824306)
     (property "Reference" "#FLG02" (id 0) (at 179.705 88.9 0)
       (effects (font (size 1.27 1.27)) hide)
