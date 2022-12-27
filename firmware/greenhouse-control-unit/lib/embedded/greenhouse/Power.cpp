@@ -30,7 +30,7 @@ const float k_localVoltageMapOut = 10.0;
 const int k_switchDelay = 2000; // delay between switching both relays
 const bool k_relayTest = false; // useful for testing power drop
 const int k_relayTestInterval = 2000;
-const int k_lowBatteryMeasureInterval = 600000; // 10 mins
+const int k_lowBatteryMeasureInterval = 10000; // 10 s
 
 static Power *s_instance = nullptr;
 bool s_testState = false;
@@ -174,6 +174,10 @@ void Power::Loop()
 
 void Power::MeasureVoltage()
 {
+  if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
+    return;
+  }
+
   // slow battery measurement down if low battery to save power
   const unsigned long next = (m_lastMeasure + k_lowBatteryMeasureInterval);
   if (batteryIsLow() && (millis() < next)) {
@@ -183,10 +187,6 @@ void Power::MeasureVoltage()
     return;
   }
   m_lastMeasure = millis();
-
-  if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
-    return;
-  }
 
   m_batteryVoltageSensor = Embedded().ReadBatteryVoltageSensorRaw();
 #if TRACE_SENSOR_RAW
