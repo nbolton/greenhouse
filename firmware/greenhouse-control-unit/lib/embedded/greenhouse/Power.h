@@ -53,6 +53,8 @@ public:
 
 private:
   void switchSource(PowerSource source);
+  bool batteryIsLow() const;
+  bool batteryIsCharged() const;
 
 private:
   embedded::greenhouse::ISystem *m_embedded;
@@ -76,6 +78,7 @@ private:
   float m_lastLocalVoltage;
   float m_lastBatteryVoltage;
   unsigned long m_nextVoltageDropSwitch;
+  float m_lastMeasure;
 };
 
 } // namespace greenhouse
