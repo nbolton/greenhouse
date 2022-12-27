@@ -320,15 +320,6 @@ void System::InitExternalADC()
   }
 }
 
-void System::ReportPower()
-{
-  Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
-  Blynk.virtualWrite(V29, Power().BatteryVoltageSensor());
-  Blynk.virtualWrite(V30, Power().BatteryVoltageOutput());
-  Blynk.virtualWrite(V42, Power().BatteryCurrentSensor());
-  Blynk.virtualWrite(V43, Power().BatteryCurrentOutput());
-}
-
 void System::Refresh()
 {
   TRACE("Refreshing (embedded)");
@@ -343,7 +334,11 @@ void System::Refresh()
 
   TRACE_F("Local voltage: %.2fV", m_power.ReadLocalVoltage());
 
-  ReportPower();
+  Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
+  Blynk.virtualWrite(V29, Power().BatteryVoltageSensor());
+  Blynk.virtualWrite(V30, Power().BatteryVoltageOutput());
+  Blynk.virtualWrite(V42, Power().BatteryCurrentSensor());
+  Blynk.virtualWrite(V43, Power().BatteryCurrentOutput());
   Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
@@ -792,7 +787,7 @@ void System::UpdateCaseFan()
 void System::OnPowerSwitch()
 {
   UpdateCaseFan();
-  ReportPower();
+  Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
 
 void System::WriteOnboardIO(uint8_t pin, uint8_t value) { s_onboardIo1.digitalWrite(pin, value); }

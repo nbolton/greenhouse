@@ -24,8 +24,6 @@ namespace greenhouse {
 #define LED_ON LOW
 #define LED_OFF HIGH
 
-// #define TRACE_BATTERY
-
 const float k_localVoltageMin = 9.5;
 const float k_localVoltageMapIn = 1880;
 const float k_localVoltageMapOut = 10.0;
@@ -61,7 +59,7 @@ Power::Power() :
   m_lastLocalVoltage(k_unknown),
   m_lastBatteryVoltage(k_unknown),
   m_nextVoltageDropSwitch(k_unknownUL),
-  m_lastVoltageMeasurement(k_unknownUL)
+  m_lastMeasure(k_unknown)
 {
 }
 
@@ -172,27 +170,23 @@ void Power::Loop()
   }
 }
 
+// #define TRACE_BATTERY
+
 void Power::MeasureVoltage()
 {
-  if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
-    return;
-  }
-
-  // don't measure when battery and psu are connected.
-  if (m_source == PowerSource::k_powerSourceBoth) {
-    return;
-  }
-
   // slow battery measurement down if low battery to save power
-  const unsigned long next = (m_lastVoltageMeasurement + k_lowBatteryMeasureInterval);
-  const bool vBattKnown = (m_batteryVoltageOutput != k_unknown);
-  if (vBattKnown && batteryIsLow() && (m_lastVoltageMeasurement != k_unknownUL) && (millis() < next)) {
+  const unsigned long next = (m_lastMeasure + k_lowBatteryMeasureInterval);
+  if (batteryIsLow() && (millis() < next)) {
 #ifdef TRACE_BATTERY
     TRACE_F("Low battery, skipping measurement for %lus", (next - millis()) / 1000);
 #endif // TRACE_BATTERY
     return;
   }
-  m_lastVoltageMeasurement = millis();
+  m_lastMeasure = millis();
+
+  if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
+    return;
+  }
 
   m_batteryVoltageSensor = Embedded().ReadBatteryVoltageSensorRaw();
 #if TRACE_SENSOR_RAW
@@ -233,6 +227,8 @@ void Power::MeasureCurrent()
 
 void Power::switchSource(PowerSource source)
 {
+  m_source = source;
+
   // first, ensure constant power; close PSU NC relay and turn on battery FET
   Embedded().WriteOnboardIO(IO_PIN_PSU_SW, SWITCH_ON);
   Embedded().WriteOnboardIO(IO_PIN_BATT_SW, SWITCH_ON);
@@ -258,16 +254,12 @@ void Power::switchSource(PowerSource source)
 
   // both relays are NC (normally closed), so to disconnect a source,
   // pass true which will open the relay.
-  Embedded().WriteOnboardIO(IO_PIN_PSU_SW, source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_SW, m_source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
   Embedded().WriteOnboardIO(
-    IO_PIN_BATT_SW, source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
+    IO_PIN_BATT_SW, m_source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
 
-  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, source == k_powerSourcePsu ? LED_ON : LED_OFF);
-  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, source == k_powerSourceBattery ? LED_ON : LED_OFF);
-
-  m_source = source;
-
-  MeasureVoltage();
+  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, m_source == k_powerSourcePsu ? LED_ON : LED_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, m_source == k_powerSourceBattery ? LED_ON : LED_OFF);
 
   TRACE_F("Local voltage: %.2fV", ReadLocalVoltage());
   Embedded().OnPowerSwitch();
