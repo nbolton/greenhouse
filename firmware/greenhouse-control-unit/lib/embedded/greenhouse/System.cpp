@@ -46,7 +46,6 @@ struct ADC {
 #define IO_PIN_BEEP_SW P2
 #define IO_PIN_FAN_SW P3
 
-#define EXT_IO_PIN_VOLTAGE_SENSOR P0
 #define EXT_IO_PIN_LIGHT P1
 
 // external adc pins
@@ -539,7 +538,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
   // HACK: this keeps getting reset to default (possibly due to a power issue
   // when the relay switches), so force the volt range every time we're about to read.
-  adc.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
+  adc.ads.setVoltageRange_mV(ADS1115_RANGE_2048);
 
   adc.ads.setCompareChannels(channel);
   adc.ads.startSingleMeasurement();
@@ -794,13 +793,7 @@ void System::WriteOnboardIO(uint8_t pin, uint8_t value) { s_onboardIo1.digitalWr
 
 bool System::BatterySensorReady() { return s_externalAdc.ready; }
 
-float System::ReadBatteryVoltageSensorRaw()
-{
-  s_externalIo1.digitalWrite(EXT_IO_PIN_VOLTAGE_SENSOR, LOW);
-  float v = ReadAdc(s_externalAdc, k_batteryVoltagePin);
-  s_externalIo1.digitalWrite(EXT_IO_PIN_VOLTAGE_SENSOR, HIGH);
-  return v;
-}
+float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_externalAdc, k_batteryVoltagePin); }
 
 float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_externalAdc, k_batteryCurrentPin); }
 
