@@ -4380,6 +4380,11 @@
     (effects (font (size 2 2)) (justify left bottom))
     (uuid 74ee5c27-5657-4dec-806c-517c6f62b2b5)
   )
+  (text "Note: N-MOS doesn't seem to work; it's very difficult to\npull the gates to both grounds (maybe possible with diodes?).\nP-MOS works, but the gates need to be pulled up to both VCC\nvia diodes."
+    (at 36.83 102.87 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 7cbd23f9-3610-4264-860b-52bca94b4075)
+  )
   (text "TODO: Replace with INA219? Current sense with\nADC and I2C. Probably more accurate than MCU ADC."
     (at 114.3 88.9 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
