@@ -83,10 +83,10 @@ void System::Refresh()
   // running weather report on startup seems to crash randomly,
   // so only check weather after start
   if (SystemStarted()) {
-    const int weatherErrorReportAtCount = 4;
+    const int weatherErrorReportAtCount = 10;
     if (!UpdateWeatherForecast()) {
       if ((++m_weatherErrors >= weatherErrorReportAtCount) && !m_weatherErrorReportSent) {
-        ReportWarning("Weather update failed");
+        ReportWarning("Weather update failed %d times", weatherErrorReportAtCount);
         m_weatherErrorReportSent = true;
       }
     }
