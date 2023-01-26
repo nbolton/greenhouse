@@ -230,14 +230,16 @@ void Power::switchSource(PowerSource source)
   m_source = source;
 
   // first, ensure PSU AC is on and give it a moment to charge caps.
+  TRACE("Switch PSU on");
   Embedded().WriteOnboardIO(IO_PIN_PSU_SW, SWITCH_ON);
   Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_ON);
-  Embedded().Delay(k_switchDelay, "PSU AC relay on");
-  
+  Embedded().Delay(k_switchDelay, "PSU AC switch");
+
   // next, turn on battery as well to ensure there is constant power
+  TRACE("Switch battery on");
   Embedded().WriteOnboardIO(IO_PIN_BATT_SW, SWITCH_ON);
   Embedded().WriteOnboardIO(IO_PIN_BATT_LED, LED_ON);
-  Embedded().Delay(k_switchDelay, "Battery relay on");
+  Embedded().Delay(k_switchDelay, "Battery switch");
 
   if (source == PowerSource::k_powerSourcePsu) {
     TRACE("PSU AC NC relay closed (PSU on), battery NC relay open (battery off)");
