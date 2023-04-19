@@ -31,9 +31,10 @@ namespace greenhouse {
 #define SR_ON LOW
 #define SR_OFF HIGH
 
-#define ADC_RETRY_MAX 10
-#define ADC_RETRY_DELAY 1
-#define DEBUG_DELAY 0
+#define ADC_BUSY_MAX 10
+#define ADC_BUSY_DELAY 1
+#define ADC_RETRY_MAX 20
+#define ADC_RETRY_DELAY 1000 // horribly, can lead to 20 second wait
 #define LOOP_DELAY 10
 #define SOIL_TEMP_FAIL_MAX 10
 
@@ -513,57 +514,75 @@ void System::Beep(int times, bool longBeep)
 
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
-  // #define ADC_DEBUG 1
-
 #if ADC_DEBUG
   TRACE_F("Reading ADC: %s", adc.name.c_str());
 #endif
 
-  if (!adc.ready) {
+  // TODO: random init fal probably caused by bad hardware;
+  // I2C line to external device is probably acting as an antenna and picking up noise.
+  for (int i = 0; i < ADC_RETRY_MAX; i++) {
+
+    if (!adc.ready) {
 #if ADC_DEBUG
-    TRACE("ADC: Re-init");
+      TRACE("ADC: Re-init");
 #endif // ADC_DEBUG
 
-    adc.ready = adc.ads.init();
-    if (adc.ready) {
-      TRACE("ADC: Ready again");
-    }
-    else {
+      adc.ready = adc.ads.init();
+      if (adc.ready) {
+        TRACE("ADC: Ready again");
+      }
+      else {
 #if ADC_DEBUG
-      TRACE("ADC: Re-init failed");
+        TRACE("ADC: Re-init failed, retrying");
 #endif // ADC_DEBUG
-      return k_unknown;
+        Delay(ADC_RETRY_DELAY, "ADC retry wait");
+        yield();
+        continue;
+      }
     }
-  }
 
-  // HACK: this keeps getting reset to default (possibly due to a power issue
-  // when the relay switches), so force the volt range every time we're about to read.
-  adc.ads.setVoltageRange_mV(ADS1115_RANGE_2048);
+    // HACK: this keeps getting reset to default (possibly due to a power issue
+    // when the relay switches), so force the volt range every time we're about to read.
+    adc.ads.setVoltageRange_mV(ADS1115_RANGE_2048);
 
-  adc.ads.setCompareChannels(channel);
-  adc.ads.startSingleMeasurement();
+    adc.ads.setCompareChannels(channel);
+    adc.ads.startSingleMeasurement();
 
-  int times = 0;
-  while (adc.ads.isBusy()) {
-    if (times++ > ADC_RETRY_MAX) {
-      // assume ADC not ready if failed many times. should cause re-init.
-      adc.ready = false;
+    int times = 0;
+    while (adc.ads.isBusy()) {
+      if (times++ > ADC_BUSY_MAX) {
+        // assume ADC not ready if failed many times. should cause re-init.
+        adc.ready = false;
 #if ADC_DEBUG
-      TRACE_F("ADC: Not ready after %d", times);
+        TRACE_F("ADC: Still busy after %d times", times);
 #endif // ADC_DEBUG
-      return k_unknown;
+        break;
+      }
+      else {
+        Delay(ADC_BUSY_DELAY, "ADC busy wait");
+      }
     }
 
-    Delay(ADC_RETRY_DELAY, "ADC busy wait");
-  }
+    // if assumed not ready, wait longer and start new comparison
+    if (!adc.ready) {
+#if ADC_DEBUG
+      TRACE_F("ADC: Assumed not ready, retrying", times);
+#endif // ADC_DEBUG
+      Delay(ADC_RETRY_DELAY, "ADC retry wait");
+      yield();
+      continue;
+    }
 
-  float f = adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
+    float f = adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 
 #if ADC_DEBUG
-  TRACE_F("ADC: Got result: %.2fV", f);
+    TRACE_F("ADC: Got result: %.2fV", f);
 #endif
 
-  return f;
+    return f;
+  }
+
+  return k_unknown;
 }
 
 void System::ReportInfo(const char *format, ...)

@@ -170,8 +170,6 @@ void Power::Loop()
   }
 }
 
-// #define TRACE_BATTERY
-
 void Power::MeasureVoltage()
 {
   if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
