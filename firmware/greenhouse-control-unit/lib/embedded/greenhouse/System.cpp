@@ -522,6 +522,8 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
   // I2C line to external device is probably acting as an antenna and picking up noise.
   for (int i = 0; i < ADC_RETRY_MAX; i++) {
 
+    TRACE_F("ADC: Attempt %d of %d", i + 1, ADC_RETRY_MAX);
+
     if (!adc.ready) {
 #if ADC_DEBUG
       TRACE("ADC: Re-init");
@@ -551,6 +553,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
     int times = 0;
     while (adc.ads.isBusy()) {
       if (times++ > ADC_BUSY_MAX) {
+
         // assume ADC not ready if failed many times. should cause re-init.
         adc.ready = false;
 #if ADC_DEBUG
@@ -560,6 +563,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
       }
       else {
         Delay(ADC_BUSY_DELAY, "ADC busy wait");
+        TRACE_F("ADC: Busy wait %d of %d", times, ADC_BUSY_MAX);
       }
     }
 
