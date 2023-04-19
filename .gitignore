@@ -11,3 +11,4 @@ firmware.elf
 *_autosave-*.kicad_sch
 fab.zip
 fab
+hardware/greenhouse-control-unit/greenhouse.bak
