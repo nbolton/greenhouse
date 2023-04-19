@@ -197,6 +197,16 @@ void Power::MeasureVoltage()
       m_batteryVoltageSensorMax,
       m_batteryVoltageOutputMin,
       m_batteryVoltageOutputMax);
+
+#if TRACE_SENSOR_RAW
+    TRACE_F(
+      "Battery inMin=%.4f, inMax=%.4f, outMin=%.4f, outMax=%.4f, out=%.4f",
+      m_batteryVoltageSensorMin,
+      m_batteryVoltageSensorMax,
+      m_batteryVoltageOutputMin,
+      m_batteryVoltageOutputMax,
+      m_batteryVoltageOutput);
+#endif // TRACE_SENSOR_RAW
   }
   else {
     m_batteryVoltageOutput = k_unknown;

@@ -1,3 +1,5 @@
+#if LORA_EN
+
 #include "PumpRadio.h"
 
 #include <Arduino.h>
@@ -135,3 +137,5 @@ void PumpRadio::SwitchPump(bool on)
 
 } // namespace greenhouse
 } // namespace embedded
+
+#endif // LORA_EN

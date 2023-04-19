@@ -170,7 +170,9 @@ void System::Setup()
   m_radio.Init(this);
 #endif // RADIO_EN
 
+#if LORA_EN
   m_pumpRadio.Init(this);
+#endif // LORA_EN
 
   TRACE("System ready");
   Blynk.virtualWrite(V52, "Ready");
@@ -196,7 +198,9 @@ void System::Loop()
   // always run before actuator check
   ng::System::Loop();
 
+#if LORA_EN
   m_pumpRadio.Update();
+#endif // LORA_EN
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -1066,7 +1070,9 @@ BLYNK_WRITE(V80)
   else {
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
+  #if LORA_EN
   eg::s_instance->PumpRadio().SwitchPump(pumpOn);
+  #endif //LORA_EN
 }
 
 BLYNK_WRITE(V82)
@@ -1078,6 +1084,8 @@ BLYNK_WRITE(V82)
   else {
     Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
   }
+  #if LORA_EN
   // tank not full? switch pump on
   eg::s_instance->PumpRadio().SwitchPump(!tankFull);
+  #endif //LORA_EN
 }
