@@ -33,8 +33,8 @@ namespace greenhouse {
 
 #define ADC_BUSY_MAX 10
 #define ADC_BUSY_DELAY 1
-#define ADC_RETRY_MAX 20
-#define ADC_RETRY_DELAY 1000 // horribly, can lead to 20 second wait
+#define ADC_RETRY_MAX 5
+#define ADC_RETRY_DELAY 1000
 #define LOOP_DELAY 10
 #define SOIL_TEMP_FAIL_MAX 10
 
@@ -520,6 +520,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
   // TODO: random init fal probably caused by bad hardware;
   // I2C line to external device is probably acting as an antenna and picking up noise.
+  // seems to be caused by load on the battery. 
   for (int i = 0; i < ADC_RETRY_MAX; i++) {
 
     TRACE_F("ADC: Attempt %d of %d", i + 1, ADC_RETRY_MAX);
