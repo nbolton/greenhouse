@@ -31,6 +31,7 @@ namespace greenhouse {
 #define SR_ON LOW
 #define SR_OFF HIGH
 
+#define ADC_RANGE ADS1115_RANGE_4096 // 2.8 V = 10 A
 #define ADC_BUSY_MAX 10
 #define ADC_BUSY_DELAY 1
 #define ADC_RETRY_MAX 5
@@ -519,7 +520,7 @@ void System::Beep(int times, bool longBeep)
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
 #if ADC_DEBUG
-  TRACE_F("Reading ADC: %s", adc.name.c_str());
+  TRACE_F("Reading ADC '%s' channel %02X", adc.name.c_str());
 #endif
 
   // TODO: random init fal probably caused by bad hardware;
@@ -550,7 +551,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
     // HACK: this keeps getting reset to default (possibly due to a power issue
     // when the relay switches), so force the volt range every time we're about to read.
-    adc.ads.setVoltageRange_mV(ADS1115_RANGE_2048);
+    adc.ads.setVoltageRange_mV(ADC_RANGE);
 
     adc.ads.setCompareChannels(channel);
     adc.ads.startSingleMeasurement();
