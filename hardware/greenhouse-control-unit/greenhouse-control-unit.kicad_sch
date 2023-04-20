@@ -4118,7 +4118,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 1cb4a000-9b6f-454c-b3b3-164613e13dda)
   )
-  (text "TODO: \n- Add 240 VAC relay to board\n- Make library for GND/PWR "
+  (text "TODO: \n- Add switching USB ports for lights, Alexa, etc\n- Change nodes to use LoRa modules\n- Use PNP back-to-back for always-connected GND (i.e. for ADC to measure battery, etc)"
     (at 36.83 340.36 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 366f83a7-b628-4468-9e3d-8a7d1d0f7ed4)
@@ -4151,8 +4151,8 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid ac1b193f-f196-41e4-8758-8916841c2875)
   )
-  (text "TODO: Test measuring PSU/batt voltage \nwhen disconnected from MCU ADC. It might\nmake sense to connect MCU ADC to both GNDs \nvia high R to provide a return path."
-    (at 97.79 165.1 0)
+  (text "TODO: Find another solution; R between GND\nand source GND creates different voltage\npotentials, which screws up ADC reading."
+    (at 105.41 163.83 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid b6a88e9f-cf61-4a27-8833-74e7f0415407)
   )

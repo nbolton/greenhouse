@@ -6021,7 +6021,7 @@
   (gr_circle (center 74.676001 115.604425) (end 75.311 116.239424)
     (stroke (width 0.15) (type solid)) (fill none) (layer "F.SilkS") (tstamp 10aef442-d59b-4fe0-a399-c5b820a0a610))
   (gr_line (start 239.05651 88.453684) (end 235.204177 95.207438)
-    (stroke (width 0) (type solid)) (layer "F.SilkS") (tstamp 21bb54b1-e91d-4c0d-bec6-8ceb17ea13f9))
+    (stroke (width 0.1) (type solid)) (layer "F.SilkS") (tstamp 21bb54b1-e91d-4c0d-bec6-8ceb17ea13f9))
   (gr_poly
     (pts
       (xy 235.204 95.504)
@@ -6544,7 +6544,7 @@
   (gr_text "+" (at 123.1146 48.387) (layer "F.SilkS") (tstamp f48422b2-d39c-4f93-a956-1f6a77af145d)
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (gr_text "TODO: Check USB connector clearance to buck module" (at 137.033 148.463) (layer "Cmts.User") (tstamp 378e137a-9631-4d82-815c-86318844c40d)
+  (gr_text "TODO: 5V buck is too high for this to work.\nEither move USB to edge (20 mm clearance for angled,\nor 40 mm straight), or add USB port on the board." (at 132.08 154.94) (layer "Cmts.User") (tstamp 378e137a-9631-4d82-815c-86318844c40d)
     (effects (font (size 1.5 1.5) (thickness 0.3) bold) (justify left bottom))
   )
 
