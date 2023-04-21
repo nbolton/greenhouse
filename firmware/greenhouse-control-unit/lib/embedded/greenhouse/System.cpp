@@ -38,6 +38,7 @@ namespace greenhouse {
 #define ADC_RETRY_DELAY 1000
 #define LOOP_DELAY 10
 #define SOIL_TEMP_FAIL_MAX 10
+#define CASE_FAN_CURRENT_THRESHOLD 1
 
 struct ADC {
   String name;
@@ -806,10 +807,13 @@ void System::ReportWaterHeaterInfo()
 }
 
 void System::UpdateCaseFan()
-{
+{  
   // turn case fan on when PSU is in use
-  bool caseFanOn = Power().Source() != PowerSource::k_powerSourceBattery;
-  CaseFan(caseFanOn);
+  bool onPsu = Power().Source() != PowerSource::k_powerSourceBattery;
+
+  bool highCurrent = Power().BatteryCurrentOutput() > CASE_FAN_CURRENT_THRESHOLD;
+
+  CaseFan(onPsu || highCurrent);
 }
 
 void System::OnPowerSwitch()
