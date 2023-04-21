@@ -4427,6 +4427,11 @@
     (effects (font (size 2 2)) (justify left bottom))
     (uuid 4665e977-20ca-416b-97fb-d1d69dc093bd)
   )
+  (text "TODO: Either change to ESP8266 or remove extra IO ICs"
+    (at 290.83 97.79 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 4c53b200-1f8f-48fa-b402-52bdaab53b04)
+  )
   (text "Active HIGH" (at 457.2 254 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 5aceb587-0661-427b-bb60-af121147b0a9)
