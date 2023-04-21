@@ -416,8 +416,12 @@
     }
   },
   "libraries": {
-    "pinned_footprint_libs": [],
-    "pinned_symbol_libs": []
+    "pinned_footprint_libs": [
+      "Nick"
+    ],
+    "pinned_symbol_libs": [
+      "Nick"
+    ]
   },
   "meta": {
     "filename": "greenhouse-control-unit.kicad_pro",
