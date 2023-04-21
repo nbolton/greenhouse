@@ -55,6 +55,7 @@ public:
   void LowerPumpOn(bool pumpOn);
   void LowerPumpStatus(const char *message);
   void SwitchLights(bool on);
+  void OnBatteryCurrentChange();
 
 protected:
   void ReportInfo(const char *m, ...);

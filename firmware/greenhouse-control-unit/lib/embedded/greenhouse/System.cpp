@@ -526,7 +526,7 @@ float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 
   // TODO: random init fal probably caused by bad hardware;
   // I2C line to external device is probably acting as an antenna and picking up noise.
-  // seems to be caused by load on the battery. 
+  // seems to be caused by load on the battery.
   for (int i = 0; i < ADC_RETRY_MAX; i++) {
 
     TRACE_F("ADC: Attempt %d of %d", i + 1, ADC_RETRY_MAX);
@@ -807,13 +807,20 @@ void System::ReportWaterHeaterInfo()
 }
 
 void System::UpdateCaseFan()
-{  
+{
   // turn case fan on when PSU is in use
   bool onPsu = Power().Source() != PowerSource::k_powerSourceBattery;
 
   bool highCurrent = Power().BatteryCurrentOutput() > CASE_FAN_CURRENT_THRESHOLD;
 
-  CaseFan(onPsu || highCurrent);
+  bool on = onPsu || highCurrent;
+  CaseFan(on);
+
+  TRACE_F(
+    "Case fan: %s (PSU=%s, HC=%s)", //
+    BOOL_FS(on),
+    BOOL_FS(onPsu),
+    BOOL_FS(highCurrent));
 }
 
 void System::OnPowerSwitch()
@@ -821,6 +828,8 @@ void System::OnPowerSwitch()
   UpdateCaseFan();
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
+
+void System::OnBatteryCurrentChange() { UpdateCaseFan(); }
 
 void System::WriteOnboardIO(uint8_t pin, uint8_t value) { s_onboardIo1.digitalWrite(pin, value); }
 
@@ -1075,9 +1084,9 @@ BLYNK_WRITE(V80)
   else {
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
-  #if LORA_EN
+#if LORA_EN
   eg::s_instance->PumpRadio().SwitchPump(pumpOn);
-  #endif //LORA_EN
+#endif // LORA_EN
 }
 
 BLYNK_WRITE(V82)
@@ -1089,8 +1098,8 @@ BLYNK_WRITE(V82)
   else {
     Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
   }
-  #if LORA_EN
+#if LORA_EN
   // tank not full? switch pump on
   eg::s_instance->PumpRadio().SwitchPump(!tankFull);
-  #endif //LORA_EN
+#endif // LORA_EN
 }

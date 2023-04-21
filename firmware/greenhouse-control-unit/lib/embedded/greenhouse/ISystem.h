@@ -15,6 +15,7 @@ public:
   virtual float ReadBatteryCurrentSensorRaw() = 0;
   virtual void LowerPumpOn(bool pumpOn) = 0;
   virtual void LowerPumpStatus(const char *message) = 0;
+  virtual void OnBatteryCurrentChange() = 0;
 };
 
 } // namespace greenhouse

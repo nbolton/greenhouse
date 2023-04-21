@@ -12,6 +12,7 @@ namespace greenhouse {
 
 #define PIN_LOCAL_VOLTAGE 34
 #define VOLTAGE_DIFF_DELTA .1f
+#define CURRENT_DIFF_DELTA .1f
 #define VOLTAGE_DROP_WAIT 10000 // 10s
 
 #define IO_PIN_BATT_SW P0
@@ -58,6 +59,7 @@ Power::Power() :
   m_batteryCurrentOutputMax(k_unknown),
   m_lastLocalVoltage(k_unknown),
   m_lastBatteryVoltage(k_unknown),
+  m_lastBatteryCurrent(k_unknown),
   m_nextVoltageDropSwitch(k_unknownUL),
   m_lastMeasure(k_unknown)
 {
@@ -111,7 +113,7 @@ void Power::Loop()
   const float localVoltage = ReadLocalVoltage();
   const bool localVoltageChanged = abs(m_lastLocalVoltage - localVoltage) > VOLTAGE_DIFF_DELTA;
   if (localVoltageChanged) {
-    TRACE_F("Local voltage changed: %.2fV", localVoltage);
+    TRACE_F("Local voltage changed, was %.2fV, now %.2fV", m_lastLocalVoltage, localVoltage);
   }
   m_lastLocalVoltage = localVoltage;
 
@@ -119,7 +121,7 @@ void Power::Loop()
   const bool batteryVoltageChanged =
     abs(m_lastBatteryVoltage - batteryVoltage) > VOLTAGE_DIFF_DELTA;
   if (batteryVoltageChanged) {
-    TRACE_F("Battery voltage changed: %.2fV", batteryVoltage);
+    TRACE_F("Battery voltage changed, was %.2fV now %.2fV", m_lastBatteryVoltage, batteryVoltage);
   }
   m_lastBatteryVoltage = m_batteryVoltageOutput;
 
@@ -168,6 +170,17 @@ void Power::Loop()
       }
     }
   }
+
+  MeasureCurrent();
+
+  if (abs(m_lastBatteryCurrent - BatteryCurrentOutput()) > CURRENT_DIFF_DELTA) {
+    TRACE_F(
+      "Battery current changed, was %.2fA, now %.2fA", //
+      m_lastBatteryCurrent,
+      BatteryCurrentOutput());
+    Embedded().OnBatteryCurrentChange();
+  }
+  m_lastBatteryCurrent = BatteryCurrentOutput();
 }
 
 void Power::MeasureVoltage()
