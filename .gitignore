@@ -11,3 +11,6 @@ firmware.elf
 *_autosave-*.kicad_sch
 fab.zip
 fab
+*.bak
+*.~lock.*
+greenhouse-control-unit.xml

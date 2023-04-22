@@ -7,9 +7,8 @@
 namespace common {
 
 // float version of Arduino map()
-float mapFloat(float x, float in_min, float in_max, float out_min, float out_max)
-{
-  return (x - in_min) * (out_max - out_min) / ((in_max - in_min) + out_min);
+float mapFloat(float v, float inMin, float inMax, float outMin, float outMax) {
+    return (v - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }
 
 void halt()

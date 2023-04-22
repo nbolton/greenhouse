@@ -77,6 +77,7 @@ private:
   float m_batteryCurrentOutputMax;
   float m_lastLocalVoltage;
   float m_lastBatteryVoltage;
+  float m_lastBatteryCurrent;
   unsigned long m_nextVoltageDropSwitch;
   float m_lastMeasure;
 };

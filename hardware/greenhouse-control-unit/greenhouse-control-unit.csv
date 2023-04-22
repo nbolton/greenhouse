@@ -1,95 +1,34 @@
-"Source:","C:\Projects\nbolton\greenhouse\hardware\greenhouse-control-unit\greenhouse-control-unit.kicad_sch"
-"Date:","30/11/2022 14:14:03"
-"Tool:","Eeschema (6.0.2)"
-"Generator:","C:\Program Files\KiCad\6.0\bin\scripting\plugins/bom_csv_grouped_by_value.py"
-"Component Count:","53"
-
-"Individual Components:"
-
-"Item","Qty","Reference(s)","Value","LibPart","Footprint","Datasheet","Ic","Module","Purpose"
-"","","BZ1","10mA beep","Device:Buzzer","Buzzer_Beeper:Buzzer_12x9.5RM7.6","~","","",""
-"","","C1","100uF","Device:C_Polarized_Small","Capacitor_THT:CP_Radial_D6.3mm_P2.50mm","~","","",""
-"","","C2","10nF","Device:C_Small","Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm","~","","",""
-"","","D1","LED","Device:LED","LED_THT:LED_D5.0mm","~","","","Beep"
-"","","D2","LED","Device:LED","LED_THT:LED_D5.0mm","~","","","Battery"
-"","","D3","LED","Device:LED","LED_THT:LED_D5.0mm","~","","","PSU"
-"","","D4","LED","Device:LED","LED_THT:LED_D5.0mm","~","","","Power"
-"","","D5","FR107","Device:D","Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal","~","","",""
-"","","D6","D","Device:D","Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal","~","","",""
-"","","D7","LED","Device:LED","LED_THT:LED_D5.0mm","~","","","Case fan"
-"","","H1","MountingHole","Mechanical:MountingHole","MountingHole:MountingHole_3mm","~","","",""
-"","","H2","MountingHole","Mechanical:MountingHole","MountingHole:MountingHole_3mm","~","","",""
-"","","H3","MountingHole","Mechanical:MountingHole","MountingHole:MountingHole_3mm","~","","",""
-"","","H4","MountingHole","Mechanical:MountingHole","MountingHole:MountingHole_3mm","~","","",""
-"","","J1","Molex_KK-396_01x02","Connector:Conn_01x02_Male","Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical","~","","",""
-"","","J2","Molex_KK-396_01x02","Connector:Conn_01x02_Male","Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical","~","","",""
-"","","J3","Beep_Jumper","Connector:Conn_01x03_Female","Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical","~","","",""
-"","","J4","Conn_01x01_Male","Connector:Conn_01x01_Male","Connector_Pin:Pin_D1.0mm_L10.0mm","~","","",""
-"","","J5","Conn_01x01_Male","Connector:Conn_01x01_Male","Connector_Pin:Pin_D1.0mm_L10.0mm","~","","",""
-"","","J6","Conn_01x01_Male","Connector:Conn_01x01_Male","Connector_Pin:Pin_D1.0mm_L10.0mm","~","","",""
-"","","J7","Conn_01x01_Male","Connector:Conn_01x01_Male","Connector_Pin:Pin_D1.0mm_L10.0mm","~","","",""
-"","","J8","Conn_01x09","Connector:Conn_01x09_Female","Connector_PinSocket_2.54mm:PinSocket_1x09_P2.54mm_Vertical","~","","RFM9x LoRa module",""
-"","","J9","Conn_01x05_Female","Connector:Conn_01x05_Female","Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical","~","","RFM9x G1-G5",""
-"","","J10","Conn_ESP32_DevKitV1_Female","Nick:Conn_ESP32_DevKitV1_Female","Nick:PinSocket_ESP32_DevKitV1","~","","",""
-"","","J11","Conn_01x05_Female","Connector:Conn_01x05_Female","Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical","~","","HC-12 RF module",""
-"","","J12","Conn_01x05_Female","Connector:Conn_01x05_Female","Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical","~","","HC-12 standoff",""
-"","","J13","Molex_KK-396_01x12","Connector:Conn_01x12_Male","Connector_Molex:Molex_KK-396_A-41791-0012_1x12_P3.96mm_Vertical","~","","",""
-"","","J14","Molex_KK-254_01x12",":Conn_01x12_Male_1","Connector_Molex:Molex_KK-254_AE-6410-12A_1x12_P2.54mm_Vertical","~","","",""
-"","","Q1","BC547","Transistor_BJT:BC547","Package_TO_SOT_THT:TO-92_Inline","https://www.onsemi.com/pub/Collateral/BC550-D.pdf","100mA","",""
-"","","Q2","BC547","Transistor_BJT:BC547","Package_TO_SOT_THT:TO-92_Inline","https://www.onsemi.com/pub/Collateral/BC550-D.pdf","100mA","",""
-"","","Q3","BC337","Transistor_BJT:BC337","Package_TO_SOT_THT:TO-92_Inline","https://diotec.com/tl_files/diotec/files/pdf/datasheets/bc337.pdf","550mA","",""
-"","","Q4","BC547","Transistor_BJT:BC547","Package_TO_SOT_THT:TO-92_Inline","https://www.onsemi.com/pub/Collateral/BC550-D.pdf","100mA","",""
-"","","Q5","2N3906","Transistor_BJT:2N3906","Package_TO_SOT_THT:TO-92_Inline","https://www.onsemi.com/pub/Collateral/2N3906-D.PDF","200mA","",""
-"","","Q6","BC547","Transistor_BJT:BC547","Package_TO_SOT_THT:TO-92_Inline","https://www.onsemi.com/pub/Collateral/BC550-D.pdf","100mA","",""
-"","","Q7","BC337","Transistor_BJT:BC337","Package_TO_SOT_THT:TO-92_Inline","https://diotec.com/tl_files/diotec/files/pdf/datasheets/bc337.pdf","550mA","",""
-"","","R1","33k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R2","33k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R3","1k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R4","2k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R5","1k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R6","100R","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R7","2k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R8","1k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R9","1M","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R10","220k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R11","2k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R12","10k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R13","10k","Device:R_US","Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal","~","","",""
-"","","R14","10k","Device:R_US","Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal","~","","",""
-"","","R15","33k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R16","1k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","R17","2k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"","","U1","PCF8574","Interface_Expansion:PCF8574","Package_DIP:DIP-16_W7.62mm_Socket","http://www.nxp.com/documents/data_sheet/PCF8574_PCF8574A.pdf","","",""
-
-
-
-"Collated Components:"
-
-"Item","Qty","Reference(s)","Value","LibPart","Footprint","Datasheet","Ic","Module","Purpose"
-"1","1","BZ1","10mA beep","Device:Buzzer","Buzzer_Beeper:Buzzer_12x9.5RM7.6","~","","",""
-"2","1","C1","100uF","Device:C_Polarized_Small","Capacitor_THT:CP_Radial_D6.3mm_P2.50mm","~","","",""
-"3","1","C2","10nF","Device:C_Small","Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm","~","","",""
-"4","5","D1, D2, D3, D4, D7","LED","Device:LED","LED_THT:LED_D5.0mm","~","","","Beep"
-"5","1","D5","FR107","Device:D","Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal","~","","",""
-"6","1","D6","D","Device:D","Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal","~","","",""
-"7","4","H1, H2, H3, H4","MountingHole","Mechanical:MountingHole","MountingHole:MountingHole_3mm","~","","",""
-"8","2","J1, J2","Molex_KK-396_01x02","Connector:Conn_01x02_Male","Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical","~","","",""
-"9","1","J3","Beep_Jumper","Connector:Conn_01x03_Female","Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical","~","","",""
-"10","4","J4, J5, J6, J7","Conn_01x01_Male","Connector:Conn_01x01_Male","Connector_Pin:Pin_D1.0mm_L10.0mm","~","","",""
-"11","1","J8","Conn_01x09","Connector:Conn_01x09_Female","Connector_PinSocket_2.54mm:PinSocket_1x09_P2.54mm_Vertical","~","","RFM9x LoRa module",""
-"12","3","J9, J11, J12","Conn_01x05_Female","Connector:Conn_01x05_Female","Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical","~","","RFM9x G1-G5",""
-"13","1","J10","Conn_ESP32_DevKitV1_Female","Nick:Conn_ESP32_DevKitV1_Female","Nick:PinSocket_ESP32_DevKitV1","~","","",""
-"14","1","J13","Molex_KK-396_01x12","Connector:Conn_01x12_Male","Connector_Molex:Molex_KK-396_A-41791-0012_1x12_P3.96mm_Vertical","~","","",""
-"15","1","J14","Molex_KK-254_01x12",":Conn_01x12_Male_1","Connector_Molex:Molex_KK-254_AE-6410-12A_1x12_P2.54mm_Vertical","~","","",""
-"16","4","Q1, Q2, Q4, Q6","BC547","Transistor_BJT:BC547","Package_TO_SOT_THT:TO-92_Inline","https://www.onsemi.com/pub/Collateral/BC550-D.pdf","100mA","",""
-"17","2","Q3, Q7","BC337","Transistor_BJT:BC337","Package_TO_SOT_THT:TO-92_Inline","https://diotec.com/tl_files/diotec/files/pdf/datasheets/bc337.pdf","550mA","",""
-"18","1","Q5","2N3906","Transistor_BJT:2N3906","Package_TO_SOT_THT:TO-92_Inline","https://www.onsemi.com/pub/Collateral/2N3906-D.PDF","200mA","",""
-"19","3","R1, R2, R15","33k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"20","4","R3, R5, R8, R16","1k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"21","4","R4, R7, R11, R17","2k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"22","1","R6","100R","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"23","1","R9","1M","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"24","1","R10","220k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"25","1","R12","10k","Device:R_US","Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal","~","","",""
-"26","2","R13, R14","10k","Device:R_US","Resistor_THT:R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal","~","","",""
-"27","1","U1","PCF8574","Interface_Expansion:PCF8574","Package_DIP:DIP-16_W7.62mm_Socket","http://www.nxp.com/documents/data_sheet/PCF8574_PCF8574A.pdf","","",""
+Comment,Stock,Ordered,Designator,Footprint,LCSC Part #
+U.FL-R-SMT-1 Antenna with extra pin for shielding,10,,AE1,U.FL_Hirose_U.FL-R-SMT-1_Vertical,
+"2kΩ? Buzzer, polarized",5,,BZ1,Buzzer_12x9.5RM7.6,
+"10nF Unpolarized capacitor, small symbol",++,,"C1,C2,C3",C_Disc_D4.7mm_W2.5mm_P5.00mm,
+LED Light emitting diode,++,,"D1,D2,D3,D5,D7",LED_D5.0mm,
+D Diode,++,,D4,D_DO-35_SOD27_P7.62mm_Horizontal,
+D Diode,++,,D6,D_DO-41_SOD81_P7.62mm_Horizontal,
+D Diode,++,,"D8,D9,D10,D11",D_DO-41_SOD81_P2.54mm_Vertical_AnodeUp,
+Fuse Fuse,++,,F1,Fuse_3522-2_L,
+"Molex_KK-396_01x02 Generic connector, single row, 01x02, script generated",10?,,"J1,J2,J7,J15",Molex_KK-396_1x02_P3.96mm_Vertical,
+"Beep_Jumper Generic connector, single row, 01x03, script generated",++,,J3,PinHeader_1x03_P2.54mm_Vertical,
+"PV MPPT module Generic connector, single row, 01x04, script generated",1,,J4,MPPT-10A-Module,
+"Conn_01x08_Pin Generic connector, single row, 01x08, script generated",5,,J5,Molex_KK-396_1x08_P3.96mm_Vertical,
+"5V Buck Generic connector, single row, 01x04, script generated",1,,J6,Buck_Module,
+"Conn_ESP32_DevKitV1_Female Generic connector, single row, 01x13, script generated (kicad-library-utils/schlib/autogen/connector/)",1,,J10,PinSocket_ESP32_DevKitV1,
+"Molex_254_1x08 Generic connector, single row, 01x12, script generated (kicad-library-utils/schlib/autogen/connector/)",0,10,J11,Molex_KK-254_AE-6410-08A_1x08_P2.54mm_Vertical,
+"SRD-12VDC-SL-C Sanyo SRD relay, Single Pole Miniature Power Relay,",5,,K1,Relay_SRD-12VDC-SL-C,
+"IRF4905 -74A Id, -55V Vds, Single P-Channel HEXFET Power MOSFET, 20mOhm Ron, TO-220AB",++,,"Q1,Q2,Q4,Q5",TO-220-3_Vertical,
+"2N7000 0.2A Id, 200V Vds, N-Channel MOSFET, 2.6V Logic Level, TO-92",10?,,"Q3,Q6,Q11,Q13,Q15,Q17",TO-92_Inline,
+"BC547 0.1A Ic, 45V Vce, Small Signal NPN Transistor, TO-92",10?,,"Q7,Q8,Q10",TO-92_Inline,
+"BC337 0.8A Ic, 45V Vce, NPN Transistor, TO-92",10?,,Q9,TO-92_Inline,
+"STD30NF06LT4 N-MOSFET transistor, gate/drain/source",0,,"Q14,Q16,Q19,Q20",TO-252-2,
+"0R001 Resistor, US symbol",5,,"R1,R18",R_2512_6332Metric_Pad1.40x3.35mm_HandSolder,
+"33k Resistor, US symbol",++,,"R2,R15",R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+"1k Resistor, US symbol",++,,"R3,R16",R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+"2k Resistor, US symbol",++,,"R4,R7,R11,R17",R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+"100R Resistor, US symbol",++,,R6,R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+"1M Resistor, US symbol",++,,"R8,R9,R24",R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+"100k Resistor, US symbol",++,,"R10,R21,R25",R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+"10k Resistor, US symbol",++,,"R13,R14",R_Axial_DIN0204_L3.6mm_D1.6mm_P5.08mm_Horizontal,
+"10k Resistor, US symbol",++,,"R19,R22,R23,R26,R27,R28,R29,R30,R31,R32,R33",R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,
+"PCF8574ATS 8 Bit Port/Expander to I2C Bus, SSOP",0,,"U1,U2",SSOP,
+"INA219 Zero-Drift, Bidirectional Current/Power Monitor (0-26V) With I2C Interface, SOT-23-8",0,,"U3,U4",SOT-23-8,
+"RFM69HW ISM Radio Transceiver Module, SPI interface",4,,U5,HopeRF_RFM69HW,

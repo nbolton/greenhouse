@@ -55,6 +55,7 @@ public:
   void LowerPumpOn(bool pumpOn);
   void LowerPumpStatus(const char *message);
   void SwitchLights(bool on);
+  void OnBatteryCurrentChange();
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -81,7 +82,9 @@ public:
   embedded::greenhouse::Time &Time() { return m_time; }
   native::greenhouse::Heating &Heating() { return m_heating; }
   embedded::greenhouse::Power &Power() { return m_power; }
+#if LORA_EN
   embedded::greenhouse::PumpRadio &PumpRadio() { return m_pumpRadio; }
+#endif // LORA_EN
   float InsideAirTemperature() const { return m_insideAirTemperature; }
   float InsideAirHumidity() const;
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }
@@ -113,7 +116,9 @@ private:
   embedded::greenhouse::Time m_time;
   embedded::greenhouse::Heating m_heating;
   embedded::greenhouse::Power m_power;
+#if LORA_EN
   embedded::greenhouse::PumpRadio m_pumpRadio;
+#endif // LORA_EN
   float m_insideAirTemperature;
   float m_insideAirHumidity;
   float m_outsideAirTemperature;

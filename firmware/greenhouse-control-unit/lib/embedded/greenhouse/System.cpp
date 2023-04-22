@@ -31,11 +31,14 @@ namespace greenhouse {
 #define SR_ON LOW
 #define SR_OFF HIGH
 
-#define ADC_RETRY_MAX 10
-#define ADC_RETRY_DELAY 1
-#define DEBUG_DELAY 0
+#define ADC_RANGE ADS1115_RANGE_4096 // 2.8 V = 10 A
+#define ADC_BUSY_MAX 10
+#define ADC_BUSY_DELAY 1
+#define ADC_RETRY_MAX 5
+#define ADC_RETRY_DELAY 1000
 #define LOOP_DELAY 10
 #define SOIL_TEMP_FAIL_MAX 10
+#define CASE_FAN_CURRENT_THRESHOLD 1
 
 struct ADC {
   String name;
@@ -46,7 +49,6 @@ struct ADC {
 #define IO_PIN_BEEP_SW P2
 #define IO_PIN_FAN_SW P3
 
-#define EXT_IO_PIN_VOLTAGE_SENSOR P0
 #define EXT_IO_PIN_LIGHT P1
 
 // external adc pins
@@ -170,7 +172,9 @@ void System::Setup()
   m_radio.Init(this);
 #endif // RADIO_EN
 
+#if LORA_EN
   m_pumpRadio.Init(this);
+#endif // LORA_EN
 
   TRACE("System ready");
   Blynk.virtualWrite(V52, "Ready");
@@ -196,7 +200,9 @@ void System::Loop()
   // always run before actuator check
   ng::System::Loop();
 
+#if LORA_EN
   m_pumpRadio.Update();
+#endif // LORA_EN
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -514,57 +520,80 @@ void System::Beep(int times, bool longBeep)
 
 float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
 {
-  // #define ADC_DEBUG 1
-
 #if ADC_DEBUG
-  TRACE_F("Reading ADC: %s", adc.name.c_str());
+  TRACE_F("Reading ADC '%s' channel %02X", adc.name.c_str());
 #endif
 
-  if (!adc.ready) {
+  // TODO: random init fal probably caused by bad hardware;
+  // I2C line to external device is probably acting as an antenna and picking up noise.
+  // seems to be caused by load on the battery.
+  for (int i = 0; i < ADC_RETRY_MAX; i++) {
+
+    TRACE_F("ADC: Attempt %d of %d", i + 1, ADC_RETRY_MAX);
+
+    if (!adc.ready) {
 #if ADC_DEBUG
-    TRACE("ADC: Re-init");
+      TRACE("ADC: Re-init");
 #endif // ADC_DEBUG
 
-    adc.ready = adc.ads.init();
-    if (adc.ready) {
-      TRACE("ADC: Ready again");
-    }
-    else {
+      adc.ready = adc.ads.init();
+      if (adc.ready) {
+        TRACE("ADC: Ready again");
+      }
+      else {
 #if ADC_DEBUG
-      TRACE("ADC: Re-init failed");
+        TRACE("ADC: Re-init failed, retrying");
 #endif // ADC_DEBUG
-      return k_unknown;
+        Delay(ADC_RETRY_DELAY, "ADC retry wait");
+        yield();
+        continue;
+      }
     }
-  }
 
-  // HACK: this keeps getting reset to default (possibly due to a power issue
-  // when the relay switches), so force the volt range every time we're about to read.
-  adc.ads.setVoltageRange_mV(ADS1115_RANGE_6144);
+    // HACK: this keeps getting reset to default (possibly due to a power issue
+    // when the relay switches), so force the volt range every time we're about to read.
+    adc.ads.setVoltageRange_mV(ADC_RANGE);
 
-  adc.ads.setCompareChannels(channel);
-  adc.ads.startSingleMeasurement();
+    adc.ads.setCompareChannels(channel);
+    adc.ads.startSingleMeasurement();
 
-  int times = 0;
-  while (adc.ads.isBusy()) {
-    if (times++ > ADC_RETRY_MAX) {
-      // assume ADC not ready if failed many times. should cause re-init.
-      adc.ready = false;
+    int times = 0;
+    while (adc.ads.isBusy()) {
+      if (times++ > ADC_BUSY_MAX) {
+
+        // assume ADC not ready if failed many times. should cause re-init.
+        adc.ready = false;
 #if ADC_DEBUG
-      TRACE_F("ADC: Not ready after %d", times);
+        TRACE_F("ADC: Still busy after %d times", times);
 #endif // ADC_DEBUG
-      return k_unknown;
+        break;
+      }
+      else {
+        Delay(ADC_BUSY_DELAY, "ADC busy wait");
+        TRACE_F("ADC: Busy wait %d of %d", times, ADC_BUSY_MAX);
+      }
     }
 
-    Delay(ADC_RETRY_DELAY, "ADC busy wait");
-  }
+    // if assumed not ready, wait longer and start new comparison
+    if (!adc.ready) {
+#if ADC_DEBUG
+      TRACE_F("ADC: Assumed not ready, retrying", times);
+#endif // ADC_DEBUG
+      Delay(ADC_RETRY_DELAY, "ADC retry wait");
+      yield();
+      continue;
+    }
 
-  float f = adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
+    float f = adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
 
 #if ADC_DEBUG
-  TRACE_F("ADC: Got result: %.2fV", f);
+    TRACE_F("ADC: Got result: %.2fV", f);
 #endif
 
-  return f;
+    return f;
+  }
+
+  return k_unknown;
 }
 
 void System::ReportInfo(const char *format, ...)
@@ -780,8 +809,18 @@ void System::ReportWaterHeaterInfo()
 void System::UpdateCaseFan()
 {
   // turn case fan on when PSU is in use
-  bool caseFanOn = Power().Source() != PowerSource::k_powerSourceBattery;
-  CaseFan(caseFanOn);
+  bool onPsu = Power().Source() != PowerSource::k_powerSourceBattery;
+
+  bool highCurrent = Power().BatteryCurrentOutput() > CASE_FAN_CURRENT_THRESHOLD;
+
+  bool on = onPsu || highCurrent;
+  CaseFan(on);
+
+  TRACE_F(
+    "Case fan: %s (PSU=%s, HC=%s)", //
+    BOOL_FS(on),
+    BOOL_FS(onPsu),
+    BOOL_FS(highCurrent));
 }
 
 void System::OnPowerSwitch()
@@ -790,17 +829,13 @@ void System::OnPowerSwitch()
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
 
+void System::OnBatteryCurrentChange() { UpdateCaseFan(); }
+
 void System::WriteOnboardIO(uint8_t pin, uint8_t value) { s_onboardIo1.digitalWrite(pin, value); }
 
 bool System::BatterySensorReady() { return s_externalAdc.ready; }
 
-float System::ReadBatteryVoltageSensorRaw()
-{
-  s_externalIo1.digitalWrite(EXT_IO_PIN_VOLTAGE_SENSOR, LOW);
-  float v = ReadAdc(s_externalAdc, k_batteryVoltagePin);
-  s_externalIo1.digitalWrite(EXT_IO_PIN_VOLTAGE_SENSOR, HIGH);
-  return v;
-}
+float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_externalAdc, k_batteryVoltagePin); }
 
 float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_externalAdc, k_batteryCurrentPin); }
 
@@ -1049,7 +1084,9 @@ BLYNK_WRITE(V80)
   else {
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
+#if LORA_EN
   eg::s_instance->PumpRadio().SwitchPump(pumpOn);
+#endif // LORA_EN
 }
 
 BLYNK_WRITE(V82)
@@ -1061,6 +1098,8 @@ BLYNK_WRITE(V82)
   else {
     Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
   }
+#if LORA_EN
   // tank not full? switch pump on
   eg::s_instance->PumpRadio().SwitchPump(!tankFull);
+#endif // LORA_EN
 }

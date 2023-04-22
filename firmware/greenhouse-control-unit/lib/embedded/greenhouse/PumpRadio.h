@@ -1,5 +1,7 @@
 #pragma once
 
+#if LORA_EN
+
 #include "ISystem.h"
 
 namespace embedded {
@@ -19,3 +21,5 @@ private:
 
 } // namespace greenhouse
 } // namespace embedded
+
+#endif // LORA_EN
