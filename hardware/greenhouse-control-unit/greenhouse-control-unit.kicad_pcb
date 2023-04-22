@@ -8,7 +8,7 @@
   (title_block
     (title "Greenhouse Control Unit")
     (date "2022-11-16")
-    (rev "4")
+    (rev "4B")
     (company "Nick Bolton")
   )
 
@@ -7352,7 +7352,7 @@
   (gr_text "+" (at 139.0646 48.387) (layer "F.SilkS") (tstamp 987f9c4b-4f7e-4b51-9ea7-957be0d7e070)
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (gr_text "Greenhouse Control Unit\nRev 4 - Nick Bolton" (at 239.014 113.284) (layer "F.SilkS") (tstamp aa36617b-7d39-485f-bdb3-054612142e45)
+  (gr_text "Greenhouse Control Unit\nRev 4B - Nick Bolton" (at 239.014 113.284) (layer "F.SilkS") (tstamp aa36617b-7d39-485f-bdb3-054612142e45)
     (effects (font (size 1.2 1.2) (thickness 0.2)))
   )
   (gr_text "7A 18AWG" (at 112.6744 57.912 90) (layer "F.SilkS") (tstamp bbedc13e-8b53-4c37-9156-e2caf2ffe24c)
