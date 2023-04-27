@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <export version="E">
   <design>
-    <source>C:\Projects\nbolton\greenhouse\hardware\greenhouse-node-mini\greenhouse-node-mini.kicad_sch</source>
-    <date>29/11/2022 21:26:01</date>
-    <tool>Eeschema (6.0.2)</tool>
+    <source>C:\Projects\nbolton\greenhouse\hardware\greenhouse-node-hb\greenhouse-node-hb.kicad_sch</source>
+    <date>27/04/2023 15:12:28</date>
+    <tool>Eeschema 7.0.1</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
-        <title>Greenhouse Node Mini</title>
+        <title>Greenhouse Node HB (Mini)</title>
         <company>Nick Bolton</company>
-        <rev>1</rev>
-        <date>2022-11-16</date>
-        <source>greenhouse-node-mini.kicad_sch</source>
-        <comment number="1" value="Controls an H-bridge with an ATtiny"/>
-        <comment number="2" value="Uses 433MHz HC-12 radio module"/>
+        <rev>2</rev>
+        <date>2023-04-27</date>
+        <source>greenhouse-node-hb.kicad_sch</source>
+        <comment number="1" value="Uses 868MHz RF69 radio module"/>
+        <comment number="2" value="Controls an H-bridge with STM32F0xx"/>
         <comment number="3" value=""/>
         <comment number="4" value=""/>
         <comment number="5" value=""/>
@@ -24,103 +24,142 @@
     </sheet>
   </design>
   <components>
-    <comp ref="C1">
-      <value>100uF</value>
-      <footprint>Capacitor_THT:C_Radial_D5.0mm_H7.0mm_P2.00mm</footprint>
-      <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
+    <comp ref="AE1">
+      <value>U.FL-R-SMT-1</value>
+      <footprint>Connector_Coaxial:U.FL_Hirose_U.FL-R-SMT-1_Vertical</footprint>
+      <libsource lib="Device" part="Antenna_Shield" description="Antenna with extra pin for shielding"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Antenna with extra pin for shielding"/>
+      <property name="ki_keywords" value="antenna"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>695ccbcc-4a44-4a1f-b5e4-e7c0459755d8</tstamps>
+      <tstamps>4eab4b53-c0a1-4843-8635-36bd83867879</tstamps>
     </comp>
-    <comp ref="C2">
-      <value>10nF</value>
+    <comp ref="C1">
+      <value>100nF</value>
       <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e7818d17-9423-474c-87b3-fec45bd25988</tstamps>
+    </comp>
+    <comp ref="C2">
+      <value>100nF</value>
+      <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
+      <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>1bbe0bee-1018-4ce9-bd17-02581403417d</tstamps>
     </comp>
     <comp ref="C3">
-      <value>330nF</value>
+      <value>220nF</value>
       <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>3fc81e51-6a2d-490e-99ec-8d35dcefe346</tstamps>
+      <tstamps>f5b0e8ff-6646-425c-89ee-53ae9dcab37e</tstamps>
     </comp>
     <comp ref="C4">
       <value>100nF</value>
       <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>a3eb68a2-522b-4470-836c-da2b7c64b251</tstamps>
+      <tstamps>bf5e4d9f-0443-4894-a20c-7a96140caa42</tstamps>
     </comp>
     <comp ref="C5">
-      <value>22pF</value>
+      <value>100nF</value>
       <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>223e37bd-425d-49ee-90e7-c3274029bd4e</tstamps>
+      <tstamps>51c8a121-212f-46f0-bf36-4a0d90f0bcbe</tstamps>
     </comp>
     <comp ref="C6">
-      <value>22pF</value>
-      <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
+      <value>10nF</value>
+      <footprint>Capacitor_THT:C_Disc_D3.0mm_W2.0mm_P2.50mm</footprint>
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>18142e8e-8231-4ade-baf8-9a7715687dc3</tstamps>
+      <tstamps>ba454b95-6370-41f9-bebd-f2505294badc</tstamps>
     </comp>
     <comp ref="C7">
       <value>10nF</value>
-      <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
+      <footprint>Capacitor_THT:C_Disc_D3.0mm_W2.0mm_P2.50mm</footprint>
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>4ebb038f-ea55-4749-8e8a-c4f911f9f883</tstamps>
-    </comp>
-    <comp ref="C8">
-      <value>330nF</value>
-      <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
-      <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>556c49a3-3861-4eeb-bed7-30a5aebf5526</tstamps>
     </comp>
     <comp ref="C9">
       <value>100nF</value>
       <footprint>Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm</footprint>
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Unpolarized capacitor, small symbol"/>
+      <property name="ki_keywords" value="capacitor cap"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>01fef755-0f7b-4612-854f-9df10a82204d</tstamps>
     </comp>
-    <comp ref="D1">
-      <value>1N4001</value>
-      <footprint>Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal</footprint>
-      <datasheet>http://www.vishay.com/docs/88503/1n4001.pdf</datasheet>
-      <libsource lib="Diode" part="1N4001" description="50V 1A General Purpose Rectifier Diode, DO-41"/>
+    <comp ref="C10">
+      <value>100uF</value>
+      <footprint>Capacitor_THT:CP_Radial_D6.3mm_P2.50mm</footprint>
+      <libsource lib="Device" part="C_Polarized" description="Polarized capacitor"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Polarized capacitor"/>
+      <property name="ki_keywords" value="cap capacitor"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>2398c74e-bdaf-4913-b648-f4d9cb68ee90</tstamps>
+      <tstamps>16cd985e-6f41-44d6-a1b1-ac2f1eb6b915</tstamps>
+    </comp>
+    <comp ref="D1">
+      <value>BAT46</value>
+      <footprint>Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal</footprint>
+      <datasheet>http://www.vishay.com/docs/85662/bat46.pdf</datasheet>
+      <fields>
+        <field name="Sim.Device">D</field>
+        <field name="Sim.Pins">1=K 2=A</field>
+      </fields>
+      <libsource lib="Diode" part="BAT46" description="100V 0.15A Small Signal Schottky Diode, DO-35"/>
+      <property name="Sim.Device" value="D"/>
+      <property name="Sim.Pins" value="1=K 2=A"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="100V 0.15A Small Signal Schottky Diode, DO-35"/>
+      <property name="ki_keywords" value="diode Schottky"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d46a98d7-591b-42bb-a861-4feced577532</tstamps>
     </comp>
     <comp ref="D2">
       <value>LED_Sm_G</value>
       <footprint>LED_THT:LED_D3.0mm</footprint>
       <libsource lib="Device" part="LED_Small" description="Light emitting diode, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Light emitting diode, small symbol"/>
+      <property name="ki_keywords" value="LED diode light-emitting-diode"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>51b7deb3-d546-4266-aa92-b89ded074dd4</tstamps>
     </comp>
@@ -129,7 +168,9 @@
       <footprint>LED_THT:LED_D3.0mm</footprint>
       <libsource lib="Device" part="LED_Small" description="Light emitting diode, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Light emitting diode, small symbol"/>
+      <property name="ki_keywords" value="LED diode light-emitting-diode"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>c4eae818-134f-49b0-971a-95148b4262ed</tstamps>
     </comp>
@@ -138,7 +179,9 @@
       <footprint>LED_THT:LED_D3.0mm</footprint>
       <libsource lib="Device" part="LED_Small" description="Light emitting diode, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Light emitting diode, small symbol"/>
+      <property name="ki_keywords" value="LED diode light-emitting-diode"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>7ea7153d-86d1-4837-922d-d6b2e34767d9</tstamps>
     </comp>
@@ -147,7 +190,9 @@
       <footprint>LED_THT:LED_D3.0mm</footprint>
       <libsource lib="Device" part="LED_Small" description="Light emitting diode, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Light emitting diode, small symbol"/>
+      <property name="ki_keywords" value="LED diode light-emitting-diode"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>c2bb2215-dc02-4d03-a8ea-37fb53359b89</tstamps>
     </comp>
@@ -156,7 +201,9 @@
       <footprint>LED_THT:LED_D3.0mm</footprint>
       <libsource lib="" part="LED_Small_1" description="Light emitting diode, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Light emitting diode, small symbol"/>
+      <property name="ki_keywords" value="LED diode light-emitting-diode"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>025b67ec-fe6a-4ee1-9f43-89b9b5fad3d7</tstamps>
     </comp>
@@ -165,56 +212,38 @@
       <footprint>LED_THT:LED_D3.0mm</footprint>
       <libsource lib="Device" part="LED_Small" description="Light emitting diode, small symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Light emitting diode, small symbol"/>
+      <property name="ki_keywords" value="LED diode light-emitting-diode"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>a72c3f86-13e9-4f1e-b7c0-a682d6d5ed14</tstamps>
     </comp>
     <comp ref="D8">
-      <value>1N4001</value>
-      <footprint>Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal</footprint>
-      <datasheet>http://www.vishay.com/docs/88503/1n4001.pdf</datasheet>
-      <libsource lib="Diode" part="1N4001" description="50V 1A General Purpose Rectifier Diode, DO-41"/>
+      <value>BAT46</value>
+      <footprint>Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal</footprint>
+      <datasheet>http://www.vishay.com/docs/85662/bat46.pdf</datasheet>
+      <fields>
+        <field name="Sim.Device">D</field>
+        <field name="Sim.Pins">1=K 2=A</field>
+      </fields>
+      <libsource lib="Diode" part="BAT46" description="100V 0.15A Small Signal Schottky Diode, DO-35"/>
+      <property name="Sim.Device" value="D"/>
+      <property name="Sim.Pins" value="1=K 2=A"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="100V 0.15A Small Signal Schottky Diode, DO-35"/>
+      <property name="ki_keywords" value="diode Schottky"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>58784900-9501-43a7-9eab-092d484b4939</tstamps>
-    </comp>
-    <comp ref="D9">
-      <value>1N4001</value>
-      <footprint>Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal</footprint>
-      <datasheet>http://www.vishay.com/docs/88503/1n4001.pdf</datasheet>
-      <libsource lib="Diode" part="1N4001" description="50V 1A General Purpose Rectifier Diode, DO-41"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>6b0f6c72-03f3-4494-9d53-1ce286ecb1de</tstamps>
-    </comp>
-    <comp ref="D10">
-      <value>1N4001</value>
-      <footprint>Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal</footprint>
-      <datasheet>http://www.vishay.com/docs/88503/1n4001.pdf</datasheet>
-      <libsource lib="Diode" part="1N4001" description="50V 1A General Purpose Rectifier Diode, DO-41"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>e5bbae67-8d26-4a65-864d-2fb7a3faedbd</tstamps>
-    </comp>
-    <comp ref="D11">
-      <value>1N4001</value>
-      <footprint>Diode_THT:D_DO-41_SOD81_P7.62mm_Horizontal</footprint>
-      <datasheet>http://www.vishay.com/docs/88503/1n4001.pdf</datasheet>
-      <libsource lib="Diode" part="1N4001" description="50V 1A General Purpose Rectifier Diode, DO-41"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>8f487075-941a-4d7f-9a5b-7f69295f186d</tstamps>
+      <tstamps>5a2c6946-ba5e-44f3-b20a-f3167e4d5b91</tstamps>
     </comp>
     <comp ref="H1">
       <value>MountingHole</value>
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Mounting Hole without connection"/>
+      <property name="ki_keywords" value="mounting hole"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>f18d96d3-0ef3-4d4d-b3ff-a54b59d3fb50</tstamps>
     </comp>
@@ -223,7 +252,9 @@
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Mounting Hole without connection"/>
+      <property name="ki_keywords" value="mounting hole"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>90e2cfff-ff0f-4aad-87ae-1e467e85d8f3</tstamps>
     </comp>
@@ -232,52 +263,64 @@
       <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Mounting Hole without connection"/>
+      <property name="ki_keywords" value="mounting hole"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>02c43821-4c74-41a0-852e-ae44da25958c</tstamps>
     </comp>
-    <comp ref="J1">
-      <value>Molex_KK_396_1x2</value>
-      <footprint>Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical</footprint>
-      <libsource lib="Connector" part="Conn_01x02_Male" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+    <comp ref="H4">
+      <value>MountingHole</value>
+      <footprint>MountingHole:MountingHole_3.2mm_M3</footprint>
+      <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Mounting Hole without connection"/>
+      <property name="ki_keywords" value="mounting hole"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>da3a743c-1908-4e85-a5f0-c8a78b85f550</tstamps>
+    </comp>
+    <comp ref="J1">
+      <value>Conn_01x02_Pin</value>
+      <footprint>Connector_Molex:Molex_KK-254_AE-6410-02A_1x02_P2.54mm_Vertical</footprint>
+      <libsource lib="Connector" part="Conn_01x02_Pin" description="Generic connector, single row, 01x02, script generated"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Generic connector, single row, 01x02, script generated"/>
+      <property name="ki_keywords" value="connector"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>64c39fd2-36c7-4cd2-b0b8-1a1e70b12069</tstamps>
     </comp>
     <comp ref="J2">
-      <value>JST_XH_2.54mm_1x2</value>
-      <footprint>Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical</footprint>
-      <libsource lib="Connector" part="Conn_01x02_Male" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <value>Conn_01x03</value>
+      <footprint>Jumper:SolderJumper-3_P1.3mm_Bridged2Bar12_RoundedPad1.0x1.5mm</footprint>
+      <libsource lib="Connector_Generic" part="Conn_01x03" description="Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="ki_keywords" value="connector"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>d9d1085b-9b15-4340-9b95-610882d9fee3</tstamps>
-    </comp>
-    <comp ref="J3">
-      <value>Conn_01x05_Female</value>
-      <footprint>Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical</footprint>
-      <libsource lib="Connector" part="Conn_01x05_Female" description="Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>fff04c1f-e1b8-49c9-81c6-57e3ffe722c2</tstamps>
+      <tstamps>07f4cd52-7211-42b2-b2d4-ab6f0f7f5f07</tstamps>
     </comp>
     <comp ref="J4">
-      <value>Molex_KK_396_1x2</value>
-      <footprint>Connector_Molex:Molex_KK-396_A-41791-0002_1x02_P3.96mm_Vertical</footprint>
-      <libsource lib="Connector" part="Conn_01x02_Male" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <value>Conn_01x02_Pin</value>
+      <footprint>Connector_Molex:Molex_KK-254_AE-6410-02A_1x02_P2.54mm_Vertical</footprint>
+      <libsource lib="Connector" part="Conn_01x02_Pin" description="Generic connector, single row, 01x02, script generated"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Generic connector, single row, 01x02, script generated"/>
+      <property name="ki_keywords" value="connector"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>5445894f-4880-497e-9742-4bc058d8a3fd</tstamps>
     </comp>
     <comp ref="J5">
-      <value>JST_XH_2.54mm_1x4</value>
-      <footprint>Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical</footprint>
-      <libsource lib="Connector" part="Conn_01x04_Male" description="Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <value>Conn_01x04_Pin</value>
+      <footprint>Connector_JST:JST_PH_B4B-PH-K_1x04_P2.00mm_Vertical</footprint>
+      <libsource lib="Connector" part="Conn_01x04_Pin" description="Generic connector, single row, 01x04, script generated"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Generic connector, single row, 01x04, script generated"/>
+      <property name="ki_keywords" value="connector"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>d23f2718-7b0c-422c-8b10-4aeeca192dfc</tstamps>
     </comp>
@@ -286,7 +329,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>eb8c4f77-d931-4888-a754-0b09c6b8907f</tstamps>
     </comp>
@@ -295,7 +340,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>b6456347-a8b0-4beb-be5d-c94cb7d030d6</tstamps>
     </comp>
@@ -304,7 +351,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>8d8e4c38-c484-4fac-a511-73eabc76600a</tstamps>
     </comp>
@@ -313,7 +362,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>5e0eae24-dbad-48fb-ae7c-f6a4c82246b4</tstamps>
     </comp>
@@ -322,7 +373,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>aaf12300-f95b-4fd6-9598-8426feadbf1b</tstamps>
     </comp>
@@ -331,7 +384,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>8d8a3be9-1e0c-4839-a01e-a19d5822dac7</tstamps>
     </comp>
@@ -340,7 +395,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>23299cf6-a16e-430c-ae20-6a5e83dd3ba0</tstamps>
     </comp>
@@ -349,7 +406,9 @@
       <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
       <libsource lib="Device" part="R_Small_US" description="Resistor, small US symbol"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Resistor, small US symbol"/>
+      <property name="ki_keywords" value="r resistor"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>85534442-588d-49db-a19b-8db2c032d0fc</tstamps>
     </comp>
@@ -358,68 +417,83 @@
       <footprint>Button_Switch_THT:SW_PUSH_6mm</footprint>
       <libsource lib="Switch" part="SW_Push" description="Push button switch, generic, two pins"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Push button switch, generic, two pins"/>
+      <property name="ki_keywords" value="switch normally-open pushbutton push-button"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>50676101-d186-402b-b842-660a80bb31e9</tstamps>
     </comp>
     <comp ref="U1">
-      <value>ATtiny84A-P</value>
-      <footprint>Package_DIP:DIP-14_W7.62mm_Socket</footprint>
-      <datasheet>http://ww1.microchip.com/downloads/en/DeviceDoc/doc8183.pdf</datasheet>
-      <libsource lib="MCU_Microchip_ATtiny" part="ATtiny84A-P" description="20MHz, 8kB Flash, 512B SRAM, 512B EEPROM, debugWIRE, DIP-14"/>
+      <value>XC6706x</value>
+      <footprint>Package_TO_SOT_SMD:SOT-89-3</footprint>
+      <datasheet>https://www.farnell.com/datasheets/3902362.pdf</datasheet>
+      <libsource lib="Nick" part="XC6706x" description="200mA, Low Drop-out Voltage Regulator, Fixed Output, SOT-23-5"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="200mA, Low Drop-out Voltage Regulator, Fixed Output, SOT-23-5"/>
+      <property name="ki_keywords" value="LDO Voltage Regulator 200mA"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>9753ff07-d111-4956-af59-0c4add831580</tstamps>
-    </comp>
-    <comp ref="U2">
-      <value>L7805</value>
-      <footprint>Package_TO_SOT_THT:TO-220-3_Horizontal_TabDown</footprint>
-      <datasheet>http://www.st.com/content/ccc/resource/technical/document/datasheet/41/4f/b3/b0/12/d4/47/88/CD00000444.pdf/files/CD00000444.pdf/jcr:content/translations/en.CD00000444.pdf</datasheet>
-      <libsource lib="Regulator_Linear" part="L7805" description="Positive 1.5A 35V Linear Regulator, Fixed Output 5V, TO-220/TO-263/TO-252"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>0849f9b1-8d15-459f-a2fc-f501c1e92377</tstamps>
+      <tstamps>e5029c17-093c-47a5-abc8-f05a77f0e4e1</tstamps>
     </comp>
     <comp ref="U3">
-      <value>PCF8574</value>
-      <footprint>Package_DIP:DIP-16_W7.62mm_Socket</footprint>
+      <value>PCF8574ATS/3,118</value>
+      <footprint>Package_SO:SSOP-20_4.4x6.5mm_P0.65mm</footprint>
       <datasheet>http://www.nxp.com/documents/data_sheet/PCF8574_PCF8574A.pdf</datasheet>
       <libsource lib="Interface_Expansion" part="PCF8574" description="8 Bit Port/Expander to I2C Bus, DIP/SOIC-16"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="8 Bit Port/Expander to I2C Bus, DIP/SOIC-16"/>
+      <property name="ki_keywords" value="I2C Expander"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>35577ca8-d7ca-4dcf-91c1-a24f1a9444d8</tstamps>
     </comp>
-    <comp ref="U4">
-      <value>L298HN</value>
-      <footprint>Package_TO_SOT_THT:TO-220-15_P2.54x2.54mm_StaggerOdd_Lead4.58mm_Vertical</footprint>
-      <datasheet>http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00000240.pdf</datasheet>
-      <libsource lib="Driver_Motor" part="L298HN" description="Dual full bridge motor driver, up to 46V, 4A, Multiwatt-15"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>8771aadb-f286-44b0-bba1-46019edb00a7</tstamps>
-    </comp>
     <comp ref="U5">
       <value>L7810</value>
-      <footprint>Package_TO_SOT_THT:TO-220-3_Vertical</footprint>
+      <footprint>Package_TO_SOT_THT:TO-220-3_Horizontal_TabUp</footprint>
       <datasheet>http://www.st.com/content/ccc/resource/technical/document/datasheet/41/4f/b3/b0/12/d4/47/88/CD00000444.pdf/files/CD00000444.pdf/jcr:content/translations/en.CD00000444.pdf</datasheet>
       <libsource lib="Regulator_Linear" part="L7805" description="Positive 1.5A 35V Linear Regulator, Fixed Output 5V, TO-220/TO-263/TO-252"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Positive 1.5A 35V Linear Regulator, Fixed Output 5V, TO-220/TO-263/TO-252"/>
+      <property name="ki_keywords" value="Voltage Regulator 1.5A Positive"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>3bee3637-6f1f-4e9e-badc-0dcb4a13e1fb</tstamps>
     </comp>
-    <comp ref="Y1">
-      <value>8MHz</value>
-      <footprint>Crystal:Crystal_HC49-4H_Vertical</footprint>
-      <libsource lib="Device" part="Crystal_Small" description="Two pin crystal, small symbol"/>
+    <comp ref="U6">
+      <value>STM32F030F4P6</value>
+      <footprint>Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm</footprint>
+      <datasheet>https://www.st.com/resource/en/datasheet/stm32f030f4.pdf</datasheet>
+      <libsource lib="MCU_ST_STM32F0" part="STM32F030F4Px" description="STMicroelectronics Arm Cortex-M0 MCU, 16KB flash, 4KB RAM, 48 MHz, 2.4-3.6V, 15 GPIO, TSSOP20"/>
       <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="greenhouse-node-mini.kicad_sch"/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="STMicroelectronics Arm Cortex-M0 MCU, 16KB flash, 4KB RAM, 48 MHz, 2.4-3.6V, 15 GPIO, TSSOP20"/>
+      <property name="ki_keywords" value="Arm Cortex-M0 STM32F0 STM32F0x0 Value Line"/>
       <sheetpath names="/" tstamps="/"/>
-      <tstamps>77646657-5d5b-4281-a7b7-2c11ea23e48c</tstamps>
+      <tstamps>4e19e9c4-2608-4437-9366-82c025896d92</tstamps>
+    </comp>
+    <comp ref="U7">
+      <value>RFM69HW</value>
+      <footprint>Nick:HopeRF_RFM69HW</footprint>
+      <datasheet>https://www.hoperf.com/data/upload/portal/20181127/5bfcbb56f1fd7.pdf</datasheet>
+      <libsource lib="RF_Module" part="RFM69HW" description="ISM Radio Transceiver Module, SPI interface"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="ISM Radio Transceiver Module, SPI interface"/>
+      <property name="ki_keywords" value="Radio ISM Transceiver Module AES"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>6ef6cba8-713c-4b69-b33c-43031ece2d69</tstamps>
+    </comp>
+    <comp ref="U8">
+      <value>A4952ELYTR-T</value>
+      <footprint>Package_SO:MSOP-10-1EP_3x3mm_P0.5mm_EP1.73x1.98mm</footprint>
+      <datasheet>www.allegromicro.com/~/media/Files/Datasheets/A4952-3-Datasheet.ashx?la=en</datasheet>
+      <libsource lib="Driver_Motor" part="A4952_LY" description="Full-Bridge, DMOS PWM, Motor Driver, 40V, 2A, MSOP-10"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="greenhouse-node-hb.kicad_sch"/>
+      <property name="ki_description" value="Full-Bridge, DMOS PWM, Motor Driver, 40V, 2A, MSOP-10"/>
+      <property name="ki_keywords" value="Full-bridge h-bridge"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>eec99ab4-a653-42bf-b801-f3164c3bd91f</tstamps>
     </comp>
   </components>
   <libparts>
@@ -441,15 +515,15 @@
         <pin num="2" name="A" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Connector" part="Conn_01x02_Male">
-      <description>Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+    <libpart lib="Connector" part="Conn_01x02_Pin">
+      <description>Generic connector, single row, 01x02, script generated</description>
       <docs>~</docs>
       <footprints>
         <fp>Connector*:*_1x??_*</fp>
       </footprints>
       <fields>
         <field name="Reference">J</field>
-        <field name="Value">Conn_01x02_Male</field>
+        <field name="Value">Conn_01x02_Pin</field>
         <field name="Datasheet">~</field>
       </fields>
       <pins>
@@ -457,15 +531,15 @@
         <pin num="2" name="Pin_2" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Connector" part="Conn_01x04_Male">
-      <description>Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+    <libpart lib="Connector" part="Conn_01x04_Pin">
+      <description>Generic connector, single row, 01x04, script generated</description>
       <docs>~</docs>
       <footprints>
         <fp>Connector*:*_1x??_*</fp>
       </footprints>
       <fields>
         <field name="Reference">J</field>
-        <field name="Value">Conn_01x04_Male</field>
+        <field name="Value">Conn_01x04_Pin</field>
         <field name="Datasheet">~</field>
       </fields>
       <pins>
@@ -475,23 +549,50 @@
         <pin num="4" name="Pin_4" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Connector" part="Conn_01x05_Female">
-      <description>Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+    <libpart lib="Connector_Generic" part="Conn_01x03">
+      <description>Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
       <docs>~</docs>
       <footprints>
         <fp>Connector*:*_1x??_*</fp>
       </footprints>
       <fields>
         <field name="Reference">J</field>
-        <field name="Value">Conn_01x05_Female</field>
+        <field name="Value">Conn_01x03</field>
         <field name="Datasheet">~</field>
       </fields>
       <pins>
         <pin num="1" name="Pin_1" type="passive"/>
         <pin num="2" name="Pin_2" type="passive"/>
         <pin num="3" name="Pin_3" type="passive"/>
-        <pin num="4" name="Pin_4" type="passive"/>
-        <pin num="5" name="Pin_5" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="Antenna_Shield">
+      <description>Antenna with extra pin for shielding</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">AE</field>
+        <field name="Value">Antenna_Shield</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="A" type="input"/>
+        <pin num="2" name="Shield" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C_Polarized">
+      <description>Polarized capacitor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>CP_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C_Polarized</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
       </pins>
     </libpart>
     <libpart lib="Device" part="C_Small">
@@ -508,22 +609,6 @@
       <pins>
         <pin num="1" name="" type="passive"/>
         <pin num="2" name="" type="passive"/>
-      </pins>
-    </libpart>
-    <libpart lib="Device" part="Crystal_Small">
-      <description>Two pin crystal, small symbol</description>
-      <docs>~</docs>
-      <footprints>
-        <fp>Crystal*</fp>
-      </footprints>
-      <fields>
-        <field name="Reference">Y</field>
-        <field name="Value">Crystal_Small</field>
-        <field name="Datasheet">~</field>
-      </fields>
-      <pins>
-        <pin num="1" name="1" type="passive"/>
-        <pin num="2" name="2" type="passive"/>
       </pins>
     </libpart>
     <libpart lib="Device" part="LED_Small">
@@ -560,51 +645,47 @@
         <pin num="2" name="" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Diode" part="1N4001">
-      <description>50V 1A General Purpose Rectifier Diode, DO-41</description>
-      <docs>http://www.vishay.com/docs/88503/1n4001.pdf</docs>
+    <libpart lib="Diode" part="BAT46">
+      <description>100V 0.15A Small Signal Schottky Diode, DO-35</description>
+      <docs>http://www.vishay.com/docs/85662/bat46.pdf</docs>
       <footprints>
-        <fp>D*DO?41*</fp>
+        <fp>D*DO?35*</fp>
       </footprints>
       <fields>
         <field name="Reference">D</field>
-        <field name="Value">1N4001</field>
-        <field name="Footprint">Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal</field>
-        <field name="Datasheet">http://www.vishay.com/docs/88503/1n4001.pdf</field>
+        <field name="Value">BAT46</field>
+        <field name="Footprint">Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal</field>
+        <field name="Datasheet">http://www.vishay.com/docs/85662/bat46.pdf</field>
       </fields>
       <pins>
         <pin num="1" name="K" type="passive"/>
         <pin num="2" name="A" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Driver_Motor" part="L298HN">
-      <description>Dual full bridge motor driver, up to 46V, 4A, Multiwatt-15</description>
-      <docs>http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00000240.pdf</docs>
+    <libpart lib="Driver_Motor" part="A4952_LY">
+      <description>Full-Bridge, DMOS PWM, Motor Driver, 40V, 2A, MSOP-10</description>
+      <docs>www.allegromicro.com/~/media/Files/Datasheets/A4952-3-Datasheet.ashx?la=en</docs>
       <footprints>
-        <fp>TO?220*</fp>
+        <fp>MSOP*1EP*3x3mm*P0.5mm*</fp>
       </footprints>
       <fields>
         <field name="Reference">U</field>
-        <field name="Value">L298HN</field>
-        <field name="Footprint">Package_TO_SOT_THT:TO-220-15_P2.54x2.54mm_StaggerOdd_Lead4.58mm_Vertical</field>
-        <field name="Datasheet">http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/CD00000240.pdf</field>
+        <field name="Value">A4952_LY</field>
+        <field name="Footprint">Package_SO:MSOP-10-1EP_3x3mm_P0.5mm_EP1.73x1.98mm</field>
+        <field name="Datasheet">www.allegromicro.com/~/media/Files/Datasheets/A4952-3-Datasheet.ashx?la=en</field>
       </fields>
       <pins>
-        <pin num="1" name="SENSE_A" type="power_in"/>
-        <pin num="2" name="OUT1" type="output"/>
-        <pin num="3" name="OUT2" type="output"/>
-        <pin num="4" name="Vs" type="power_in"/>
-        <pin num="5" name="IN1" type="input"/>
-        <pin num="6" name="EnA" type="input"/>
-        <pin num="7" name="IN2" type="input"/>
-        <pin num="8" name="GND" type="power_in"/>
-        <pin num="9" name="Vss" type="power_in"/>
-        <pin num="10" name="IN3" type="input"/>
-        <pin num="11" name="EnB" type="input"/>
-        <pin num="12" name="IN4" type="input"/>
-        <pin num="13" name="OUT3" type="output"/>
-        <pin num="14" name="OUT4" type="output"/>
-        <pin num="15" name="SENSE_B" type="power_in"/>
+        <pin num="1" name="~{FLTn}" type="output"/>
+        <pin num="2" name="RTRY" type="input"/>
+        <pin num="3" name="IN2" type="input"/>
+        <pin num="4" name="IN1" type="input"/>
+        <pin num="5" name="VREF" type="passive"/>
+        <pin num="6" name="VBB" type="power_in"/>
+        <pin num="7" name="OUT1" type="power_out"/>
+        <pin num="8" name="LSS" type="power_in"/>
+        <pin num="9" name="OUT2" type="power_out"/>
+        <pin num="10" name="GND" type="power_in"/>
+        <pin num="11" name="PAD" type="power_in"/>
       </pins>
     </libpart>
     <libpart lib="Interface_Expansion" part="PCF8574">
@@ -638,33 +719,39 @@
         <pin num="16" name="VDD" type="power_in"/>
       </pins>
     </libpart>
-    <libpart lib="MCU_Microchip_ATtiny" part="ATtiny84A-P">
-      <description>20MHz, 8kB Flash, 512B SRAM, 512B EEPROM, debugWIRE, DIP-14</description>
-      <docs>http://ww1.microchip.com/downloads/en/DeviceDoc/doc8183.pdf</docs>
+    <libpart lib="MCU_ST_STM32F0" part="STM32F030F4Px">
+      <description>STMicroelectronics Arm Cortex-M0 MCU, 16KB flash, 4KB RAM, 48 MHz, 2.4-3.6V, 15 GPIO, TSSOP20</description>
+      <docs>https://www.st.com/resource/en/datasheet/stm32f030f4.pdf</docs>
       <footprints>
-        <fp>DIP*W7.62mm*</fp>
+        <fp>TSSOP*4.4x6.5mm*P0.65mm*</fp>
       </footprints>
       <fields>
         <field name="Reference">U</field>
-        <field name="Value">ATtiny84A-P</field>
-        <field name="Footprint">Package_DIP:DIP-14_W7.62mm</field>
-        <field name="Datasheet">http://ww1.microchip.com/downloads/en/DeviceDoc/doc8183.pdf</field>
+        <field name="Value">STM32F030F4Px</field>
+        <field name="Footprint">Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm</field>
+        <field name="Datasheet">https://www.st.com/resource/en/datasheet/stm32f030f4.pdf</field>
       </fields>
       <pins>
-        <pin num="1" name="VCC" type="power_in"/>
-        <pin num="2" name="XTAL1/PB0" type="bidirectional"/>
-        <pin num="3" name="XTAL2/PB1" type="bidirectional"/>
-        <pin num="4" name="~{RESET}/PB3" type="bidirectional"/>
-        <pin num="5" name="PB2" type="bidirectional"/>
-        <pin num="6" name="PA7" type="bidirectional"/>
-        <pin num="7" name="PA6" type="bidirectional"/>
-        <pin num="8" name="PA5" type="bidirectional"/>
-        <pin num="9" name="PA4" type="bidirectional"/>
-        <pin num="10" name="PA3" type="bidirectional"/>
-        <pin num="11" name="PA2" type="bidirectional"/>
-        <pin num="12" name="PA1" type="bidirectional"/>
-        <pin num="13" name="AREF/PA0" type="bidirectional"/>
-        <pin num="14" name="GND" type="power_in"/>
+        <pin num="1" name="BOOT0" type="input"/>
+        <pin num="2" name="PF0" type="bidirectional"/>
+        <pin num="3" name="PF1" type="bidirectional"/>
+        <pin num="4" name="NRST" type="input"/>
+        <pin num="5" name="VDDA" type="power_in"/>
+        <pin num="6" name="PA0" type="bidirectional"/>
+        <pin num="7" name="PA1" type="bidirectional"/>
+        <pin num="8" name="PA2" type="bidirectional"/>
+        <pin num="9" name="PA3" type="bidirectional"/>
+        <pin num="10" name="PA4" type="bidirectional"/>
+        <pin num="11" name="PA5" type="bidirectional"/>
+        <pin num="12" name="PA6" type="bidirectional"/>
+        <pin num="13" name="PA7" type="bidirectional"/>
+        <pin num="14" name="PB1" type="bidirectional"/>
+        <pin num="15" name="VSS" type="power_in"/>
+        <pin num="16" name="VDD" type="power_in"/>
+        <pin num="17" name="PA9" type="bidirectional"/>
+        <pin num="18" name="PA10" type="bidirectional"/>
+        <pin num="19" name="PA13" type="bidirectional"/>
+        <pin num="20" name="PA14" type="bidirectional"/>
       </pins>
     </libpart>
     <libpart lib="Mechanical" part="MountingHole">
@@ -678,6 +765,57 @@
         <field name="Value">MountingHole</field>
         <field name="Datasheet">~</field>
       </fields>
+    </libpart>
+    <libpart lib="Nick" part="XC6706x">
+      <description>200mA, Low Drop-out Voltage Regulator, Fixed Output, SOT-23-5</description>
+      <docs>https://www.farnell.com/datasheets/3902362.pdf</docs>
+      <footprints>
+        <fp>TO?252*</fp>
+        <fp>TO?263*</fp>
+        <fp>TO?220*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">XC6706x</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-89-3</field>
+        <field name="Datasheet">https://www.farnell.com/datasheets/3902362.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="OUT" type="power_out"/>
+        <pin num="2" name="GND" type="power_in"/>
+        <pin num="3" name="IN" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="RF_Module" part="RFM69HW">
+      <description>ISM Radio Transceiver Module, SPI interface</description>
+      <docs>https://www.hoperf.com/data/upload/portal/20181127/5bfcbb56f1fd7.pdf</docs>
+      <footprints>
+        <fp>HOPERF*RFM69HW*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">RFM69HW</field>
+        <field name="Footprint">RF_Module:HOPERF_RFM69HW</field>
+        <field name="Datasheet">https://www.hoperf.com/data/upload/portal/20181127/5bfcbb56f1fd7.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="RESET" type="input"/>
+        <pin num="2" name="DIO0" type="bidirectional"/>
+        <pin num="3" name="DIO1" type="bidirectional"/>
+        <pin num="4" name="DIO2" type="bidirectional"/>
+        <pin num="5" name="DIO3" type="bidirectional"/>
+        <pin num="6" name="DIO4" type="bidirectional"/>
+        <pin num="7" name="DIO5" type="bidirectional"/>
+        <pin num="8" name="3.3V" type="power_in"/>
+        <pin num="9" name="GND" type="power_in"/>
+        <pin num="10" name="ANA" type="output"/>
+        <pin num="11" name="GND" type="passive"/>
+        <pin num="12" name="SCK" type="input"/>
+        <pin num="13" name="MISO" type="output"/>
+        <pin num="14" name="MOSI" type="input"/>
+        <pin num="15" name="NSS" type="input"/>
+        <pin num="16" name="NC" type="no_connect"/>
+      </pins>
     </libpart>
     <libpart lib="Regulator_Linear" part="L7805">
       <description>Positive 1.5A 35V Linear Regulator, Fixed Output 5V, TO-220/TO-263/TO-252</description>
@@ -714,62 +852,73 @@
   </libparts>
   <libraries>
     <library logical="Connector">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Connector.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Connector.kicad_sym</uri>
+    </library>
+    <library logical="Connector_Generic">
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Connector_Generic.kicad_sym</uri>
     </library>
     <library logical="Device">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Device.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Device.kicad_sym</uri>
     </library>
     <library logical="Diode">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Diode.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Diode.kicad_sym</uri>
     </library>
     <library logical="Driver_Motor">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Driver_Motor.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Driver_Motor.kicad_sym</uri>
     </library>
     <library logical="Interface_Expansion">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Interface_Expansion.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Interface_Expansion.kicad_sym</uri>
     </library>
-    <library logical="MCU_Microchip_ATtiny">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/MCU_Microchip_ATtiny.kicad_sym</uri>
+    <library logical="MCU_ST_STM32F0">
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/MCU_ST_STM32F0.kicad_sym</uri>
     </library>
     <library logical="Mechanical">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Mechanical.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Mechanical.kicad_sym</uri>
+    </library>
+    <library logical="Nick">
+      <uri>C:/Users/Nick/Documents/KiCad/7.0/symbols/Nick.kicad_sym</uri>
+    </library>
+    <library logical="RF_Module">
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/RF_Module.kicad_sym</uri>
     </library>
     <library logical="Regulator_Linear">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Regulator_Linear.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Regulator_Linear.kicad_sym</uri>
     </library>
     <library logical="Switch">
-      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Switch.kicad_sym</uri>
+      <uri>C:\Program Files\KiCad\7.0\share\kicad\symbols\/Switch.kicad_sym</uri>
     </library>
   </libraries>
   <nets>
-    <net code="1" name="+5V">
-      <node ref="C1" pin="1" pintype="passive"/>
+    <net code="1" name="+3V3">
       <node ref="C2" pin="1" pintype="passive"/>
-      <node ref="C4" pin="1" pintype="passive"/>
+      <node ref="C5" pin="1" pintype="passive"/>
+      <node ref="C6" pin="1" pintype="passive"/>
       <node ref="C7" pin="1" pintype="passive"/>
       <node ref="D2" pin="2" pinfunction="A" pintype="passive"/>
       <node ref="D3" pin="2" pinfunction="A" pintype="passive"/>
       <node ref="D4" pin="2" pinfunction="A" pintype="passive"/>
       <node ref="D5" pin="2" pinfunction="A" pintype="passive"/>
-      <node ref="J2" pin="2" pinfunction="Pin_2" pintype="passive"/>
-      <node ref="J3" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="J5" pin="1" pinfunction="Pin_1" pintype="passive"/>
       <node ref="R8" pin="1" pintype="passive"/>
       <node ref="R9" pin="1" pintype="passive"/>
-      <node ref="U1" pin="1" pinfunction="VCC" pintype="power_in"/>
-      <node ref="U2" pin="3" pinfunction="OUT" pintype="power_out"/>
+      <node ref="U1" pin="1" pinfunction="OUT" pintype="power_out"/>
       <node ref="U3" pin="16" pinfunction="VDD" pintype="power_in"/>
-      <node ref="U4" pin="9" pinfunction="Vss" pintype="power_in"/>
+      <node ref="U6" pin="16" pinfunction="VDD" pintype="power_in"/>
+      <node ref="U6" pin="5" pinfunction="VDDA" pintype="power_in"/>
+      <node ref="U7" pin="8" pinfunction="3.3V" pintype="power_in"/>
+      <node ref="U8" pin="5" pinfunction="VREF" pintype="passive"/>
     </net>
     <net code="2" name="+10V">
+      <node ref="C10" pin="1" pintype="passive"/>
+      <node ref="C3" pin="1" pintype="passive"/>
       <node ref="C9" pin="1" pintype="passive"/>
-      <node ref="D1" pin="2" pinfunction="A" pintype="passive"/>
-      <node ref="U4" pin="4" pinfunction="Vs" pintype="power_in"/>
+      <node ref="D8" pin="2" pinfunction="A" pintype="passive"/>
       <node ref="U5" pin="3" pinfunction="OUT" pintype="power_out"/>
+      <node ref="U8" pin="6" pinfunction="VBB" pintype="power_in"/>
     </net>
     <net code="3" name="+12V">
-      <node ref="C8" pin="2" pintype="passive"/>
-      <node ref="D10" pin="1" pinfunction="K" pintype="passive"/>
-      <node ref="D8" pin="1" pinfunction="K" pintype="passive"/>
+      <node ref="C4" pin="2" pintype="passive"/>
+      <node ref="D1" pin="2" pinfunction="A" pintype="passive"/>
       <node ref="J4" pin="1" pinfunction="Pin_1" pintype="passive"/>
       <node ref="U5" pin="1" pinfunction="IN" pintype="power_in"/>
     </net>
@@ -789,158 +938,192 @@
       <node ref="R5" pin="1" pintype="passive"/>
       <node ref="U3" pin="11" pinfunction="P6" pintype="bidirectional"/>
     </net>
-    <net code="8" name="/M_EN">
-      <node ref="U1" pin="5" pinfunction="PB2" pintype="bidirectional"/>
-      <node ref="U4" pin="11" pinfunction="EnB" pintype="input"/>
+    <net code="8" name="/MISO">
+      <node ref="U6" pin="12" pinfunction="PA6" pintype="bidirectional"/>
+      <node ref="U7" pin="13" pinfunction="MISO" pintype="output"/>
     </net>
-    <net code="9" name="/M_IN1">
-      <node ref="U3" pin="6" pinfunction="P2" pintype="bidirectional"/>
-      <node ref="U4" pin="10" pinfunction="IN3" pintype="input"/>
+    <net code="9" name="/MOSI">
+      <node ref="U6" pin="13" pinfunction="PA7" pintype="bidirectional"/>
+      <node ref="U7" pin="14" pinfunction="MOSI" pintype="input"/>
     </net>
-    <net code="10" name="/M_IN2">
-      <node ref="U3" pin="7" pinfunction="P3" pintype="bidirectional"/>
-      <node ref="U4" pin="12" pinfunction="IN4" pintype="input"/>
+    <net code="10" name="/M_IN1">
+      <node ref="U6" pin="9" pinfunction="PA3" pintype="bidirectional"/>
+      <node ref="U8" pin="4" pinfunction="IN1" pintype="input"/>
     </net>
-    <net code="11" name="/M_OUT1">
+    <net code="11" name="/M_IN2">
+      <node ref="U6" pin="8" pinfunction="PA2" pintype="bidirectional"/>
+      <node ref="U8" pin="3" pinfunction="IN2" pintype="input"/>
+    </net>
+    <net code="12" name="/M_OUT1">
       <node ref="D6" pin="2" pinfunction="A" pintype="passive"/>
-      <node ref="D8" pin="2" pinfunction="A" pintype="passive"/>
-      <node ref="D9" pin="1" pinfunction="K" pintype="passive"/>
       <node ref="J1" pin="2" pinfunction="Pin_2" pintype="passive"/>
       <node ref="R2" pin="1" pintype="passive"/>
-      <node ref="U4" pin="13" pinfunction="OUT3" pintype="output"/>
+      <node ref="U8" pin="7" pinfunction="OUT1" pintype="power_out"/>
     </net>
-    <net code="12" name="/M_OUT2">
-      <node ref="D10" pin="2" pinfunction="A" pintype="passive"/>
-      <node ref="D11" pin="1" pinfunction="K" pintype="passive"/>
+    <net code="13" name="/M_OUT2">
       <node ref="D7" pin="2" pinfunction="A" pintype="passive"/>
       <node ref="J1" pin="1" pinfunction="Pin_1" pintype="passive"/>
       <node ref="R1" pin="1" pintype="passive"/>
-      <node ref="U4" pin="14" pinfunction="OUT4" pintype="output"/>
+      <node ref="U8" pin="9" pinfunction="OUT2" pintype="power_out"/>
     </net>
-    <net code="13" name="/PGM_A">
-      <node ref="J5" pin="2" pinfunction="Pin_2" pintype="passive"/>
-      <node ref="R9" pin="2" pintype="passive"/>
-      <node ref="U1" pin="7" pinfunction="PA6" pintype="bidirectional"/>
-      <node ref="U3" pin="15" pinfunction="SDA" pintype="bidirectional"/>
+    <net code="14" name="/RM_CS">
+      <node ref="U6" pin="10" pinfunction="PA4" pintype="bidirectional"/>
+      <node ref="U7" pin="15" pinfunction="NSS" pintype="input"/>
     </net>
-    <net code="14" name="/PGM_B">
-      <node ref="J5" pin="3" pinfunction="Pin_3" pintype="passive"/>
-      <node ref="U1" pin="8" pinfunction="PA5" pintype="bidirectional"/>
+    <net code="15" name="/RM_IRQ">
+      <node ref="U6" pin="6" pinfunction="PA0" pintype="bidirectional"/>
+      <node ref="U7" pin="2" pinfunction="DIO0" pintype="bidirectional"/>
     </net>
-    <net code="15" name="/PGM_C">
-      <node ref="J5" pin="4" pinfunction="Pin_4" pintype="passive"/>
-      <node ref="R8" pin="2" pintype="passive"/>
-      <node ref="U1" pin="9" pinfunction="PA4" pintype="bidirectional"/>
-      <node ref="U3" pin="14" pinfunction="SCL" pintype="input"/>
-    </net>
-    <net code="16" name="/RAD_RX">
-      <node ref="J3" pin="3" pinfunction="Pin_3" pintype="passive"/>
-      <node ref="U1" pin="11" pinfunction="PA2" pintype="bidirectional"/>
-    </net>
-    <net code="17" name="/RAD_SET">
-      <node ref="J3" pin="5" pinfunction="Pin_5" pintype="passive"/>
-    </net>
-    <net code="18" name="/RAD_TX">
-      <node ref="J3" pin="4" pinfunction="Pin_4" pintype="passive"/>
-      <node ref="U1" pin="12" pinfunction="PA1" pintype="bidirectional"/>
-    </net>
-    <net code="19" name="/Reset">
-      <node ref="J5" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    <net code="16" name="/RST">
       <node ref="SW1" pin="1" pinfunction="1" pintype="passive"/>
-      <node ref="U1" pin="4" pinfunction="~{RESET}/PB3" pintype="bidirectional"/>
+      <node ref="U6" pin="4" pinfunction="NRST" pintype="input"/>
     </net>
-    <net code="20" name="/XTAL1">
-      <node ref="C5" pin="1" pintype="passive"/>
-      <node ref="U1" pin="2" pinfunction="XTAL1/PB0" pintype="bidirectional"/>
-      <node ref="Y1" pin="1" pinfunction="1" pintype="passive"/>
+    <net code="17" name="/SCK">
+      <node ref="U6" pin="11" pinfunction="PA5" pintype="bidirectional"/>
+      <node ref="U7" pin="12" pinfunction="SCK" pintype="input"/>
     </net>
-    <net code="21" name="/XTAL2">
-      <node ref="C6" pin="1" pintype="passive"/>
-      <node ref="U1" pin="3" pinfunction="XTAL2/PB1" pintype="bidirectional"/>
-      <node ref="Y1" pin="2" pinfunction="2" pintype="passive"/>
+    <net code="18" name="/SCL">
+      <node ref="R8" pin="2" pintype="passive"/>
+      <node ref="U3" pin="14" pinfunction="SCL" pintype="input"/>
+      <node ref="U6" pin="17" pinfunction="PA9" pintype="bidirectional"/>
+    </net>
+    <net code="19" name="/SDA">
+      <node ref="R9" pin="2" pintype="passive"/>
+      <node ref="U3" pin="15" pinfunction="SDA" pintype="bidirectional"/>
+      <node ref="U6" pin="18" pinfunction="PA10" pintype="bidirectional"/>
+    </net>
+    <net code="20" name="/SWCLK">
+      <node ref="J5" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="U6" pin="20" pinfunction="PA14" pintype="bidirectional"/>
+    </net>
+    <net code="21" name="/SWDIO">
+      <node ref="J5" pin="3" pinfunction="Pin_3" pintype="passive"/>
+      <node ref="U6" pin="19" pinfunction="PA13" pintype="bidirectional"/>
     </net>
     <net code="22" name="GND">
-      <node ref="C1" pin="2" pintype="passive"/>
+      <node ref="AE1" pin="2" pinfunction="Shield" pintype="input"/>
+      <node ref="C1" pin="1" pintype="passive"/>
+      <node ref="C10" pin="2" pintype="passive"/>
       <node ref="C2" pin="2" pintype="passive"/>
-      <node ref="C3" pin="1" pintype="passive"/>
-      <node ref="C4" pin="2" pintype="passive"/>
+      <node ref="C3" pin="2" pintype="passive"/>
+      <node ref="C4" pin="1" pintype="passive"/>
       <node ref="C5" pin="2" pintype="passive"/>
       <node ref="C6" pin="2" pintype="passive"/>
       <node ref="C7" pin="2" pintype="passive"/>
-      <node ref="C8" pin="1" pintype="passive"/>
       <node ref="C9" pin="2" pintype="passive"/>
-      <node ref="D11" pin="2" pinfunction="A" pintype="passive"/>
-      <node ref="D9" pin="2" pinfunction="A" pintype="passive"/>
-      <node ref="J2" pin="1" pinfunction="Pin_1" pintype="passive"/>
-      <node ref="J3" pin="2" pinfunction="Pin_2" pintype="passive"/>
       <node ref="J4" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="J5" pin="4" pinfunction="Pin_4" pintype="passive"/>
       <node ref="SW1" pin="2" pinfunction="2" pintype="passive"/>
-      <node ref="U1" pin="14" pinfunction="GND" pintype="power_in"/>
-      <node ref="U2" pin="2" pinfunction="GND" pintype="power_in"/>
+      <node ref="U1" pin="2" pinfunction="GND" pintype="power_in"/>
       <node ref="U3" pin="1" pinfunction="A0" pintype="input"/>
       <node ref="U3" pin="2" pinfunction="A1" pintype="input"/>
       <node ref="U3" pin="3" pinfunction="A2" pintype="input"/>
       <node ref="U3" pin="8" pinfunction="VSS" pintype="power_in"/>
-      <node ref="U4" pin="1" pinfunction="SENSE_A" pintype="power_in"/>
-      <node ref="U4" pin="15" pinfunction="SENSE_B" pintype="power_in"/>
-      <node ref="U4" pin="5" pinfunction="IN1" pintype="input"/>
-      <node ref="U4" pin="6" pinfunction="EnA" pintype="input"/>
-      <node ref="U4" pin="7" pinfunction="IN2" pintype="input"/>
-      <node ref="U4" pin="8" pinfunction="GND" pintype="power_in"/>
       <node ref="U5" pin="2" pinfunction="GND" pintype="power_in"/>
+      <node ref="U6" pin="1" pinfunction="BOOT0" pintype="input"/>
+      <node ref="U6" pin="15" pinfunction="VSS" pintype="power_in"/>
+      <node ref="U7" pin="11" pinfunction="GND" pintype="passive"/>
+      <node ref="U7" pin="9" pinfunction="GND" pintype="power_in"/>
+      <node ref="U8" pin="10" pinfunction="GND" pintype="power_in"/>
+      <node ref="U8" pin="11" pinfunction="PAD" pintype="power_in"/>
     </net>
-    <net code="23" name="Net-(C3-Pad2)">
-      <node ref="C3" pin="2" pintype="passive"/>
+    <net code="23" name="Net-(#FLG03-pwr)">
+      <node ref="C1" pin="2" pintype="passive"/>
+      <node ref="J2" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="U1" pin="3" pinfunction="IN" pintype="power_in"/>
+    </net>
+    <net code="24" name="Net-(AE1-A)">
+      <node ref="AE1" pin="1" pinfunction="A" pintype="input"/>
+      <node ref="U7" pin="10" pinfunction="ANA" pintype="output"/>
+    </net>
+    <net code="25" name="Net-(D1-K)">
       <node ref="D1" pin="1" pinfunction="K" pintype="passive"/>
-      <node ref="U2" pin="1" pinfunction="IN" pintype="power_in"/>
+      <node ref="J2" pin="1" pinfunction="Pin_1" pintype="passive"/>
     </net>
-    <net code="24" name="Net-(D2-Pad1)">
+    <net code="26" name="Net-(D2-K)">
       <node ref="D2" pin="1" pinfunction="K" pintype="passive"/>
       <node ref="R3" pin="2" pintype="passive"/>
     </net>
-    <net code="25" name="Net-(D3-Pad1)">
+    <net code="27" name="Net-(D3-K)">
       <node ref="D3" pin="1" pinfunction="K" pintype="passive"/>
       <node ref="R4" pin="2" pintype="passive"/>
     </net>
-    <net code="26" name="Net-(D4-Pad1)">
+    <net code="28" name="Net-(D4-K)">
       <node ref="D4" pin="1" pinfunction="K" pintype="passive"/>
       <node ref="R5" pin="2" pintype="passive"/>
     </net>
-    <net code="27" name="Net-(D5-Pad1)">
+    <net code="29" name="Net-(D5-K)">
       <node ref="D5" pin="1" pinfunction="K" pintype="passive"/>
       <node ref="R6" pin="2" pintype="passive"/>
     </net>
-    <net code="28" name="Net-(D6-Pad1)">
+    <net code="30" name="Net-(D6-K)">
       <node ref="D6" pin="1" pinfunction="K" pintype="passive"/>
       <node ref="R1" pin="2" pintype="passive"/>
     </net>
-    <net code="29" name="Net-(D7-Pad1)">
+    <net code="31" name="Net-(D7-K)">
       <node ref="D7" pin="1" pinfunction="K" pintype="passive"/>
       <node ref="R2" pin="2" pintype="passive"/>
     </net>
-    <net code="30" name="unconnected-(U1-Pad6)">
-      <node ref="U1" pin="6" pinfunction="PA7" pintype="bidirectional"/>
+    <net code="32" name="Net-(D8-K)">
+      <node ref="D8" pin="1" pinfunction="K" pintype="passive"/>
+      <node ref="J2" pin="3" pinfunction="Pin_3" pintype="passive"/>
     </net>
-    <net code="31" name="unconnected-(U1-Pad10)">
-      <node ref="U1" pin="10" pinfunction="PA3" pintype="bidirectional"/>
+    <net code="33" name="unconnected-(U3-P0-Pad4)">
+      <node ref="U3" pin="4" pinfunction="P0" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="32" name="unconnected-(U1-Pad13)">
-      <node ref="U1" pin="13" pinfunction="AREF/PA0" pintype="bidirectional"/>
+    <net code="34" name="unconnected-(U3-P1-Pad5)">
+      <node ref="U3" pin="5" pinfunction="P1" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="33" name="unconnected-(U3-Pad4)">
-      <node ref="U3" pin="4" pinfunction="P0" pintype="bidirectional"/>
+    <net code="35" name="unconnected-(U3-P2-Pad6)">
+      <node ref="U3" pin="6" pinfunction="P2" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="34" name="unconnected-(U3-Pad5)">
-      <node ref="U3" pin="5" pinfunction="P1" pintype="bidirectional"/>
+    <net code="36" name="unconnected-(U3-P3-Pad7)">
+      <node ref="U3" pin="7" pinfunction="P3" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="35" name="unconnected-(U3-Pad13)">
-      <node ref="U3" pin="13" pinfunction="~{INT}" pintype="open_collector"/>
+    <net code="37" name="unconnected-(U3-~{INT}-Pad13)">
+      <node ref="U3" pin="13" pinfunction="~{INT}" pintype="open_collector+no_connect"/>
     </net>
-    <net code="36" name="unconnected-(U4-Pad2)">
-      <node ref="U4" pin="2" pinfunction="OUT1" pintype="output"/>
+    <net code="38" name="unconnected-(U6-PA1-Pad7)">
+      <node ref="U6" pin="7" pinfunction="PA1" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="37" name="unconnected-(U4-Pad3)">
-      <node ref="U4" pin="3" pinfunction="OUT2" pintype="output"/>
+    <net code="39" name="unconnected-(U6-PB1-Pad14)">
+      <node ref="U6" pin="14" pinfunction="PB1" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="40" name="unconnected-(U6-PF0-Pad2)">
+      <node ref="U6" pin="2" pinfunction="PF0" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="41" name="unconnected-(U6-PF1-Pad3)">
+      <node ref="U6" pin="3" pinfunction="PF1" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="42" name="unconnected-(U7-DIO1-Pad3)">
+      <node ref="U7" pin="3" pinfunction="DIO1" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="43" name="unconnected-(U7-DIO2-Pad4)">
+      <node ref="U7" pin="4" pinfunction="DIO2" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="44" name="unconnected-(U7-DIO3-Pad5)">
+      <node ref="U7" pin="5" pinfunction="DIO3" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="45" name="unconnected-(U7-DIO4-Pad6)">
+      <node ref="U7" pin="6" pinfunction="DIO4" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="46" name="unconnected-(U7-DIO5-Pad7)">
+      <node ref="U7" pin="7" pinfunction="DIO5" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="47" name="unconnected-(U7-NC-Pad16)">
+      <node ref="U7" pin="16" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="48" name="unconnected-(U7-RESET-Pad1)">
+      <node ref="U7" pin="1" pinfunction="RESET" pintype="input+no_connect"/>
+    </net>
+    <net code="49" name="unconnected-(U8-LSS-Pad8)">
+      <node ref="U8" pin="8" pinfunction="LSS" pintype="power_in+no_connect"/>
+    </net>
+    <net code="50" name="unconnected-(U8-RTRY-Pad2)">
+      <node ref="U8" pin="2" pinfunction="RTRY" pintype="input+no_connect"/>
+    </net>
+    <net code="51" name="unconnected-(U8-~{FLTn}-Pad1)">
+      <node ref="U8" pin="1" pinfunction="~{FLTn}" pintype="output+no_connect"/>
     </net>
   </nets>
 </export>
