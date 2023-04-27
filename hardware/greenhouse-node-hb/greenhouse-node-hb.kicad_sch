@@ -5,7 +5,7 @@
   (paper "A4")
 
   (title_block
-    (title "Greenhouse Node Mini")
+    (title "Greenhouse Node HB (Mini)")
     (date "2022-11-16")
     (rev "2")
     (company "Nick Bolton")
@@ -2396,7 +2396,7 @@
     (pin "1" (uuid 4cd02096-2bed-4db1-b436-48310c25ea03))
     (pin "2" (uuid 73189310-63a8-424c-a390-09693fc402cf))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C9") (unit 1)
         )
@@ -2422,7 +2422,7 @@
     (pin "1" (uuid 3081c45f-0a62-4dc8-a706-c2b3c5e194d8))
     (pin "2" (uuid 3258ef2e-7dfd-4b7b-a84c-a8f03af613a6))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "D6") (unit 1)
         )
@@ -2446,7 +2446,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "H3") (unit 1)
         )
@@ -2471,7 +2471,7 @@
     )
     (pin "1" (uuid 2b424e4b-192e-4891-b8d3-d807c6c94095))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR08") (unit 1)
         )
@@ -2496,7 +2496,7 @@
     )
     (pin "1" (uuid 8b08491b-60d4-437e-8d25-6029ad1296e6))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR0102") (unit 1)
         )
@@ -2521,7 +2521,7 @@
     )
     (pin "1" (uuid 0d077e38-a5d8-4438-a9e3-ede15c6c09a1))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR03") (unit 1)
         )
@@ -2547,7 +2547,7 @@
     (pin "1" (uuid 03efb8ef-6073-408f-8f0f-e66f45130e47))
     (pin "2" (uuid e36eb0d2-1048-45d5-9fef-ad3d4b5e5869))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C10") (unit 1)
         )
@@ -2572,7 +2572,7 @@
     )
     (pin "1" (uuid 3ea88be0-e57a-411b-81cb-852047332593))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR012") (unit 1)
         )
@@ -2598,7 +2598,7 @@
     (pin "1" (uuid 78425667-dad1-47de-81b1-3da277e11bf4))
     (pin "2" (uuid 846c6b2e-c321-4a77-af7b-fab476912546))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C2") (unit 1)
         )
@@ -2624,7 +2624,7 @@
     (pin "1" (uuid c53aa5f2-d572-4202-858c-f6be0526a30e))
     (pin "2" (uuid 01fdc5bf-296e-4f04-9c40-b5172d878a40))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R8") (unit 1)
         )
@@ -2656,7 +2656,7 @@
     (pin "1" (uuid 6fa05a9c-b7d8-4e4c-8acc-cd954b56ef4e))
     (pin "2" (uuid abd48bd7-c1a6-4597-b152-4c554faf2c24))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "D1") (unit 1)
         )
@@ -2681,7 +2681,7 @@
     )
     (pin "1" (uuid aba15d5a-cc11-4cd7-ab2e-88d2aeaafc7e))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR015") (unit 1)
         )
@@ -2706,7 +2706,7 @@
     )
     (pin "1" (uuid abae5eb6-f404-475f-aa3c-78fb6c375c01))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR02") (unit 1)
         )
@@ -2746,7 +2746,7 @@
     (pin "8" (uuid 4581a7a5-f1c2-4275-b471-9dfd790fe9ba))
     (pin "9" (uuid c0888964-def4-4e1c-89b2-fd607ceb6aa3))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "U3") (unit 1)
         )
@@ -2773,7 +2773,7 @@
     (pin "2" (uuid 589b8a81-dff5-4ed8-8d90-a26c2f360859))
     (pin "3" (uuid faebd2df-d711-456f-835b-6b8768a4a69a))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "U5") (unit 1)
         )
@@ -2817,7 +2817,7 @@
     (pin "8" (uuid 8c5c7a53-1993-4a85-ad2f-65492657f3e8))
     (pin "9" (uuid c676f558-cd5a-4913-b44b-a474538cf672))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "U6") (unit 1)
         )
@@ -2848,7 +2848,7 @@
           (reference "AE1") (unit 1)
         )
       )
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "AE1") (unit 1)
         )
@@ -2874,7 +2874,7 @@
     (pin "1" (uuid 0c8cfabd-8938-4f7d-8512-3b57ec2f8e02))
     (pin "2" (uuid 79eaadf3-10f9-492b-a326-27b6b1e41013))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C7") (unit 1)
         )
@@ -2900,7 +2900,7 @@
     (pin "1" (uuid 8c60e3c9-4275-4a7b-9593-0d6ad7af9d00))
     (pin "2" (uuid ca32b5b7-7b22-45c5-a3d4-ed6d94fcc151))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "SW1") (unit 1)
         )
@@ -2925,7 +2925,7 @@
     )
     (pin "1" (uuid 40997062-008a-4e49-9f9f-e8d17d675065))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR0113") (unit 1)
         )
@@ -2951,7 +2951,7 @@
     (pin "1" (uuid cbc0d3e3-60b4-45df-a00b-ef7799d90bc5))
     (pin "2" (uuid 6ce1ec92-d904-4789-96aa-4351303bb99b))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "D2") (unit 1)
         )
@@ -2977,7 +2977,7 @@
     (pin "1" (uuid 645aa6e6-86b3-4dd5-bf64-72105a15818f))
     (pin "2" (uuid 8a3c0c5e-396f-4878-9da1-27c2e835c214))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C5") (unit 1)
         )
@@ -3003,7 +3003,7 @@
     (pin "1" (uuid 51cc0ec5-989d-4070-94f7-0da57ca969a9))
     (pin "2" (uuid b3e7f54d-3803-45ee-98b2-4e09beec5fba))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "J4") (unit 1)
         )
@@ -3029,7 +3029,7 @@
     (pin "1" (uuid b8b80187-cb2a-4773-b619-b26edbc8c094))
     (pin "2" (uuid f96f56bb-ec9e-48d7-8e77-4f5fc14859ec))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R4") (unit 1)
         )
@@ -3054,7 +3054,7 @@
     )
     (pin "1" (uuid b054b851-677e-4d89-b50e-17682f96d6b5))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR014") (unit 1)
         )
@@ -3080,7 +3080,7 @@
     (pin "1" (uuid b64d922b-f1cc-4940-96f6-60cbefb80766))
     (pin "2" (uuid 602a1461-f2fc-4f38-9213-73e41c428934))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "J1") (unit 1)
         )
@@ -3105,7 +3105,7 @@
     )
     (pin "1" (uuid 30aea2cf-57c4-438e-ac44-6f0b7aab8c79))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR019") (unit 1)
         )
@@ -3130,7 +3130,7 @@
     )
     (pin "1" (uuid 65ea38ae-8fc9-4556-837f-8e24333e33e0))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#FLG03") (unit 1)
         )
@@ -3170,7 +3170,7 @@
     (pin "8" (uuid 75681514-7ed3-4a7b-91a9-c1c5c46c6fd5))
     (pin "9" (uuid e255082b-7b9b-4fd2-b324-f96379dcb80d))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "U7") (unit 1)
         )
@@ -3195,7 +3195,7 @@
     )
     (pin "1" (uuid e0e0f21a-7d52-482e-852b-de341ec0ef64))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#FLG02") (unit 1)
         )
@@ -3221,7 +3221,7 @@
     (pin "1" (uuid 095009ff-5c56-42f2-b5c6-08b9557b737e))
     (pin "2" (uuid 29a5903b-1efe-45d2-8b8d-cf48e555a1aa))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "D4") (unit 1)
         )
@@ -3247,7 +3247,7 @@
     (pin "1" (uuid 93123703-660b-450f-8ff7-6cde35b84dc7))
     (pin "2" (uuid ab3a9af0-fa3b-44a2-961e-8e38fe1fcb4f))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R9") (unit 1)
         )
@@ -3273,7 +3273,7 @@
     (pin "1" (uuid 3450b2e4-ced5-46f5-9b29-6cc2e2bf32ee))
     (pin "2" (uuid 140388da-3b64-419c-aa64-8b4bef375025))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R6") (unit 1)
         )
@@ -3299,7 +3299,7 @@
     (pin "1" (uuid 341541c1-d4dd-4abf-b14f-29ff453aec34))
     (pin "2" (uuid 17716c3c-0e6c-4077-a91f-9dba44702c50))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R3") (unit 1)
         )
@@ -3323,7 +3323,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "H2") (unit 1)
         )
@@ -3353,7 +3353,7 @@
           (reference "#PWR030") (unit 1)
         )
       )
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR017") (unit 1)
         )
@@ -3378,7 +3378,7 @@
     )
     (pin "1" (uuid c98a6c0e-6716-439b-9df8-60deb05a664a))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR010") (unit 1)
         )
@@ -3404,7 +3404,7 @@
     (pin "1" (uuid cdab9592-9fc5-4cb1-a573-b6e4c01917d9))
     (pin "2" (uuid da74f95f-1d78-40c1-9f65-cff7fb20eeaa))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "D7") (unit 1)
         )
@@ -3429,7 +3429,7 @@
     )
     (pin "1" (uuid 4e2582fb-afa6-4a0e-a8b4-133e3fe239ce))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR09") (unit 1)
         )
@@ -3455,7 +3455,7 @@
     (pin "1" (uuid 8d9650d8-890a-4f2a-8677-74631744cf09))
     (pin "2" (uuid bd685f36-653f-438f-8a57-6198bd43d0c2))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R5") (unit 1)
         )
@@ -3480,7 +3480,7 @@
     )
     (pin "1" (uuid 5fc14630-3e2d-499e-8183-1ed3a5ba9660))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#FLG01") (unit 1)
         )
@@ -3506,7 +3506,7 @@
     (pin "1" (uuid 2a1e126f-a9a5-414b-9647-9870ac9981f9))
     (pin "2" (uuid 18dcb17a-d81c-4b8b-8db2-863005a99fab))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R2") (unit 1)
         )
@@ -3531,7 +3531,7 @@
     )
     (pin "1" (uuid 5f767106-4d62-4f24-aa2d-b9dd5c1a0497))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR0106") (unit 1)
         )
@@ -3557,7 +3557,7 @@
     (pin "1" (uuid 707329af-e8b1-42a5-873e-ec30a7817c3b))
     (pin "2" (uuid f52886a1-8d65-4eb5-a2d0-60b406f240ae))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C6") (unit 1)
         )
@@ -3582,7 +3582,7 @@
     )
     (pin "1" (uuid 2df689eb-5f45-464d-8603-58e1c71ca682))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR016") (unit 1)
         )
@@ -3607,7 +3607,7 @@
     )
     (pin "1" (uuid 829dcfb0-16a6-490f-afa6-5e712fc19269))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR018") (unit 1)
         )
@@ -3633,7 +3633,7 @@
     (pin "1" (uuid c6d429dc-593c-414b-9320-8526ab51982f))
     (pin "2" (uuid 068c0570-b6a5-4cf9-8131-68e87403c95f))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C4") (unit 1)
         )
@@ -3659,7 +3659,7 @@
     (pin "1" (uuid a3c0880a-9b88-40c9-a34e-232cb814b7d3))
     (pin "2" (uuid 0c86020d-322b-46cb-b039-7532153898ee))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "D5") (unit 1)
         )
@@ -3685,7 +3685,7 @@
     (pin "1" (uuid 0cfaef79-4183-4ca0-ba10-6296f760f980))
     (pin "2" (uuid 333ae736-94cc-4651-b514-d3d2cb0b18c5))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "D3") (unit 1)
         )
@@ -3710,7 +3710,7 @@
     )
     (pin "1" (uuid 58a79074-1952-4562-94bd-5f624ebaad4e))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR013") (unit 1)
         )
@@ -3735,7 +3735,7 @@
     )
     (pin "1" (uuid eae287b5-46bf-4fbc-9c14-93ad2a3cda9c))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR020") (unit 1)
         )
@@ -3760,7 +3760,7 @@
     )
     (pin "1" (uuid 62a3a113-d718-4984-ab2a-c3bee3378b07))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR0114") (unit 1)
         )
@@ -3788,7 +3788,7 @@
     (pin "3" (uuid 605982ff-2a21-4499-8bfe-4dd88cecc24a))
     (pin "4" (uuid 85bace5a-dbb0-4f54-b5f1-dd38800ccb69))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "J5") (unit 1)
         )
@@ -3813,7 +3813,7 @@
     )
     (pin "1" (uuid 012e138a-c5b5-49d3-9d01-36e17cb03eec))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR05") (unit 1)
         )
@@ -3837,7 +3837,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "H4") (unit 1)
         )
@@ -3862,7 +3862,7 @@
     )
     (pin "1" (uuid ca681df1-932c-40f5-a0f8-d9e847617ecf))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR0105") (unit 1)
         )
@@ -3887,7 +3887,7 @@
     )
     (pin "1" (uuid 99794c2d-8dad-4938-9dad-78984fc87fa4))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR0112") (unit 1)
         )
@@ -3914,7 +3914,7 @@
     (pin "2" (uuid 1d065432-00dc-4b5b-9c77-0ad2fd4ba85c))
     (pin "3" (uuid 6fbb32bc-3163-473b-bb2c-07e96836fc3c))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "U1") (unit 1)
         )
@@ -3939,7 +3939,7 @@
     )
     (pin "1" (uuid 89ce4b6b-f800-4d4c-938b-cfbe0da788e1))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR0108") (unit 1)
         )
@@ -3965,7 +3965,7 @@
     (pin "1" (uuid dc2deb69-e3c6-448b-aabc-6edeca4112b1))
     (pin "2" (uuid 721186d3-76dc-4264-94af-eb77f6a6e28e))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C1") (unit 1)
         )
@@ -3991,7 +3991,7 @@
     (pin "1" (uuid 7d393522-d44b-4d20-8f0b-b7142987aa89))
     (pin "2" (uuid b7bae9c8-4fed-4c69-a28c-182e2480bcdb))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "R1") (unit 1)
         )
@@ -4026,7 +4026,7 @@
     (pin "8" (uuid da69180b-82ee-4356-af0f-7f6e71cd3c49))
     (pin "9" (uuid 9ff2e504-9832-4e75-9623-0edca0f888c7))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "U8") (unit 1)
         )
@@ -4051,7 +4051,7 @@
     )
     (pin "1" (uuid 28bddaa5-dc7d-49c4-bbfb-238b2b04e3fd))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR06") (unit 1)
         )
@@ -4075,7 +4075,7 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "H1") (unit 1)
         )
@@ -4100,7 +4100,7 @@
     )
     (pin "1" (uuid 177ba98b-90a5-4b9b-aabf-2fa8c204366a))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR011") (unit 1)
         )
@@ -4126,7 +4126,7 @@
     (pin "1" (uuid a7e3e241-7aba-4549-ac5f-c7b6764d5003))
     (pin "2" (uuid 0911cbd8-191e-4b4e-8a5a-e5f6f0f41164))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "C3") (unit 1)
         )
@@ -4151,7 +4151,7 @@
     )
     (pin "1" (uuid 991551a6-52fb-4ba0-81d7-33963581c007))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR01") (unit 1)
         )
@@ -4176,7 +4176,7 @@
     )
     (pin "1" (uuid 8039c3aa-f039-4597-ba84-ed7deb8b296d))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR04") (unit 1)
         )
@@ -4201,7 +4201,7 @@
     )
     (pin "1" (uuid 97617ea4-2a0b-43ae-88db-1a9dd519f782))
     (instances
-      (project "greenhouse-node-mini"
+      (project "greenhouse-node-hb"
         (path "/d6d8dcc8-67cc-42c5-89b4-d76037b5248a"
           (reference "#PWR07") (unit 1)
         )
