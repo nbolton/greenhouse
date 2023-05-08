@@ -1,4 +1,4 @@
-#if LORA_EN
+#if PUMP_RADIO_EN
 
 #include "PumpRadio.h"
 
@@ -8,8 +8,8 @@
 
 #include <string>
 
-#include "../../common/common.h"
-#include "../../common/log.h"
+#include "../../../common/common.h"
+#include "../../../common/log.h"
 
 #define RFM95_CS 5
 #define RFM95_IRQ 4
@@ -138,4 +138,4 @@ void PumpRadio::SwitchPump(bool on)
 } // namespace greenhouse
 } // namespace embedded
 
-#endif // LORA_EN
+#endif // PUMP_RADIO_EN

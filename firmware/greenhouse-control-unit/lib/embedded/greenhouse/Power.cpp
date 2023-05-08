@@ -2,6 +2,7 @@
 
 #include "common.h"
 
+#include <Adafruit_INA219.h>
 #include <Arduino.h>
 #include <PCF8574.h>
 
@@ -10,31 +11,38 @@ using namespace common;
 namespace embedded {
 namespace greenhouse {
 
+#define VS_PIN_PSU 32
+#define VS_PIN_BATT 35
+#define VS_PIN_PV 34
+#define VS_IN_MIN 912
+#define VS_IN_MAX 1575
+#define VS_OUT_MIN 9.89
+#define VS_OUT_MAX 15.87
 #define PIN_LOCAL_VOLTAGE 34
 #define VOLTAGE_DIFF_DELTA .1f
 #define CURRENT_DIFF_DELTA .1f
-#define VOLTAGE_DROP_WAIT 10000 // 10s
-
-#define IO_PIN_BATT_SW P0
-#define IO_PIN_PSU_SW P1
-#define IO_PIN_BATT_LED P4
-#define IO_PIN_PSU_LED P5
-
+#define SWITCH_LIMIT 10000 // 10s
+#define IO_PIN_PSU_LED P2
+#define IO_PIN_BATT_LED P3
+#define IO_PIN_BATT_SW P4
+#define IO_PIN_PSU_SW P5
+#define IO_PIN_AC_SW P6
 #define SWITCH_ON HIGH
 #define SWITCH_OFF LOW
 #define LED_ON LOW
 #define LED_OFF HIGH
+#define INA219_ADDR1 0x40
+#define INA219_ADDR2 0x48
 
-const float k_localVoltageMin = 9.5;
-const float k_localVoltageMapIn = 1880;
-const float k_localVoltageMapOut = 10.0;
-const int k_switchDelay = 2000; // delay between switching both relays
-const bool k_relayTest = false; // useful for testing power drop
-const int k_relayTestInterval = 2000;
-const int k_lowBatteryMeasureInterval = 10000; // 10 s
+const float k_batteryVoltageMin = 10;
+const float k_psuVoltageMin = 11.5;
+const int k_switchDelay = 500; // delay between switching both relays
 
 static Power *s_instance = nullptr;
 bool s_testState = false;
+
+Adafruit_INA219 ina219_0(INA219_ADDR1);
+Adafruit_INA219 ina219_1(INA219_ADDR2);
 
 // member functions
 
@@ -47,21 +55,16 @@ Power::Power() :
   m_batteryVoltageSwitchOff(k_unknown),
   m_batteryVoltageSensor(k_unknown),
   m_batteryVoltageOutput(k_unknown),
-  m_batteryVoltageSensorMin(0),
-  m_batteryVoltageSensorMax(k_unknown),
-  m_batteryVoltageOutputMin(0),
-  m_batteryVoltageOutputMax(k_unknown),
   m_batteryCurrentSensor(k_unknown),
   m_batteryCurrentOutput(k_unknown),
-  m_batteryCurrentSensorMin(0),
-  m_batteryCurrentSensorMax(k_unknown),
-  m_batteryCurrentOutputMin(0),
-  m_batteryCurrentOutputMax(k_unknown),
-  m_lastLocalVoltage(k_unknown),
+  m_psuVoltageSensor(k_unknown),
+  m_psuVoltageOutput(k_unknown),
   m_lastBatteryVoltage(k_unknown),
   m_lastBatteryCurrent(k_unknown),
-  m_nextVoltageDropSwitch(k_unknownUL),
-  m_lastMeasure(k_unknown)
+  m_lastPsuVoltage(k_unknown),
+  m_lastPsuCurrent(k_unknown),
+  m_lastMeasure(k_unknown),
+  m_nextSwitch(k_unknownUL)
 {
 }
 
@@ -72,6 +75,9 @@ void Power::Setup()
   // circuit default state is both power sources connected
   Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_ON);
   Embedded().WriteOnboardIO(IO_PIN_BATT_LED, LED_ON);
+
+  ina219_0.begin();
+  ina219_1.begin();
 }
 
 native::greenhouse::ISystem &Power::Native() const
@@ -110,38 +116,37 @@ void Power::Loop()
 {
   MeasureVoltage();
 
-  const float localVoltage = ReadLocalVoltage();
-  const bool localVoltageChanged = abs(m_lastLocalVoltage - localVoltage) > VOLTAGE_DIFF_DELTA;
-  if (localVoltageChanged) {
-    TRACE_F("Local voltage changed, was %.2fV, now %.2fV", m_lastLocalVoltage, localVoltage);
+  const float psuVoltage = m_psuVoltageOutput;
+  const bool psuVoltageChanged = abs(m_lastPsuVoltage - psuVoltage) > VOLTAGE_DIFF_DELTA;
+  if (psuVoltageChanged) {
+    TRACE_F("PSU voltage changed, was %.2fV, now %.2fV", m_lastPsuVoltage, psuVoltage);
+
+    if ((m_source == PowerSource::k_powerSourcePsu) && (psuVoltage < k_psuVoltageMin)) {
+      TRACE("PSU undervoltage, switching to battery");
+      switchSource(PowerSource::k_powerSourceBattery);
+      Native().ReportWarning("PSU undervoltage, using battery");
+    }
   }
-  m_lastLocalVoltage = localVoltage;
+  m_lastPsuVoltage = psuVoltage;
 
   const float batteryVoltage = m_batteryVoltageOutput;
   const bool batteryVoltageChanged =
     abs(m_lastBatteryVoltage - batteryVoltage) > VOLTAGE_DIFF_DELTA;
   if (batteryVoltageChanged) {
     TRACE_F("Battery voltage changed, was %.2fV now %.2fV", m_lastBatteryVoltage, batteryVoltage);
+
+    if ((m_source == PowerSource::k_powerSourceBattery) && (batteryVoltage < k_batteryVoltageMin)) {
+      TRACE("Battery undervoltage, switching to PSU");
+      switchSource(PowerSource::k_powerSourcePsu);
+      Native().ReportWarning("Battery undervoltage, using PSU");
+    }
   }
   m_lastBatteryVoltage = m_batteryVoltageOutput;
 
-  if ((m_nextVoltageDropSwitch == k_unknownUL) || (millis() > m_nextVoltageDropSwitch)) {
-    if (localVoltage <= k_localVoltageMin) {
-      Native().ReportWarning("Local voltage drop detected: %.2fV", localVoltage);
-      if (m_source == PowerSource::k_powerSourceBattery) {
-        TRACE("Auto switching from battery to PSU");
-        switchSource(PowerSource::k_powerSourcePsu);
-      }
-      else if (m_source == PowerSource::k_powerSourcePsu) {
-        TRACE("Auto switching from PSU to battery");
-        switchSource(PowerSource::k_powerSourceBattery);
-      }
-      else {
-        TRACE("Not auto switching; other source");
-      }
-      m_nextVoltageDropSwitch = millis() + VOLTAGE_DROP_WAIT;
-    }
-    else if (Mode() != PowerMode::k_powerModeAuto) {
+  if ((m_nextSwitch == k_unknownUL) || (millis() > m_nextSwitch)) {
+    m_nextSwitch = millis() + SWITCH_LIMIT;
+
+    if (Mode() != PowerMode::k_powerModeAuto) {
       if (Mode() == PowerMode::k_powerModeManualBattery) {
         if (m_source != PowerSource::k_powerSourceBattery) {
           Native().ReportWarning("Power mode is manual (battery)");
@@ -185,119 +190,87 @@ void Power::Loop()
 
 void Power::MeasureVoltage()
 {
-  if (m_batteryVoltageSensorMax == k_unknown || m_batteryVoltageOutputMax == k_unknown) {
-    return;
-  }
-
-  // slow battery measurement down if low battery to save power
-  const unsigned long next = (m_lastMeasure + k_lowBatteryMeasureInterval);
-  if (batteryIsLow() && (millis() < next)) {
-#ifdef TRACE_BATTERY
-    TRACE_F("Low battery, skipping measurement for %lus", (next - millis()) / 1000);
-#endif // TRACE_BATTERY
-    return;
-  }
-  m_lastMeasure = millis();
-
-  m_batteryVoltageSensor = Embedded().ReadBatteryVoltageSensorRaw();
-#if TRACE_SENSOR_RAW
-  TRACE_F("Battery voltage sensor raw: %.4f", m_batteryVoltageSensor);
-#endif // TRACE_SENSOR_RAW
+  m_batteryVoltageSensor = analogRead(VS_PIN_BATT);
   if (m_batteryVoltageSensor != k_unknown) {
-    m_batteryVoltageOutput = mapFloat(
-      m_batteryVoltageSensor,
-      m_batteryVoltageSensorMin,
-      m_batteryVoltageSensorMax,
-      m_batteryVoltageOutputMin,
-      m_batteryVoltageOutputMax);
-
-#if TRACE_SENSOR_RAW
-    TRACE_F(
-      "Battery inMin=%.4f, inMax=%.4f, outMin=%.4f, outMax=%.4f, out=%.4f",
-      m_batteryVoltageSensorMin,
-      m_batteryVoltageSensorMax,
-      m_batteryVoltageOutputMin,
-      m_batteryVoltageOutputMax,
-      m_batteryVoltageOutput);
-#endif // TRACE_SENSOR_RAW
+    m_batteryVoltageOutput =
+      mapFloat(m_batteryVoltageSensor, VS_IN_MIN, VS_IN_MAX, VS_OUT_MIN, VS_OUT_MAX);
   }
   else {
     m_batteryVoltageOutput = k_unknown;
   }
+
+  m_psuVoltageSensor = analogRead(VS_PIN_PSU);
+  if (m_psuVoltageSensor != k_unknown) {
+    m_psuVoltageOutput = mapFloat(m_psuVoltageSensor, VS_IN_MIN, VS_IN_MAX, VS_OUT_MIN, VS_OUT_MAX);
+  }
+  else {
+    m_psuVoltageOutput = k_unknown;
+  }
 }
+
+// TODO: send the correct calibration value for a 0.001 ohms
+// shunt (the Adafruit library uses a 0.1 ohms shunt).
+float toAmps_0R001(float mA_0R1) { return mA_0R1 / 10; }
 
 void Power::MeasureCurrent()
 {
-  if (
-    !Embedded().BatterySensorReady() || m_batteryCurrentSensorMax == k_unknown ||
-    m_batteryCurrentOutputMax == k_unknown) {
-    return;
-  }
+  Adafruit_INA219 &ina219 = ina219_0;
+  float shunt = ina219.getShuntVoltage_mV();
+  float bus = ina219.getBusVoltage_V();
+  float current = toAmps_0R001(ina219.getCurrent_mA());
+  float power = ina219.getPower_mW();
+  float load = bus + (shunt / 1000);
 
-  m_batteryCurrentSensor = Embedded().ReadBatteryCurrentSensorRaw();
-#if TRACE_SENSOR_RAW
-  TRACE_F("Battery current sensor raw: %.4f", m_batteryCurrentSensor);
-#endif // TRACE_SENSOR_RAW
-  m_batteryCurrentOutput = mapFloat(
-    m_batteryCurrentSensor,
-    m_batteryCurrentSensorMin,
-    m_batteryCurrentSensorMax,
-    m_batteryCurrentOutputMin,
-    m_batteryCurrentOutputMax);
+  m_batteryCurrentOutput = current;
 }
 
 void Power::switchSource(PowerSource source)
 {
-  m_source = source;
-
-  // first, ensure PSU AC is on and give it a moment to charge caps.
-  TRACE("Switch PSU on");
-  Embedded().WriteOnboardIO(IO_PIN_PSU_SW, SWITCH_ON);
-  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_ON);
-  Embedded().Delay(k_switchDelay, "PSU AC switch");
-
-  // next, turn on battery as well to ensure there is constant power
-  TRACE("Switch battery on");
-  Embedded().WriteOnboardIO(IO_PIN_BATT_SW, SWITCH_ON);
-  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, LED_ON);
-  Embedded().Delay(k_switchDelay, "Battery switch");
-
   if (source == PowerSource::k_powerSourcePsu) {
-    TRACE("PSU AC NC relay closed (PSU on), battery NC relay open (battery off)");
+
+    // ensure PSU AC is on and give it a moment to charge caps.
+    TRACE("Switch PSU on");
+    Embedded().WriteOnboardIO(IO_PIN_AC_SW, SWITCH_ON);
+    Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_ON);
+    Embedded().Delay(k_switchDelay, "PSU AC relay");
+
+    MeasureVoltage();
+    if (m_psuVoltageOutput < k_psuVoltageMin) {
+      TRACE_F("Unable to use PSU, voltage too low: %.2fV", m_psuVoltageOutput);
+      Embedded().WriteOnboardIO(IO_PIN_AC_SW, SWITCH_OFF);
+      Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_OFF);
+      Native().ReportWarning("Can't switch, PSU undervoltage");
+      return;
+    }
+
+    TRACE("PSU AC relay live (PSU on)");
     TRACE("Power source: PSU");
   }
   else if (source == PowerSource::k_powerSourceBattery) {
-    TRACE("Battery NC relay closed (battery on), PSU AC NC relay open (PSU off)");
-    TRACE("Power source: Battery");
+    if (batteryIsLow()) {
+      TRACE_F("Unable to use battery, voltage too low: %.2fV", m_batteryVoltageOutput);
+      Native().ReportWarning("Can't switch, low battery");
+      return;
+    }
+
+    TRACE("Switch battery on");
+    Embedded().WriteOnboardIO(IO_PIN_AC_SW, SWITCH_OFF);
   }
   else {
-    TRACE("Battery NC relay closed (battery on), PSU AC NC relay closed (PSU on)");
-    TRACE("Power source: Both (PSU and battery)");
+    TRACE("Invalid power switch");
+    return;
   }
 
-  // both relays are NC (normally closed), so to disconnect a source,
-  // pass true which will open the relay.
-  Embedded().WriteOnboardIO(IO_PIN_PSU_SW, m_source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_SW, source == k_powerSourcePsu ? SWITCH_ON : SWITCH_OFF);
   Embedded().WriteOnboardIO(
-    IO_PIN_BATT_SW, m_source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
+    IO_PIN_BATT_SW, source == k_powerSourceBattery ? SWITCH_ON : SWITCH_OFF);
 
-  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, m_source == k_powerSourcePsu ? LED_ON : LED_OFF);
-  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, m_source == k_powerSourceBattery ? LED_ON : LED_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_PSU_LED, source == k_powerSourcePsu ? LED_ON : LED_OFF);
+  Embedded().WriteOnboardIO(IO_PIN_BATT_LED, source == k_powerSourceBattery ? LED_ON : LED_OFF);
 
-  TRACE_F("Local voltage: %.2fV", ReadLocalVoltage());
+  m_source = source;
+
   Embedded().OnPowerSwitch();
-}
-
-float Power::ReadLocalVoltage()
-{
-  float f = analogReadMilliVolts(PIN_LOCAL_VOLTAGE);
-  if (f == k_unknown) {
-    return k_unknown;
-  }
-#if TRACE_SENSOR_RAW
-  TRACE_F("Local voltage sensor raw: %.4f", f);
-#endif // TRACE_SENSOR_RAW
-  return mapFloat(f, 0, k_localVoltageMapIn, 0, k_localVoltageMapOut);
 }
 
 // free function definitions

@@ -1,4 +1,4 @@
-#if RADIO_EN
+#if NODE_RADIO_EN
 
 #pragma once
 
@@ -121,4 +121,4 @@ private:
 } // namespace greenhouse
 } // namespace embedded
 
-#endif // RADIO_EN
+#endif // NODE_RADIO_EN

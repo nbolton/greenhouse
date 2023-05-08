@@ -29,16 +29,12 @@ public:
 public:
   // getters & setters
   PowerMode Mode() const { return m_mode; }
-  void Mode(PowerMode value) { m_mode = value; }
+  void Mode(PowerMode value)
+  {
+    m_mode = value;
+    m_nextSwitch = common::k_unknownUL;
+  }
   PowerSource Source() const { return m_source; }
-  void BatteryVoltageSensorMin(float value) { m_batteryVoltageSensorMin = value; }
-  void BatteryVoltageSensorMax(float value) { m_batteryVoltageSensorMax = value; }
-  void BatteryVoltageOutputMin(float value) { m_batteryVoltageOutputMin = value; }
-  void BatteryVoltageOutputMax(float value) { m_batteryVoltageOutputMax = value; }
-  void BatteryCurrentSensorMin(float value) { m_batteryCurrentSensorMin = value; }
-  void BatteryCurrentSensorMax(float value) { m_batteryCurrentSensorMax = value; }
-  void BatteryCurrentOutputMin(float value) { m_batteryCurrentOutputMin = value; }
-  void BatteryCurrentOutputMax(float value) { m_batteryCurrentOutputMax = value; }
   void BatteryVoltageSwitchOn(float value) { m_batteryVoltageSwitchOn = value; }
   void BatteryVoltageSwitchOff(float value) { m_batteryVoltageSwitchOff = value; }
   float BatteryVoltageSensor() { return m_batteryVoltageSensor; }
@@ -49,7 +45,6 @@ public:
   void Embedded(embedded::greenhouse::ISystem &value) { m_embedded = &value; }
   native::greenhouse::ISystem &Native() const;
   void Native(native::greenhouse::ISystem &value) { m_native = &value; }
-  float ReadLocalVoltage();
 
 private:
   void switchSource(PowerSource source);
@@ -65,21 +60,16 @@ private:
   float m_batteryVoltageSwitchOff;
   float m_batteryVoltageSensor;
   float m_batteryVoltageOutput;
-  float m_batteryVoltageSensorMin;
-  float m_batteryVoltageSensorMax;
-  float m_batteryVoltageOutputMin;
-  float m_batteryVoltageOutputMax;
   float m_batteryCurrentSensor;
   float m_batteryCurrentOutput;
-  float m_batteryCurrentSensorMin;
-  float m_batteryCurrentSensorMax;
-  float m_batteryCurrentOutputMin;
-  float m_batteryCurrentOutputMax;
-  float m_lastLocalVoltage;
   float m_lastBatteryVoltage;
   float m_lastBatteryCurrent;
-  unsigned long m_nextVoltageDropSwitch;
+  float m_psuVoltageSensor;
+  float m_psuVoltageOutput;
+  float m_lastPsuVoltage;
+  float m_lastPsuCurrent;
   float m_lastMeasure;
+  unsigned long m_nextSwitch;
 };
 
 } // namespace greenhouse

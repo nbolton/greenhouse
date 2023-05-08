@@ -4427,8 +4427,8 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 35685c26-4a41-4499-ab5b-7c6320b0ed01)
   )
-  (text "TODO: \n- Change nodes and Z80 to use RFM69 modules\n- Add a 3rd INA219 (addr 0x42) and monitor battery and PSU separately; \n  INA219 has voltage sensor, so we can remove the voltage dividers\n- Test points for GND, and VDDs\n- Order correct pin types for 2N7000 and BC547 (or change footprints)\n- Jumper + LDO regulator after buck converter (in case incorrect voltage)\n- R on components in case they go short?"
-    (at 33.02 41.91 0)
+  (text "TODO: \n- Change nodes and Z80 to use RFM69 modules\n- Add a 3rd INA219 (addr 0x42) and monitor battery and PSU separately; \n  INA219 has voltage sensor, so we can remove the voltage dividers\n- Test points for GND, and VDDs\n- Order correct pin types for 2N7000 and BC547 (or change footprints)\n- Jumper + LDO regulator after buck converter (in case incorrect voltage)\n- R on components in case they go short?\n- Switch to turn off PV battery charger, so that battery can be measured;\n  when PV is charging battery, charging voltage appears higher than actual \n  battery voltage. Also, if no battery is detected, PV charger should be\n  off (or it will provide unstable power to the circuit)."
+    (at 25.4 48.26 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 366f83a7-b628-4468-9e3d-8a7d1d0f7ed4)
   )

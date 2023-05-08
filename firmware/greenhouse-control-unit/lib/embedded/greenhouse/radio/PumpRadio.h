@@ -1,6 +1,6 @@
 #pragma once
 
-#if LORA_EN
+#if PUMP_RADIO_EN
 
 #include "ISystem.h"
 
@@ -22,4 +22,4 @@ private:
 } // namespace greenhouse
 } // namespace embedded
 
-#endif // LORA_EN
+#endif // PUMP_RADIO_EN

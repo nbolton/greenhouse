@@ -1,8 +1,8 @@
-#include "Radio.h"
+#include "NodeRadio.h"
 
 #define RADIO_TRACE
 
-#if RADIO_EN
+#if NODE_RADIO_EN
 
 #include "../../common/common.h"
 #include "ISystem.h"
@@ -513,4 +513,4 @@ void printBuffer(const __FlashStringHelper *prompt, const uint8_t *data, uint8_t
 } // namespace greenhouse
 } // namespace embedded
 
-#endif // RADIO_EN
+#endif // NODE_RADIO_EN

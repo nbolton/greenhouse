@@ -30,30 +30,14 @@ namespace greenhouse {
 
 #define SR_ON LOW
 #define SR_OFF HIGH
-
-#define ADC_RANGE ADS1115_RANGE_4096 // 2.8 V = 10 A
-#define ADC_BUSY_MAX 10
-#define ADC_BUSY_DELAY 1
-#define ADC_RETRY_MAX 5
-#define ADC_RETRY_DELAY 1000
 #define LOOP_DELAY 10
 #define SOIL_TEMP_FAIL_MAX 10
 #define CASE_FAN_CURRENT_THRESHOLD 1
-
-struct ADC {
-  String name;
-  ADS1115_WE ads;
-  bool ready = false;
-};
-
-#define IO_PIN_BEEP_SW P2
-#define IO_PIN_FAN_SW P3
-
-#define EXT_IO_PIN_LIGHT P1
-
-// external adc pins
-const ADS1115_MUX k_batteryVoltagePin = ADS1115_COMP_0_GND;
-const ADS1115_MUX k_batteryCurrentPin = ADS1115_COMP_1_GND;
+#define SHORT_BEEP_TIME 100
+#define LONG_BEEP_TIME 400
+#define BEEP_OFF_TIME 200
+#define IO_PIN_BEEP_SW P1
+#define IO_PIN_FAN_SW P0
 
 const bool k_enableLed = false;
 const int k_ledFlashDelay = 30; // ms
@@ -67,9 +51,9 @@ const float k_weatherLon = -4.408;
 const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char *k_weatherHost = "api.openweathermap.org";
 const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
-const uint8_t k_onboardIoAddress1 = 0x20;
-const uint8_t k_externalIoAddress1 = 0x21;
-const int k_loopFrequency = 1000; // 1s
+const uint8_t k_localSystemIoAddress1 = 0x38;
+const uint8_t k_externSwitchlIoAddress1 = 0x39;
+const int k_loopFrequency = 1000;      // 1s
 const int k_blynkFailuresMax = 300;
 const int k_blynkRecoverTimeSec = 300; // 5m
 const int k_serialWaitDelay = 1000;    // 1s
@@ -77,13 +61,12 @@ const int k_leftWindowNodeSwitch = 1;
 const int k_rightWindowNodeSwitch = 2;
 
 static System *s_instance = nullptr;
-static PCF8574 s_onboardIo1(k_onboardIoAddress1);
-static PCF8574 s_externalIo1(k_externalIoAddress1);
+static PCF8574 s_localSystemIo1(k_localSystemIoAddress1);
+static PCF8574 s_externalSwitchIo1(k_externSwitchlIoAddress1);
 static char s_reportBuffer[200];
 static BlynkTimer s_refreshTimer;
 static Adafruit_SHT31 s_insideAirSensor;
 static Adafruit_SHT31 s_outsideAirSensor;
-static ADC s_externalAdc;
 static WiFiClient s_wifiClient;
 static char s_weatherInfo[50];
 static DynamicJsonDocument s_weatherJson(2048);
@@ -159,7 +142,6 @@ void System::Setup()
   m_power.Setup();
 
   InitSensors();
-  InitExternalADC();
 
   TRACE("Init Blynk");
   Blynk.begin(k_auth, k_ssid, k_pass);
@@ -172,9 +154,9 @@ void System::Setup()
   m_radio.Init(this);
 #endif // RADIO_EN
 
-#if LORA_EN
+#if PUMP_RADIO_EN
   m_pumpRadio.Init(this);
-#endif // LORA_EN
+#endif // PUMP_RADIO_EN
 
   TRACE("System ready");
   Blynk.virtualWrite(V52, "Ready");
@@ -200,9 +182,9 @@ void System::Loop()
   // always run before actuator check
   ng::System::Loop();
 
-#if LORA_EN
+#if PUMP_RADIO_EN
   m_pumpRadio.Update();
-#endif // LORA_EN
+#endif // PUMP_RADIO_EN
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -268,35 +250,35 @@ void System::Loop()
 
 void System::InitIO()
 {
-  TRACE("Init onboard PCF8574 IO");
+  TRACE("Init local system PCF8574 IO");
 
-  s_onboardIo1.pinMode(P0, OUTPUT);
-  s_onboardIo1.pinMode(P1, OUTPUT);
-  s_onboardIo1.pinMode(P2, OUTPUT);
-  s_onboardIo1.pinMode(P3, OUTPUT);
-  s_onboardIo1.pinMode(P4, OUTPUT);
-  s_onboardIo1.pinMode(P5, OUTPUT);
-  s_onboardIo1.pinMode(P6, OUTPUT);
-  s_onboardIo1.pinMode(P7, OUTPUT);
+  s_localSystemIo1.pinMode(P0, OUTPUT);
+  s_localSystemIo1.pinMode(P1, OUTPUT);
+  s_localSystemIo1.pinMode(P2, OUTPUT);
+  s_localSystemIo1.pinMode(P3, OUTPUT);
+  s_localSystemIo1.pinMode(P4, OUTPUT);
+  s_localSystemIo1.pinMode(P5, OUTPUT);
+  s_localSystemIo1.pinMode(P6, OUTPUT);
+  s_localSystemIo1.pinMode(P7, OUTPUT);
 
-  if (!s_onboardIo1.begin()) {
-    TRACE("Onboard PCF8574 failed");
+  if (!s_localSystemIo1.begin()) {
+    TRACE("Local system PCF8574 failed");
     Restart();
   }
 
-  TRACE("Init external PCF8574 IO");
+  TRACE("Init external switch PCF8574 IO");
 
-  s_externalIo1.pinMode(P0, OUTPUT);
-  s_externalIo1.pinMode(P1, OUTPUT);
-  s_externalIo1.pinMode(P2, OUTPUT);
-  s_externalIo1.pinMode(P3, OUTPUT);
-  s_externalIo1.pinMode(P4, OUTPUT);
-  s_externalIo1.pinMode(P5, OUTPUT);
-  s_externalIo1.pinMode(P6, OUTPUT);
-  s_externalIo1.pinMode(P7, OUTPUT);
+  s_externalSwitchIo1.pinMode(P0, OUTPUT, LOW);
+  s_externalSwitchIo1.pinMode(P1, OUTPUT, LOW);
+  s_externalSwitchIo1.pinMode(P2, OUTPUT, LOW);
+  s_externalSwitchIo1.pinMode(P3, OUTPUT, LOW);
+  s_externalSwitchIo1.pinMode(P4, OUTPUT);
+  s_externalSwitchIo1.pinMode(P5, OUTPUT);
+  s_externalSwitchIo1.pinMode(P6, OUTPUT);
+  s_externalSwitchIo1.pinMode(P7, OUTPUT);
 
-  if (!s_externalIo1.begin()) {
-    TRACE("External PCF8574 failed");
+  if (!s_externalSwitchIo1.begin()) {
+    TRACE("External switch PCF8574 failed");
     Restart();
   }
 }
@@ -314,18 +296,6 @@ void System::InitSensors()
   }
 }
 
-void System::InitExternalADC()
-{
-  TRACE("Init external ADC");
-
-  s_externalAdc.name = "Battery";
-  s_externalAdc.ads = ADS1115_WE(k_externalAdcAddress);
-  s_externalAdc.ready = s_externalAdc.ads.init();
-  if (!s_externalAdc.ready) {
-    ReportWarning("ADC init failed: %s", s_externalAdc.name.c_str());
-  }
-}
-
 void System::Refresh()
 {
   TRACE("Refreshing (embedded)");
@@ -337,8 +307,6 @@ void System::Refresh()
   ng::System::Refresh();
 
   m_power.MeasureCurrent();
-
-  TRACE_F("Local voltage: %.2fV", m_power.ReadLocalVoltage());
 
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
   Blynk.virtualWrite(V29, Power().BatteryVoltageSensor());
@@ -483,7 +451,7 @@ void System::RunWindowActuator(bool extend, float delta)
 void System::Delay(unsigned long ms, const char *reason)
 {
 #if DEBUG_DELAY
-  TRACE_F("%s delay: %dms", reason, (int)ms);
+  TRACE_F("Delay %dms (%s)", (int)ms, reason);
 #endif // DEBUG_DELAY
   delay(ms);
 }
@@ -503,97 +471,19 @@ void System::Restart()
 void System::CaseFan(bool on)
 {
   TRACE_F("Case fan %s", on ? "on" : "off");
-  s_onboardIo1.digitalWrite(IO_PIN_FAN_SW, on);
+  s_localSystemIo1.digitalWrite(IO_PIN_FAN_SW, on);
 }
 
 void System::Beep(int times, bool longBeep)
 {
   TRACE_F("Beep %d times (%s)", times, longBeep ? "long" : "short");
   for (int i = 0; i < times; i++) {
-    s_onboardIo1.digitalWrite(IO_PIN_BEEP_SW, LOW);
-    Delay(longBeep ? 200 : 100, "Beep on");
+    s_localSystemIo1.digitalWrite(IO_PIN_BEEP_SW, LOW);
+    Delay(longBeep ? LONG_BEEP_TIME : SHORT_BEEP_TIME, "Beep on");
 
-    s_onboardIo1.digitalWrite(IO_PIN_BEEP_SW, HIGH);
-    Delay(200, "Beep off");
+    s_localSystemIo1.digitalWrite(IO_PIN_BEEP_SW, HIGH);
+    Delay(BEEP_OFF_TIME, "Beep off");
   }
-}
-
-float System::ReadAdc(ADC &adc, ADS1115_MUX channel)
-{
-#if ADC_DEBUG
-  TRACE_F("Reading ADC '%s' channel %02X", adc.name.c_str());
-#endif
-
-  // TODO: random init fal probably caused by bad hardware;
-  // I2C line to external device is probably acting as an antenna and picking up noise.
-  // seems to be caused by load on the battery.
-  for (int i = 0; i < ADC_RETRY_MAX; i++) {
-
-    TRACE_F("ADC: Attempt %d of %d", i + 1, ADC_RETRY_MAX);
-
-    if (!adc.ready) {
-#if ADC_DEBUG
-      TRACE("ADC: Re-init");
-#endif // ADC_DEBUG
-
-      adc.ready = adc.ads.init();
-      if (adc.ready) {
-        TRACE("ADC: Ready again");
-      }
-      else {
-#if ADC_DEBUG
-        TRACE("ADC: Re-init failed, retrying");
-#endif // ADC_DEBUG
-        Delay(ADC_RETRY_DELAY, "ADC retry wait");
-        yield();
-        continue;
-      }
-    }
-
-    // HACK: this keeps getting reset to default (possibly due to a power issue
-    // when the relay switches), so force the volt range every time we're about to read.
-    adc.ads.setVoltageRange_mV(ADC_RANGE);
-
-    adc.ads.setCompareChannels(channel);
-    adc.ads.startSingleMeasurement();
-
-    int times = 0;
-    while (adc.ads.isBusy()) {
-      if (times++ > ADC_BUSY_MAX) {
-
-        // assume ADC not ready if failed many times. should cause re-init.
-        adc.ready = false;
-#if ADC_DEBUG
-        TRACE_F("ADC: Still busy after %d times", times);
-#endif // ADC_DEBUG
-        break;
-      }
-      else {
-        Delay(ADC_BUSY_DELAY, "ADC busy wait");
-        TRACE_F("ADC: Busy wait %d of %d", times, ADC_BUSY_MAX);
-      }
-    }
-
-    // if assumed not ready, wait longer and start new comparison
-    if (!adc.ready) {
-#if ADC_DEBUG
-      TRACE_F("ADC: Assumed not ready, retrying", times);
-#endif // ADC_DEBUG
-      Delay(ADC_RETRY_DELAY, "ADC retry wait");
-      yield();
-      continue;
-    }
-
-    float f = adc.ads.getResult_V(); // alternative: getResult_mV for Millivolt
-
-#if ADC_DEBUG
-    TRACE_F("ADC: Got result: %.2fV", f);
-#endif
-
-    return f;
-  }
-
-  return k_unknown;
 }
 
 void System::ReportInfo(const char *format, ...)
@@ -831,13 +721,10 @@ void System::OnPowerSwitch()
 
 void System::OnBatteryCurrentChange() { UpdateCaseFan(); }
 
-void System::WriteOnboardIO(uint8_t pin, uint8_t value) { s_onboardIo1.digitalWrite(pin, value); }
-
-bool System::BatterySensorReady() { return s_externalAdc.ready; }
-
-float System::ReadBatteryVoltageSensorRaw() { return ReadAdc(s_externalAdc, k_batteryVoltagePin); }
-
-float System::ReadBatteryCurrentSensorRaw() { return ReadAdc(s_externalAdc, k_batteryCurrentPin); }
+void System::WriteOnboardIO(uint8_t pin, uint8_t value)
+{
+  s_localSystemIo1.digitalWrite(pin, value);
+}
 
 void System::PrintCommands() { TRACE("Commands\ns: status"); }
 
@@ -865,10 +752,7 @@ void System::LowerPumpOn(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
 
 void System::LowerPumpStatus(const char *message) { Blynk.virtualWrite(V81, message); }
 
-void System::SwitchLights(bool on)
-{
-  s_externalIo1.digitalWrite(EXT_IO_PIN_LIGHT, on ? LOW : HIGH);
-}
+void System::SwitchLights(bool on) { TRACE("lights not implemented"); }
 
 } // namespace greenhouse
 } // namespace embedded
@@ -979,22 +863,6 @@ BLYNK_WRITE(V31) { eg::s_instance->Time().DayStartHour(param.asInt()); }
 
 BLYNK_WRITE(V32) { eg::s_instance->Time().DayEndHour(param.asInt()); }
 
-BLYNK_WRITE(V34) { eg::s_instance->Power().BatteryVoltageSensorMin(param.asFloat()); }
-
-BLYNK_WRITE(V35) { eg::s_instance->Power().BatteryVoltageSensorMax(param.asFloat()); }
-
-BLYNK_WRITE(V36) { eg::s_instance->Power().BatteryVoltageOutputMin(param.asFloat()); }
-
-BLYNK_WRITE(V37) { eg::s_instance->Power().BatteryVoltageOutputMax(param.asFloat()); }
-
-BLYNK_WRITE(V38) { eg::s_instance->Power().BatteryCurrentSensorMin(param.asFloat()); }
-
-BLYNK_WRITE(V39) { eg::s_instance->Power().BatteryCurrentSensorMax(param.asFloat()); }
-
-BLYNK_WRITE(V40) { eg::s_instance->Power().BatteryCurrentOutputMin(param.asFloat()); }
-
-BLYNK_WRITE(V41) { eg::s_instance->Power().BatteryCurrentOutputMax(param.asFloat()); }
-
 BLYNK_WRITE(V44) { eg::s_instance->Power().BatteryVoltageSwitchOn(param.asFloat()); }
 
 BLYNK_WRITE(V45) { eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat()); }
@@ -1084,9 +952,9 @@ BLYNK_WRITE(V80)
   else {
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
-#if LORA_EN
+#if PUMP_RADIO_EN
   eg::s_instance->PumpRadio().SwitchPump(pumpOn);
-#endif // LORA_EN
+#endif // PUMP_RADIO_EN
 }
 
 BLYNK_WRITE(V82)
@@ -1098,8 +966,8 @@ BLYNK_WRITE(V82)
   else {
     Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
   }
-#if LORA_EN
+#if PUMP_RADIO_EN
   // tank not full? switch pump on
   eg::s_instance->PumpRadio().SwitchPump(!tankFull);
-#endif // LORA_EN
+#endif // PUMP_RADIO_EN
 }
