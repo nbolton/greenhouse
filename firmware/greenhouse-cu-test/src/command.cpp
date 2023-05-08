@@ -7,7 +7,8 @@
 #include "power.h"
 #include "sensors.h"
 
-#define SERIAL_BUF_LEN 4
+#define PROMPT "> "
+#define SERIAL_BUF_LEN 5
 #define ASCII_BS 0x08
 #define ASCII_LF 0x0A
 #define ASCII_CR 0x0D
@@ -24,7 +25,7 @@ int lastBufIndex = 0;
 void handleCommand();
 void printHelp();
 
-void prompt() { Serial.print("> "); }
+void prompt() { Serial.print(PROMPT); }
 
 void processSerial()
 {
@@ -55,9 +56,13 @@ void processSerial()
     }
     else if (r == ASCII_TAB) {
       TRACE_VA(TRACE_DEBUG2, "serial last: %s", lastBuf);
-      serialBufIndex = lastBufIndex;
-      memcpy(serialBuf, lastBuf, sizeof lastBuf);
-      Serial.print(serialBuf);
+      if (strlen(lastBuf) != 0) {
+        serialBufIndex = lastBufIndex;
+        memcpy(serialBuf, lastBuf, sizeof lastBuf);
+        Serial.println();
+        Serial.print(F(PROMPT));
+        Serial.print(serialBuf);
+      }
     }
     else if (serialBufIndex < SERIAL_BUF_LEN) {
       Serial.print(r);
