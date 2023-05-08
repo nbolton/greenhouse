@@ -14,3 +14,4 @@ fab
 *.bak
 *.~lock.*
 greenhouse-control-unit.xml
+firmware/greenhouse-cu-test/lib/shared/
