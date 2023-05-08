@@ -5,6 +5,7 @@
 
 #include "io.h"
 #include "power.h"
+#include "sensors.h"
 
 #define SERIAL_BUF_LEN 4
 #define ASCII_BS 0x08
@@ -45,7 +46,7 @@ void processSerial()
         TRACE_VA(TRACE_DEBUG2, "serialBufIndex=%d", serialBufIndex);
         Serial.println();
         handleCommand();
-        Serial.print(F("> "));
+        Serial.print(F(PROMPT));
         memcpy(lastBuf, serialBuf, sizeof serialBuf);
         memset(serialBuf, 0, sizeof serialBuf);
         lastBufIndex = serialBufIndex;
@@ -82,7 +83,7 @@ void printHelp()
     "l[n]         log level n\n"
     "x            restart\n"
     "\n"
-    "i/o devices:\n"
+    "i/o:\n"
     "ib           blink all i/o ports\n"
     "it[dp]       toggle i/o `d` port `p`\n"
     "\n"
@@ -90,6 +91,9 @@ void printHelp()
     "ps           power switch (batt/psu)\n"
     "pv           measure voltages\n"
     "pm           measure currents\n"
+    "\n"
+    "sensors:\n"
+    "sa           measure air\n"
     "\n"
     "type command followed by <enter>\n"));
 }
@@ -127,7 +131,7 @@ void handleCurrent()
   }
 }
 
-void handelPower()
+void handlePower()
 {
   switch (serialBuf[1]) {
   default: {
@@ -147,6 +151,21 @@ void handelPower()
 
   case 'c': {
     power::printCurrent();
+    break;
+  }
+  }
+}
+
+void handleSensors()
+{
+  switch (serialBuf[1]) {
+  default: {
+    unknown();
+    break;
+  }
+
+  case 'a': {
+    sensors::printAir();
     break;
   }
   }
@@ -194,7 +213,12 @@ void handleCommand()
   }
 
   case 'p': {
-    handelPower();
+    handlePower();
+    break;
+  }
+
+  case 's': {
+    handleSensors();
     break;
   }
   }

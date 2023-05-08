@@ -21,8 +21,8 @@
 #define SWITCH_RELAY
 #define PSU_VOLTS_MIN 11
 
-#define INA219_ADDR1 INA219_ADDRESS
-#define INA219_ADDR2 0x44
+#define INA219_ADDR1 0x40
+#define INA219_ADDR2 0x48
 
 #define MODE i == 0 ? FCSTR("common") : FCSTR("pv")
 

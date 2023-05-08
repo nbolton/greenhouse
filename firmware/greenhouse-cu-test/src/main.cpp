@@ -4,6 +4,7 @@
 #include "command.h"
 #include "io.h"
 #include "power.h"
+#include "sensors.h"
 
 int i = 0;
 
@@ -21,6 +22,10 @@ void setup(void)
 
   // power inits IO
   if (!power::init()) {
+    ok = false;
+  }
+
+  if (!sensors::init()) {
     ok = false;
   }
 
