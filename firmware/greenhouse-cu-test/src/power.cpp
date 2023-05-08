@@ -16,7 +16,7 @@
 #define VS_OUT_MAX 15.87
 #define BATT_VOLTS_ON 12.5
 #define BATT_VOLTS_OFF 11.5
-#define AC_EN_DELAY 200
+#define AC_EN_DELAY 500
 #define INIT_DELAY 20
 #define SWITCH_RELAY
 #define PSU_VOLTS_MIN 11
