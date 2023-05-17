@@ -5,7 +5,7 @@
 
 #include <unity.h>
 
-using namespace native::greenhouse;
+using namespace greenhouse::native;
 
 void Test_IsDaytime_CurrentHourBeforeDayStart_ReturnsFalse()
 {

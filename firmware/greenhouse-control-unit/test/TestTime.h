@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../native/greenhouse/Time.h"
+#include "native/Time.h"
 
-using namespace native::greenhouse;
+using namespace greenhouse::native;
 
 class TestTime : public Time {
 
@@ -22,7 +22,7 @@ public:
     m_mockOn_IsDaytime(false)
   {
   }
-  
+
   int CurrentHour() const
   {
     TRACE_F("Mock: CurrentHour, value=%d", m_mock_CurrentHour);
@@ -41,7 +41,7 @@ public:
       TRACE_F("Mock: IsDaytime, value=%s", m_mock_IsDaytime ? "true" : "false");
       return m_mock_IsDaytime;
     }
-    
+
     return Time::IsDaytime();
   }
 

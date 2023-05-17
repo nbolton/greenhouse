@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../../native/greenhouse/Heating.h"
-#include "../../common/log.h"
+#include "log.h"
+#include "native/Heating.h"
 
 #include <stdexcept>
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
-class Heating : public native::greenhouse::Heating {
+class Heating : public greenhouse::native::Heating {
 
 public:
   Heating();
@@ -19,5 +19,5 @@ protected:
   bool SwitchAirHeating(bool on);
 };
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

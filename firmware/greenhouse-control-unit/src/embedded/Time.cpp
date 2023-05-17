@@ -4,8 +4,8 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
 const int retryDelay = 1000;
 const int k_maxSetupRetry = 5;
@@ -83,5 +83,5 @@ String Time::FormattedUptime()
   return uptimeBuffer;
 }
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

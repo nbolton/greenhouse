@@ -4,8 +4,8 @@
 #include <math.h>
 #include <stdio.h>
 
-namespace native {
 namespace greenhouse {
+namespace native {
 
 const int k_dryWeatherCode = 701; // anything less is snow/rain
 const int k_windowActuatorLoopDelay = 100;
@@ -72,10 +72,7 @@ void System::Refresh()
     SoilTemperature(),
     WaterTemperature());
 
-  TRACE_F(
-    "Humidity, inside=%.2f%%, outside=%.2f%%",
-    InsideAirHumidity(),
-    OutsideAirHumidity());
+  TRACE_F("Humidity, inside=%.2f%%, outside=%.2f%%", InsideAirHumidity(), OutsideAirHumidity());
 
   ReportSensorValues();
   ReportWarnings();
@@ -313,5 +310,5 @@ int System::WeatherCode() const
   return m_weatherCode;
 }
 
-} // namespace greenhouse
 } // namespace native
+} // namespace greenhouse

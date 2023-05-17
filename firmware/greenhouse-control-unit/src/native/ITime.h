@@ -1,7 +1,7 @@
 #pragma once
 
-namespace native {
 namespace greenhouse {
+namespace native {
 
 class ITime {
 public:
@@ -11,5 +11,5 @@ public:
   virtual void CheckTransition() = 0;
 };
 
-} // namespace greenhouse
 } // namespace native
+} // namespace greenhouse

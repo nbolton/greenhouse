@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../native/greenhouse/System.h"
+#include "native/System.h"
 
-#include "TestTime.h"
 #include "TestHeating.h"
+#include "TestTime.h"
 
-using namespace native::greenhouse;
+using namespace greenhouse::native;
 
 class TestSystem : public System {
 
@@ -59,7 +59,7 @@ public:
     return m_mock_InsideAirTemperature;
   }
 
-  native::greenhouse::Time &Time()
+  greenhouse::native::Time &Time()
   {
     if (m_mock_time != nullptr) {
       TRACE("Mock: Time");
@@ -70,7 +70,7 @@ public:
     return m_time;
   }
 
-  native::greenhouse::Heating &Heating()
+  greenhouse::native::Heating &Heating()
   {
     if (m_mock_heating != nullptr) {
       TRACE("Mock: Heating");
@@ -108,7 +108,7 @@ public:
     m_calls_RunWindowActuator++;
   }
 
-  void Delay(unsigned long ms, const char* reason)
+  void Delay(unsigned long ms, const char *reason)
   {
     TRACE_F("Stub: Delay, ms=%d, reason=%s", static_cast<int>(ms), reason);
     m_lastArg_SystemDelay_ms = ms;
@@ -135,8 +135,8 @@ public:
 
   // mock values
 
-  native::greenhouse::Heating *m_mock_heating;
-  native::greenhouse::Time *m_mock_time;
+  greenhouse::native::Heating *m_mock_heating;
+  greenhouse::native::Time *m_mock_time;
   bool m_mock_ReadDhtSensor;
   float m_mock_WaterTemperature;
   float m_mock_SoilTemperature;
@@ -160,7 +160,7 @@ public:
   unsigned long m_lastArg_SystemDelay_ms;
 
   // defaults
-  
-  native::greenhouse::Heating m_heating;
-  native::greenhouse::Time m_time;
+
+  greenhouse::native::Heating m_heating;
+  greenhouse::native::Time m_time;
 };

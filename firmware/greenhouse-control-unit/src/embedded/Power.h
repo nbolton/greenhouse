@@ -1,17 +1,17 @@
 #pragma once
 
-#include "../../common/common.h"
-#include "../../common/log.h"
-#include "../../native/greenhouse/ISystem.h"
 #include "ISystem.h"
+#include "common.h"
+#include "log.h"
+#include "native/ISystem.h"
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
 enum PowerSource { k_powerSourceBoth, k_powerSourceBattery, k_powerSourcePsu };
 
 enum PowerMode {
-  k_powerModeUnknown = common::k_unknown,
+  k_powerModeUnknown = k_unknown,
   k_powerModeAuto = 0,
   k_powerModeManualBattery = 1,
   k_powerModeManualPsu = 2
@@ -32,7 +32,7 @@ public:
   void Mode(PowerMode value)
   {
     m_mode = value;
-    m_nextSwitch = common::k_unknownUL;
+    m_nextSwitch = k_unknownUL;
   }
   PowerSource Source() const { return m_source; }
   void BatteryVoltageSwitchOn(float value) { m_batteryVoltageSwitchOn = value; }
@@ -41,10 +41,10 @@ public:
   float BatteryVoltageOutput() { return m_batteryVoltageOutput; }
   float BatteryCurrentSensor() { return m_batteryCurrentSensor; }
   float BatteryCurrentOutput() { return m_batteryCurrentOutput; }
-  embedded::greenhouse::ISystem &Embedded() const;
-  void Embedded(embedded::greenhouse::ISystem &value) { m_embedded = &value; }
-  native::greenhouse::ISystem &Native() const;
-  void Native(native::greenhouse::ISystem &value) { m_native = &value; }
+  greenhouse::embedded::ISystem &Embedded() const;
+  void Embedded(greenhouse::embedded::ISystem &value) { m_embedded = &value; }
+  greenhouse::native::ISystem &Native() const;
+  void Native(greenhouse::native::ISystem &value) { m_native = &value; }
 
 private:
   void switchSource(PowerSource source);
@@ -52,8 +52,8 @@ private:
   bool batteryIsCharged() const;
 
 private:
-  embedded::greenhouse::ISystem *m_embedded;
-  native::greenhouse::ISystem *m_native;
+  greenhouse::embedded::ISystem *m_embedded;
+  greenhouse::native::ISystem *m_native;
   PowerMode m_mode;
   PowerSource m_source;
   float m_batteryVoltageSwitchOn;
@@ -72,5 +72,5 @@ private:
   unsigned long m_nextSwitch;
 };
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

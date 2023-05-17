@@ -1,12 +1,12 @@
 #include "test.h"
 
+#include "TestHeating.h"
 #include "TestSystem.h"
 #include "TestTime.h"
-#include "TestHeating.h"
 
 #include <unity.h>
 
-using namespace native::greenhouse;
+using namespace greenhouse::native;
 
 // void setUp(void) {
 // // set stuff up here

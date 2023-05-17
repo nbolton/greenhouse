@@ -1,27 +1,36 @@
 #ifdef ARDUINO
 
-#include "../lib/embedded/greenhouse/System.h"
+#include "embedded/System.h"
 
-embedded::greenhouse::System greenhouse;
+using namespace greenhouse::embedded;
+
+System s;
 
 void setup()
 {
-  embedded::greenhouse::System::Instance(greenhouse);
-  greenhouse.Setup();
+  System::Instance(s);
+  s.Setup();
 }
 
-void loop() { greenhouse.Loop(); }
+void loop() { s.Loop(); }
 
 #else
 
-#include "../lib/native/greenhouse/System.h"
+#include "native/System.h"
 
-// native::greenhouse::System greenhouse;
+#if 0
+
+using namespace greenhouse::embedded;
+
+System s;
 
 int main()
 {
-  // greenhouse.Setup();
-  // greenhouse.Loop();
+  s.Setup();
+  while(true) {
+    s.Loop();
+  }
 }
+#endif // 0
 
 #endif

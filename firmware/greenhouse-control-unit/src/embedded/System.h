@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../common/log.h"
-#include "../../native/greenhouse/System.h"
+#include "log.h"
+#include "native/System.h"
 
 #include "Heating.h"
 #include "Power.h"
@@ -12,14 +12,14 @@
 
 class Adafruit_SHT31;
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
 struct ADC;
 
 enum LedFlashTimes { k_ledRefresh = 1, k_ledStarted = 2, k_ledRestart = 3 };
 
-class System : public native::greenhouse::System, ISystem {
+class System : public greenhouse::native::System, ISystem {
 
   typedef void (System::*CallbackFunction)(void);
 
@@ -74,9 +74,9 @@ protected:
 
 public:
   // getters & setters
-  embedded::greenhouse::Time &Time() { return m_time; }
-  native::greenhouse::Heating &Heating() { return m_heating; }
-  embedded::greenhouse::Power &Power() { return m_power; }
+  greenhouse::embedded::Time &Time() { return m_time; }
+  greenhouse::native::Heating &Heating() { return m_heating; }
+  greenhouse::embedded::Power &Power() { return m_power; }
   float InsideAirTemperature() const { return m_insideAirTemperature; }
   float InsideAirHumidity() const;
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }
@@ -103,9 +103,9 @@ private:
   void PrintStatus();
 
 private:
-  embedded::greenhouse::Time m_time;
-  embedded::greenhouse::Heating m_heating;
-  embedded::greenhouse::Power m_power;
+  greenhouse::embedded::Time m_time;
+  greenhouse::embedded::Heating m_heating;
+  greenhouse::embedded::Power m_power;
   float m_insideAirTemperature;
   float m_insideAirHumidity;
   float m_outsideAirTemperature;
@@ -129,5 +129,5 @@ private:
   int m_windowSpeedRight;
 };
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

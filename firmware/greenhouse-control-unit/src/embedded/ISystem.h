@@ -2,8 +2,8 @@
 
 #include <Arduino.h>
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
 class ISystem {
 public:
@@ -15,5 +15,5 @@ public:
   virtual void OnBatteryCurrentChange() = 0;
 };
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

@@ -1,15 +1,17 @@
 #include "Heating.h"
 
+#include "native/Heating.h"
+
 #include <Arduino.h>
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
 Heating::Heating() {}
 
 bool Heating::SwitchWaterHeater(bool on)
 {
-  if (!native::greenhouse::Heating::SwitchWaterHeater(on)) {
+  if (!greenhouse::native::Heating::SwitchWaterHeater(on)) {
     return false;
   }
 
@@ -27,7 +29,7 @@ bool Heating::SwitchWaterHeater(bool on)
 
 bool Heating::SwitchSoilHeating(bool on)
 {
-  if (!native::greenhouse::Heating::SwitchSoilHeating(on)) {
+  if (!greenhouse::native::Heating::SwitchSoilHeating(on)) {
     return false;
   }
 
@@ -49,7 +51,7 @@ bool Heating::SwitchSoilHeating(bool on)
 
 bool Heating::SwitchAirHeating(bool on)
 {
-  if (!native::greenhouse::Heating::SwitchAirHeating(on)) {
+  if (!greenhouse::native::Heating::SwitchAirHeating(on)) {
     return false;
   }
 
@@ -72,5 +74,5 @@ bool Heating::SwitchAirHeating(bool on)
   return true;
 }
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

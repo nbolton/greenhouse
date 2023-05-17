@@ -12,7 +12,7 @@
 #include <iostream>
 #include <string.h>
 
-namespace common {
+namespace greenhouse {
 namespace log {
 
 char s_buffer[200];
@@ -30,7 +30,7 @@ void traceFlash(const __FlashStringHelper *format, ...)
   sprintf(s_buffer, "[%lu] ", millis());
   s_timeLen = strlen(s_buffer);
 
-  char* buf = s_buffer + s_timeLen;
+  char *buf = s_buffer + s_timeLen;
   int len = sizeof(s_buffer) - s_timeLen;
 
   va_list args;
@@ -48,8 +48,8 @@ void trace(const char *format, ...)
   if (!k_trace) {
     return;
   }
-  
-  char* buf = s_buffer;
+
+  char *buf = s_buffer;
 
 #if ARDUINO
 
@@ -73,6 +73,6 @@ void trace(const char *format, ...)
 }
 
 } // namespace log
-} // namespace common
+} // namespace greenhouse
 
 #endif // TRACE_EN

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../common/log.h"
-#include "../common/common.h"
 #include "ISystem.h"
 #include "ITime.h"
+#include "common.h"
+#include "log.h"
 
 #include <stdexcept>
 
-namespace native {
 namespace greenhouse {
+namespace native {
 
 using namespace common;
 
@@ -32,7 +32,8 @@ public:
 
 public:
   // getters & setters
-  virtual ISystem &System() const {
+  virtual ISystem &System() const
+  {
     if (m_system == nullptr) {
       TRACE("System not set");
       throw std::runtime_error("System not set");
@@ -54,5 +55,5 @@ private:
   unsigned long m_dayToNightTransitionTime;
 };
 
-} // namespace greenhouse
 } // namespace native
+} // namespace greenhouse

@@ -8,8 +8,8 @@
 
 using namespace common;
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
 #define VS_PIN_PSU 32
 #define VS_PIN_BATT 35
@@ -80,7 +80,7 @@ void Power::Setup()
   ina219_1.begin();
 }
 
-native::greenhouse::ISystem &Power::Native() const
+greenhouse::native::ISystem &Power::Native() const
 {
   if (m_native == nullptr) {
     TRACE("Native system not set");
@@ -89,7 +89,7 @@ native::greenhouse::ISystem &Power::Native() const
   return *m_native;
 }
 
-embedded::greenhouse::ISystem &Power::Embedded() const
+greenhouse::embedded::ISystem &Power::Embedded() const
 {
   if (m_embedded == nullptr) {
     TRACE("Embedded system not set");
@@ -280,5 +280,5 @@ void Power::switchSource(PowerSource source)
 
 // free function definitions
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

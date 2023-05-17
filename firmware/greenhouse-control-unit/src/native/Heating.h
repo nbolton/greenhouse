@@ -1,12 +1,12 @@
 #pragma once
 
 #include "ISystem.h"
-#include "../../common/log.h"
+#include "log.h"
 
 #include <stdexcept>
 
-namespace native {
 namespace greenhouse {
+namespace native {
 
 class Heating {
 
@@ -53,7 +53,10 @@ public:
   virtual float WaterHeaterDayRuntimeMinutes() const { return m_waterHeaterDayRuntimeMinutes; }
   virtual void WaterHeaterNightLimitMinutes(int value) { m_waterHeaterNightLimitMinutes = value; }
   virtual int WaterHeaterNightLimitMinutes() const { return m_waterHeaterNightLimitMinutes; }
-  virtual void WaterHeaterNightRuntimeMinutes(float value) { m_waterHeaterNightRuntimeMinutes = value; }
+  virtual void WaterHeaterNightRuntimeMinutes(float value)
+  {
+    m_waterHeaterNightRuntimeMinutes = value;
+  }
   virtual float WaterHeaterNightRuntimeMinutes() const { return m_waterHeaterNightRuntimeMinutes; }
 
 private:
@@ -61,7 +64,8 @@ private:
 
 public:
   // getters & setters
-  virtual ISystem &System() const {
+  virtual ISystem &System() const
+  {
     if (m_system == nullptr) {
       TRACE("System not set");
       throw std::runtime_error("System not set");
@@ -91,5 +95,5 @@ private:
   int m_waterHeaterNightLimitMinutes;
 };
 
-} // namespace greenhouse
 } // namespace native
+} // namespace greenhouse

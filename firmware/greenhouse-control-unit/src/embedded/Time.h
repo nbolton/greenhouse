@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../../common/log.h"
-#include "../../native/greenhouse/Time.h"
+#include "log.h"
+#include "native/Time.h"
 
 #include <Arduino.h>
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
-class Time : public native::greenhouse::Time {
+class Time : public greenhouse::native::Time {
 
 public:
   Time();
@@ -30,5 +30,5 @@ private:
   int m_errors;
 };
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse

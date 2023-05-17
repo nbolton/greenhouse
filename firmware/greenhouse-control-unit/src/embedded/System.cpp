@@ -13,21 +13,19 @@
 #include <ArduinoHttpClient.h>
 #include <ArduinoJson.h>
 #include <BlynkSimpleEsp32.h>
-#include <DallasTemperature.h>
-#include <OneWire.h>
 #include <PCF8574.h>
 #include <SPI.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <Wire.h>
 
-using namespace common;
+using namespace greenhouse;
 
-namespace ng = native::greenhouse;
-namespace eg = embedded::greenhouse;
+namespace ng = greenhouse::native;
+namespace eg = greenhouse::embedded;
 
-namespace embedded {
 namespace greenhouse {
+namespace embedded {
 
 #define SR_ON LOW
 #define SR_OFF HIGH
@@ -699,8 +697,8 @@ void System::LowerPumpStatus(const char *message) { Blynk.virtualWrite(V81, mess
 
 void System::SwitchLights(bool on) { TRACE("lights not implemented"); }
 
-} // namespace greenhouse
 } // namespace embedded
+} // namespace greenhouse
 
 // blynk
 
@@ -812,7 +810,7 @@ BLYNK_WRITE(V44) { eg::s_instance->Power().BatteryVoltageSwitchOn(param.asFloat(
 
 BLYNK_WRITE(V45) { eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) { eg::s_instance->Power().Mode((embedded::greenhouse::PowerMode)param.asInt()); }
+BLYNK_WRITE(V47) { eg::s_instance->Power().Mode((greenhouse::embedded::PowerMode)param.asInt()); }
 
 BLYNK_WRITE(V48) { eg::s_instance->WindowAdjustPositions(param.asInt()); }
 
@@ -898,7 +896,7 @@ BLYNK_WRITE(V80)
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
 
-  eg::radio::switchPump(pumpOn);
+  radio::switchPump(pumpOn);
 }
 
 BLYNK_WRITE(V82)
@@ -912,5 +910,5 @@ BLYNK_WRITE(V82)
   }
 
   // tank not full? switch pump on
-  eg::radio::switchPump(!tankFull);
+  radio::switchPump(!tankFull);
 }

@@ -1,12 +1,12 @@
 #include "Heating.h"
 
-#include "../common/log.h"
-#include "../common/common.h"
+#include "common.h"
+#include "log.h"
 
 using namespace common;
 
-namespace native {
 namespace greenhouse {
+namespace native {
 
 const float k_waterTempMargin = 1;
 const float k_soilTempMargin = .2f;
@@ -256,7 +256,7 @@ void Heating::Update()
     TRACE("Nighttime heating mode");
     UpdatePeriod(NightWaterTemperature(), NightSoilTemperature(), NightAirTemperature());
   }
-  
+
   System().ReportWaterHeaterInfo();
 }
 
@@ -277,5 +277,5 @@ void Heating::HandleDayToNightTransition()
   TRACE("Water heater night runtime was reset");
 }
 
-} // namespace greenhouse
 } // namespace native
+} // namespace greenhouse

@@ -3,8 +3,8 @@
 #include "common.h"
 #include <time.h>
 
-namespace native {
 namespace greenhouse {
+namespace native {
 
 using namespace common;
 
@@ -63,8 +63,7 @@ void Time::CheckTransition()
   int nowYear = ptm->tm_year;
   int nowHour = ptm->tm_hour;
 
-  TRACE_F(
-    "Current time, hour=%d, day=%d, month=%d, year=%d", nowHour, nowDay, nowMonth, nowYear);
+  TRACE_F("Current time, hour=%d, day=%d, month=%d, year=%d", nowHour, nowDay, nowMonth, nowYear);
 
   ptm = gmtime(&last);
   int lastDay = ptm->tm_mday;
@@ -84,7 +83,9 @@ void Time::CheckTransition()
   }
 
   // if last transition didn't happen within this exact hour time frame
-  if ((nowHour != lastHour) || (nowDay != lastDay) || (nowMonth != lastMonth) || (nowYear != lastYear)) {
+  if (
+    (nowHour != lastHour) || (nowDay != lastDay) || (nowMonth != lastMonth) ||
+    (nowYear != lastYear)) {
     TRACE("Last transition didn't happen in current hour");
 
     if (DayStartHour() == nowHour) {
@@ -122,15 +123,9 @@ void Time::Transition(bool nightToDay)
   }
 }
 
-void Time::OnNightToDayTransition()
-{
-    System().HandleNightToDayTransition();
-}
+void Time::OnNightToDayTransition() { System().HandleNightToDayTransition(); }
 
-void Time::OnDayToNightTransition()
-{
-    System().HandleDayToNightTransition();
-}
+void Time::OnDayToNightTransition() { System().HandleDayToNightTransition(); }
 
-} // namespace greenhouse
 } // namespace native
+} // namespace greenhouse
