@@ -5,9 +5,8 @@
 
 #include "Heating.h"
 #include "Power.h"
+#include "Radio.h"
 #include "Time.h"
-#include "radio/NodeRadio.h"
-#include "radio/PumpRadio.h"
 
 #include <Arduino.h>
 
@@ -78,9 +77,6 @@ public:
   embedded::greenhouse::Time &Time() { return m_time; }
   native::greenhouse::Heating &Heating() { return m_heating; }
   embedded::greenhouse::Power &Power() { return m_power; }
-#if PUMP_RADIO_EN
-  embedded::greenhouse::PumpRadio &PumpRadio() { return m_pumpRadio; }
-#endif // PUMP_RADIO_EN
   float InsideAirTemperature() const { return m_insideAirTemperature; }
   float InsideAirHumidity() const;
   float OutsideAirTemperature() const { return m_outsideAirTemperature; }
@@ -110,9 +106,6 @@ private:
   embedded::greenhouse::Time m_time;
   embedded::greenhouse::Heating m_heating;
   embedded::greenhouse::Power m_power;
-#if PUMP_RADIO_EN
-  embedded::greenhouse::PumpRadio m_pumpRadio;
-#endif // PUMP_RADIO_EN
   float m_insideAirTemperature;
   float m_insideAirHumidity;
   float m_outsideAirTemperature;
@@ -134,9 +127,6 @@ private:
   unsigned long m_lastLoop;
   int m_windowSpeedLeft;
   int m_windowSpeedRight;
-#if RADIO_EN
-  Radio m_radio;
-#endif // RADIO_EN
 };
 
 } // namespace greenhouse

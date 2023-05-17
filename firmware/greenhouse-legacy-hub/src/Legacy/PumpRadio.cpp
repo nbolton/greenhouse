@@ -2,14 +2,13 @@
 
 #include "PumpRadio.h"
 
+#include "common.h"
+
 #include <Arduino.h>
 #include <RH_RF95.h>
 #include <SPI.h>
 
 #include <string>
-
-#include "../../../common/common.h"
-#include "../../../common/log.h"
 
 #define RFM95_CS 5
 #define RFM95_IRQ 4
@@ -20,23 +19,20 @@ bool pumpMessagePending = false;
 bool pumpMessageAckWait = false;
 bool pumpSwitchOn = false;
 unsigned long pumpMessageAckWaitStart = 0;
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+uint8_t len = sizeof(buf);
 
 #define LORA_ACK_TIMEOUT 3000
 #define PUMP_ACK_TIMEOUT 10000
 
-uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-uint8_t len = sizeof(buf);
+namespace legacy {
 
-namespace embedded {
-namespace greenhouse {
+PumpRadio::PumpRadio() {}
 
-PumpRadio::PumpRadio() : m_system(nullptr) {}
-
-void PumpRadio::Init(embedded::greenhouse::ISystem *system)
+void PumpRadio::Init()
 {
-  m_system = system;
   TRACE("Init RF95 LoRa");
-  if (!rf95.init()) {
+  if (!s_rf95.init()) {
     TRACE("RF95 LoRa init failed");
     while (true) {
       delay(1);
@@ -46,8 +42,8 @@ void PumpRadio::Init(embedded::greenhouse::ISystem *system)
 
 void PumpRadio::Update()
 {
-  if (rf95.available()) {
-    if (rf95.recv(buf, &len)) {
+  if (s_rf95.available()) {
+    if (s_rf95.recv(buf, &len)) {
       const char *bufChar = (char *)buf;
       TRACE_F("LoRa RX: %s", +bufChar);
 
@@ -55,13 +51,13 @@ void PumpRadio::Update()
         TRACE("Message received from Z80");
 
         if (std::string(bufChar).find("pump=1") != std::string::npos) {
-          m_system->LowerPumpStatus("Pump running");
-          m_system->LowerPumpOn(true);
+          LowerPumpStatus("Pump running");
+          LowerPumpOn(true);
           pumpMessageAckWait = false;
         }
         else {
-          m_system->LowerPumpStatus("Pump stopped");
-          m_system->LowerPumpOn(false);
+          LowerPumpStatus("Pump stopped");
+          LowerPumpOn(false);
           pumpMessageAckWait = false;
         }
 
@@ -96,17 +92,17 @@ void PumpRadio::SendPumpMessage()
   strcpy((char *)data, pumpSwitchOn ? "z80:pump=1" : "z80:pump=0");
 
   TRACE_F("LoRa TX: %s", (char *)data);
-  rf95.send(data, sizeof(data));
+  s_rf95.send(data, sizeof(data));
 
-  rf95.waitPacketSent();
-  if (rf95.waitAvailableTimeout(LORA_ACK_TIMEOUT)) {
-    if (rf95.recv(buf, &len)) {
+  s_rf95.waitPacketSent();
+  if (s_rf95.waitAvailableTimeout(LORA_ACK_TIMEOUT)) {
+    if (s_rf95.recv(buf, &len)) {
       const char *bufChar = (char *)buf;
       TRACE_F("LoRa RX: %s", bufChar);
 
       if (std::string(bufChar).find("ack") != std::string::npos) {
         TRACE("LoRa ack OK");
-        m_system->LowerPumpStatus("Waiting for Z80");
+        LowerPumpStatus("Waiting for Z80");
 
         pumpMessagePending = false;
         pumpMessageAckWait = true;
@@ -114,17 +110,17 @@ void PumpRadio::SendPumpMessage()
       }
       else {
         TRACE("LoRa error: No ack");
-        m_system->LowerPumpStatus("LoRa error: Ack failed");
+        LowerPumpStatus("LoRa error: Ack failed");
       }
     }
     else {
       TRACE("LoRa RX failed");
-      m_system->LowerPumpStatus("LoRa error: RX failed");
+      LowerPumpStatus("LoRa error: RX failed");
     }
   }
   else {
     TRACE_F("LoRa error: No reply within %dms", LORA_ACK_TIMEOUT);
-    m_system->LowerPumpStatus("LoRa error: No reply");
+    LowerPumpStatus("LoRa error: No reply");
   }
 }
 
@@ -132,10 +128,9 @@ void PumpRadio::SwitchPump(bool on)
 {
   pumpMessagePending = true;
   pumpSwitchOn = on;
-  m_system->LowerPumpStatus("Waiting for LoRa");
+  LowerPumpStatus("Waiting for LoRa");
 }
 
-} // namespace greenhouse
-} // namespace embedded
+} // namespace legacy
 
 #endif // PUMP_RADIO_EN

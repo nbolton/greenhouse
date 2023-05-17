@@ -4,6 +4,7 @@
 
 #include "Heating.h"
 #include "ISystem.h"
+#include "Radio.h"
 #include "common.h"
 #include "gh_config.h"
 
@@ -149,14 +150,7 @@ void System::Setup()
   TRACE("Init time");
   m_time.Setup();
 
-#if RADIO_EN
-  TRACE("Init radio");
-  m_radio.Init(this);
-#endif // RADIO_EN
-
-#if PUMP_RADIO_EN
-  m_pumpRadio.Init(this);
-#endif // PUMP_RADIO_EN
+  radio::init();
 
   TRACE("System ready");
   Blynk.virtualWrite(V52, "Ready");
@@ -174,17 +168,10 @@ void System::Loop()
   // run early so that refresh is queued on time.
   s_refreshTimer.run();
 
-#if RADIO_EN
-  // run first for keep alive
-  m_radio.Update();
-#endif // RADIO_EN
+  radio::update();
 
   // always run before actuator check
   ng::System::Loop();
-
-#if PUMP_RADIO_EN
-  m_pumpRadio.Update();
-#endif // PUMP_RADIO_EN
 
   if (Serial.available() > 0) {
     String s = Serial.readString();
@@ -246,6 +233,8 @@ void System::Loop()
     m_queueOnSystemStarted = false;
     OnSystemStarted();
   }
+
+  yield();
 }
 
 void System::InitIO()
@@ -317,10 +306,6 @@ void System::Refresh()
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
 
-#if RADIO_EN
-  Blynk.virtualWrite(V77, m_radio.DebugInfo());
-#endif // RADIO_EN
-
   UpdateSoilTemp();
 
   TRACE("Refresh done (embedded)");
@@ -391,41 +376,8 @@ bool System::ReadSensors(int &failures)
 
 void System::UpdateSoilTemp()
 {
-#if RADIO_EN
   TRACE("Reading soil temperatures");
-  radio::Node &rightWindow = m_radio.Node(radio::k_nodeRightWindow);
-  const int tempDevs = rightWindow.GetTempDevs();
-
-  TRACE_F("Soil temperature devices: %d", tempDevs);
-  float tempSum = 0;
-  int tempValues = 0;
-  for (int i = 0; i < tempDevs; i++) {
-    const float t = rightWindow.GetTemp(i);
-    if (t != k_unknown) {
-      tempSum += t;
-      tempValues++;
-      TRACE_F("Soil temperature sensor %d: %.2f", i, t);
-    }
-    else {
-      TRACE_F("Soil temperature sensor %d: unknown", i);
-    }
-  }
-
-  if (tempValues > 0) {
-    m_soilTemperatureFailures = 0;
-    m_soilTemperature = tempSum / tempValues;
-    TRACE_F("Soil temperature average: %.2f", m_soilTemperature);
-  }
-  else if (++m_soilTemperatureFailures > SOIL_TEMP_FAIL_MAX) {
-    // only report -1 if there are a number of failures
-    m_soilTemperatureFailures = 0;
-    m_soilTemperature = k_unknown;
-    TRACE("Soil temperatures unknown");
-  }
-#else
-  m_soilTemperature = k_unknown;
-#endif // RADIO_EN
-
+  m_soilTemperature = radio::soilTempResult();
   Blynk.virtualWrite(V11, SoilTemperature());
 }
 
@@ -438,21 +390,19 @@ void System::RunWindowActuator(bool extend, float delta)
     WindowActuatorRuntimeSec(),
     runtimeSec);
 
-#if RADIO_EN
   if (extend) {
-    m_radio.MotorRunAll(radio::k_windowExtend, runtimeSec);
+    radio::windowActuatorRunAll(radio::k_windowExtend, runtimeSec);
   }
   else {
-    m_radio.MotorRunAll(radio::k_windowRetract, runtimeSec);
+    radio::windowActuatorRunAll(radio::k_windowRetract, runtimeSec);
   }
-#endif // RADIO_EN
 }
 
 void System::Delay(unsigned long ms, const char *reason)
 {
-#if DEBUG_DELAY
+#if TRACE_DELAY
   TRACE_F("Delay %dms (%s)", (int)ms, reason);
-#endif // DEBUG_DELAY
+#endif // TRACE_DELAY
   delay(ms);
 }
 
@@ -740,12 +690,7 @@ void System::QueueCallback(CallbackFunction f, std::string name)
 
 void System::WindowSpeedUpdate()
 {
-#if RADIO_EN
-  radio::Node &left = m_radio.Node(radio::k_nodeLeftWindow);
-  radio::Node &right = m_radio.Node(radio::k_nodeRightWindow);
-  left.MotorSpeed(WindowSpeedLeft());
-  right.MotorSpeed(WindowSpeedRight());
-#endif // RADIO_EN
+  radio::windowActuatorSetup(WindowSpeedLeft(), WindowSpeedRight());
 }
 
 void System::LowerPumpOn(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
@@ -952,9 +897,8 @@ BLYNK_WRITE(V80)
   else {
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
-#if PUMP_RADIO_EN
-  eg::s_instance->PumpRadio().SwitchPump(pumpOn);
-#endif // PUMP_RADIO_EN
+
+  eg::radio::switchPump(pumpOn);
 }
 
 BLYNK_WRITE(V82)
@@ -966,8 +910,7 @@ BLYNK_WRITE(V82)
   else {
     Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
   }
-#if PUMP_RADIO_EN
+
   // tank not full? switch pump on
-  eg::s_instance->PumpRadio().SwitchPump(!tankFull);
-#endif // PUMP_RADIO_EN
+  eg::radio::switchPump(!tankFull);
 }

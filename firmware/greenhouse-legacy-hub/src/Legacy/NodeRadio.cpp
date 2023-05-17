@@ -1,11 +1,8 @@
 #include "NodeRadio.h"
 
-#define RADIO_TRACE
-
 #if NODE_RADIO_EN
 
-#include "../../common/common.h"
-#include "ISystem.h"
+#include "common.h"
 
 #include <SoftwareSerial.h>
 
@@ -21,15 +18,7 @@
 #define KEEP_ALIVE_TIME 60000 // 60s
 #define RECONNECT_TIME 10000  // 10s
 
-#ifndef RADIO_TRACE
-#undef TRACE
-#define TRACE(l)
-#undef TRACE_F
-#define TRACE_F(...)
-#endif // RADIO_TRACE
-
-namespace embedded {
-namespace greenhouse {
+namespace legacy {
 
 static SoftwareSerial s_hc12(PIN_TX, PIN_RX);
 static uint8_t s_rxBuf[GH_LENGTH];
@@ -37,31 +26,30 @@ static uint8_t s_txBuf[GH_LENGTH];
 
 void printBuffer(const __FlashStringHelper *prompt, const uint8_t *data, uint8_t dataLen);
 
-Radio::Radio() : m_system(nullptr), m_requests(0), m_errors(0) {}
+NodeRadio::NodeRadio() : m_requests(0), m_errors(0) {}
 
-void Radio::Init(ISystem *system)
+void NodeRadio::Init()
 {
   TRACE("Radio init");
-  m_system = system;
 
   s_hc12.begin(BAUD);
 
-  m_nodes[radio::k_nodeRightWindow].Init(*this, GH_ADDR_NODE_1);
-  m_nodes[radio::k_nodeLeftWindow].Init(*this, GH_ADDR_NODE_2);
+  m_nodes[k_nodeRightWindow].Init(*this, GH_ADDR_NODE_1);
+  m_nodes[k_nodeLeftWindow].Init(*this, GH_ADDR_NODE_2);
 }
 
-void Radio::Update()
+void NodeRadio::Update()
 {
   for (int i = 0; i < RADIO_NODES_MAX; i++) {
     m_nodes[i].Update();
   }
 }
 
-String Radio::DebugInfo()
+String NodeRadio::DebugInfo()
 {
   String debug;
   for (int i = 0; i < RADIO_NODES_MAX; i++) {
-    radio::Node &node = m_nodes[i];
+    Node &node = m_nodes[i];
     char buf[200];
     String f = String(F("%d:{addr=%02Xh, err=%d} "));
     sprintf(buf, f.c_str(), i, node.Address(), node.Errors());
@@ -70,18 +58,20 @@ String Radio::DebugInfo()
   return debug;
 }
 
-radio::Node &Radio::Node(radio::NodeId index)
+Node &NodeRadio::GetNode(NodeId index)
 {
   if (index < 0 || index >= RADIO_NODES_MAX) {
     TRACE_F("Fatal: Radio node out of bounds, index=%d", (int)index);
-    common::halt();
+    halt();
   }
   return m_nodes[index];
 }
 
-void Radio::sr(int pin, bool set) { m_system->WriteOnboardIO(pin, set); }
+void NodeRadio::sr(int pin, bool set)
+{ /*WriteOnboardIO(pin, set);*/
+}
 
-bool Radio::Send(radio::SendDesc &sendDesc)
+bool NodeRadio::Send(SendDesc &sendDesc)
 {
   bool rx = false;
   for (int i = 0; i < TX_RETRY_MAX; i++) {
@@ -202,18 +192,18 @@ bool Radio::Send(radio::SendDesc &sendDesc)
   return rx;
 }
 
-void Radio::MotorRunAll(radio::MotorDirection direction, byte seconds)
+void NodeRadio::MotorRunAll(MotorDirection direction, byte seconds)
 {
   const int windowNodes = 2;
   const int motorBusyWait = 1000;
   const int busyCheckMax = 60;
 
-  radio::NodeId nodes[windowNodes];
-  nodes[0] = radio::k_nodeRightWindow;
-  nodes[1] = radio::k_nodeLeftWindow;
+  NodeId nodes[windowNodes];
+  nodes[0] = k_nodeRightWindow;
+  nodes[1] = k_nodeLeftWindow;
 
   for (int i = 0; i < windowNodes; i++) {
-    radio::Node &node = Node(nodes[i]);
+    Node &node = GetNode(nodes[i]);
 
     int busyChecks = 0;
     bool motorBusy = false, motorStateRx = false;
@@ -228,7 +218,7 @@ void Radio::MotorRunAll(radio::MotorDirection direction, byte seconds)
       }
       if (motorBusy) {
         TRACE("Motor is busy, waiting");
-        m_system->Delay(motorBusyWait, "Motor busy wait");
+        delay(motorBusyWait);
       }
     } while (motorBusy);
 
@@ -238,23 +228,67 @@ void Radio::MotorRunAll(radio::MotorDirection direction, byte seconds)
   }
 }
 
-// begin node class
+#define SOIL_TEMP_FAIL_MAX 10
 
-namespace radio {
+float NodeRadio::GetSoilTemp()
+{
+  Node &rightWindow = GetNode(k_nodeRightWindow);
+  const int tempDevs = rightWindow.GetTempDevs();
+
+  TRACE_F("Soil temperature devices: %d", tempDevs);
+  float tempSum = 0;
+  int tempValues = 0;
+  for (int i = 0; i < tempDevs; i++) {
+    const float t = rightWindow.GetTemp(i);
+    if (t != k_unknown) {
+      tempSum += t;
+      tempValues++;
+      TRACE_F("Soil temperature sensor %d: %.2f", i, t);
+    }
+    else {
+      TRACE_F("Soil temperature sensor %d: unknown", i);
+    }
+  }
+
+  int soilTemperatureFailures = 0;
+  int soilTemperature;
+  if (tempValues > 0) {
+    soilTemperatureFailures = 0;
+    soilTemperature = tempSum / tempValues;
+    TRACE_F("Soil temperature average: %.2f", m_soilTemperature);
+  }
+  else if (++soilTemperatureFailures > SOIL_TEMP_FAIL_MAX) {
+    // only report -1 if there are a number of failures
+    soilTemperatureFailures = 0;
+    soilTemperature = k_unknown;
+    TRACE("Soil temperatures unknown");
+  }
+  return soilTemperature;
+}
+
+void NodeRadio::SetWindowSpeeds(int left, int right)
+{
+  Node &leftNode = GetNode(k_nodeLeftWindow);
+  Node &rightNode = GetNode(k_nodeRightWindow);
+  leftNode.MotorSpeed(left);
+  rightNode.MotorSpeed(right);
+}
+
+// begin node class
 
 Node::Node() :
   m_init(false),
   m_radio(nullptr),
   m_address(UNKNOWN_ADDRESS),
   m_helloOk(false),
-  m_keepAliveExpiry(common::k_unknownUL),
-  m_nextReconnect(common::k_unknownUL),
+  m_keepAliveExpiry(k_unknownUL),
+  m_nextReconnect(k_unknownUL),
   m_sequence(1),
   m_errors(0)
 {
 }
 
-void Node::Init(embedded::greenhouse::Radio &radio, byte address)
+void Node::Init(NodeRadio &radio, byte address)
 {
   TRACE_F("Init radio node, address=%02Xh", address);
   m_radio = &radio;
@@ -327,7 +361,7 @@ bool helloOk(SendDesc &sendDesc)
   return true;
 }
 
-bool Node::send(radio::SendDesc &sendDesc)
+bool Node::send(SendDesc &sendDesc)
 {
   sendDesc.seq = m_sequence;
   bool ok = Radio().Send(sendDesc);
@@ -362,7 +396,7 @@ bool Node::hello()
 
 bool tempDevsOk(SendDesc &sendDesc)
 {
-  radio::TempData *data = (radio::TempData *)sendDesc.okCallbackArg;
+  TempData *data = (TempData *)sendDesc.okCallbackArg;
   data->devs = GH_DATA_1(s_rxBuf);
   TRACE_F("Got temperature device count: %d", data->devs);
   return true;
@@ -371,25 +405,25 @@ bool tempDevsOk(SendDesc &sendDesc)
 int Node::GetTempDevs()
 {
   if (!keepAlive()) {
-    return common::k_unknown;
+    return k_unknown;
   }
 
   TRACE("Getting temperature device count");
 
-  radio::SendDesc sd;
+  SendDesc sd;
   sd.to = m_address;
   sd.cmd = GH_CMD_TEMP_DEVS_REQ;
   sd.expectCmd = GH_CMD_TEMP_DEVS_RSP;
   sd.okCallback = &tempDevsOk;
   sd.okCallbackArg = &m_tempData;
 
-  m_tempData.devs = common::k_unknown;
+  m_tempData.devs = k_unknown;
 
   if (send(sd)) {
     return m_tempData.devs;
   }
   else {
-    return common::k_unknown;
+    return k_unknown;
   }
 }
 
@@ -408,7 +442,7 @@ bool tempDataOk(SendDesc &sendDesc)
 float Node::GetTemp(byte index)
 {
   if (!keepAlive()) {
-    return common::k_unknown;
+    return k_unknown;
   }
 
   TRACE_F("Getting temperature value from device: %d", index);
@@ -425,13 +459,13 @@ float Node::GetTemp(byte index)
   sd.okCallbackArg = &arg;
   sd.okCallback = &tempDataOk;
 
-  m_tempData.temps[index] = common::k_unknown;
+  m_tempData.temps[index] = k_unknown;
 
   if (send(sd)) {
     return m_tempData.temps[index];
   }
   else {
-    return common::k_unknown;
+    return k_unknown;
   }
 }
 
@@ -483,8 +517,6 @@ bool Node::MotorState(bool &state)
   return false;
 }
 
-} // namespace radio
-
 // end Node class
 
 // begin free functions
@@ -510,7 +542,6 @@ void printBuffer(const __FlashStringHelper *prompt, const uint8_t *data, uint8_t
 
 // end free functions
 
-} // namespace greenhouse
-} // namespace embedded
+} // namespace legacy
 
 #endif // NODE_RADIO_EN

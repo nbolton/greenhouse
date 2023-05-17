@@ -2,25 +2,22 @@
 
 #pragma once
 
-#include "../../common/common.h"
-#include "../../common/log.h"
+#include "common.h"
 
+#include <Arduino.h>
 #include <gh_protocol.h>
 
 #define TEMP_DEVS_MAX 4
 #define RADIO_NODES_MAX 2
 #define UNKNOWN_ADDRESS 255
 
-namespace embedded {
-namespace greenhouse {
+namespace legacy {
 
-class Radio;
-
-namespace radio {
+class NodeRadio;
 
 struct SendDesc;
 
-typedef bool (*callback)(SendDesc& sendDesc);
+typedef bool (*callback)(SendDesc &sendDesc);
 
 struct SendDesc {
   byte to = 0;
@@ -54,7 +51,7 @@ struct TempDataCallbackArg {
 class Node {
 public:
   Node();
-  void Init(Radio &radio, byte address);
+  void Init(NodeRadio &radio, byte address);
   void Update();
   bool Online();
   int GetTempDevs();
@@ -66,11 +63,11 @@ public:
   int Errors() const { return m_errors; }
 
 protected:
-  embedded::greenhouse::Radio &Radio()
+  NodeRadio &Radio()
   {
     if (m_radio == nullptr) {
       TRACE("Fatal: Radio not set for node");
-      common::halt();
+      halt();
     }
     return *m_radio;
   }
@@ -80,11 +77,11 @@ private:
   bool keepAlive();
   bool keepAliveExpired();
   void stepSequence();
-  bool send(radio::SendDesc &sendDesc);
+  bool send(SendDesc &sendDesc);
 
 private:
   bool m_init;
-  embedded::greenhouse::Radio *m_radio;
+  NodeRadio *m_radio;
   TempData m_tempData;
   byte m_address;
   bool m_helloOk;
@@ -94,31 +91,27 @@ private:
   int m_errors;
 };
 
-} // namespace radio
-
-class ISystem;
-
-class Radio {
+class NodeRadio {
 public:
-  Radio();
-  void Init(ISystem *system);
+  NodeRadio();
+  void Init();
   void Update();
   String DebugInfo();
-  bool Send(radio::SendDesc &sendDesc);
-  radio::Node &Node(radio::NodeId index);
-  void MotorRunAll(radio::MotorDirection direction, byte seconds);
+  bool Send(SendDesc &sendDesc);
+  Node &GetNode(NodeId index);
+  void MotorRunAll(MotorDirection direction, byte seconds);
+  float GetSoilTemp();
+  void SetWindowSpeeds(int left, int right);
 
 private:
   void sr(int pin, bool set);
 
 private:
-  ISystem *m_system;
-  radio::Node m_nodes[RADIO_NODES_MAX];
+  Node m_nodes[RADIO_NODES_MAX];
   int m_requests;
   int m_errors;
 };
 
-} // namespace greenhouse
-} // namespace embedded
+} // namespace legacy
 
 #endif // NODE_RADIO_EN
