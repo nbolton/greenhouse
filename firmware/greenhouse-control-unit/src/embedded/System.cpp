@@ -39,6 +39,7 @@ namespace embedded {
 #define BEEP_OFF_TIME 200
 #define IO_PIN_BEEP_SW P1
 #define IO_PIN_FAN_SW P0
+#define NODE_OFF_DELAY 100
 
 const bool k_enableLed = false;
 const int k_ledFlashDelay = 30;  // ms
@@ -270,8 +271,9 @@ void System::InitIO() {
     Restart();
   }
 
-  // wait for devices to power off
-  // delay(100);
+  // wait for nodes to power off
+  Delay(NODE_OFF_DELAY);
+
   PCF8574::DigitalInput di;
   di.p0 = LOW;
   di.p1 = LOW;
@@ -287,9 +289,11 @@ void System::InitSensors() {
     ReportWarning("Inside air sensor not found");
   }
 
+#if OUTSIDE_SHT31_EN
   if (!s_outsideAirSensor.begin(k_outsideAirSensorAddress)) {
     ReportWarning("Outside air sensor not found");
   }
+#endif  // OUTSIDE_SHT31_EN
 }
 
 void System::Refresh(bool first) {
@@ -363,6 +367,7 @@ bool System::ReadSensors(int &failures) {
     failures++;
   }
 
+#if OUTSIDE_SHT31_EN
   m_outsideAirTemperature = s_outsideAirSensor.readTemperature();
   if (isnan(m_outsideAirTemperature)) {
     m_outsideAirTemperature = k_unknown;
@@ -374,6 +379,7 @@ bool System::ReadSensors(int &failures) {
     m_outsideAirHumidity = k_unknown;
     failures++;
   }
+#endif  // OUTSIDE_SHT31_EN
 
   return failures == 0;
 
