@@ -1,13 +1,13 @@
 #include "relay.h"
 
-#include "common.h"
-#include "legacy/NodeRadio.h"
-#include "legacy/PumpRadio.h"
-
 #include <Arduino.h>
 #include <RHReliableDatagram.h>
 #include <RH_RF69.h>
 #include <radio_common.h>
+
+#include "common.h"
+#include "legacy/NodeRadio.h"
+#include "legacy/PumpRadio.h"
 
 #define PIN_IRQ PA2
 #define PIN_CS PA1
@@ -29,8 +29,7 @@ void state(bool busy) { led(busy ? LOW : HIGH); }
 void relaySoilTemps();
 void relayWindowActuatorRunAll(Message m);
 
-void init(NodeRadio &nr, PumpRadio &pr)
-{
+void init(NodeRadio &nr, PumpRadio &pr) {
   p_nodeRadio = &nr;
   p_pumpRadio = &pr;
 
@@ -52,32 +51,34 @@ void init(NodeRadio &nr, PumpRadio &pr)
 
 void update() { common::rx(); }
 
-void rx(Message m)
-{
+void rx(Message m) {
   switch (m.type) {
-  case k_soilTemps: {
-    relaySoilTemps();
-    break;
-  }
-  case k_windowActuatorRunAll: {
-    relayWindowActuatorRunAll(m);
-    break;
-  }
-  case k_windowActuatorSetup: {
-    int l = (int)m.data[RADIO_NODE_WA_L];
-    int r = (int)m.data[RADIO_NODE_WA_R];
-    p_nodeRadio->SetWindowSpeeds(l, r);
-    break;
-  }
-  case k_pumpSwitch: {
-    p_pumpRadio->SwitchPump((bool)m.data[0]);
-    break;
-  }
+    case k_reset: {
+      NVIC_SystemReset();
+      break;
+    }
+    case k_soilTemps: {
+      relaySoilTemps();
+      break;
+    }
+    case k_windowActuatorRunAll: {
+      relayWindowActuatorRunAll(m);
+      break;
+    }
+    case k_windowActuatorSetup: {
+      int l = (int)m.data[RADIO_NODE_WA_L];
+      int r = (int)m.data[RADIO_NODE_WA_R];
+      p_nodeRadio->SetWindowSpeeds(l, r);
+      break;
+    }
+    case k_pumpSwitch: {
+      p_pumpRadio->SwitchPump((bool)m.data[0]);
+      break;
+    }
   }
 }
 
-void relaySoilTemps()
-{
+void relaySoilTemps() {
   float temps = p_nodeRadio->GetSoilTemps();
 
   union {
@@ -97,34 +98,30 @@ void relaySoilTemps()
   common::tx(m);
 }
 
-void relayWindowActuatorRunAll(Message m)
-{
+void relayWindowActuatorRunAll(Message m) {
   gr::MotorDirection d = (gr::MotorDirection)m.data[RADIO_NODE_WA_D];
   byte r = (byte)m.data[RADIO_NODE_WA_R];
 
   legacy::MotorDirection ld;
   if (d == gr::MotorDirection::k_windowExtend) {
     ld = legacy::MotorDirection::k_windowExtend;
-  }
-  else if (d == gr::MotorDirection::k_windowRetract) {
+  } else if (d == gr::MotorDirection::k_windowRetract) {
     ld = legacy::MotorDirection::k_windowRetract;
   }
 
   p_nodeRadio->MotorRunAll(ld, r);
 }
 
-void txPumpStatus(const char *status)
-{
+void txPumpStatus(const char *status) {
   Message m;
   m.to = RHRD_ADDR_SERVER;
   m.type = MessageType::k_pumpStatus;
   strcpy((char *)m.data, status);
-  m.dataLen = strlen(status) + 1; // add null char
+  m.dataLen = strlen(status) + 1;  // add null char
   common::tx(m);
 }
 
-void txPumpSwitch(bool on)
-{
+void txPumpSwitch(bool on) {
   Message m;
   m.to = RHRD_ADDR_SERVER;
   m.type = MessageType::k_pumpSwitch;
@@ -133,4 +130,4 @@ void txPumpSwitch(bool on)
   common::tx(m);
 }
 
-} // namespace relay
+}  // namespace relay
