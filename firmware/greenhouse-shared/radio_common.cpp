@@ -17,19 +17,18 @@ RxCallback rxCallback;
 StateCallback stateCallback;
 int txFailures = 0;
 
-void init(
-  ::RHReliableDatagram *rd, ::RH_RF69 *rf69, RxCallback _rxCallback, StateCallback _stateCallback)
-{
+void init(::RHReliableDatagram *rd, ::RH_RF69 *rf69, RxCallback _rxCallback,
+          StateCallback _stateCallback) {
   p_rd = rd;
   p_rf69 = rf69;
   rxCallback = _rxCallback;
   stateCallback = _stateCallback;
 }
 
-void tx(Message m)
-{
+void tx(Message m) {
   stateCallback(true);
-  TRACE_F(TRACE_DEBUG2, "TX sending message, type=%d, dataLen=%d, to=%d", m.type, m.dataLen, m.to);
+  TRACE_F(TRACE_DEBUG2, "TX sending message, type=%d, dataLen=%d, to=%d",
+          m.type, m.dataLen, m.to);
 
   if (m.dataLen > 0) {
     printBuffer(F("TX payload data:"), m.data, m.dataLen);
@@ -49,15 +48,13 @@ void tx(Message m)
 
   if (p_rd->sendtoWait(data, len, m.to)) {
     TRACE(TRACE_DEBUG2, "TX success");
-  }
-  else {
-    TRACE_F(TRACE_DEBUG2, "TX failed %d time(s)", ++txFailures);
+  } else {
+    TRACE_F(TRACE_ERROR, "TX failed %d time(s)", ++txFailures);
   }
   stateCallback(false);
 }
 
-Message rx(MessageType mt)
-{
+Message rx(MessageType mt) {
   Message m;
   while (p_rd->available()) {
     stateCallback(true);
@@ -79,7 +76,8 @@ Message rx(MessageType mt)
         m.from = from;
         m.type = (MessageType)buf[RADIO_MSG_META_TYPE];
         m.dataLen = buf[RADIO_MSG_META_LEN];
-        TRACE_F(TRACE_DEBUG2, "RX decoded, type=%d, dataLen=%d", m.type, m.dataLen);
+        TRACE_F(TRACE_DEBUG2, "RX decoded, type=%d, dataLen=%d", m.type,
+                m.dataLen);
 
         if (m.dataLen > 0) {
           uint8_t *payload = buf + RADIO_MSG_META_END;
@@ -95,21 +93,19 @@ Message rx(MessageType mt)
           TRACE(TRACE_DEBUG2, "RX message found");
           break;
         }
+      } else {
+        TRACE(TRACE_ERROR, "RX unexpected message");
       }
-      else {
-        TRACE(TRACE_DEBUG2, "RX unexpected message");
-      }
-    }
-    else {
-      TRACE(TRACE_DEBUG2, "RX could not acknowledge");
+    } else {
+      TRACE(TRACE_ERROR, "RX could not acknowledge");
     }
     stateCallback(false);
   }
   return m;
 }
 
-void printBuffer(const __FlashStringHelper *prompt, uint8_t *data, uint8_t dataLen)
-{
+void printBuffer(const __FlashStringHelper *prompt, uint8_t *data,
+                 uint8_t dataLen) {
   char printBuf[PRINT_BUFFER_LEN];
   sprintf(printBuf, "%s ", String(prompt).c_str());
   int printLen = strlen(printBuf);
@@ -126,6 +122,6 @@ void printBuffer(const __FlashStringHelper *prompt, uint8_t *data, uint8_t dataL
   TRACE_C(TRACE_DEBUG2, printBuf);
 }
 
-} // namespace common
-} // namespace radio
-} // namespace greenhouse
+}  // namespace common
+}  // namespace radio
+}  // namespace greenhouse
