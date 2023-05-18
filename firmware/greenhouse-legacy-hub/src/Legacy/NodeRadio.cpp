@@ -6,17 +6,17 @@
 
 #include <SoftwareSerial.h>
 
-#define PIN_RX 14
-#define PIN_TX 27
+#define PIN_RX PC15
+#define PIN_TX PC14
 #define BAUD 9600
-#define RX_TIMEOUT 500
+#define RX_TIMEOUT 200
 #define TX_WAIT_DELAY 20
-#define TX_RETRY_MAX 5
-#define LINEAR_TIMEOUT 1
+#define TX_RETRY_MAX 10
+// #define LINEAR_TIMEOUT 1
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
 #define KEEP_ALIVE_TIME 60000 // 60s
-#define RECONNECT_TIME 10000  // 10s
+#define RECONNECT_TIME 30000  // 30s
 
 namespace legacy {
 
@@ -73,6 +73,7 @@ void NodeRadio::sr(int pin, bool set)
 
 bool NodeRadio::Send(SendDesc &sendDesc)
 {
+  led(LOW);
   bool rx = false;
   for (int i = 0; i < TX_RETRY_MAX; i++) {
 
@@ -169,7 +170,6 @@ bool NodeRadio::Send(SendDesc &sendDesc)
           // don't report an error, this is fine
         }
       }
-      delay(1); // prevent WDT reset
     }
 
     if (rx) {
@@ -189,6 +189,7 @@ bool NodeRadio::Send(SendDesc &sendDesc)
     m_errors,
     m_requests);
 
+  led(HIGH);
   return rx;
 }
 
@@ -230,7 +231,7 @@ void NodeRadio::MotorRunAll(MotorDirection direction, byte seconds)
 
 #define SOIL_TEMP_FAIL_MAX 10
 
-float NodeRadio::GetSoilTemp()
+float NodeRadio::GetSoilTemps()
 {
   Node &rightWindow = GetNode(k_nodeRightWindow);
   const int tempDevs = rightWindow.GetTempDevs();
@@ -251,7 +252,7 @@ float NodeRadio::GetSoilTemp()
   }
 
   int soilTemperatureFailures = 0;
-  int soilTemperature;
+  float soilTemperature;
   if (tempValues > 0) {
     soilTemperatureFailures = 0;
     soilTemperature = tempSum / tempValues;
@@ -277,7 +278,7 @@ void NodeRadio::SetWindowSpeeds(int left, int right)
 // begin node class
 
 Node::Node() :
-  m_init(false),
+  m_saidHello(false),
   m_radio(nullptr),
   m_address(UNKNOWN_ADDRESS),
   m_helloOk(false),
@@ -293,19 +294,18 @@ void Node::Init(NodeRadio &radio, byte address)
   TRACE_F("Init radio node, address=%02Xh", address);
   m_radio = &radio;
   m_address = address;
-  if (hello()) {
-    TRACE_F("Radio node online: %02Xh", m_address);
-  }
-  else {
-    TRACE_F("Radio node offline: %02Xh", m_address);
-  }
-  m_init = true;
 }
 
 void Node::Update()
 {
-  if (!m_init) {
-    return;
+  if (!m_saidHello) {
+    if (hello()) {
+      TRACE_F("Radio node online: %02Xh", m_address);
+    }
+    else {
+      TRACE_F("Radio node offline: %02Xh", m_address);
+    }
+    m_saidHello = true;
   }
 
   if (m_helloOk) {

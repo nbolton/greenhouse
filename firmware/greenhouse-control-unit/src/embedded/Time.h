@@ -1,9 +1,9 @@
 #pragma once
 
-#include "log.h"
 #include "native/Time.h"
 
 #include <Arduino.h>
+#include <trace.h>
 
 namespace greenhouse {
 namespace embedded {

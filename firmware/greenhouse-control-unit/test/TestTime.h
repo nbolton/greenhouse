@@ -25,20 +25,20 @@ public:
 
   int CurrentHour() const
   {
-    TRACE_F("Mock: CurrentHour, value=%d", m_mock_CurrentHour);
+    TRACE_F(TRACE_DEBUG1, "Mock: CurrentHour, value=%d", m_mock_CurrentHour);
     return m_mock_CurrentHour;
   }
 
   unsigned long UptimeSeconds() const
   {
-    TRACE_F("Mock: UptimeSeconds, value=%d", static_cast<int>(m_mock_UptimeSeconds));
+    TRACE_F(TRACE_DEBUG1, "Mock: UptimeSeconds, value=%d", static_cast<int>(m_mock_UptimeSeconds));
     return m_mock_UptimeSeconds;
   }
 
   bool IsDaytime() const
   {
     if (m_mockOn_IsDaytime) {
-      TRACE_F("Mock: IsDaytime, value=%s", m_mock_IsDaytime ? "true" : "false");
+      TRACE_F(TRACE_DEBUG1, "Mock: IsDaytime, value=%s", m_mock_IsDaytime ? "true" : "false");
       return m_mock_IsDaytime;
     }
 
@@ -47,19 +47,19 @@ public:
 
   unsigned long EpochTime() const
   {
-    TRACE_F("Mock: EpochTime, value=%d", static_cast<int>(m_mock_EpochTime));
+    TRACE_F(TRACE_DEBUG1, "Mock: EpochTime, value=%d", static_cast<int>(m_mock_EpochTime));
     return m_mock_EpochTime;
   }
 
   void OnNightToDayTransition()
   {
-    TRACE("Stub: OnNightToDayTransition");
+    TRACE(TRACE_DEBUG1, "Stub: OnNightToDayTransition");
     m_calls_OnNightToDayTransition++;
   }
 
   void OnDayToNightTransition()
   {
-    TRACE("Stub: OnDayToNightTransition");
+    TRACE(TRACE_DEBUG1, "Stub: OnDayToNightTransition");
     m_calls_OnDayToNightTransition++;
   }
 

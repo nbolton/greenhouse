@@ -9,12 +9,10 @@ public:
   PumpRadio();
   void Init();
   void Update();
-  void SendPumpMessage();
   void SwitchPump(bool on);
 
 private:
-  void LowerPumpStatus(const char *status) {}
-  void LowerPumpOn(bool isOn) {}
+  void SendPumpMessage();
 };
 
 } // namespace legacy

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "log.h"
 #include "native/Heating.h"
 
 #include <stdexcept>
+#include <trace.h>
 
 namespace greenhouse {
 namespace embedded {

@@ -4,10 +4,8 @@
 #define TRACE_F(a, ...)
 #define TRACE_C(a)
 
-#define halt()                                                                                     \
-  while (1) {                                                                                      \
-    delay(1);                                                                                      \
-  }
+void halt();
+void led(int value);
 
 const int k_unknown = -1;
 const unsigned long k_unknownUL = 0;

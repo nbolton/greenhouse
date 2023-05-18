@@ -3,6 +3,7 @@
 #include "PumpRadio.h"
 
 #include "common.h"
+#include "relay.h"
 
 #include <Arduino.h>
 #include <RH_RF95.h>
@@ -10,10 +11,10 @@
 
 #include <string>
 
-#define RFM95_CS 5
-#define RFM95_IRQ 4
+#define RFM95_CS PA3
+#define RFM95_IRQ PA4
 
-RH_RF95 rf95(RFM95_CS, RFM95_IRQ);
+RH_RF95 s_rf95(RFM95_CS, RFM95_IRQ);
 
 bool pumpMessagePending = false;
 bool pumpMessageAckWait = false;
@@ -31,33 +32,30 @@ PumpRadio::PumpRadio() {}
 
 void PumpRadio::Init()
 {
-  TRACE("Init RF95 LoRa");
   if (!s_rf95.init()) {
-    TRACE("RF95 LoRa init failed");
-    while (true) {
-      delay(1);
-    }
+    halt();
   }
 }
 
 void PumpRadio::Update()
 {
   if (s_rf95.available()) {
+    led(LOW);
     if (s_rf95.recv(buf, &len)) {
       const char *bufChar = (char *)buf;
-      TRACE_F("LoRa RX: %s", +bufChar);
+      TRACE_F("RF95 RX: %s", +bufChar);
 
       if (std::string(bufChar).find("z80") != std::string::npos) {
         TRACE("Message received from Z80");
 
         if (std::string(bufChar).find("pump=1") != std::string::npos) {
-          LowerPumpStatus("Pump running");
-          LowerPumpOn(true);
+          relay::txPumpStatus("Pump running");
+          relay::txPumpSwitch(true);
           pumpMessageAckWait = false;
         }
         else {
-          LowerPumpStatus("Pump stopped");
-          LowerPumpOn(false);
+          relay::txPumpStatus("Pump stopped");
+          relay::txPumpSwitch(false);
           pumpMessageAckWait = false;
         }
 
@@ -68,7 +66,7 @@ void PumpRadio::Update()
       }
     }
     else {
-      TRACE("LoRa RX failed");
+      TRACE("RF95 RX failed");
     }
   }
 
@@ -83,52 +81,56 @@ void PumpRadio::Update()
     SendPumpMessage();
   }
 
-  delay(10);
+  led(HIGH);
 }
 
 void PumpRadio::SendPumpMessage()
 {
+  led(LOW);
+
   uint8_t data[11];
   strcpy((char *)data, pumpSwitchOn ? "z80:pump=1" : "z80:pump=0");
 
-  TRACE_F("LoRa TX: %s", (char *)data);
+  TRACE_F("RF95 TX: %s", (char *)data);
   s_rf95.send(data, sizeof(data));
 
   s_rf95.waitPacketSent();
   if (s_rf95.waitAvailableTimeout(LORA_ACK_TIMEOUT)) {
     if (s_rf95.recv(buf, &len)) {
       const char *bufChar = (char *)buf;
-      TRACE_F("LoRa RX: %s", bufChar);
+      TRACE_F("RF95 RX: %s", bufChar);
 
       if (std::string(bufChar).find("ack") != std::string::npos) {
-        TRACE("LoRa ack OK");
-        LowerPumpStatus("Waiting for Z80");
+        TRACE("RF95 ack OK");
+        relay::txPumpStatus("Waiting for Z80");
 
         pumpMessagePending = false;
         pumpMessageAckWait = true;
         pumpMessageAckWaitStart = millis();
       }
       else {
-        TRACE("LoRa error: No ack");
-        LowerPumpStatus("LoRa error: Ack failed");
+        TRACE("RF95 error: No ack");
+        relay::txPumpStatus("RF95 error: Ack failed");
       }
     }
     else {
-      TRACE("LoRa RX failed");
-      LowerPumpStatus("LoRa error: RX failed");
+      TRACE("RF95 RX failed");
+      relay::txPumpStatus("RF95 error: RX failed");
     }
   }
   else {
-    TRACE_F("LoRa error: No reply within %dms", LORA_ACK_TIMEOUT);
-    LowerPumpStatus("LoRa error: No reply");
+    TRACE_F("RF95 error: No reply within %dms", LORA_ACK_TIMEOUT);
+    relay::txPumpStatus("RF95 error: No reply");
   }
+
+  led(HIGH);
 }
 
 void PumpRadio::SwitchPump(bool on)
 {
   pumpMessagePending = true;
   pumpSwitchOn = on;
-  LowerPumpStatus("Waiting for LoRa");
+  relay::txPumpStatus("Waiting for RF95");
 }
 
 } // namespace legacy

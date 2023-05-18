@@ -45,9 +45,9 @@ void System::Setup()
 
 void System::Loop() {}
 
-void System::Refresh()
+void System::Refresh(bool first)
 {
-  TRACE("Refreshing (native)");
+  TRACE(TRACE_DEBUG1, "Refreshing (native)");
 
   Time().CheckTransition();
 
@@ -61,18 +61,23 @@ void System::Refresh()
       m_sensorWarningSent = true;
     }
     else {
-      TRACE_F("Sensors unavailable, failures: %d", sensorFailures);
+      TRACE_F(TRACE_DEBUG1, "Sensors unavailable, failures: %d", sensorFailures);
     }
   }
 
   TRACE_F(
+    TRACE_DEBUG1,
     "Temperatures, inside=%.2f°C, outside=%.2f°C, soil=%.2f°C, water=%.2f°C",
     InsideAirTemperature(),
     OutsideAirTemperature(),
     SoilTemperature(),
     WaterTemperature());
 
-  TRACE_F("Humidity, inside=%.2f%%, outside=%.2f%%", InsideAirHumidity(), OutsideAirHumidity());
+  TRACE_F(
+    TRACE_DEBUG1,
+    "Humidity, inside=%.2f%%, outside=%.2f%%",
+    InsideAirHumidity(),
+    OutsideAirHumidity());
 
   ReportSensorValues();
   ReportWarnings();
@@ -108,6 +113,7 @@ void System::Refresh()
     const float soilTemperature = SoilTemperature();
 
     TRACE_F(
+      TRACE_DEBUG1,
       "Auto mode: expected=%d%%, actual=%d%%, soil=%.2fC, start=%.2fC, finish=%.2fC, last=%lu, "
       "timeframe=%ds",
       WindowOpenPercentExpected(),
@@ -131,7 +137,7 @@ void System::Refresh()
 
       if ((soilTemperature > openStart) && (soilTemperature < openFinish)) {
         // window should be semi-open
-        TRACE("Temperature in bounds");
+        TRACE(TRACE_DEBUG1, "Temperature in bounds");
 
         const float tempWidth = openFinish - openStart;
         const float openPercentAsTemp = soilTemperature - openStart;
@@ -139,20 +145,21 @@ void System::Refresh()
       }
       else if (soilTemperature >= openFinish) {
         // window should be fully open
-        TRACE("Temperature above bounds");
+        TRACE(TRACE_DEBUG1, "Temperature above bounds");
         m_windowOpenPercentExpected = 100;
       }
       else {
         // window should be fully closed
-        TRACE("Temperature below bounds");
+        TRACE(TRACE_DEBUG1, "Temperature below bounds");
         m_windowOpenPercentExpected = 0;
       }
-      TRACE_F("Window open percent expected: %d%%", m_windowOpenPercentExpected);
+      TRACE_F(TRACE_DEBUG1, "Window open percent expected: %d%%", m_windowOpenPercentExpected);
 
       ApplyWindowOpenPercent();
     }
     else {
       TRACE_F(
+        TRACE_DEBUG1,
         "Window adjust didn't run, noUnknowns=%s, timeframeOk=%s",
         noUnknowns ? "true" : "false",
         timeframeOk ? "true" : "false");
@@ -163,7 +170,7 @@ void System::Refresh()
 
   ReportSystemInfo();
 
-  TRACE("Refresh done (native)");
+  TRACE(TRACE_DEBUG1, "Refresh done (native)");
 }
 
 void System::WindowFullClose()
@@ -185,6 +192,7 @@ void System::ApplyWindowOpenPercent()
   bool const changed = std::abs(expected - actual) > changeThreshold;
 
   TRACE_F(
+    TRACE_DEBUG1,
     "Apply window open percent, "
     "positions=%d, expected=%.2f, rounded=%.2f, actual=%.2f, "
     "changed=%s, full=%s",
@@ -196,17 +204,17 @@ void System::ApplyWindowOpenPercent()
     fullExtent ? "true" : "false");
 
   if (expected == k_unknown) {
-    TRACE("Skip apply window open percent, unknown expected");
+    TRACE(TRACE_DEBUG1, "Skip apply window open percent, unknown expected");
     return;
   }
 
   if (actual == k_unknown) {
-    TRACE("Skip apply window open percent, unknown actual");
+    TRACE(TRACE_DEBUG1, "Skip apply window open percent, unknown actual");
     return;
   }
 
   if (positions == k_unknown) {
-    TRACE("Skip apply window open percent, unknown positions");
+    TRACE(TRACE_DEBUG1, "Skip apply window open percent, unknown positions");
     return;
   }
 
@@ -215,7 +223,8 @@ void System::ApplyWindowOpenPercent()
     float closeDelta = (actual - rounded) / 100;
     float openDelta = (rounded - actual) / 100;
 
-    TRACE_F("Testing window open percent, open=%.2f, close=%.2f", openDelta, closeDelta);
+    TRACE_F(
+      TRACE_DEBUG1, "Testing window open percent, open=%.2f, close=%.2f", openDelta, closeDelta);
 
     if (openDelta > 0) {
       OpenWindow(openDelta);
@@ -231,7 +240,7 @@ void System::ApplyWindowOpenPercent()
     }
   }
 
-  TRACE("No window open percent change");
+  TRACE(TRACE_DEBUG1, "No window open percent change");
 }
 
 void System::ChangeWindowOpenPercentActual(float delta)
@@ -249,24 +258,24 @@ void System::ChangeWindowOpenPercentActual(float delta)
 
 void System::OpenWindow(float delta)
 {
-  TRACE_F("Opening window, delta=%.2f", delta);
+  TRACE_F(TRACE_DEBUG1, "Opening window, delta=%.2f", delta);
 
   ChangeWindowOpenPercentActual(delta);
   RunWindowActuator(true, delta);
 
   float percent = delta * 100;
-  TRACE_F("Window opened by %.1f%%", percent);
+  TRACE_F(TRACE_DEBUG1, "Window opened by %.1f%%", percent);
 }
 
 void System::CloseWindow(float delta)
 {
-  TRACE_F("Closing window, delta=%.2f", delta);
+  TRACE_F(TRACE_DEBUG1, "Closing window, delta=%.2f", delta);
 
   ChangeWindowOpenPercentActual(delta * -1);
   RunWindowActuator(false, delta);
 
   float percent = delta * 100;
-  TRACE_F("Window closed by %.1f%%", percent);
+  TRACE_F(TRACE_DEBUG1, "Window closed by %.1f%%", percent);
 }
 
 void System::WindowOpenPercent(int value)

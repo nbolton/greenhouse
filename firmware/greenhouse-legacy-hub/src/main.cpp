@@ -1,19 +1,30 @@
 #include <Arduino.h>
 
-#include "hc12.h"
-#include "s_rf95.h"
-#include "s_rf69.h"
+#include "common.h"
+#include "legacy/NodeRadio.h"
+#include "legacy/PumpRadio.h"
+#include "relay.h"
+
+using namespace legacy;
+
+NodeRadio nr;
+PumpRadio pr;
 
 void setup()
 {
-  hc12::init();
-  rf95::init();
-  rf69::init();
+  pinMode(LED_BUILTIN, OUTPUT);
+  led(LOW);
+
+  relay::init(nr, pr);
+  nr.Init();
+  pr.Init();
+
+  led(HIGH);
 }
 
 void loop()
 {
-  hc12::update();
-  rf95::update();
-  rf69::update();
+  relay::update();
+  nr.Update();
+  pr.Update();
 }

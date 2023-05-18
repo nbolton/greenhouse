@@ -4,10 +4,10 @@
 #include "ISystem.h"
 #include "Time.h"
 #include "common.h"
-#include "log.h"
 
 #include <queue>
 #include <string>
+#include <trace.h>
 
 namespace greenhouse {
 namespace native {
@@ -22,7 +22,7 @@ public:
   virtual greenhouse::native::Time &Time() = 0;
   virtual void Setup();
   virtual void Loop();
-  virtual void Refresh();
+  virtual void Refresh(bool first);
   virtual void ReportInfo(const char *m, ...) {}
   virtual void ReportWarning(const char *m, ...) {}
   virtual void ReportCritical(const char *m, ...) {}

@@ -1,7 +1,8 @@
 #include "Heating.h"
 
 #include "common.h"
-#include "log.h"
+
+#include <trace.h>
 
 using namespace common;
 
@@ -55,7 +56,8 @@ bool Heating::SwitchWaterHeater(bool on)
     }
 
     if ((runtime > 0) && (runtime >= limit)) {
-      TRACE_F("Blocking water heating switch on, runtime=%.2fm, limit=%dm", runtime, limit);
+      TRACE_F(
+        TRACE_DEBUG1, "Blocking water heating switch on, runtime=%.2fm, limit=%dm", runtime, limit);
       return false;
     }
   }
@@ -99,6 +101,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
   bool airDeltaInBounds = (waterTemp >= airTemp + k_waterAirDeltaMin);
 
   TRACE_F(
+    TRACE_DEBUG1,
     "Water heater deltas in bounds, soil=%s, air=%s",
     soilDeltaInBounds ? "true" : "false",
     airDeltaInBounds ? "true" : "false");
@@ -109,7 +112,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
   if (soilTemp != k_unknown) {
     if (soilTemp < (soilTarget - k_soilTempMargin)) {
 
-      TRACE("Soil temp below");
+      TRACE(TRACE_DEBUG1, "Soil temp below");
       soilHeatingRequired = true;
 
       if (soilDeltaInBounds) {
@@ -121,7 +124,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
     }
     else if (soilTemp > (soilTarget + k_soilTempMargin)) {
 
-      TRACE("Soil temp above");
+      TRACE(TRACE_DEBUG1, "Soil temp above");
       soilHeatingRequired = false;
 
       SwitchSoilHeating(false);
@@ -131,7 +134,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
   if (airTemp != k_unknown) {
     if (airTemp < (airTarget - k_airTempMargin)) {
 
-      TRACE("Air temp below");
+      TRACE(TRACE_DEBUG1, "Air temp below");
       airHeatingRequired = true;
 
       if (airDeltaInBounds) {
@@ -143,7 +146,7 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
     }
     else if (airTemp > (airTarget + k_airTempMargin)) {
 
-      TRACE("Air temp above");
+      TRACE(TRACE_DEBUG1, "Air temp above");
       airHeatingRequired = false;
 
       SwitchAirHeating(false);
@@ -180,12 +183,12 @@ void Heating::UpdatePeriod(float waterTarget, float soilTarget, float airTarget)
 void Heating::Update()
 {
   if (System().Time().CurrentHour() == k_unknown) {
-    TRACE("Unable to update heating, time unknown");
+    TRACE(TRACE_DEBUG1, "Unable to update heating, time unknown");
     return;
   }
 
   if (!Enabled()) {
-    TRACE("Unable to update heating, it is disabled");
+    TRACE(TRACE_DEBUG1, "Unable to update heating, it is disabled");
     if (AirHeatingIsOn()) {
       SwitchAirHeating(false);
     }
@@ -200,6 +203,7 @@ void Heating::Update()
 
   bool daytime = System().Time().IsDaytime();
   TRACE_F(
+    TRACE_DEBUG1,
     "Update heating systems, hour=%d, period=%s",
     System().Time().CurrentHour(),
     daytime ? "day" : "night");
@@ -223,6 +227,7 @@ void Heating::Update()
     m_waterHeaterCostCumulative += (k_waterHeaterCostPerKwh / 3600) * addSeconds; // kWh to kWs
 
     TRACE_F(
+      TRACE_DEBUG1,
       "Advanced water heating runtime, add=%ds, day=%.2fm, night=%.2fm, cost=£%.2f",
       addSeconds,
       WaterHeaterDayRuntimeMinutes(),
@@ -231,6 +236,7 @@ void Heating::Update()
 
     if (runtime >= limit) {
       TRACE_F(
+        TRACE_DEBUG1,
         "Water heater %s runtime limit reached (%dm), switching off",
         daytime ? "day" : "night",
         limit);
@@ -249,11 +255,11 @@ void Heating::Update()
 
   // heat water to different temperature depending on if day or night
   if (daytime) {
-    TRACE("Daytime heating mode");
+    TRACE(TRACE_DEBUG1, "Daytime heating mode");
     UpdatePeriod(DayWaterTemperature(), DaySoilTemperature(), DayAirTemperature());
   }
   else {
-    TRACE("Nighttime heating mode");
+    TRACE(TRACE_DEBUG1, "Nighttime heating mode");
     UpdatePeriod(NightWaterTemperature(), NightSoilTemperature(), NightAirTemperature());
   }
 
@@ -266,7 +272,7 @@ void Heating::HandleNightToDayTransition()
   WaterHeaterCostCumulative(0);
   System().ReportWaterHeaterInfo();
   m_waterHeaterLastUpdate = k_unknownUL;
-  TRACE("Water heater day runtime was reset");
+  TRACE(TRACE_DEBUG1, "Water heater day runtime was reset");
 }
 
 void Heating::HandleDayToNightTransition()
@@ -274,7 +280,7 @@ void Heating::HandleDayToNightTransition()
   WaterHeaterNightRuntimeMinutes(0);
   System().ReportWaterHeaterInfo();
   m_waterHeaterLastUpdate = k_unknownUL;
-  TRACE("Water heater night runtime was reset");
+  TRACE(TRACE_DEBUG1, "Water heater night runtime was reset");
 }
 
 } // namespace native

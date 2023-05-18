@@ -2,8 +2,9 @@
 
 #include "ISystem.h"
 #include "common.h"
-#include "log.h"
 #include "native/ISystem.h"
+
+#include <trace.h>
 
 namespace greenhouse {
 namespace embedded {

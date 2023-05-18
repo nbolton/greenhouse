@@ -5,6 +5,7 @@
 #include <Adafruit_INA219.h>
 #include <Arduino.h>
 #include <PCF8574.h>
+#include <trace.h>
 
 using namespace common;
 
@@ -83,7 +84,7 @@ void Power::Setup()
 greenhouse::native::ISystem &Power::Native() const
 {
   if (m_native == nullptr) {
-    TRACE("Native system not set");
+    TRACE(TRACE_DEBUG1, "Native system not set");
     throw;
   }
   return *m_native;
@@ -92,7 +93,7 @@ greenhouse::native::ISystem &Power::Native() const
 greenhouse::embedded::ISystem &Power::Embedded() const
 {
   if (m_embedded == nullptr) {
-    TRACE("Embedded system not set");
+    TRACE(TRACE_DEBUG1, "Embedded system not set");
     throw;
   }
   return *m_embedded;
@@ -119,11 +120,12 @@ void Power::Loop()
   const float psuVoltage = m_psuVoltageOutput;
   const bool psuVoltageChanged = abs(m_lastPsuVoltage - psuVoltage) > VOLTAGE_DIFF_DELTA;
   if (psuVoltageChanged) {
-    TRACE_F("PSU voltage changed, was %.2fV, now %.2fV", m_lastPsuVoltage, psuVoltage);
+    TRACE_F(
+      TRACE_DEBUG1, "PSU voltage changed, was %.2fV, now %.2fV", m_lastPsuVoltage, psuVoltage);
 
 #if POWER_EN
     if ((m_source == PowerSource::k_powerSourcePsu) && (psuVoltage < k_psuVoltageMin)) {
-      TRACE("PSU undervoltage, switching to battery");
+      TRACE(TRACE_DEBUG1, "PSU undervoltage, switching to battery");
       switchSource(PowerSource::k_powerSourceBattery);
       Native().ReportWarning("PSU undervoltage, using battery");
     }
@@ -135,11 +137,15 @@ void Power::Loop()
   const bool batteryVoltageChanged =
     abs(m_lastBatteryVoltage - batteryVoltage) > VOLTAGE_DIFF_DELTA;
   if (batteryVoltageChanged) {
-    TRACE_F("Battery voltage changed, was %.2fV now %.2fV", m_lastBatteryVoltage, batteryVoltage);
+    TRACE_F(
+      TRACE_DEBUG1,
+      "Battery voltage changed, was %.2fV now %.2fV",
+      m_lastBatteryVoltage,
+      batteryVoltage);
 
 #if POWER_EN
     if ((m_source == PowerSource::k_powerSourceBattery) && (batteryVoltage < k_batteryVoltageMin)) {
-      TRACE("Battery undervoltage, switching to PSU");
+      TRACE(TRACE_DEBUG1, "Battery undervoltage, switching to PSU");
       switchSource(PowerSource::k_powerSourcePsu);
       Native().ReportWarning("Battery undervoltage, using PSU");
     }
@@ -167,13 +173,13 @@ void Power::Loop()
     else {
       if (batteryIsCharged()) {
         if (m_source != PowerSource::k_powerSourceBattery) {
-          TRACE("Switching to battery automatically (PSU off)");
+          TRACE(TRACE_DEBUG1, "Switching to battery automatically (PSU off)");
           switchSource(PowerSource::k_powerSourceBattery);
         }
       }
       else if (batteryIsLow()) {
         if (m_source != PowerSource::k_powerSourcePsu) {
-          TRACE("Switching PSU on automatically (battery off)");
+          TRACE(TRACE_DEBUG1, "Switching PSU on automatically (battery off)");
           switchSource(PowerSource::k_powerSourcePsu);
         }
       }
@@ -185,6 +191,7 @@ void Power::Loop()
 
   if (abs(m_lastBatteryCurrent - BatteryCurrentOutput()) > CURRENT_DIFF_DELTA) {
     TRACE_F(
+      TRACE_DEBUG1,
       "Battery current changed, was %.2fA, now %.2fA", //
       m_lastBatteryCurrent,
       BatteryCurrentOutput());
@@ -234,35 +241,36 @@ void Power::switchSource(PowerSource source)
   if (source == PowerSource::k_powerSourcePsu) {
 
     // ensure PSU AC is on and give it a moment to charge caps.
-    TRACE("Switch PSU on");
+    TRACE(TRACE_DEBUG1, "Switch PSU on");
     Embedded().WriteOnboardIO(IO_PIN_AC_SW, SWITCH_ON);
     Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_ON);
     Embedded().Delay(k_switchDelay, "PSU AC relay");
 
     MeasureVoltage();
     if (m_psuVoltageOutput < k_psuVoltageMin) {
-      TRACE_F("Unable to use PSU, voltage too low: %.2fV", m_psuVoltageOutput);
+      TRACE_F(TRACE_DEBUG1, "Unable to use PSU, voltage too low: %.2fV", m_psuVoltageOutput);
       Embedded().WriteOnboardIO(IO_PIN_AC_SW, SWITCH_OFF);
       Embedded().WriteOnboardIO(IO_PIN_PSU_LED, LED_OFF);
       Native().ReportWarning("Can't switch, PSU undervoltage");
       return;
     }
 
-    TRACE("PSU AC relay live (PSU on)");
-    TRACE("Power source: PSU");
+    TRACE(TRACE_DEBUG1, "PSU AC relay live (PSU on)");
+    TRACE(TRACE_DEBUG1, "Power source: PSU");
   }
   else if (source == PowerSource::k_powerSourceBattery) {
     if (batteryIsLow()) {
-      TRACE_F("Unable to use battery, voltage too low: %.2fV", m_batteryVoltageOutput);
+      TRACE_F(
+        TRACE_DEBUG1, "Unable to use battery, voltage too low: %.2fV", m_batteryVoltageOutput);
       Native().ReportWarning("Can't switch, low battery");
       return;
     }
 
-    TRACE("Switch battery on");
+    TRACE(TRACE_DEBUG1, "Switch battery on");
     Embedded().WriteOnboardIO(IO_PIN_AC_SW, SWITCH_OFF);
   }
   else {
-    TRACE("Invalid power switch");
+    TRACE(TRACE_DEBUG1, "Invalid power switch");
     return;
   }
 

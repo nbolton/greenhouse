@@ -3,6 +3,7 @@
 
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <trace.h>
 
 namespace greenhouse {
 namespace embedded {
@@ -22,11 +23,11 @@ void Time::Setup() { s_timeClient.begin(); }
 
 void Time::Refresh()
 {
-  TRACE("Doing time update");
+  TRACE(TRACE_DEBUG1, "Doing time update");
   m_timeClientOk = s_timeClient.update();
 
   if (!m_timeClientOk) {
-    TRACE("Error: Time update failed");
+    TRACE(TRACE_DEBUG1, "Error: Time update failed");
     m_errors++;
   }
   else {
@@ -34,12 +35,13 @@ void Time::Refresh()
   }
 
   TRACE_F(
+    TRACE_DEBUG1,
     "Time update stats, last=%s, success=%d, errors=%d",
     m_timeClientOk ? "ok" : "fail",
     m_success,
     m_errors);
 
-  TRACE_F("Time is: %s", FormattedCurrentTime().c_str());
+  TRACE_F(TRACE_DEBUG1, "Time is: %s", FormattedCurrentTime().c_str());
 }
 
 unsigned long Time::UptimeSeconds() const { return millis() / 1000; }

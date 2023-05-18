@@ -80,7 +80,7 @@ private:
   bool send(SendDesc &sendDesc);
 
 private:
-  bool m_init;
+  bool m_saidHello;
   NodeRadio *m_radio;
   TempData m_tempData;
   byte m_address;
@@ -100,7 +100,7 @@ public:
   bool Send(SendDesc &sendDesc);
   Node &GetNode(NodeId index);
   void MotorRunAll(MotorDirection direction, byte seconds);
-  float GetSoilTemp();
+  float GetSoilTemps();
   void SetWindowSpeeds(int left, int right);
 
 private:

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ISystem.h"
-#include "log.h"
+
+#include <trace.h>
 
 #include <stdexcept>
 
@@ -67,7 +68,7 @@ public:
   virtual ISystem &System() const
   {
     if (m_system == nullptr) {
-      TRACE("System not set");
+      TRACE(TRACE_DEBUG1, "System not set");
       throw std::runtime_error("System not set");
     }
     return *m_system;

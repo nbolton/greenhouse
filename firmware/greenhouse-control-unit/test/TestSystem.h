@@ -37,32 +37,32 @@ public:
 
   bool ReadSensors()
   {
-    TRACE_F("Mock: ReadSensors, value=%s", m_mock_ReadDhtSensor ? "true" : "false");
+    TRACE_F(TRACE_DEBUG1, "Mock: ReadSensors, value=%s", m_mock_ReadDhtSensor ? "true" : "false");
     return m_mock_ReadDhtSensor;
   }
 
   float WaterTemperature() const
   {
-    TRACE_F("Mock: WaterTemperature, value=%.2f", m_mock_WaterTemperature);
+    TRACE_F(TRACE_DEBUG1, "Mock: WaterTemperature, value=%.2f", m_mock_WaterTemperature);
     return m_mock_WaterTemperature;
   }
 
   float SoilTemperature() const
   {
-    TRACE_F("Mock: SoilTemperature, value=%.2f", m_mock_SoilTemperature);
+    TRACE_F(TRACE_DEBUG1, "Mock: SoilTemperature, value=%.2f", m_mock_SoilTemperature);
     return m_mock_SoilTemperature;
   }
 
   float InsideAirTemperature() const
   {
-    TRACE_F("Mock: InsideAirTemperature, value=%.2f", m_mock_InsideAirTemperature);
+    TRACE_F(TRACE_DEBUG1, "Mock: InsideAirTemperature, value=%.2f", m_mock_InsideAirTemperature);
     return m_mock_InsideAirTemperature;
   }
 
   greenhouse::native::Time &Time()
   {
     if (m_mock_time != nullptr) {
-      TRACE("Mock: Time");
+      TRACE(TRACE_DEBUG1, "Mock: Time");
       return *m_mock_time;
     }
 
@@ -73,7 +73,7 @@ public:
   greenhouse::native::Heating &Heating()
   {
     if (m_mock_heating != nullptr) {
-      TRACE("Mock: Heating");
+      TRACE(TRACE_DEBUG1, "Mock: Heating");
       return *m_mock_heating;
     }
 
@@ -85,7 +85,7 @@ public:
 
   void OpenWindow(float delta)
   {
-    TRACE_F("Stub: OpenWindow, delta=%.2f", delta);
+    TRACE_F(TRACE_DEBUG1, "Stub: OpenWindow, delta=%.2f", delta);
     m_calls_OpenWindow++;
     m_lastArg_OpenWindow_delta = delta;
 
@@ -94,7 +94,7 @@ public:
 
   void CloseWindow(float delta)
   {
-    TRACE_F("Stub: CloseWindow, delta=%.2f", delta);
+    TRACE_F(TRACE_DEBUG1, "Stub: CloseWindow, delta=%.2f", delta);
     m_calls_CloseWindow++;
     m_lastArg_CloseWindow_delta = delta;
 
@@ -103,33 +103,33 @@ public:
 
   void RunWindowActuator(bool extend, float delta)
   {
-    TRACE_F("Stub: RunWindowActuator, extend=%s", extend ? "true" : "false");
+    TRACE_F(TRACE_DEBUG1, "Stub: RunWindowActuator, extend=%s", extend ? "true" : "false");
     m_lastArg_RunWindowActuator_extend = extend;
     m_calls_RunWindowActuator++;
   }
 
   void Delay(unsigned long ms, const char *reason)
   {
-    TRACE_F("Stub: Delay, ms=%d, reason=%s", static_cast<int>(ms), reason);
+    TRACE_F(TRACE_DEBUG1, "Stub: Delay, ms=%d, reason=%s", static_cast<int>(ms), reason);
     m_lastArg_SystemDelay_ms = ms;
     m_calls_SystemDelay++;
   }
 
   void ReportWarning(const char *m, ...)
   {
-    TRACE("Stub: ReportWarning");
+    TRACE(TRACE_DEBUG1, "Stub: ReportWarning");
     m_calls_ReportWarning++;
   }
 
   void HandleNightToDayTransition()
   {
-    TRACE("Stub: HandleNightToDayTransition");
+    TRACE(TRACE_DEBUG1, "Stub: HandleNightToDayTransition");
     m_calls_HandleNightToDayTransition++;
   }
 
   void HandleDayToNightTransition()
   {
-    TRACE("Stub: HandleDayToNightTransition");
+    TRACE(TRACE_DEBUG1, "Stub: HandleDayToNightTransition");
     m_calls_HandleDayToNightTransition++;
   }
 

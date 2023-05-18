@@ -4,9 +4,10 @@
 
 #include "Heating.h"
 #include "ISystem.h"
-#include "Radio.h"
 #include "common.h"
 #include "gh_config.h"
+#include "radio.h"
+#include "radio_common.h"
 
 #include <Adafruit_SHT31.h>
 #include <Arduino.h>
@@ -18,6 +19,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <Wire.h>
+#include <trace.h>
 
 using namespace greenhouse;
 
@@ -118,15 +120,14 @@ void System::Setup()
   }
 #endif // TRACE_EN
 
-  if (k_enableLed) {
-    pinMode(LED_BUILTIN, OUTPUT);
-  }
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
 
-  TRACE_F("Starting system: %s", BLYNK_DEVICE_NAME);
+  TRACE_F(TRACE_DEBUG1, "Starting system: %s", BLYNK_DEVICE_NAME);
 
-  TRACE("Init I2C");
+  TRACE(TRACE_DEBUG1, "Init I2C");
   if (!Wire.begin()) {
-    TRACE("I2C init failed");
+    TRACE(TRACE_DEBUG1, "I2C init failed");
     Restart();
   }
 
@@ -135,38 +136,40 @@ void System::Setup()
   Beep(1, false);
   CaseFan(true); // on by default
 
-  TRACE("Init power");
+  TRACE(TRACE_DEBUG1, "Init power");
   m_power.Embedded(*this);
   m_power.Native(*this);
   m_power.Setup();
 
   InitSensors();
 
-  TRACE("Init Blynk");
+  TRACE(TRACE_DEBUG1, "Init Blynk");
   Blynk.begin(k_auth, k_ssid, k_pass);
 
-  TRACE("Init time");
+  TRACE(TRACE_DEBUG1, "Init time");
   m_time.Setup();
 
-  radio::init();
+  radio::init(this);
 
-  TRACE("System ready");
+  TRACE(TRACE_DEBUG1, "System ready");
   Blynk.virtualWrite(V52, "Ready");
   Beep(2, false);
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void System::Loop()
 {
+  radio::update();
+
   if (millis() < (m_lastLoop + k_loopFrequency)) {
-    delay(LOOP_DELAY);
     return;
   }
   m_lastLoop = millis();
 
+  UpdateSoilTemps();
+
   // run early so that refresh is queued on time.
   s_refreshTimer.run();
-
-  radio::update();
 
   // always run before actuator check
   ng::System::Loop();
@@ -192,17 +195,17 @@ void System::Loop()
 
     m_lastBlynkFailure = now;
     m_blynkFailures++;
-    TRACE_F("Blynk failed %d time(s)", m_blynkFailures);
+    TRACE_F(TRACE_DEBUG1, "Blynk failed %d time(s)", m_blynkFailures);
 
     if (m_blynkFailures >= k_blynkFailuresMax) {
-      TRACE("Restarting, too many Blynk failures");
+      TRACE(TRACE_DEBUG1, "Restarting, too many Blynk failures");
       Restart();
       return;
     }
   }
   else if (recoveredWithinTimeframe && (m_blynkFailures != 0)) {
     // no failures happened within last n - r seconds (n = now, r = recover time)
-    TRACE("Blynk is back to normal, resetting fail count");
+    TRACE(TRACE_DEBUG1, "Blynk is back to normal, resetting fail count");
     m_blynkFailures = 0;
   }
 
@@ -212,7 +215,7 @@ void System::Loop()
     while (!m_callbackQueue.empty()) {
       Callback callback = m_callbackQueue.front();
 
-      TRACE_F("Callback function: %s", callback.m_name.c_str());
+      TRACE_F(TRACE_DEBUG1, "Callback function: %s", callback.m_name.c_str());
 
       m_callbackQueue.pop();
 
@@ -220,10 +223,10 @@ void System::Loop()
         (this->*callback.m_function)();
       }
       else {
-        TRACE("Function pointer was null");
+        TRACE(TRACE_DEBUG1, "Function pointer was null");
       }
 
-      TRACE_F("Callback queue remaining=%d", m_callbackQueue.size());
+      TRACE_F(TRACE_DEBUG1, "Callback queue remaining=%d", m_callbackQueue.size());
     }
   }
 
@@ -237,7 +240,7 @@ void System::Loop()
 
 void System::InitIO()
 {
-  TRACE("Init local system PCF8574 IO");
+  TRACE(TRACE_DEBUG1, "Init local system PCF8574 IO");
 
   s_localSystemIo1.pinMode(P0, OUTPUT);
   s_localSystemIo1.pinMode(P1, OUTPUT);
@@ -249,11 +252,11 @@ void System::InitIO()
   s_localSystemIo1.pinMode(P7, OUTPUT);
 
   if (!s_localSystemIo1.begin()) {
-    TRACE("Local system PCF8574 failed");
+    TRACE(TRACE_DEBUG1, "Local system PCF8574 failed");
     Restart();
   }
 
-  TRACE("Init external switch PCF8574 IO");
+  TRACE(TRACE_DEBUG1, "Init external switch PCF8574 IO");
 
   s_externalSwitchIo1.pinMode(P0, OUTPUT, LOW);
   s_externalSwitchIo1.pinMode(P1, OUTPUT, LOW);
@@ -265,14 +268,14 @@ void System::InitIO()
   s_externalSwitchIo1.pinMode(P7, OUTPUT);
 
   if (!s_externalSwitchIo1.begin()) {
-    TRACE("External switch PCF8574 failed");
+    TRACE(TRACE_DEBUG1, "External switch PCF8574 failed");
     Restart();
   }
 }
 
 void System::InitSensors()
 {
-  TRACE("Init sensors");
+  TRACE(TRACE_DEBUG1, "Init sensors");
 
   if (!s_insideAirSensor.begin(k_insideAirSensorAddress)) {
     ReportWarning("Inside air sensor not found");
@@ -283,15 +286,15 @@ void System::InitSensors()
   }
 }
 
-void System::Refresh()
+void System::Refresh(bool first)
 {
-  TRACE("Refreshing (embedded)");
+  TRACE(TRACE_DEBUG1, "Refreshing (embedded)");
 
   Time().Refresh();
 
   FlashLed(k_ledRefresh);
 
-  ng::System::Refresh();
+  ng::System::Refresh(first);
 
   m_power.MeasureCurrent();
 
@@ -304,9 +307,9 @@ void System::Refresh()
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
 
-  UpdateSoilTemp();
+  radio::getSoilTempsAsync();
 
-  TRACE("Refresh done (embedded)");
+  TRACE(TRACE_DEBUG1, "Refresh done (embedded)");
 }
 
 void System::FlashLed(LedFlashTimes times)
@@ -340,8 +343,10 @@ float System::SoilTemperature() const
 
 bool System::ReadSensors(int &failures)
 {
+#if SENSORS_EN
+
   if (TestMode()) {
-    TRACE("Test mode: Skipping sensor read");
+    TRACE(TRACE_DEBUG1, "Test mode: Skipping sensor read");
     return true;
   }
 
@@ -370,19 +375,35 @@ bool System::ReadSensors(int &failures)
   }
 
   return failures == 0;
+
+#else
+
+  return true;
+
+#endif // SENSORS_EN
 }
 
-void System::UpdateSoilTemp()
+void System::UpdateSoilTemps()
 {
-  TRACE("Reading soil temperatures");
-  m_soilTemperature = radio::soilTempResult();
-  Blynk.virtualWrite(V11, SoilTemperature());
+  if (m_soilTemperature != radio::getSoilTempsResult()) {
+    TRACE(TRACE_DEBUG1, "Soil temps changed");
+
+    m_soilTemperature = radio::getSoilTempsResult();
+    if (m_soilTemperature != k_unknown) {
+      TRACE_F(TRACE_DEBUG1, "Soil temps: %.2f°C", m_soilTemperature);
+    }
+    else {
+      TRACE(TRACE_DEBUG1, "Soil temps unknown");
+    }
+    Blynk.virtualWrite(V11, SoilTemperature());
+  }
 }
 
 void System::RunWindowActuator(bool extend, float delta)
 {
   int runtimeSec = ceilf(WindowActuatorRuntimeSec() * delta);
   TRACE_F(
+    TRACE_DEBUG1,
     "Running window actuator: delta=%.2f, max=%.2fs, runtime=%.2fs",
     delta,
     WindowActuatorRuntimeSec(),
@@ -399,7 +420,7 @@ void System::RunWindowActuator(bool extend, float delta)
 void System::Delay(unsigned long ms, const char *reason)
 {
 #if TRACE_DELAY
-  TRACE_F("Delay %dms (%s)", (int)ms, reason);
+  TRACE_F(TRACE_DEBUG1, "Delay %dms (%s)", (int)ms, reason);
 #endif // TRACE_DELAY
   delay(ms);
 }
@@ -418,13 +439,13 @@ void System::Restart()
 
 void System::CaseFan(bool on)
 {
-  TRACE_F("Case fan %s", on ? "on" : "off");
+  TRACE_F(TRACE_DEBUG1, "Case fan %s", on ? "on" : "off");
   s_localSystemIo1.digitalWrite(IO_PIN_FAN_SW, on);
 }
 
 void System::Beep(int times, bool longBeep)
 {
-  TRACE_F("Beep %d times (%s)", times, longBeep ? "long" : "short");
+  TRACE_F(TRACE_DEBUG1, "Beep %d times (%s)", times, longBeep ? "long" : "short");
   for (int i = 0; i < times; i++) {
     s_localSystemIo1.digitalWrite(IO_PIN_BEEP_SW, LOW);
     Delay(longBeep ? LONG_BEEP_TIME : SHORT_BEEP_TIME, "Beep on");
@@ -441,12 +462,13 @@ void System::ReportInfo(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  TRACE_C(s_reportBuffer);
+  TRACE_C(TRACE_DEBUG1, s_reportBuffer);
   Blynk.logEvent("info", s_reportBuffer);
 }
 
 void System::ReportWarning(const char *format, ...)
 {
+#if BLYNK_WARNINGS
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
@@ -454,13 +476,10 @@ void System::ReportWarning(const char *format, ...)
 
   // still log even if k_reportWarnings is off (the intent of k_reportWarnings
   // is to reduce noise on the blynk app during testing)
-  TRACE_C(s_reportBuffer);
-
-  if (!k_reportWarnings) {
-    return;
-  }
+  TRACE_C(TRACE_DEBUG1, s_reportBuffer);
 
   Blynk.logEvent("warning", s_reportBuffer);
+#endif // BLYNK_WARNINGS
 }
 
 void System::ReportCritical(const char *format, ...)
@@ -470,7 +489,7 @@ void System::ReportCritical(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  TRACE_C(s_reportBuffer);
+  TRACE_C(TRACE_DEBUG1, s_reportBuffer);
   Blynk.logEvent("critical", s_reportBuffer);
 }
 
@@ -494,7 +513,7 @@ void System::ReportSystemInfo()
 
   // free heap
   int freeHeap = ESP.getFreeHeap();
-  TRACE_F("Free heap: %d bytes", freeHeap);
+  TRACE_F(TRACE_DEBUG1, "Free heap: %d bytes", freeHeap);
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
@@ -540,8 +559,8 @@ void System::OnSystemStarted()
   // we run the 1st refresh here instead of when the timer is created,
   // because when we setup the timer for the first time, we may not
   // have all of the correct initial values.
-  TRACE("First refresh");
-  Refresh();
+  TRACE(TRACE_DEBUG1, "First refresh");
+  Refresh(true);
 
   FlashLed(k_ledStarted);
   SystemStarted(true);
@@ -555,23 +574,25 @@ void System::OnSystemStarted()
 void System::ApplyRefreshRate()
 {
   if (m_refreshRate <= 0) {
-    TRACE_F("Invalid refresh rate: %ds", m_refreshRate);
+    TRACE_F(TRACE_DEBUG1, "Invalid refresh rate: %ds", m_refreshRate);
     return;
   }
 
-  TRACE_F("New refresh rate: %ds", m_refreshRate);
+  TRACE_F(TRACE_DEBUG1, "New refresh rate: %ds", m_refreshRate);
 
   if (m_timerId != k_unknown) {
-    TRACE_F("Deleting old timer: %d", m_timerId);
+    TRACE_F(TRACE_DEBUG1, "Deleting old timer: %d", m_timerId);
     s_refreshTimer.deleteTimer(m_timerId);
   }
 
   m_timerId = s_refreshTimer.setInterval(m_refreshRate * 1000L, refreshTimer);
-  TRACE_F("New refresh timer: %d", m_timerId);
+  TRACE_F(TRACE_DEBUG1, "New refresh timer: %d", m_timerId);
 }
 
 bool System::UpdateWeatherForecast()
 {
+#if WEATHER_EN
+
   if (TestMode()) {
     return true;
   }
@@ -579,35 +600,35 @@ bool System::UpdateWeatherForecast()
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
 
-  TRACE_F("Connecting to weather host: %s", k_weatherHost);
+  TRACE_F(TRACE_DEBUG1, "Connecting to weather host: %s", k_weatherHost);
   HttpClient httpClient(s_wifiClient, k_weatherHost, 80);
 
-  TRACE("Weather host get");
+  TRACE(TRACE_DEBUG1, "Weather host get");
   httpClient.get(uri);
 
   int statusCode = httpClient.responseStatusCode();
   if (isnan(statusCode)) {
-    TRACE("Weather host status is invalid");
+    TRACE(TRACE_DEBUG1, "Weather host status is invalid");
     return false;
   }
 
-  TRACE_F("Weather host status: %d", statusCode);
+  TRACE_F(TRACE_DEBUG1, "Weather host status: %d", statusCode);
   if (statusCode != 200) {
-    TRACE("Weather host error status");
+    TRACE(TRACE_DEBUG1, "Weather host error status");
     return false;
   }
 
   String response = httpClient.responseBody();
   int size = static_cast<int>(strlen(response.c_str()));
-  TRACE_F("Weather host response length: %d", size);
+  TRACE_F(TRACE_DEBUG1, "Weather host response length: %d", size);
 
   DeserializationError error = deserializeJson(s_weatherJson, response);
   if (error != DeserializationError::Ok) {
-    TRACE_F("Weather data error: %s", error.c_str());
+    TRACE_F(TRACE_DEBUG1, "Weather data error: %s", error.c_str());
     return false;
   }
 
-  TRACE("Deserialized weather JSON");
+  TRACE(TRACE_DEBUG1, "Deserialized weather JSON");
   int id = s_weatherJson["weather"][0]["id"];
   const char *main = s_weatherJson["weather"][0]["main"];
   int dt = s_weatherJson["dt"];
@@ -627,12 +648,18 @@ bool System::UpdateWeatherForecast()
     minuteString.c_str(),
     location);
 
-  TRACE_F("Weather forecast: code=%d, info='%s'", id, s_weatherInfo);
+  TRACE_F(TRACE_DEBUG1, "Weather forecast: code=%d, info='%s'", id, s_weatherInfo);
 
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
   ReportWeather();
   return true;
+
+#else
+
+  return true;
+
+#endif // WEATHER_EN
 }
 
 void System::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
@@ -655,6 +682,7 @@ void System::UpdateCaseFan()
   CaseFan(on);
 
   TRACE_F(
+    TRACE_DEBUG1,
     "Case fan: %s (PSU=%s, HC=%s)", //
     BOOL_FS(on),
     BOOL_FS(onPsu),
@@ -674,11 +702,11 @@ void System::WriteOnboardIO(uint8_t pin, uint8_t value)
   s_localSystemIo1.digitalWrite(pin, value);
 }
 
-void System::PrintCommands() { TRACE("Commands\ns: status"); }
+void System::PrintCommands() { TRACE(TRACE_DEBUG1, "Commands\ns: status"); }
 
 void System::PrintStatus()
 {
-  TRACE_F("Status\nBlynk: %s", Blynk.connected() ? "Connected" : "Disconnected");
+  TRACE_F(TRACE_DEBUG1, "Status\nBlynk: %s", Blynk.connected() ? "Connected" : "Disconnected");
 }
 
 void System::QueueCallback(CallbackFunction f, std::string name)
@@ -691,11 +719,11 @@ void System::WindowSpeedUpdate()
   radio::windowActuatorSetup(WindowSpeedLeft(), WindowSpeedRight());
 }
 
-void System::LowerPumpOn(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
+void System::ReportPumpSwitch(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
 
-void System::LowerPumpStatus(const char *message) { Blynk.virtualWrite(V81, message); }
+void System::ReportPumpStatus(const char *message) { Blynk.virtualWrite(V81, message); }
 
-void System::SwitchLights(bool on) { TRACE("lights not implemented"); }
+void System::SwitchLights(bool on) { TRACE(TRACE_DEBUG1, "Lights not implemented"); }
 
 } // namespace embedded
 } // namespace greenhouse
@@ -757,7 +785,6 @@ BLYNK_CONNECTED()
     V74,
     V78,
     V79,
-    V80,
     V82,
     V127 /* last */);
 }
@@ -890,25 +917,28 @@ BLYNK_WRITE(V80)
 {
   const bool pumpOn = static_cast<bool>(param.asInt());
   if (pumpOn) {
+    eg::s_instance->ReportPumpStatus("Manually switching on");
     Blynk.logEvent("info", F("Manually switching pump on."));
   }
   else {
+    eg::s_instance->ReportPumpStatus("Manually switching off");
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
-
-  radio::switchPump(pumpOn);
+  radio::pumpSwitch(pumpOn);
 }
 
 BLYNK_WRITE(V82)
 {
   const bool tankFull = static_cast<bool>(param.asInt());
   if (tankFull) {
+    eg::s_instance->ReportPumpStatus("Auto switching off");
     Blynk.logEvent("info", F("Tank is full, auto switching pump off."));
   }
   else {
+    eg::s_instance->ReportPumpStatus("Auto switching on");
     Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
   }
 
   // tank not full? switch pump on
-  radio::switchPump(!tankFull);
+  radio::pumpSwitch(!tankFull);
 }

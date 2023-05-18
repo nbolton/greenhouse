@@ -1,12 +1,12 @@
 #pragma once
 
-#include "log.h"
 #include "native/System.h"
+#include <trace.h>
 
 #include "Heating.h"
 #include "Power.h"
-#include "Radio.h"
 #include "Time.h"
+#include "radio.h"
 
 #include <Arduino.h>
 
@@ -37,7 +37,8 @@ public:
 
   void Setup();
   void Loop();
-  void Refresh();
+  void Refresh() { Refresh(false); }
+  void Refresh(bool first);
   void WeatherCallback();
   void OnLastWrite();
   void OnSystemStarted();
@@ -47,8 +48,8 @@ public:
   void ApplyRefreshRate();
   void QueueCallback(CallbackFunction f, std::string name);
   void WindowSpeedUpdate();
-  void LowerPumpOn(bool pumpOn);
-  void LowerPumpStatus(const char *message);
+  void ReportPumpSwitch(bool pumpOn);
+  void ReportPumpStatus(const char *message);
   void SwitchLights(bool on);
   void OnBatteryCurrentChange();
 
@@ -65,7 +66,7 @@ protected:
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
-  void UpdateSoilTemp();
+  void UpdateSoilTemps();
   void RunWindowActuator(bool extend, float delta);
   void Delay(unsigned long ms, const char *reason);
   bool UpdateWeatherForecast();
