@@ -272,7 +272,7 @@ void System::InitIO() {
   }
 
   // wait for nodes to power off
-  Delay(NODE_OFF_DELAY);
+  Delay(NODE_OFF_DELAY, "Node powering off");
 
   PCF8574::DigitalInput di;
   di.p0 = LOW;
