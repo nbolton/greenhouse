@@ -35,11 +35,14 @@ enum MotorDirection { k_windowExtend, k_windowRetract };
 
 enum MessageType { //
   k_messageTypeNotSet,
+
   k_soilTemps,
   k_windowActuatorRunAll,
   k_windowActuatorSetup,
   k_pumpSwitch,
-  k_pumpStatus
+  k_pumpStatus,
+
+  k_reset = 255
 };
 
 struct Message {
