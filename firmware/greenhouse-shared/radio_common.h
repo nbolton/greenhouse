@@ -2,8 +2,8 @@
 
 #include <Arduino.h>
 
-#define RHRD_RETRIES 20  // default is 3
-#define RHRD_TIMEOUT 200 // default is 200 ms
+#define RHRD_RETRIES 10  // default is 3
+#define RHRD_TIMEOUT 500 // default is 200 ms
 
 #define RHRD_ADDR_SERVER 0
 #define RHRD_ADDR_NODE1 1
@@ -61,7 +61,7 @@ typedef void (*StateCallback)(bool busy);
 void init(
   ::RHReliableDatagram *rd, ::RH_RF69 *rf69, RxCallback _rxCallback, StateCallback _stateCallback);
 Message rx(MessageType mt = k_messageTypeNotSet);
-void tx(Message m);
+bool tx(Message m);
 void printBuffer(const __FlashStringHelper *prompt, uint8_t *data, uint8_t dataLen);
 
 } // namespace common

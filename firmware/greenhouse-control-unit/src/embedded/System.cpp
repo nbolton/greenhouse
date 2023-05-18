@@ -39,10 +39,13 @@ namespace embedded {
 #define BEEP_OFF_TIME 200
 #define IO_PIN_BEEP_SW P1
 #define IO_PIN_FAN_SW P0
-#define NODE_OFF_DELAY 100
+#define NODE_SWITCH_0 P1
+#define NODE_SWITCH_1 P2
+#define NODE_RESET_DELAY 100
+#define NODE_BOOT_DELAY 2000
 
 const bool k_enableLed = false;
-const int k_ledFlashDelay = 30;  // ms
+const int k_ledFlashDelay = 30; // ms
 const int k_soilProbeIndex = 0;
 const int k_waterProbeIndex = 1;
 const uint8_t k_insideAirSensorAddress = 0x44;
@@ -52,14 +55,13 @@ const float k_weatherLat = 54.203;
 const float k_weatherLon = -4.408;
 const char *k_weatherApiKey = "e8444a70abfc2b472d43537730750892";
 const char *k_weatherHost = "api.openweathermap.org";
-const char *k_weatherUri =
-    "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
+const char *k_weatherUri = "/data/2.5/weather?lat=%.3f&lon=%.3f&units=metric&appid=%s";
 const uint8_t k_localSystemIoAddress1 = 0x38;
 const uint8_t k_externSwitchlIoAddress1 = 0x39;
-const int k_loopFrequency = 1000;  // 1s
+const int k_loopFrequency = 1000;      // 1s
 const int k_blynkFailuresMax = 300;
-const int k_blynkRecoverTimeSec = 300;  // 5m
-const int k_serialWaitDelay = 1000;     // 1s
+const int k_blynkRecoverTimeSec = 300; // 5m
+const int k_serialWaitDelay = 1000;    // 1s
 const int k_leftWindowNodeSwitch = 1;
 const int k_rightWindowNodeSwitch = 2;
 
@@ -76,9 +78,7 @@ static DynamicJsonDocument s_weatherJson(2048);
 
 // free-function declarations
 
-void refreshTimer() {
-  eg::s_instance->QueueCallback(&eg::System::Refresh, "Refresh (timer)");
-}
+void refreshTimer() { eg::s_instance->QueueCallback(&eg::System::Refresh, "Refresh (timer)"); }
 
 // member functions
 
@@ -86,31 +86,34 @@ System &System::Instance() { return *s_instance; }
 
 void System::Instance(System &ga) { s_instance = &ga; }
 
-System::System()
-    : m_heating(),
-      m_power(),
-      m_insideAirTemperature(k_unknown),
-      m_insideAirHumidity(k_unknown),
-      m_outsideAirTemperature(k_unknown),
-      m_outsideAirHumidity(k_unknown),
-      m_soilTemperature(k_unknown),
-      m_soilTemperatureFailures(0),
-      m_waterTemperature(k_unknown),
-      m_timerId(k_unknown),
-      m_led(LOW),
-      m_fakeInsideHumidity(k_unknown),
-      m_fakeSoilTemperature(k_unknown),
-      m_refreshBusy(false),
-      m_insideHumidityWarningSent(false),
-      m_blynkFailures(0),
-      m_lastBlynkFailure(0),
-      m_refreshRate(k_unknown),
-      m_queueOnSystemStarted(false),
-      m_lastLoop(0),
-      m_windowSpeedLeft(k_unknown),
-      m_windowSpeedRight(k_unknown) {}
+System::System() :
+  m_heating(),
+  m_power(),
+  m_insideAirTemperature(k_unknown),
+  m_insideAirHumidity(k_unknown),
+  m_outsideAirTemperature(k_unknown),
+  m_outsideAirHumidity(k_unknown),
+  m_soilTemperature(k_unknown),
+  m_soilTemperatureFailures(0),
+  m_waterTemperature(k_unknown),
+  m_timerId(k_unknown),
+  m_led(LOW),
+  m_fakeInsideHumidity(k_unknown),
+  m_fakeSoilTemperature(k_unknown),
+  m_refreshBusy(false),
+  m_insideHumidityWarningSent(false),
+  m_blynkFailures(0),
+  m_lastBlynkFailure(0),
+  m_refreshRate(k_unknown),
+  m_queueOnSystemStarted(false),
+  m_lastLoop(0),
+  m_windowSpeedLeft(k_unknown),
+  m_windowSpeedRight(k_unknown)
+{
+}
 
-void System::Setup() {
+void System::Setup()
+{
   ng::System::Setup();
 
 #if TRACE_EN
@@ -119,7 +122,7 @@ void System::Setup() {
     delay(k_serialWaitDelay);
     Serial.println("\n");
   }
-#endif  // TRACE_EN
+#endif // TRACE_EN
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
@@ -135,7 +138,7 @@ void System::Setup() {
   InitIO();
 
   Beep(1, false);
-  CaseFan(true);  // on by default
+  CaseFan(true); // on by default
 
   TRACE(TRACE_DEBUG1, "Init power");
   m_power.Embedded(*this);
@@ -158,7 +161,8 @@ void System::Setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 }
 
-void System::Loop() {
+void System::Loop()
+{
   radio::update();
 
   if (millis() < (m_lastLoop + k_loopFrequency)) {
@@ -166,7 +170,7 @@ void System::Loop() {
   }
   m_lastLoop = millis();
 
-  UpdateSoilTemps();
+  UpdateSoilTemps(false);
 
   // run early so that refresh is queued on time.
   s_refreshTimer.run();
@@ -178,19 +182,18 @@ void System::Loop() {
     String s = Serial.readString();
     const char c = s.c_str()[0];
     switch (c) {
-      case 's':
-        PrintStatus();
-        break;
+    case 's':
+      PrintStatus();
+      break;
 
-      default:
-        PrintCommands();
-        break;
+    default:
+      PrintCommands();
+      break;
     }
   }
 
   const unsigned long now = Time().UptimeSeconds();
-  const bool recoveredWithinTimeframe =
-      ((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec);
+  const bool recoveredWithinTimeframe = ((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec);
 
   if (!Blynk.run()) {
     m_lastBlynkFailure = now;
@@ -202,7 +205,8 @@ void System::Loop() {
       Restart();
       return;
     }
-  } else if (recoveredWithinTimeframe && (m_blynkFailures != 0)) {
+  }
+  else if (recoveredWithinTimeframe && (m_blynkFailures != 0)) {
     // no failures happened within last n - r seconds (n = now, r = recover
     // time)
     TRACE(TRACE_DEBUG1, "Blynk is back to normal, resetting fail count");
@@ -221,12 +225,12 @@ void System::Loop() {
 
       if (callback.m_function != nullptr) {
         (this->*callback.m_function)();
-      } else {
+      }
+      else {
         TRACE(TRACE_DEBUG1, "Function pointer was null");
       }
 
-      TRACE_F(TRACE_DEBUG1, "Callback queue remaining=%d",
-              m_callbackQueue.size());
+      TRACE_F(TRACE_DEBUG1, "Callback queue remaining=%d", m_callbackQueue.size());
     }
   }
 
@@ -238,7 +242,8 @@ void System::Loop() {
   yield();
 }
 
-void System::InitIO() {
+void System::InitIO()
+{
   TRACE(TRACE_DEBUG1, "Init local system PCF8574 IO");
 
   s_localSystemIo1.pinMode(P0, OUTPUT);
@@ -270,19 +275,10 @@ void System::InitIO() {
     TRACE(TRACE_DEBUG1, "External switch PCF8574 failed");
     Restart();
   }
-
-  // wait for nodes to power off
-  Delay(NODE_OFF_DELAY, "Node powering off");
-
-  PCF8574::DigitalInput di;
-  di.p0 = LOW;
-  di.p1 = LOW;
-  di.p2 = LOW;
-  di.p3 = LOW;
-  s_externalSwitchIo1.digitalWriteAll(di);
 }
 
-void System::InitSensors() {
+void System::InitSensors()
+{
   TRACE(TRACE_DEBUG1, "Init sensors");
 
   if (!s_insideAirSensor.begin(k_insideAirSensorAddress)) {
@@ -293,10 +289,11 @@ void System::InitSensors() {
   if (!s_outsideAirSensor.begin(k_outsideAirSensorAddress)) {
     ReportWarning("Outside air sensor not found");
   }
-#endif  // OUTSIDE_SHT31_EN
+#endif // OUTSIDE_SHT31_EN
 }
 
-void System::Refresh(bool first) {
+void System::Refresh(bool first)
+{
   TRACE(TRACE_DEBUG1, "Refreshing (embedded)");
 
   Time().Refresh();
@@ -316,12 +313,14 @@ void System::Refresh(bool first) {
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
 
+  UpdateSoilTemps(true);
   radio::getSoilTempsAsync();
 
   TRACE(TRACE_DEBUG1, "Refresh done (embedded)");
 }
 
-void System::FlashLed(LedFlashTimes times) {
+void System::FlashLed(LedFlashTimes times)
+{
   if (!k_enableLed) {
     return;
   }
@@ -333,21 +332,24 @@ void System::FlashLed(LedFlashTimes times) {
   }
 }
 
-float System::InsideAirHumidity() const {
+float System::InsideAirHumidity() const
+{
   if (TestMode()) {
     return m_fakeInsideHumidity;
   }
   return m_insideAirHumidity;
 }
 
-float System::SoilTemperature() const {
+float System::SoilTemperature() const
+{
   if (TestMode()) {
     return m_fakeSoilTemperature;
   }
   return m_soilTemperature;
 }
 
-bool System::ReadSensors(int &failures) {
+bool System::ReadSensors(int &failures)
+{
 #if SENSORS_EN
 
   if (TestMode()) {
@@ -379,7 +381,7 @@ bool System::ReadSensors(int &failures) {
     m_outsideAirHumidity = k_unknown;
     failures++;
   }
-#endif  // OUTSIDE_SHT31_EN
+#endif // OUTSIDE_SHT31_EN
 
   return failures == 0;
 
@@ -387,44 +389,56 @@ bool System::ReadSensors(int &failures) {
 
   return true;
 
-#endif  // SENSORS_EN
+#endif // SENSORS_EN
 }
 
-void System::UpdateSoilTemps() {
-  if (m_soilTemperature != radio::getSoilTempsResult()) {
+void System::UpdateSoilTemps(bool force)
+{
+  bool changed = m_soilTemperature != radio::getSoilTempsResult();
+  if (changed) {
     TRACE(TRACE_DEBUG1, "Soil temps changed");
+  }
 
+  if (changed || force) {
     m_soilTemperature = radio::getSoilTempsResult();
     if (m_soilTemperature != k_unknown) {
       TRACE_F(TRACE_DEBUG1, "Soil temps: %.2f°C", m_soilTemperature);
-    } else {
+    }
+    else {
       TRACE(TRACE_DEBUG1, "Soil temps unknown");
     }
     Blynk.virtualWrite(V11, SoilTemperature());
   }
 }
 
-void System::RunWindowActuator(bool extend, float delta) {
+void System::RunWindowActuator(bool extend, float delta)
+{
   int runtimeSec = ceilf(WindowActuatorRuntimeSec() * delta);
-  TRACE_F(TRACE_DEBUG1,
-          "Running window actuator: delta=%.2f, max=%.2fs, runtime=%.2fs",
-          delta, WindowActuatorRuntimeSec(), runtimeSec);
+  TRACE_F(
+    TRACE_DEBUG1,
+    "Running window actuator: delta=%.2f, max=%.2fs, runtime=%.2fs",
+    delta,
+    WindowActuatorRuntimeSec(),
+    runtimeSec);
 
   if (extend) {
     radio::windowActuatorRunAll(radio::k_windowExtend, runtimeSec);
-  } else {
+  }
+  else {
     radio::windowActuatorRunAll(radio::k_windowRetract, runtimeSec);
   }
 }
 
-void System::Delay(unsigned long ms, const char *reason) {
+void System::Delay(unsigned long ms, const char *reason)
+{
 #if TRACE_DELAY
   TRACE_F(TRACE_DEBUG1, "Delay %dms (%s)", (int)ms, reason);
-#endif  // TRACE_DELAY
+#endif // TRACE_DELAY
   delay(ms);
 }
 
-void System::Restart() {
+void System::Restart()
+{
   FlashLed(k_ledRestart);
   Beep(2, true);
 
@@ -435,14 +449,15 @@ void System::Restart() {
   esp_restart();
 }
 
-void System::CaseFan(bool on) {
+void System::CaseFan(bool on)
+{
   TRACE_F(TRACE_DEBUG1, "Case fan %s", on ? "on" : "off");
   s_localSystemIo1.digitalWrite(IO_PIN_FAN_SW, on);
 }
 
-void System::Beep(int times, bool longBeep) {
-  TRACE_F(TRACE_DEBUG1, "Beep %d times (%s)", times,
-          longBeep ? "long" : "short");
+void System::Beep(int times, bool longBeep)
+{
+  TRACE_F(TRACE_DEBUG1, "Beep %d times (%s)", times, longBeep ? "long" : "short");
   for (int i = 0; i < times; i++) {
     s_localSystemIo1.digitalWrite(IO_PIN_BEEP_SW, LOW);
     Delay(longBeep ? LONG_BEEP_TIME : SHORT_BEEP_TIME, "Beep on");
@@ -452,7 +467,8 @@ void System::Beep(int times, bool longBeep) {
   }
 }
 
-void System::ReportInfo(const char *format, ...) {
+void System::ReportInfo(const char *format, ...)
+{
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
@@ -462,7 +478,8 @@ void System::ReportInfo(const char *format, ...) {
   Blynk.logEvent("info", s_reportBuffer);
 }
 
-void System::ReportWarning(const char *format, ...) {
+void System::ReportWarning(const char *format, ...)
+{
 #if BLYNK_WARNINGS
   va_list args;
   va_start(args, format);
@@ -474,10 +491,11 @@ void System::ReportWarning(const char *format, ...) {
   TRACE_C(TRACE_DEBUG1, s_reportBuffer);
 
   Blynk.logEvent("warning", s_reportBuffer);
-#endif  // BLYNK_WARNINGS
+#endif // BLYNK_WARNINGS
 }
 
-void System::ReportCritical(const char *format, ...) {
+void System::ReportCritical(const char *format, ...)
+{
   va_list args;
   va_start(args, format);
   vsprintf(s_reportBuffer, format, args);
@@ -487,18 +505,18 @@ void System::ReportCritical(const char *format, ...) {
   Blynk.logEvent("critical", s_reportBuffer);
 }
 
-void System::ReportSensorValues() {
+void System::ReportSensorValues()
+{
   Blynk.virtualWrite(V1, InsideAirTemperature());
   Blynk.virtualWrite(V2, InsideAirHumidity());
   Blynk.virtualWrite(V19, OutsideAirTemperature());
   Blynk.virtualWrite(V20, OutsideAirHumidity());
 }
 
-void System::ReportWindowOpenPercent() {
-  Blynk.virtualWrite(V9, WindowOpenPercentExpected());
-}
+void System::ReportWindowOpenPercent() { Blynk.virtualWrite(V9, WindowOpenPercentExpected()); }
 
-void System::ReportSystemInfo() {
+void System::ReportSystemInfo()
+{
   // current time
   Blynk.virtualWrite(V10, Time().FormattedCurrentTime());
 
@@ -511,7 +529,8 @@ void System::ReportSystemInfo() {
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
-void System::HandleNightToDayTransition() {
+void System::HandleNightToDayTransition()
+{
   // report cumulative time to daily virtual pin before calling
   // base function (which resets cumulative to 0)
   Blynk.virtualWrite(V65, Heating().WaterHeaterCostCumulative());
@@ -523,26 +542,33 @@ void System::HandleNightToDayTransition() {
   Blynk.virtualWrite(V64, Time().NightToDayTransitionTime());
 }
 
-void System::HandleDayToNightTransition() {
+void System::HandleDayToNightTransition()
+{
   ng::System::HandleDayToNightTransition();
 
   Blynk.virtualWrite(V68, Time().DayToNightTransitionTime());
 }
 
-void System::ReportWarnings() {
+void System::ReportWarnings()
+{
   if (!SystemStarted()) {
     return;
   }
 }
 
-void System::OnLastWrite() {
+void System::OnLastWrite()
+{
   if (!SystemStarted()) {
     m_queueOnSystemStarted = true;
   }
 }
 
-void System::OnSystemStarted() {
+void System::OnSystemStarted()
+{
   // Power().InitPowerSource();
+
+  ResetNodes();
+  ResetRelay();
 
   // run first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -560,7 +586,8 @@ void System::OnSystemStarted() {
   ReportWarning("System started");
 }
 
-void System::ApplyRefreshRate() {
+void System::ApplyRefreshRate()
+{
   if (m_refreshRate <= 0) {
     TRACE_F(TRACE_DEBUG1, "Invalid refresh rate: %ds", m_refreshRate);
     return;
@@ -577,7 +604,8 @@ void System::ApplyRefreshRate() {
   TRACE_F(TRACE_DEBUG1, "New refresh timer: %d", m_timerId);
 }
 
-bool System::UpdateWeatherForecast() {
+bool System::UpdateWeatherForecast()
+{
 #if WEATHER_EN
 
   if (TestMode()) {
@@ -627,11 +655,15 @@ bool System::UpdateWeatherForecast() {
   String hoursString = hours < 10 ? "0" + String(hours) : String(hours);
   String minuteString = minutes < 10 ? "0" + String(minutes) : String(minutes);
 
-  sprintf(s_weatherInfo, "%s @ %s:%s UTC (%s)", main, hoursString.c_str(),
-          minuteString.c_str(), location);
+  sprintf(
+    s_weatherInfo,
+    "%s @ %s:%s UTC (%s)",
+    main,
+    hoursString.c_str(),
+    minuteString.c_str(),
+    location);
 
-  TRACE_F(TRACE_DEBUG1, "Weather forecast: code=%d, info='%s'", id,
-          s_weatherInfo);
+  TRACE_F(TRACE_DEBUG1, "Weather forecast: code=%d, info='%s'", id, s_weatherInfo);
 
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
@@ -642,98 +674,171 @@ bool System::UpdateWeatherForecast() {
 
   return true;
 
-#endif  // WEATHER_EN
+#endif // WEATHER_EN
 }
 
 void System::ReportWeather() { Blynk.virtualWrite(V60, WeatherInfo().c_str()); }
 
-void System::ReportWaterHeaterInfo() {
+void System::ReportWaterHeaterInfo()
+{
   Blynk.virtualWrite(V62, Heating().WaterHeaterDayRuntimeMinutes());
   Blynk.virtualWrite(V67, Heating().WaterHeaterNightRuntimeMinutes());
   Blynk.virtualWrite(V63, Heating().WaterHeaterCostCumulative());
 }
 
-void System::UpdateCaseFan() {
+void System::UpdateCaseFan()
+{
   // turn case fan on when PSU is in use
   bool onPsu = Power().Source() != PowerSource::k_powerSourceBattery;
 
-  bool highCurrent =
-      Power().BatteryCurrentOutput() > CASE_FAN_CURRENT_THRESHOLD;
+  bool highCurrent = Power().BatteryCurrentOutput() > CASE_FAN_CURRENT_THRESHOLD;
 
   bool on = onPsu || highCurrent;
   CaseFan(on);
 
-  TRACE_F(TRACE_DEBUG1,
-          "Case fan: %s (PSU=%s, HC=%s)",  //
-          BOOL_FS(on), BOOL_FS(onPsu), BOOL_FS(highCurrent));
+  TRACE_F(
+    TRACE_DEBUG1,
+    "Case fan: %s (PSU=%s, HC=%s)", //
+    BOOL_FS(on),
+    BOOL_FS(onPsu),
+    BOOL_FS(highCurrent));
 }
 
-void System::OnPowerSwitch() {
+void System::OnPowerSwitch()
+{
   UpdateCaseFan();
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
 
 void System::OnBatteryCurrentChange() { UpdateCaseFan(); }
 
-void System::WriteOnboardIO(uint8_t pin, uint8_t value) {
+void System::ResetNodes()
+{
+  TRACE(TRACE_DEBUG1, "Resetting nodes");
+  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_0, HIGH);
+  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_1, HIGH);
+
+  Delay(NODE_RESET_DELAY, "Node reset");
+
+  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_0, LOW);
+  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_1, LOW);
+
+  Delay(NODE_BOOT_DELAY, "Node boot");
+}
+
+void System::ResetRelay() { radio::resetRelay(); }
+
+void System::WriteOnboardIO(uint8_t pin, uint8_t value)
+{
   s_localSystemIo1.digitalWrite(pin, value);
 }
 
 void System::PrintCommands() { TRACE(TRACE_DEBUG1, "Commands\ns: status"); }
 
-void System::PrintStatus() {
-  TRACE_F(TRACE_DEBUG1, "Status\nBlynk: %s",
-          Blynk.connected() ? "Connected" : "Disconnected");
+void System::PrintStatus()
+{
+  TRACE_F(TRACE_DEBUG1, "Status\nBlynk: %s", Blynk.connected() ? "Connected" : "Disconnected");
 }
 
-void System::QueueCallback(CallbackFunction f, std::string name) {
+void System::QueueCallback(CallbackFunction f, std::string name)
+{
   m_callbackQueue.push(Callback(f, name));
 }
 
-void System::WindowSpeedUpdate() {
+void System::WindowSpeedUpdate()
+{
   radio::windowActuatorSetup(WindowSpeedLeft(), WindowSpeedRight());
 }
 
 void System::ReportPumpSwitch(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
 
-void System::ReportPumpStatus(const char *message) {
-  Blynk.virtualWrite(V81, message);
-}
+void System::ReportPumpStatus(const char *message) { Blynk.virtualWrite(V81, message); }
 
-void System::SwitchLights(bool on) {
-  TRACE(TRACE_DEBUG1, "Lights not implemented");
-}
+void System::SwitchLights(bool on) { TRACE(TRACE_DEBUG1, "Lights not implemented"); }
 
-}  // namespace embedded
-}  // namespace greenhouse
+} // namespace embedded
+} // namespace greenhouse
 
 // blynk
 
-BLYNK_CONNECTED() {
+BLYNK_CONNECTED()
+{
   // read all last known values from Blynk server
-  Blynk.syncVirtual(V0, V3, V5, V8, V9, V14, V17, V18, V22, V23, V24, V25, V26,
-                    V27, V31, V32, V33, V34, V35, V36, V37, V38, V39, V40, V41,
-                    V44, V45, V47, V48, V49, V50, V51, V53, V54, V57, V58, V61,
-                    V62, V63, V64, V66, V67, V68, V69, V70, V71, V72, V73, V74,
-                    V78, V79, V82, V127 /* last */);
+  Blynk.syncVirtual(
+    V0,
+    V3,
+    V5,
+    V8,
+    V9,
+    V14,
+    V17,
+    V18,
+    V22,
+    V23,
+    V24,
+    V25,
+    V26,
+    V27,
+    V31,
+    V32,
+    V33,
+    V34,
+    V35,
+    V36,
+    V37,
+    V38,
+    V39,
+    V40,
+    V41,
+    V44,
+    V45,
+    V47,
+    V48,
+    V49,
+    V50,
+    V51,
+    V53,
+    V54,
+    V57,
+    V58,
+    V61,
+    V62,
+    V63,
+    V64,
+    V66,
+    V67,
+    V68,
+    V69,
+    V70,
+    V71,
+    V72,
+    V73,
+    V74,
+    V78,
+    V79,
+    V82,
+    V127 /* last */);
 }
 
 BLYNK_WRITE(V0) { eg::s_instance->AutoMode(param.asInt() == 1); }
 
-BLYNK_WRITE(V3) {
+BLYNK_WRITE(V3)
+{
   eg::s_instance->RefreshRate(param.asInt());
   eg::s_instance->QueueCallback(&eg::System::ApplyRefreshRate, "Refresh rate");
 }
 
 BLYNK_WRITE(V5) { eg::s_instance->OpenStart(param.asFloat()); }
 
-BLYNK_WRITE(V6) {
+BLYNK_WRITE(V6)
+{
   if (param.asInt() == 1) {
     eg::s_instance->QueueCallback(&eg::System::Restart, "Restart");
   }
 }
 
-BLYNK_WRITE(V7) {
+BLYNK_WRITE(V7)
+{
   if (param.asInt() == 1) {
     eg::s_instance->QueueCallback(&eg::System::Refresh, "Refresh (manual)");
   }
@@ -741,10 +846,10 @@ BLYNK_WRITE(V7) {
 
 BLYNK_WRITE(V8) { eg::s_instance->OpenFinish(param.asFloat()); }
 
-BLYNK_WRITE(V9) {
+BLYNK_WRITE(V9)
+{
   eg::s_instance->WindowOpenPercent(param.asInt());
-  eg::s_instance->QueueCallback(&eg::System::UpdateWindowOpenPercent,
-                                "Window open percent");
+  eg::s_instance->QueueCallback(&eg::System::UpdateWindowOpenPercent, "Window open percent");
 }
 
 BLYNK_WRITE(V14) { eg::s_instance->TestMode(param.asInt() == 1); }
@@ -759,78 +864,54 @@ BLYNK_WRITE(V31) { eg::s_instance->Time().DayStartHour(param.asInt()); }
 
 BLYNK_WRITE(V32) { eg::s_instance->Time().DayEndHour(param.asInt()); }
 
-BLYNK_WRITE(V44) {
-  eg::s_instance->Power().BatteryVoltageSwitchOn(param.asFloat());
-}
+BLYNK_WRITE(V44) { eg::s_instance->Power().BatteryVoltageSwitchOn(param.asFloat()); }
 
-BLYNK_WRITE(V45) {
-  eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat());
-}
+BLYNK_WRITE(V45) { eg::s_instance->Power().BatteryVoltageSwitchOff(param.asFloat()); }
 
-BLYNK_WRITE(V47) {
-  eg::s_instance->Power().Mode((greenhouse::embedded::PowerMode)param.asInt());
-}
+BLYNK_WRITE(V47) { eg::s_instance->Power().Mode((greenhouse::embedded::PowerMode)param.asInt()); }
 
 BLYNK_WRITE(V48) { eg::s_instance->WindowAdjustPositions(param.asInt()); }
 
 BLYNK_WRITE(V49) { eg::s_instance->WindowActuatorRuntimeSec(param.asFloat()); }
 
-BLYNK_WRITE(V50) {
-  eg::s_instance->Heating().DayWaterTemperature(param.asFloat());
-}
+BLYNK_WRITE(V50) { eg::s_instance->Heating().DayWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V51) {
-  eg::s_instance->Heating().NightWaterTemperature(param.asFloat());
-}
+BLYNK_WRITE(V51) { eg::s_instance->Heating().NightWaterTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V53) {
-  eg::s_instance->Heating().DaySoilTemperature(param.asFloat());
-}
+BLYNK_WRITE(V53) { eg::s_instance->Heating().DaySoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V54) {
-  eg::s_instance->Heating().NightSoilTemperature(param.asFloat());
-}
+BLYNK_WRITE(V54) { eg::s_instance->Heating().NightSoilTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V57) {
-  eg::s_instance->Heating().DayAirTemperature(param.asFloat());
-}
+BLYNK_WRITE(V57) { eg::s_instance->Heating().DayAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V58) {
-  eg::s_instance->Heating().NightAirTemperature(param.asFloat());
-}
+BLYNK_WRITE(V58) { eg::s_instance->Heating().NightAirTemperature(param.asFloat()); }
 
-BLYNK_WRITE(V61) {
-  eg::s_instance->Heating().WaterHeaterDayLimitMinutes(param.asInt());
-}
+BLYNK_WRITE(V61) { eg::s_instance->Heating().WaterHeaterDayLimitMinutes(param.asInt()); }
 
-BLYNK_WRITE(V62) {
-  eg::s_instance->Heating().WaterHeaterDayRuntimeMinutes(param.asFloat());
-}
+BLYNK_WRITE(V62) { eg::s_instance->Heating().WaterHeaterDayRuntimeMinutes(param.asFloat()); }
 
-BLYNK_WRITE(V63) {
-  eg::s_instance->Heating().WaterHeaterCostCumulative(param.asFloat());
-}
+BLYNK_WRITE(V63) { eg::s_instance->Heating().WaterHeaterCostCumulative(param.asFloat()); }
 
-BLYNK_WRITE(V64) {
+BLYNK_WRITE(V64)
+{
   if (!String(param.asString()).isEmpty()) {
     eg::s_instance->Time().NightToDayTransitionTime(param.asLongLong());
-  } else {
+  }
+  else {
     eg::s_instance->Time().NightToDayTransitionTime(k_unknownUL);
   }
 }
 
-BLYNK_WRITE(V66) {
-  eg::s_instance->Heating().WaterHeaterNightLimitMinutes(param.asInt());
-}
+BLYNK_WRITE(V66) { eg::s_instance->Heating().WaterHeaterNightLimitMinutes(param.asInt()); }
 
-BLYNK_WRITE(V67) {
-  eg::s_instance->Heating().WaterHeaterNightRuntimeMinutes(param.asFloat());
-}
+BLYNK_WRITE(V67) { eg::s_instance->Heating().WaterHeaterNightRuntimeMinutes(param.asFloat()); }
 
-BLYNK_WRITE(V68) {
+BLYNK_WRITE(V68)
+{
   if (!String(param.asString()).isEmpty()) {
     eg::s_instance->Time().DayToNightTransitionTime(param.asLongLong());
-  } else {
+  }
+  else {
     eg::s_instance->Time().DayToNightTransitionTime(k_unknownUL);
   }
 }
@@ -841,46 +922,50 @@ BLYNK_WRITE(V74) { eg::s_instance->WindowAdjustTimeframeSec(param.asInt()); }
 
 BLYNK_WRITE(V75) { eg::s_instance->FakeWeatherCode(param.asInt()); }
 
-BLYNK_WRITE(V76) {
+BLYNK_WRITE(V76)
+{
   if (param.asInt()) {
-    eg::s_instance->QueueCallback(&eg::System::WindowFullClose,
-                                  "Window full close");
+    eg::s_instance->QueueCallback(&eg::System::WindowFullClose, "Window full close");
   }
 }
 
 // used only as the last value
 BLYNK_WRITE(V127) { eg::s_instance->OnLastWrite(); }
 
-BLYNK_WRITE(V78) {
+BLYNK_WRITE(V78)
+{
   eg::s_instance->WindowSpeedLeft(param.asInt());
-  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate,
-                                "Window speed update");
+  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate, "Window speed update");
 }
 
-BLYNK_WRITE(V79) {
+BLYNK_WRITE(V79)
+{
   eg::s_instance->WindowSpeedRight(param.asInt());
-  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate,
-                                "Window speed update");
+  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate, "Window speed update");
 }
 
-BLYNK_WRITE(V80) {
+BLYNK_WRITE(V80)
+{
   const bool pumpOn = static_cast<bool>(param.asInt());
   if (pumpOn) {
     eg::s_instance->ReportPumpStatus("Manually switching on");
     Blynk.logEvent("info", F("Manually switching pump on."));
-  } else {
+  }
+  else {
     eg::s_instance->ReportPumpStatus("Manually switching off");
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
   radio::pumpSwitch(pumpOn);
 }
 
-BLYNK_WRITE(V82) {
+BLYNK_WRITE(V82)
+{
   const bool tankFull = static_cast<bool>(param.asInt());
   if (tankFull) {
     eg::s_instance->ReportPumpStatus("Auto switching off");
     Blynk.logEvent("info", F("Tank is full, auto switching pump off."));
-  } else {
+  }
+  else {
     eg::s_instance->ReportPumpStatus("Auto switching on");
     Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
   }

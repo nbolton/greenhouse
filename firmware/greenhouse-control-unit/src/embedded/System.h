@@ -52,6 +52,8 @@ public:
   void ReportPumpStatus(const char *message);
   void SwitchLights(bool on);
   void OnBatteryCurrentChange();
+  void ResetRelay();
+  void ResetNodes();
 
 protected:
   void ReportInfo(const char *m, ...);
@@ -66,7 +68,7 @@ protected:
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
-  void UpdateSoilTemps();
+  void UpdateSoilTemps(bool force);
   void RunWindowActuator(bool extend, float delta);
   void Delay(unsigned long ms, const char *reason);
   bool UpdateWeatherForecast();

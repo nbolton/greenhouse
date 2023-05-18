@@ -8,12 +8,14 @@
 #include <radio_common.h>
 #include <trace.h>
 
-#include <list>
-
 #include "embedded/System.h"
 
 #define PIN_IRQ 26
 #define PIN_CS 33
+#define RESET_NODE_DELAY 5000
+#define SOIL_TEMP_WEIRD_LIMIT 10
+#define SOIL_TEMP_WEIRD_MIN 5
+#define SOIL_TEMP_STALE_TIME 600000 // 10 mins
 
 RH_RF69 rf69(PIN_CS, PIN_IRQ);
 RHReliableDatagram rd(rf69, RHRD_ADDR_SERVER);
@@ -23,13 +25,15 @@ namespace radio {
 
 float soilTemps = k_unknown;
 embedded::System *p_system;
+int weirdSoilTemps = 0;
+unsigned long lastSoilTemp = 0;
 
 void rx(Message m);
 void status(bool busy);
 void rxSoilTemps(Message m);
-void txReset();
 
-void init(embedded::System *system) {
+void init(embedded::System *system)
+{
   p_system = system;
 
   common::init(&rd, &rf69, rx, status);
@@ -48,59 +52,56 @@ void init(embedded::System *system) {
   }
 
   rf69.setTxPower(20, true);
-
-  txReset();
 }
 
 void update() { common::rx(); }
 
-void status(bool busy) {
+void status(bool busy)
+{
   TRACE_F(TRACE_DEBUG2, "Radio %s", busy ? FCSTR("busy") : FCSTR("free"));
   digitalWrite(LED_BUILTIN, busy ? HIGH : LOW);
 }
 
-void rx(Message m) {
-  TRACE_F(TRACE_DEBUG2, "RX handling message, type:%d, dataLen: %d", m.type,
-          m.dataLen);
+void rx(Message m)
+{
+  TRACE_F(TRACE_DEBUG2, "RX handling message, type:%d, dataLen: %d", m.type, m.dataLen);
   switch (m.type) {
-    case k_soilTemps: {
-      rxSoilTemps(m);
-      break;
-    }
+  case k_soilTemps: {
+    rxSoilTemps(m);
+    break;
+  }
 
-    case MessageType::k_pumpSwitch: {
-      bool on = m.data[0];
-      TRACE_F(TRACE_DEBUG1, "RX pump switch: %s",
-              on ? FCSTR("on") : FCSTR("off"));
-      p_system->ReportPumpSwitch(on);
-      break;
-    }
+  case MessageType::k_pumpSwitch: {
+    bool on = m.data[0];
+    TRACE_F(TRACE_DEBUG1, "RX pump switch: %s", on ? FCSTR("on") : FCSTR("off"));
+    p_system->ReportPumpSwitch(on);
+    break;
+  }
 
-    case MessageType::k_pumpStatus: {
-      TRACE_F(TRACE_DEBUG1, "RX pump status: %s", m.data);
-      p_system->ReportPumpStatus((const char *)m.data);
-      break;
-    }
+  case MessageType::k_pumpStatus: {
+    TRACE_F(TRACE_DEBUG1, "RX pump status: %s", m.data);
+    p_system->ReportPumpStatus((const char *)m.data);
+    break;
+  }
 
-    default: {
-      TRACE(TRACE_WARN, "RX unknown message type");
-      break;
-    }
+  default: {
+    TRACE(TRACE_WARN, "RX unknown message type");
+    break;
+  }
   }
 }
 
-void rxSoilTemps(Message m) {
+void rxSoilTemps(Message m)
+{
   TRACE(TRACE_DEBUG1, "RX soil temps");
 
   if (m.type != k_soilTemps) {
-    TRACE_F(TRACE_DEBUG1,
-            "RX unexpected message (type: %d); expected soil temps", m.type);
+    TRACE_F(TRACE_DEBUG1, "RX unexpected message (type: %d); expected soil temps", m.type);
     return;
   }
 
   if (m.dataLen != FLOAT_BYTE_LEN) {
-    TRACE_F(TRACE_DEBUG1, "RX invalid float data len: %d; expected %d",
-            m.dataLen, FLOAT_BYTE_LEN);
+    TRACE_F(TRACE_DEBUG1, "RX invalid float data len: %d; expected %d", m.dataLen, FLOAT_BYTE_LEN);
     return;
   }
 
@@ -111,10 +112,32 @@ void rxSoilTemps(Message m) {
 
   memcpy(f.data, m.data, FLOAT_BYTE_LEN);
   TRACE_F(TRACE_DEBUG1, "RX soil temps: %.2f", f.n);
+
+  // HACK: if soil temps seem too low. this is probably a bug in the relay.
+  if (f.n < SOIL_TEMP_WEIRD_MIN) {
+    TRACE(TRACE_WARN, "RX ignoring weird soil temp");
+    weirdSoilTemps++;
+
+    if ((soilTemps != k_unknown) && (millis() > lastSoilTemp + SOIL_TEMP_STALE_TIME)) {
+      TRACE(TRACE_WARN, "RX invalidating soil temp");
+      soilTemps = k_unknown;
+    }
+
+    if (weirdSoilTemps > SOIL_TEMP_WEIRD_LIMIT) {
+      p_system->ResetNodes();
+      p_system->ResetRelay();
+    }
+    weirdSoilTemps = 0;
+    return;
+  }
+
+  lastSoilTemp = millis();
+
   soilTemps = f.n;
 }
 
-void getSoilTempsAsync() {
+void getSoilTempsAsync()
+{
   TRACE(TRACE_DEBUG1, "Getting soil temps (async)");
 
   Message txm;
@@ -125,7 +148,8 @@ void getSoilTempsAsync() {
 
 float getSoilTempsResult() { return soilTemps; }
 
-void windowActuatorRunAll(MotorDirection direction, int runtime) {
+void windowActuatorRunAll(MotorDirection direction, int runtime)
+{
   TRACE(TRACE_DEBUG1, "Window actuator run all");
 
   Message m;
@@ -137,7 +161,8 @@ void windowActuatorRunAll(MotorDirection direction, int runtime) {
   common::tx(m);
 }
 
-void windowActuatorSetup(int leftSpeed, int rightSpeed) {
+void windowActuatorSetup(int leftSpeed, int rightSpeed)
+{
   TRACE(TRACE_DEBUG1, "Window actuator setup");
 
   Message m;
@@ -149,7 +174,8 @@ void windowActuatorSetup(int leftSpeed, int rightSpeed) {
   common::tx(m);
 }
 
-void pumpSwitch(bool on) {
+void pumpSwitch(bool on)
+{
   TRACE_F(TRACE_DEBUG1, "Switch pump %s", on ? FCSTR("on") : FCSTR("off"));
 
   Message m;
@@ -160,15 +186,23 @@ void pumpSwitch(bool on) {
   common::tx(m);
 }
 
-void txReset() {
-  TRACE(TRACE_DEBUG1, "Sending reset message");
-  Message m;
-  m.to = RHRD_ADDR_RELAY;
-  m.type = MessageType::k_reset;
-  common::tx(m);
+#define RESET_RELAY_ATTEMPTS 10
+
+void resetRelay()
+{
+  for (int i = 1; i <= RESET_RELAY_ATTEMPTS; i++) {
+    TRACE_F(TRACE_DEBUG1, "Sending reset message (attempt %d)", i);
+    Message m;
+    m.to = RHRD_ADDR_RELAY;
+    m.type = MessageType::k_reset;
+    if (common::tx(m)) {
+      TRACE(TRACE_DEBUG1, "Relay was reset");
+      break;
+    }
+  }
 }
 
-}  // namespace radio
-}  // namespace greenhouse
+} // namespace radio
+} // namespace greenhouse
 
-#endif  // RADIO_EN
+#endif // RADIO_EN

@@ -7,7 +7,9 @@
 namespace greenhouse {
 
 namespace embedded {
+
 class System;
+
 }
 
 namespace radio {
@@ -19,6 +21,7 @@ void getSoilTempsAsync();
 void windowActuatorRunAll(MotorDirection direction, int runtime);
 void windowActuatorSetup(int left, int right);
 void pumpSwitch(bool on);
+void resetRelay();
 
 } // namespace radio
 } // namespace greenhouse
