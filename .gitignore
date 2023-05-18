@@ -15,3 +15,5 @@ fab
 *.~lock.*
 greenhouse-control-unit.xml
 firmware/greenhouse-cu-test/lib/shared/
+firmware/greenhouse-control-unit/lib/shared
+firmware/greenhouse-legacy-hub/lib/shared
