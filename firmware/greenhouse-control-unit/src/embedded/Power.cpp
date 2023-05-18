@@ -133,7 +133,7 @@ void Power::Loop() {
   const bool batteryVoltageChanged =
       abs(m_lastBatteryVoltage - batteryVoltage) > VOLTAGE_DIFF_DELTA;
   if (batteryVoltageChanged) {
-    TRACE_F(TRACE_DEBUG1, "Battery voltage changed, was %.2fV now %.2fV",
+    TRACE_F(TRACE_DEBUG2, "Battery voltage changed, was %.2fV now %.2fV",
             m_lastBatteryVoltage, batteryVoltage);
 
 #if POWER_EN
