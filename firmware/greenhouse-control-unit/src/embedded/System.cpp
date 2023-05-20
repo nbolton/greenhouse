@@ -305,13 +305,12 @@ void System::Refresh(bool first)
   m_power.MeasureCurrent();
 
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
-  Blynk.virtualWrite(V29, Power().BatteryVoltageSensor());
-  Blynk.virtualWrite(V30, Power().BatteryVoltageOutput());
-  Blynk.virtualWrite(V42, Power().BatteryCurrentSensor());
-  Blynk.virtualWrite(V43, Power().BatteryCurrentOutput());
   Blynk.virtualWrite(V55, Heating().WaterHeaterIsOn());
   Blynk.virtualWrite(V56, Heating().SoilHeatingIsOn());
   Blynk.virtualWrite(V59, Heating().AirHeatingIsOn());
+
+  ReportPower();
+  ReportWindowOpenPercent();
 
   UpdateSoilTemps(true);
   radio::getSoilTempsAsync();
@@ -686,6 +685,14 @@ void System::ReportWaterHeaterInfo()
   Blynk.virtualWrite(V63, Heating().WaterHeaterCostCumulative());
 }
 
+void System::ReportPower()
+{
+  Blynk.virtualWrite(V29, Power().BatteryVoltageSensor());
+  Blynk.virtualWrite(V30, Power().BatteryVoltageOutput());
+  Blynk.virtualWrite(V42, Power().BatteryCurrentSensor());
+  Blynk.virtualWrite(V43, Power().BatteryCurrentOutput());
+}
+
 void System::UpdateCaseFan()
 {
   // turn case fan on when PSU is in use
@@ -710,7 +717,11 @@ void System::OnPowerSwitch()
   Blynk.virtualWrite(V28, Power().Source() == k_powerSourceBattery);
 }
 
-void System::OnBatteryCurrentChange() { UpdateCaseFan(); }
+void System::OnBatteryCurrentChange()
+{
+  UpdateCaseFan();
+  ReportPower();
+}
 
 void System::ResetNodes()
 {

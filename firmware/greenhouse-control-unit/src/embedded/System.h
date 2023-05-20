@@ -65,6 +65,7 @@ protected:
   void ReportWarnings();
   void ReportWeather();
   void ReportWaterHeaterInfo();
+  void ReportPower();
 
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
