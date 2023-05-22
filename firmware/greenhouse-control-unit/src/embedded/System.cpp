@@ -26,6 +26,9 @@ using namespace greenhouse;
 namespace ng = greenhouse::native;
 namespace eg = greenhouse::embedded;
 
+enum PumpMode { k_notSet, k_auto, k_manual };
+static PumpMode s_pumpMode = k_notSet;
+
 namespace greenhouse {
 namespace embedded {
 
@@ -983,16 +986,26 @@ BLYNK_WRITE(V80)
 
 BLYNK_WRITE(V82)
 {
-  const bool tankFull = static_cast<bool>(param.asInt());
-  if (tankFull) {
-    eg::s_instance->ReportPumpStatus("Auto switching off");
-    Blynk.logEvent("info", F("Tank is full, auto switching pump off."));
-  }
-  else {
-    eg::s_instance->ReportPumpStatus("Auto switching on");
-    Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
-  }
+  if (s_pumpMode == PumpMode::k_auto) {
+    const bool tankFull = static_cast<bool>(param.asInt());
+    if (tankFull) {
+      eg::s_instance->ReportPumpStatus("Auto switching off");
+      Blynk.logEvent("info", F("Tank is full, auto switching pump off."));
+    }
+    else {
+      eg::s_instance->ReportPumpStatus("Auto switching on");
+      Blynk.logEvent("info", F("Tank is not full, auto switching pump on."));
+    }
 
-  // tank not full? switch pump on
-  radio::pumpSwitch(!tankFull);
+    // tank not full? switch pump on
+    radio::pumpSwitch(!tankFull);
+  }
+}
+
+// TODO: why isn't this being called?
+BLYNK_WRITE(V22)
+{
+  int i = param.asInt();
+  TRACE_F(TRACE_DEBUG1, "Blynk pump mode: %d", i);
+  s_pumpMode = (PumpMode)i;
 }
