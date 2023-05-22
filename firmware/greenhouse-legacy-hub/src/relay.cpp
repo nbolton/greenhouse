@@ -28,6 +28,7 @@ void rx(Message m);
 void state(bool busy) { led(busy ? LOW : HIGH); }
 void relaySoilTemps();
 void relayWindowActuatorRunAll(Message m);
+void txKeepAlive();
 
 void init(NodeRadio &nr, PumpRadio &pr)
 {
@@ -55,6 +56,10 @@ void update() { common::rx(); }
 void rx(Message m)
 {
   switch (m.type) {
+  case k_keepAlive: {
+    txKeepAlive();
+    break;
+  }
   case k_reset: {
     NVIC_SystemReset();
     break;
@@ -78,6 +83,14 @@ void rx(Message m)
     break;
   }
   }
+}
+
+void txKeepAlive()
+{
+  Message m;
+  m.to = RHRD_ADDR_SERVER;
+  m.type = MessageType::k_keepAlive;
+  common::tx(m);
 }
 
 void relaySoilTemps()

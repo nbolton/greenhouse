@@ -16,12 +16,12 @@ namespace radio {
 
 void init(embedded::System *_system);
 void update();
+bool keepAliveRelay();
 float getSoilTempsResult();
 void getSoilTempsAsync();
 void windowActuatorRunAll(MotorDirection direction, int runtime);
 void windowActuatorSetup(int left, int right);
 void pumpSwitch(bool on);
-void resetRelay();
 
 } // namespace radio
 } // namespace greenhouse

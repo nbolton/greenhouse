@@ -108,7 +108,8 @@ System::System() :
   m_queueOnSystemStarted(false),
   m_lastLoop(0),
   m_windowSpeedLeft(k_unknown),
-  m_windowSpeedRight(k_unknown)
+  m_windowSpeedRight(k_unknown),
+  m_relayAlive(false)
 {
 }
 
@@ -312,6 +313,14 @@ void System::Refresh(bool first)
   ReportPower();
   ReportWindowOpenPercent();
 
+  bool relayAlive = radio::keepAliveRelay();
+  if (first || (relayAlive != m_relayAlive)) {
+    if (!relayAlive) {
+      ReportCritical("Relay dead, keep alive failed");
+    }
+    m_relayAlive = relayAlive;
+  }
+
   UpdateSoilTemps(true);
   radio::getSoilTempsAsync();
 
@@ -473,7 +482,7 @@ void System::ReportInfo(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  TRACE_C(TRACE_DEBUG1, s_reportBuffer);
+  TRACE_F(TRACE_DEBUG1, "Report to Blynk: %s", s_reportBuffer);
   Blynk.logEvent("info", s_reportBuffer);
 }
 
@@ -487,7 +496,7 @@ void System::ReportWarning(const char *format, ...)
 
   // still log even if k_reportWarnings is off (the intent of k_reportWarnings
   // is to reduce noise on the blynk app during testing)
-  TRACE_C(TRACE_DEBUG1, s_reportBuffer);
+  TRACE_F(TRACE_DEBUG1, "Report to Blynk: %s", s_reportBuffer);
 
   Blynk.logEvent("warning", s_reportBuffer);
 #endif // BLYNK_WARNINGS
@@ -500,7 +509,7 @@ void System::ReportCritical(const char *format, ...)
   vsprintf(s_reportBuffer, format, args);
   va_end(args);
 
-  TRACE_C(TRACE_DEBUG1, s_reportBuffer);
+  TRACE_F(TRACE_DEBUG1, "Report to Blynk: %s", s_reportBuffer);
   Blynk.logEvent("critical", s_reportBuffer);
 }
 
@@ -567,7 +576,6 @@ void System::OnSystemStarted()
   // Power().InitPowerSource();
 
   ResetNodes();
-  ResetRelay();
 
   // run first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -737,7 +745,10 @@ void System::ResetNodes()
   Delay(NODE_BOOT_DELAY, "Node boot");
 }
 
-void System::ResetRelay() { radio::resetRelay(); }
+void System::ResetRelay()
+{
+  // TODO: once switchable (12V to USB)
+}
 
 void System::WriteOnboardIO(uint8_t pin, uint8_t value)
 {
@@ -784,6 +795,7 @@ BLYNK_CONNECTED()
     V14,
     V17,
     V18,
+    V21,
     V22,
     V23,
     V24,

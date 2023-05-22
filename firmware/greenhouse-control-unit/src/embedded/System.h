@@ -131,6 +131,7 @@ private:
   unsigned long m_lastLoop;
   int m_windowSpeedLeft;
   int m_windowSpeedRight;
+  bool m_relayAlive;
 };
 
 } // namespace embedded

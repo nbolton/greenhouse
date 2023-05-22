@@ -42,6 +42,7 @@ enum MessageType { //
   k_pumpSwitch,
   k_pumpStatus,
 
+  k_keepAlive = 254,
   k_reset = 255
 };
 

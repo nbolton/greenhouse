@@ -29,7 +29,7 @@ void init(
 bool tx(Message m)
 {
   stateCallback(true);
-  TRACE_F(TRACE_DEBUG2, "TX sending message, type=%d, dataLen=%d, to=%d", m.type, m.dataLen, m.to);
+  TRACE_F(TRACE_DEBUG1, "TX sending message, type=%d, dataLen=%d, to=%d", m.type, m.dataLen, m.to);
 
   if (m.dataLen > 0) {
     printBuffer(F("TX payload data:"), m.data, m.dataLen);
