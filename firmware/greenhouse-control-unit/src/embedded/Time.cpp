@@ -23,11 +23,11 @@ void Time::Setup() { s_timeClient.begin(); }
 
 void Time::Refresh()
 {
-  TRACE(TRACE_DEBUG1, "Doing time update");
+  TRACE(TRACE_DEBUG1, "Time update");
   m_timeClientOk = s_timeClient.update();
 
   if (!m_timeClientOk) {
-    TRACE(TRACE_DEBUG1, "Error: Time update failed");
+    TRACE(TRACE_ERROR, "Error: Time update failed");
     m_errors++;
   }
   else {
@@ -35,7 +35,7 @@ void Time::Refresh()
   }
 
   TRACE_F(
-    TRACE_DEBUG1,
+    TRACE_DEBUG2,
     "Time update stats, last=%s, success=%d, errors=%d",
     m_timeClientOk ? "ok" : "fail",
     m_success,

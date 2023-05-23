@@ -37,6 +37,7 @@ namespace embedded {
 #define LOOP_DELAY 10
 #define SOIL_TEMP_FAIL_MAX 10
 #define CASE_FAN_CURRENT_THRESHOLD 1
+#define CASE_FAN_VOLTAGE_THRESHOLD 14
 #define SHORT_BEEP_TIME 100
 #define LONG_BEEP_TIME 400
 #define BEEP_OFF_TIME 200
@@ -197,10 +198,10 @@ void System::Loop()
   if (!Blynk.run()) {
     m_lastBlynkFailure = now;
     m_blynkFailures++;
-    TRACE_F(TRACE_DEBUG1, "Blynk failed %d time(s)", m_blynkFailures);
+    TRACE_F(TRACE_WARN, "Blynk failed %d time(s)", m_blynkFailures);
 
     if (m_blynkFailures >= k_blynkFailuresMax) {
-      TRACE(TRACE_DEBUG1, "Restarting, too many Blynk failures");
+      TRACE(TRACE_INFO, "Restarting, too many Blynk failures");
       Restart();
       return;
     }
@@ -208,7 +209,7 @@ void System::Loop()
   else if (recoveredWithinTimeframe && (m_blynkFailures != 0)) {
     // no failures happened within last n - r seconds (n = now, r = recover
     // time)
-    TRACE(TRACE_DEBUG1, "Blynk is back to normal, resetting fail count");
+    TRACE(TRACE_INFO, "Blynk is back to normal, resetting fail count");
     m_blynkFailures = 0;
   }
 
@@ -226,7 +227,7 @@ void System::Loop()
         (this->*callback.m_function)();
       }
       else {
-        TRACE(TRACE_DEBUG2, "Function pointer was null");
+        TRACE(TRACE_WARN, "Function pointer was null");
       }
 
       TRACE_F(TRACE_DEBUG2, "Callback queue remaining=%d", m_callbackQueue.size());
@@ -282,7 +283,7 @@ void System::SerialMode()
 
     switch (buf[0]) {
     case 'q':
-      TRACE(TRACE_PRINT, "Exiting command mode");
+      TRACE(TRACE_PRINT, "Exited command mode");
       m_commandMode = false;
       break;
 
@@ -479,7 +480,10 @@ void System::UpdateSoilTemps(bool force)
 {
   bool changed = m_soilTemperature != radio::getSoilTempsResult();
   if (changed) {
-    TRACE(TRACE_DEBUG1, "Soil temps changed");
+    TRACE(TRACE_DEBUG2, "Soil temps changed, updating");
+  }
+  if (changed) {
+    TRACE(TRACE_DEBUG2, "Soil temps update forced");
   }
 
   if (changed || force) {
@@ -515,7 +519,7 @@ void System::RunWindowActuator(bool extend, float delta)
 void System::Delay(unsigned long ms, const char *reason)
 {
 #if TRACE_DELAY
-  TRACE_F(TRACE_DEBUG1, "Delay %dms (%s)", (int)ms, reason);
+  TRACE_F(TRACE_DEBUG2, "Delay %dms (%s)", (int)ms, reason);
 #endif // TRACE_DELAY
   delay(ms);
 }
@@ -534,13 +538,13 @@ void System::Restart()
 
 void System::CaseFan(bool on)
 {
-  TRACE_F(TRACE_DEBUG1, "Case fan %s", on ? "on" : "off");
+  TRACE_F(TRACE_DEBUG2, "Case fan %s", on ? "on" : "off");
   s_localSystemIo1.digitalWrite(IO_PIN_FAN_SW, on);
 }
 
 void System::Beep(int times, bool longBeep)
 {
-  TRACE_F(TRACE_DEBUG1, "Beep %d times (%s)", times, longBeep ? "long" : "short");
+  TRACE_F(TRACE_DEBUG2, "Beep %d times (%s)", times, longBeep ? "long" : "short");
   for (int i = 0; i < times; i++) {
     s_localSystemIo1.digitalWrite(IO_PIN_BEEP_SW, LOW);
     Delay(longBeep ? LONG_BEEP_TIME : SHORT_BEEP_TIME, "Beep on");
@@ -608,7 +612,7 @@ void System::ReportSystemInfo()
 
   // free heap
   int freeHeap = ESP.getFreeHeap();
-  TRACE_F(TRACE_DEBUG1, "Free heap: %d bytes", freeHeap);
+  TRACE_F(TRACE_DEBUG2, "Free heap: %d bytes", freeHeap);
   Blynk.virtualWrite(V13, (float)freeHeap / 1000);
 }
 
@@ -671,19 +675,19 @@ void System::OnSystemStarted()
 void System::ApplyRefreshRate()
 {
   if (m_refreshRate <= 0) {
-    TRACE_F(TRACE_DEBUG1, "Invalid refresh rate: %ds", m_refreshRate);
+    TRACE_F(TRACE_WARN, "Invalid refresh rate: %ds", m_refreshRate);
     return;
   }
 
-  TRACE_F(TRACE_DEBUG1, "New refresh rate: %ds", m_refreshRate);
+  TRACE_F(TRACE_DEBUG2, "New refresh rate: %ds", m_refreshRate);
 
   if (m_timerId != k_unknown) {
-    TRACE_F(TRACE_DEBUG1, "Deleting old timer: %d", m_timerId);
+    TRACE_F(TRACE_DEBUG2, "Deleting old timer: %d", m_timerId);
     s_refreshTimer.deleteTimer(m_timerId);
   }
 
   m_timerId = s_refreshTimer.setInterval(m_refreshRate * 1000L, refreshTimer);
-  TRACE_F(TRACE_DEBUG1, "New refresh timer: %d", m_timerId);
+  TRACE_F(TRACE_DEBUG2, "New refresh timer: %d", m_timerId);
 }
 
 bool System::UpdateWeatherForecast()
@@ -694,38 +698,42 @@ bool System::UpdateWeatherForecast()
     return true;
   }
 
+  time_t start = millis();
+
+  TRACE(TRACE_DEBUG1, "Updating weather");
+
   char uri[100];
   sprintf(uri, k_weatherUri, k_weatherLat, k_weatherLon, k_weatherApiKey);
 
-  TRACE_F(TRACE_DEBUG1, "Connecting to weather host: %s", k_weatherHost);
+  TRACE_F(TRACE_DEBUG2, "Connecting to weather host: %s", k_weatherHost);
   HttpClient httpClient(s_wifiClient, k_weatherHost, 80);
 
-  TRACE(TRACE_DEBUG1, "Weather host get");
+  TRACE(TRACE_DEBUG2, "Weather host get");
   httpClient.get(uri);
 
   int statusCode = httpClient.responseStatusCode();
   if (isnan(statusCode)) {
-    TRACE(TRACE_DEBUG1, "Weather host status is invalid");
+    TRACE(TRACE_ERROR, "Weather host status is invalid");
     return false;
   }
 
-  TRACE_F(TRACE_DEBUG1, "Weather host status: %d", statusCode);
+  TRACE_F(TRACE_DEBUG2, "Weather host status: %d", statusCode);
   if (statusCode != 200) {
-    TRACE(TRACE_DEBUG1, "Weather host error status");
+    TRACE(TRACE_ERROR, "Weather host error status");
     return false;
   }
 
   String response = httpClient.responseBody();
   int size = static_cast<int>(strlen(response.c_str()));
-  TRACE_F(TRACE_DEBUG1, "Weather host response length: %d", size);
+  TRACE_F(TRACE_DEBUG2, "Weather host response length: %d", size);
 
   DeserializationError error = deserializeJson(s_weatherJson, response);
   if (error != DeserializationError::Ok) {
-    TRACE_F(TRACE_DEBUG1, "Weather data error: %s", error.c_str());
+    TRACE_F(TRACE_ERROR, "Weather data error: %s", error.c_str());
     return false;
   }
 
-  TRACE(TRACE_DEBUG1, "Deserialized weather JSON");
+  TRACE(TRACE_DEBUG2, "Deserialized weather JSON");
   int id = s_weatherJson["weather"][0]["id"];
   const char *main = s_weatherJson["weather"][0]["main"];
   int dt = s_weatherJson["dt"];
@@ -745,7 +753,8 @@ bool System::UpdateWeatherForecast()
     minuteString.c_str(),
     location);
 
-  TRACE_F(TRACE_DEBUG1, "Weather forecast: code=%d, info='%s'", id, s_weatherInfo);
+  int time = (int)(millis() - start);
+  TRACE_F(TRACE_DEBUG1, "Weather forecast: code=%d, info='%s' time=%dms", id, s_weatherInfo, time);
 
   WeatherCode(id);
   WeatherInfo(s_weatherInfo);
@@ -791,7 +800,7 @@ void System::UpdateCaseFan()
   CaseFan(on);
 
   TRACE_F(
-    TRACE_DEBUG2,
+    TRACE_DEBUG1,
     "Case fan: %s (PSU=%s, HC=%s, MV=%s)", //
     BOOL_FS(on),
     BOOL_FS(onPsu),

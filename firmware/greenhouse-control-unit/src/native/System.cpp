@@ -113,7 +113,7 @@ void System::Refresh(bool first)
     const float soilTemperature = SoilTemperature();
 
     TRACE_F(
-      TRACE_DEBUG1,
+      TRACE_DEBUG2,
       "Auto mode: expected=%d%%, actual=%d%%, soil=%.2fC, start=%.2fC, finish=%.2fC, last=%lu, "
       "timeframe=%ds",
       WindowOpenPercentExpected(),
@@ -153,13 +153,13 @@ void System::Refresh(bool first)
         TRACE(TRACE_DEBUG1, "Temperature below bounds");
         m_windowOpenPercentExpected = 0;
       }
-      TRACE_F(TRACE_DEBUG1, "Window open percent expected: %d%%", m_windowOpenPercentExpected);
+      TRACE_F(TRACE_DEBUG2, "Window open percent expected: %d%%", m_windowOpenPercentExpected);
 
       ApplyWindowOpenPercent();
     }
     else {
       TRACE_F(
-        TRACE_DEBUG1,
+        TRACE_DEBUG2,
         "Window adjust didn't run, noUnknowns=%s, timeframeOk=%s",
         noUnknowns ? "true" : "false",
         timeframeOk ? "true" : "false");

@@ -129,7 +129,7 @@ void rx(Message &m)
   TRACE_F(TRACE_DEBUG2, "RX handling message, type:%d, dataLen: %d", m.type, m.dataLen);
   switch (m.type) {
   case MessageType::k_keepAlive: {
-    TRACE(TRACE_DEBUG1, "RX keep alive response");
+    TRACE(TRACE_DEBUG2, "RX keep alive response");
     break;
   }
 
@@ -153,7 +153,7 @@ void rx(Message &m)
 
   case MessageType::k_pumpSwitch: {
     bool on = m.data[0];
-    TRACE_F(TRACE_DEBUG1, "RX pump switch: %s", on ? FCSTR("on") : FCSTR("off"));
+    TRACE_F(TRACE_DEBUG2, "RX pump switch: %s", on ? FCSTR("on") : FCSTR("off"));
     p_system->ReportPumpSwitch(on);
     break;
   }
@@ -161,7 +161,7 @@ void rx(Message &m)
   case MessageType::k_pumpStatus: {
     radio::PumpStatus ps = (radio::PumpStatus)m.data[0];
     String psString = pumpStatusToString(ps);
-    TRACE_F(TRACE_DEBUG1, "RX pump status: %s", psString.c_str());
+    TRACE_F(TRACE_DEBUG2, "RX pump status: %s", psString.c_str());
     p_system->ReportPumpStatus(psString);
     break;
   }
@@ -175,15 +175,15 @@ void rx(Message &m)
 
 void rxSoilTemps(Message &m)
 {
-  TRACE(TRACE_DEBUG1, "RX soil temps");
+  TRACE(TRACE_DEBUG2, "RX soil temps");
 
   if (m.type != MessageType::k_soilTemps) {
-    TRACE_F(TRACE_DEBUG1, "RX unexpected message (type: %d); expected soil temps", m.type);
+    TRACE_F(TRACE_ERROR, "RX unexpected message (type: %d); expected soil temps", m.type);
     return;
   }
 
   if (m.dataLen != FLOAT_BYTE_LEN) {
-    TRACE_F(TRACE_DEBUG1, "RX invalid float data len: %d; expected %d", m.dataLen, FLOAT_BYTE_LEN);
+    TRACE_F(TRACE_ERROR, "RX invalid float data len: %d; expected %d", m.dataLen, FLOAT_BYTE_LEN);
     return;
   }
 
@@ -193,7 +193,7 @@ void rxSoilTemps(Message &m)
   } f;
 
   memcpy(f.data, m.data, FLOAT_BYTE_LEN);
-  TRACE_F(TRACE_DEBUG1, "RX soil temps: %.2f", f.n);
+  TRACE_F(TRACE_DEBUG2, "RX soil temps: %.2f", f.n);
 
   if (f.n < SOIL_TEMP_VALID_MIN) {
     // HACK: if soil temps seem too low. this is probably a bug in the relay.

@@ -25,7 +25,7 @@ void Time::CheckTransition()
 {
   // if time unknown, we can't do anything.
   if (!IsValid()) {
-    TRACE(TRACE_DEBUG1, "Epoch unknown, can't check time transition");
+    TRACE(TRACE_ERROR, "Epoch unknown, can't check time transition");
     return;
   }
 
@@ -43,7 +43,7 @@ void Time::CheckTransition()
   // HACK: cast to int to print -1 (%lld doesn't seem to print -1).
   // this is a bad idea, and will break in 2038.
   TRACE_F(
-    TRACE_DEBUG1,
+    TRACE_DEBUG2,
     "Now %s, checking for %s transition, now=%d, last=%d",
     daytime ? "daytime" : "nighttime",
     daytime ? "night to day" : "day to night",
@@ -51,7 +51,7 @@ void Time::CheckTransition()
     static_cast<int>(last));
 
   if (last == k_unknownUL) {
-    TRACE(TRACE_DEBUG1, "Last transition not known, assume it never happened");
+    TRACE(TRACE_DEBUG2, "Last transition not known, assume it never happened");
     Transition(IsDaytime());
     return;
   }
@@ -65,7 +65,7 @@ void Time::CheckTransition()
   int nowHour = ptm->tm_hour;
 
   TRACE_F(
-    TRACE_DEBUG1,
+    TRACE_DEBUG2,
     "Current time, hour=%d, day=%d, month=%d, year=%d",
     nowHour,
     nowDay,
@@ -79,7 +79,7 @@ void Time::CheckTransition()
   int lastHour = ptm->tm_hour;
 
   TRACE_F(
-    TRACE_DEBUG1,
+    TRACE_DEBUG2,
     "Last transition, hour=%d, day=%d, month=%d, year=%d",
     lastHour,
     lastDay,
@@ -89,7 +89,7 @@ void Time::CheckTransition()
   const int fullDay = (3600 * 24); // 24h
   if ((now - last) > fullDay) {
 
-    TRACE(TRACE_DEBUG1, "Transition is overdue (24 hours have passed since last)");
+    TRACE(TRACE_DEBUG2, "Transition is overdue (24 hours have passed since last)");
     Transition(IsDaytime());
     return;
   }
@@ -98,10 +98,10 @@ void Time::CheckTransition()
   if (
     (nowHour != lastHour) || (nowDay != lastDay) || (nowMonth != lastMonth) ||
     (nowYear != lastYear)) {
-    TRACE(TRACE_DEBUG1, "Last transition didn't happen in current hour");
+    TRACE(TRACE_DEBUG2, "Last transition didn't happen in current hour");
 
     if (DayStartHour() == nowHour) {
-      TRACE(TRACE_DEBUG1, "Start of day hour; night to day transition should happen");
+      TRACE(TRACE_DEBUG2, "Start of day hour; night to day transition should happen");
       Transition(IsDaytime());
       return;
     }
@@ -111,25 +111,25 @@ void Time::CheckTransition()
       return;
     }
     else {
-      TRACE(TRACE_DEBUG1, "Current hour is not a transition hour");
+      TRACE(TRACE_DEBUG2, "Current hour is not a transition hour");
     }
   }
   else {
-    TRACE(TRACE_DEBUG1, "Transition already happened in current hour");
+    TRACE(TRACE_DEBUG2, "Transition already happened in current hour");
   }
 
-  TRACE(TRACE_DEBUG1, "No time transition happened (no transition conditions met)");
+  TRACE(TRACE_DEBUG2, "No time transition happened (no transition conditions met)");
 }
 
 void Time::Transition(bool nightToDay)
 {
   if (nightToDay) {
-    TRACE(TRACE_DEBUG1, "Transitioning from night to day");
+    TRACE(TRACE_DEBUG2, "Transitioning from night to day");
     NightToDayTransitionTime(EpochTime());
     OnNightToDayTransition();
   }
   else {
-    TRACE(TRACE_DEBUG1, "Transitioning from day to night");
+    TRACE(TRACE_DEBUG2, "Transitioning from day to night");
     DayToNightTransitionTime(EpochTime());
     OnDayToNightTransition();
   }
