@@ -134,15 +134,23 @@ void rx(Message &m)
   }
 
   case MessageType::k_status: {
-    int queueSize = (int)m.data[0];
-    int sendDrops = (int)m.data[1];
-    int queueFails = (int)m.data[2];
+    int queueSize = (int)m.data[RADIO_RELAY_STATUS_QUEUE];
+    int sendDrops = (int)m.data[RADIO_RELAY_STATUS_DROP];
+    int queueFails = (int)m.data[RADIO_RELAY_STATUS_FAIL];
+    int nsl = (int)m.data[RADIO_RELAY_STATUS_NSL];
+    int nsr = (int)m.data[RADIO_RELAY_STATUS_NSR];
+    int nel = (int)m.data[RADIO_RELAY_STATUS_NEL];
+    int ner = (int)m.data[RADIO_RELAY_STATUS_NER];
     TRACE_F(
       TRACE_DEBUG1,
-      "RX relay status: queueSize=%d, sendDrops=%d, queueFails=%d",
+      "RX relay status: queueSize=%d, sendDrops=%d, queueFails=%d, nsl=%d, nsr=%d, nel=%d, ner=%d",
       queueSize,
       sendDrops,
-      queueFails);
+      queueFails,
+      nsl,
+      nsr,
+      nel,
+      ner);
     break;
   }
 
@@ -247,9 +255,14 @@ void txGetSoilTempsAsync()
 
 float getSoilTempsResult() { return soilTemps; }
 
-void txWindowActuatorRunAll(MotorDirection direction, int runtime)
+void txWindowActuatorRun(MotorDirection direction, int runtime, Window window)
 {
-  TRACE(TRACE_DEBUG1, "TX window actuator run all");
+  TRACE_F(
+    TRACE_DEBUG1,
+    "TX window actuator run: direction=%d, runtime=%d, window=%d",
+    (int)direction,
+    runtime,
+    (int)window);
 
   if (!checkRelayAlive()) {
     return;
@@ -257,16 +270,17 @@ void txWindowActuatorRunAll(MotorDirection direction, int runtime)
 
   Message m;
   m.to = RHRD_ADDR_RELAY;
-  m.type = MessageType::k_windowActuatorRunAll;
-  m.data[RADIO_NODE_WA_D] = direction;
-  m.data[RADIO_NODE_WA_R] = runtime;
-  m.dataLen = 2;
+  m.type = MessageType::k_windowActuatorRun;
+  m.data[RADIO_NODE_WAR_N] = window;
+  m.data[RADIO_NODE_WAR_D] = direction;
+  m.data[RADIO_NODE_WAR_R] = runtime;
+  m.dataLen = 3;
   common::tx(m);
 }
 
-void txWindowActuatorSetup(int leftSpeed, int rightSpeed)
+void txWindowActuatorSetup(int speed, Window window)
 {
-  TRACE(TRACE_DEBUG1, "TX window actuator setup");
+  TRACE_F(TRACE_DEBUG1, "TX window actuator setup: speed=%d, window=%d", speed, (int)window);
 
   if (!checkRelayAlive()) {
     return;
@@ -275,8 +289,8 @@ void txWindowActuatorSetup(int leftSpeed, int rightSpeed)
   Message m;
   m.to = RHRD_ADDR_RELAY;
   m.type = MessageType::k_windowActuatorSetup;
-  m.data[RADIO_NODE_WA_L] = leftSpeed;
-  m.data[RADIO_NODE_WA_R] = rightSpeed;
+  m.data[RADIO_NODE_WAS_N] = window;
+  m.data[RADIO_NODE_WAS_S] = speed;
   m.dataLen = 2;
   common::tx(m);
 }

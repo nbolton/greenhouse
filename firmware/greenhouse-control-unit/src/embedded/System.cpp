@@ -120,7 +120,8 @@ System::System() :
   m_windowSpeedLeft(k_unknown),
   m_windowSpeedRight(k_unknown),
   m_relayAlive(false),
-  m_commandMode(false)
+  m_commandMode(false),
+  m_windowUpdatePending(false)
 {
 }
 
@@ -175,7 +176,7 @@ void System::Setup()
 
 void System::Loop()
 {
-  SerialMode();
+  CommandMode();
 
   radio::update();
 
@@ -239,10 +240,26 @@ void System::Loop()
     OnSystemStarted();
   }
 
+  if (m_windowUpdatePending && SystemStarted()) {
+    WindowSpeedUpdate();
+    m_windowUpdatePending = false;
+  }
+
   yield();
 }
 
-void System::SerialMode()
+void System::PrintCommands()
+{
+  TRACE(
+    TRACE_DEBUG1,
+    "Commands:\n"
+    "s: status\n"
+    "r: refresh\n"
+    "l[n]: log level\n"
+    "q: quit");
+}
+
+void System::CommandMode()
 {
   if (Serial.available()) {
     if (Serial.read() == ASCII_ESC) {
@@ -289,6 +306,10 @@ void System::SerialMode()
 
     case 's':
       PrintStatus();
+      break;
+
+    case 'r':
+      Refresh();
       break;
 
     case 'l': {
@@ -398,6 +419,12 @@ void System::Refresh(bool first)
       }
       m_relayAlive = relayAlive;
     }
+
+    // HACK: send window speeds every refresh, as nodes seem to
+    // reset randomly and lose the window speed settings.
+    //
+    // TODO: send window speeds when nodes say hello.
+    WindowSpeedUpdate();
   }
 
   TRACE(TRACE_DEBUG1, "Refresh done (embedded)");
@@ -498,7 +525,7 @@ void System::UpdateSoilTemps(bool force)
   }
 }
 
-void System::RunWindowActuator(bool extend, float delta)
+void System::RunWindowActuators(bool extend, float delta)
 {
   int runtimeSec = ceilf(WindowActuatorRuntimeSec() * delta);
   TRACE_F(
@@ -509,10 +536,12 @@ void System::RunWindowActuator(bool extend, float delta)
     runtimeSec);
 
   if (extend) {
-    radio::txWindowActuatorRunAll(radio::k_windowExtend, runtimeSec);
+    radio::txWindowActuatorRun(radio::k_windowExtend, runtimeSec, radio::Window::k_leftWindow);
+    radio::txWindowActuatorRun(radio::k_windowExtend, runtimeSec, radio::Window::k_rightWindow);
   }
   else {
-    radio::txWindowActuatorRunAll(radio::k_windowRetract, runtimeSec);
+    radio::txWindowActuatorRun(radio::k_windowRetract, runtimeSec, radio::Window::k_leftWindow);
+    radio::txWindowActuatorRun(radio::k_windowRetract, runtimeSec, radio::Window::k_rightWindow);
   }
 }
 
@@ -668,7 +697,7 @@ void System::OnSystemStarted()
 
   // system started may sound like a good thing, but actually the system
   // shouldn't normally stop. so, that it has started is not usually a
-  // good thing (unless we're in test mode, but then warnings are disabled).
+  // good thing (unless we're in test mode, b-ut then warnings are disabled).
   ReportWarning("System started");
 }
 
@@ -800,7 +829,7 @@ void System::UpdateCaseFan()
   CaseFan(on);
 
   TRACE_F(
-    TRACE_DEBUG1,
+    TRACE_DEBUG2,
     "Case fan: %s (PSU=%s, HC=%s, MV=%s)", //
     BOOL_FS(on),
     BOOL_FS(onPsu),
@@ -844,16 +873,6 @@ void System::WriteOnboardIO(uint8_t pin, uint8_t value)
   s_localSystemIo1.digitalWrite(pin, value);
 }
 
-void System::PrintCommands()
-{
-  TRACE(
-    TRACE_DEBUG1,
-    "Commands:\n"
-    "s: status\n"
-    "l[n]: log level\n"
-    "q: quit");
-}
-
 void System::PrintStatus()
 {
   TRACE_F(TRACE_DEBUG1, "Status\nBlynk: %s", Blynk.connected() ? "Connected" : "Disconnected");
@@ -866,7 +885,9 @@ void System::QueueCallback(CallbackFunction f, std::string name)
 
 void System::WindowSpeedUpdate()
 {
-  radio::txWindowActuatorSetup(WindowSpeedLeft(), WindowSpeedRight());
+  TRACE(TRACE_DEBUG1, "Updating window speeds");
+  radio::txWindowActuatorSetup(WindowSpeedLeft(), radio::Window::k_leftWindow);
+  radio::txWindowActuatorSetup(WindowSpeedRight(), radio::Window::k_rightWindow);
 }
 
 void System::ReportPumpSwitch(bool pumpOn)
@@ -1062,17 +1083,9 @@ BLYNK_WRITE(V76)
   }
 }
 
-BLYNK_WRITE(V78)
-{
-  eg::s_instance->WindowSpeedLeft(param.asInt());
-  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate, "Window speed update");
-}
+BLYNK_WRITE(V78) { eg::s_instance->WindowSpeedLeft(param.asInt()); }
 
-BLYNK_WRITE(V79)
-{
-  eg::s_instance->WindowSpeedRight(param.asInt());
-  eg::s_instance->QueueCallback(&eg::System::WindowSpeedUpdate, "Window speed update");
-}
+BLYNK_WRITE(V79) { eg::s_instance->WindowSpeedRight(param.asInt()); }
 
 BLYNK_WRITE(V80)
 {

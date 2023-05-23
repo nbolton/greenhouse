@@ -191,7 +191,7 @@ void Power::Loop()
 
   if (abs(m_lastBatteryCurrent - BatteryCurrentOutput()) > CURRENT_DIFF_DELTA) {
     TRACE_F(
-      TRACE_DEBUG1,
+      TRACE_DEBUG2,
       "Battery current changed, was %.2fA, now %.2fA", //
       m_lastBatteryCurrent,
       BatteryCurrentOutput());

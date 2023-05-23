@@ -37,7 +37,7 @@ public:
 
   void Setup();
   void Loop();
-  void SerialMode();
+  void CommandMode();
   void Refresh() { Refresh(false); }
   void Refresh(bool first);
   void WeatherCallback();
@@ -71,7 +71,7 @@ protected:
   void FlashLed(LedFlashTimes times);
   bool ReadSensors(int &failures);
   void UpdateSoilTemps(bool force);
-  void RunWindowActuator(bool extend, float delta);
+  void RunWindowActuators(bool extend, float delta);
   void Delay(unsigned long ms, const char *reason);
   bool UpdateWeatherForecast();
   void HandleNightToDayTransition();
@@ -93,9 +93,19 @@ public:
   void FakeSoilTemperature(float value) { m_fakeSoilTemperature = value; }
   bool RefreshBusy() const { return m_refreshBusy; }
   int WindowSpeedLeft() const { return m_windowSpeedLeft; }
-  void WindowSpeedLeft(int value) { m_windowSpeedLeft = value; }
   int WindowSpeedRight() const { return m_windowSpeedRight; }
-  void WindowSpeedRight(int value) { m_windowSpeedRight = value; }
+
+  void WindowSpeedRight(int value)
+  {
+    m_windowSpeedRight = value;
+    m_windowUpdatePending = true;
+  }
+
+  void WindowSpeedLeft(int value)
+  {
+    m_windowSpeedLeft = value;
+    m_windowUpdatePending = true;
+  }
 
 private:
   void InitIO();
@@ -134,6 +144,7 @@ private:
   int m_windowSpeedRight;
   bool m_relayAlive;
   bool m_commandMode;
+  bool m_windowUpdatePending;
 };
 
 } // namespace embedded

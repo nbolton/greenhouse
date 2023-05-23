@@ -261,7 +261,7 @@ void Test_Loop_WindowAdjustOnceUnderThreshold_NothingHappens(void)
 {
   TestSystem system;
   system.WindowAdjustPositions(5); // i.e. first is 20%
-  system.WindowOpenPercent(0); // 0% open
+  system.WindowOpenPercent(0);     // 0% open
   system.UpdateWindowOpenPercent();
 
   system.WindowOpenPercent(5); // 5% open (round to 0%)
@@ -276,7 +276,7 @@ void Test_Loop_WindowAdjustOnceOverThreshold_WindowOpens(void)
 {
   TestSystem system;
   system.WindowAdjustPositions(5); // i.e. first is 20%
-  system.WindowOpenPercent(0); // 0% open
+  system.WindowOpenPercent(0);     // 0% open
   system.UpdateWindowOpenPercent();
 
   system.WindowOpenPercent(25); // 25% open (round to 20%)
@@ -292,7 +292,7 @@ void Test_Loop_WindowAdjustTwiceUnderThenOverThreshold_WindowOpens(void)
 {
   TestSystem system;
   system.WindowAdjustPositions(5); // i.e. first is 20%
-  system.WindowOpenPercent(20); // 0% open
+  system.WindowOpenPercent(20);    // 0% open
   system.UpdateWindowOpenPercent();
 
   system.WindowOpenPercent(25); // 25% open (round to 20%)
@@ -320,9 +320,9 @@ void Test_OpenWindow_HalfDelta_ActuatorMovedForwardHalf(void)
   time.m_mock_EpochTime = 0;
   system.WindowActuatorRuntimeSec(2);
 
-  system.OpenWindow(.5);
+  system.OpenWindows(.5);
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_RunWindowActuator);
-  
+
   system.Loop();
   TEST_ASSERT_EQUAL(true, system.m_lastArg_RunWindowActuator_extend);
 }
@@ -336,7 +336,7 @@ void Test_CloseWindow_HalfDelta_ActuatorMovedBackwardHalf(void)
   time.m_mock_EpochTime = 0;
   system.WindowActuatorRuntimeSec(2);
 
-  system.CloseWindow(.5);
+  system.CloseWindows(.5);
   system.Loop();
   TEST_ASSERT_EQUAL_INT(1, system.m_calls_RunWindowActuator);
 

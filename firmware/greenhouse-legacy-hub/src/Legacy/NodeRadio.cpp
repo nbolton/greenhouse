@@ -9,9 +9,8 @@
 #define PIN_RX PC15
 #define PIN_TX PC14
 #define BAUD 9600
-#define RX_TIMEOUT 100
-#define TX_RETRY_MAX 1
-#define LINEAR_TIMEOUT 1
+#define RX_TIMEOUT 300
+#define TX_RETRY_ATTEMPTS 3
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
 #define KEEP_ALIVE_TIME 60000 // 60s
@@ -75,87 +74,90 @@ bool NodeRadio::Send(SendDesc &sendDesc)
   led(LOW);
   bool rx = false;
 
-  TRACE_F(
-    "Radio sending, attempt=%d, to=%02Xh, cmd=%02Xh, seq=%d",
-    i + 1,
-    sendDesc.to,
-    sendDesc.cmd,
-    sendDesc.seq);
+  for (int i = 0; i < TX_RETRY_ATTEMPTS; i++) {
+    TRACE_F(
+      "Radio sending, attempt=%d, to=%02Xh, cmd=%02Xh, seq=%d",
+      i + 1,
+      sendDesc.to,
+      sendDesc.cmd,
+      sendDesc.seq);
 
-  GH_TO(s_txBuf) = sendDesc.to;
-  GH_FROM(s_txBuf) = GH_ADDR_MAIN;
-  GH_CMD(s_txBuf) = sendDesc.cmd;
-  GH_DATA_1(s_txBuf) = sendDesc.data1;
-  GH_DATA_2(s_txBuf) = sendDesc.data2;
+    GH_TO(s_txBuf) = sendDesc.to;
+    GH_FROM(s_txBuf) = GH_ADDR_MAIN;
+    GH_CMD(s_txBuf) = sendDesc.cmd;
+    GH_DATA_1(s_txBuf) = sendDesc.data1;
+    GH_DATA_2(s_txBuf) = sendDesc.data2;
 
-  sendDesc.seq = sendDesc.seq % 256;
-  GH_SEQ(s_txBuf) = sendDesc.seq;
+    sendDesc.seq = sendDesc.seq % 256;
+    GH_SEQ(s_txBuf) = sendDesc.seq;
 
-  m_requests++;
+    m_requests++;
 
-  // clear anything left in the RX buffer, otherwise when we're
-  // checking for a response, we may get an out of sync message.
-  int bitsDumped = 0;
-  while (s_hc12.read() != -1) {
-    bitsDumped++;
-  }
+    // clear anything left in the RX buffer, otherwise when we're
+    // checking for a response, we may get an out of sync message.
+    int bitsDumped = 0;
+    while (s_hc12.read() != -1) {
+      bitsDumped++;
+    }
 
-  TRACE_F("Radio read bits dumped: %d", bitsDumped);
+    TRACE_F("Radio read bits dumped: %d", bitsDumped);
 
-  s_hc12.write(s_txBuf, GH_LENGTH);
+    s_hc12.write(s_txBuf, GH_LENGTH);
 
-  unsigned long start = millis();
+    unsigned long start = millis();
 
-  printBuffer(F("Radio sent data: "), s_txBuf, GH_LENGTH);
+    printBuffer(F("Radio sent data: "), s_txBuf, GH_LENGTH);
 
-  TRACE_F("Radio waiting for response, timeout: %dms", RX_TIMEOUT);
+    TRACE_F("Radio waiting for response, timeout: %dms", RX_TIMEOUT);
 
-  while (millis() < (start + RX_TIMEOUT)) {
-    uint8_t s_rxBufLen = sizeof(s_rxBuf);
+    while (millis() < (start + RX_TIMEOUT)) {
+      uint8_t s_rxBufLen = sizeof(s_rxBuf);
 
-    if (s_hc12.available()) {
-      s_rxBufLen = s_hc12.readBytes(s_rxBuf, GH_LENGTH);
-      if (s_rxBufLen != GH_LENGTH) {
-        TRACE_F(
-          "Error: Buffer underrun while waiting for %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
-        m_errors++;
-        sendDesc.errors++;
-        break;
-      }
-
-      TRACE_F("Radio response time: %lums", millis() - start);
-      printBuffer(F("Radio got data: "), s_rxBuf, GH_LENGTH);
-
-      if ((GH_TO(s_rxBuf) == GH_ADDR_MAIN) && (GH_FROM(s_rxBuf) == sendDesc.to)) {
-
-        if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
-          TRACE_F("Error: Code from node %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
+      if (s_hc12.available()) {
+        s_rxBufLen = s_hc12.readBytes(s_rxBuf, GH_LENGTH);
+        if (s_rxBufLen != GH_LENGTH) {
+          TRACE_F(
+            "Error: Buffer underrun while waiting for %02Xh: %d", sendDesc.to, GH_DATA_1(s_rxBuf));
           m_errors++;
           sendDesc.errors++;
-          continue;
+          break;
         }
-        else if (GH_CMD(s_rxBuf) != sendDesc.expectCmd) {
-          TRACE("Error: Radio got unexpected command");
-          m_errors++;
-          sendDesc.errors++;
-          continue;
-        }
-        else if (sendDesc.okCallback != NULL) {
-          sendDesc.okCallbackResult = sendDesc.okCallback(sendDesc);
-          if (!sendDesc.okCallbackResult) {
-            TRACE("Error: Radio OK callback failed");
+
+        TRACE_F("Radio response time: %lums", millis() - start);
+        printBuffer(F("Radio got data: "), s_rxBuf, GH_LENGTH);
+
+        if ((GH_TO(s_rxBuf) == GH_ADDR_MAIN) && (GH_FROM(s_rxBuf) == sendDesc.to)) {
+
+          if (GH_CMD(s_rxBuf) == GH_CMD_ERROR) {
+            int errorCode = GH_DATA_1(s_rxBuf);
+            TRACE_F("Error: Code from node %02Xh: %d", sendDesc.to, errorCode);
             m_errors++;
             sendDesc.errors++;
             continue;
           }
-        }
+          else if (GH_CMD(s_rxBuf) != sendDesc.expectCmd) {
+            TRACE("Error: Radio got unexpected command");
+            m_errors++;
+            sendDesc.errors++;
+            continue;
+          }
+          else if (sendDesc.okCallback != NULL) {
+            sendDesc.okCallbackResult = sendDesc.okCallback(sendDesc);
+            if (!sendDesc.okCallbackResult) {
+              TRACE("Error: Radio OK callback failed");
+              m_errors++;
+              sendDesc.errors++;
+              continue;
+            }
+          }
 
-        rx = true;
-        break;
-      }
-      else {
-        TRACE("Radio ignoring message (address mismatch)");
-        // don't report an error, this is fine
+          rx = true;
+          break;
+        }
+        else {
+          TRACE("Radio ignoring message (address mismatch)");
+          // don't report an error, this is fine
+        }
       }
     }
   }
@@ -177,49 +179,41 @@ bool NodeRadio::Send(SendDesc &sendDesc)
   return rx;
 }
 
-bool NodeRadio::MotorRunAll(MotorDirection direction, byte seconds)
+bool NodeRadio::MotorRun(MotorDirection direction, byte seconds, NodeId id)
 {
   const int windowNodes = 2;
   const int motorBusyWait = 1000;
   const int busyCheckMax = 60;
 
-  NodeId nodes[windowNodes];
-  nodes[0] = k_nodeRightWindow;
-  nodes[1] = k_nodeLeftWindow;
-
   bool ok = true;
-  for (int i = 0; i < windowNodes; i++) {
-    Node &node = GetNode(nodes[i]);
+  Node &node = GetNode(id);
 
-    int busyChecks = 0;
-    bool motorBusy = false, motorStateRx = false;
-    do {
-      if (busyChecks++ >= busyCheckMax) {
-        TRACE_F("Error: Radio motor run busy checks exceeded maximum, node=%02Xh", node.Address());
-        ok = false;
-        break;
-      }
-      motorStateRx = node.MotorState(motorBusy);
-      if (!motorStateRx) {
-        ok = false;
-        break;
-      }
-      if (motorBusy) {
-        TRACE("Motor is busy, waiting");
-        delay(motorBusyWait);
-      }
-    } while (motorBusy);
+  int busyChecks = 0;
+  bool motorBusy = false, motorStateRx = false;
+  do {
+    if (busyChecks++ >= busyCheckMax) {
+      TRACE_F("Error: Radio motor run busy checks exceeded maximum, node=%02Xh", node.Address());
+      ok = false;
+      break;
+    }
+    motorStateRx = node.MotorState(motorBusy);
+    if (!motorStateRx) {
+      ok = false;
+      break;
+    }
+    if (motorBusy) {
+      TRACE("Motor is busy, waiting");
+      delay(motorBusyWait);
+    }
+  } while (motorBusy);
 
-    if (motorStateRx && !motorBusy) {
-      if (!node.MotorRun(direction, seconds)) {
-        ok = false;
-      }
+  if (motorStateRx && !motorBusy) {
+    if (!node.MotorRun(direction, seconds)) {
+      ok = false;
     }
   }
   return ok;
 }
-
-#define SOIL_TEMP_FAIL_MAX 10
 
 float NodeRadio::GetSoilTemps()
 {
@@ -252,15 +246,7 @@ float NodeRadio::GetSoilTemps()
   return soilTemperature;
 }
 
-bool NodeRadio::SetWindowSpeeds(int left, int right)
-{
-  Node &leftNode = GetNode(k_nodeLeftWindow);
-  Node &rightNode = GetNode(k_nodeRightWindow);
-  bool l = leftNode.MotorSpeed(left);
-  bool r = rightNode.MotorSpeed(right);
-  // TODO: handle these separately
-  return l && r;
-}
+bool NodeRadio::SetWindowSpeed(int speed, NodeId id) { return GetNode(id).MotorSpeed(speed); }
 
 // begin node class
 
@@ -351,10 +337,13 @@ bool helloOk(SendDesc &sendDesc)
 bool Node::send(SendDesc &sendDesc)
 {
   sendDesc.seq = m_sequence;
+
   bool ok = Radio().Send(sendDesc);
   m_errors += sendDesc.errors;
   TRACE_F("Total errors for node %02Xh: %d", m_address, m_errors);
+
   stepSequence();
+
   return ok;
 }
 

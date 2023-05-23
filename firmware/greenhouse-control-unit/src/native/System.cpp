@@ -176,7 +176,7 @@ void System::Refresh(bool first)
 void System::WindowFullClose()
 {
   m_windowOpenPercentExpected = 0;
-  CloseWindow(1);
+  CloseWindows(1);
   ReportWindowOpenPercent();
 }
 
@@ -227,13 +227,13 @@ void System::ApplyWindowOpenPercent()
       TRACE_DEBUG1, "Testing window open percent, open=%.2f, close=%.2f", openDelta, closeDelta);
 
     if (openDelta > 0) {
-      OpenWindow(openDelta);
+      OpenWindows(openDelta);
       ReportWindowOpenPercent();
       m_windowAdjustLast = Time().UptimeSeconds();
       return;
     }
     else if (closeDelta > 0) {
-      CloseWindow(closeDelta);
+      CloseWindows(closeDelta);
       ReportWindowOpenPercent();
       m_windowAdjustLast = Time().UptimeSeconds();
       return;
@@ -256,23 +256,23 @@ void System::ChangeWindowOpenPercentActual(float delta)
   m_windowOpenPercentActual = wp;
 }
 
-void System::OpenWindow(float delta)
+void System::OpenWindows(float delta)
 {
   TRACE_F(TRACE_DEBUG1, "Opening window, delta=%.2f", delta);
 
   ChangeWindowOpenPercentActual(delta);
-  RunWindowActuator(true, delta);
+  RunWindowActuators(true, delta);
 
   float percent = delta * 100;
   TRACE_F(TRACE_DEBUG1, "Window opened by %.1f%%", percent);
 }
 
-void System::CloseWindow(float delta)
+void System::CloseWindows(float delta)
 {
   TRACE_F(TRACE_DEBUG1, "Closing window, delta=%.2f", delta);
 
   ChangeWindowOpenPercentActual(delta * -1);
-  RunWindowActuator(false, delta);
+  RunWindowActuators(false, delta);
 
   float percent = delta * 100;
   TRACE_F(TRACE_DEBUG1, "Window closed by %.1f%%", percent);

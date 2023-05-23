@@ -15,10 +15,19 @@
 #define RADIO_MSG_META_END RADIO_MSG_PRE_END + 2
 #define RADIO_MSG_DATA_SIZE 10
 
-#define RADIO_NODE_WA_D 0
-#define RADIO_NODE_WA_R 1
-#define RADIO_NODE_WA_L 0
-#define RADIO_NODE_WA_R 1
+#define RADIO_NODE_WAR_N 0
+#define RADIO_NODE_WAR_D 1
+#define RADIO_NODE_WAR_R 2
+#define RADIO_NODE_WAS_N 0
+#define RADIO_NODE_WAS_S 1
+
+#define RADIO_RELAY_STATUS_QUEUE 0
+#define RADIO_RELAY_STATUS_DROP 1
+#define RADIO_RELAY_STATUS_FAIL 2
+#define RADIO_RELAY_STATUS_NSL 3
+#define RADIO_RELAY_STATUS_NSR 4
+#define RADIO_RELAY_STATUS_NEL 5
+#define RADIO_RELAY_STATUS_NER 6
 
 #define FLOAT_BYTE_LEN 4
 
@@ -32,7 +41,7 @@ enum MessageType { //
   k_messageTypeNotSet,
 
   k_soilTemps,
-  k_windowActuatorRunAll,
+  k_windowActuatorRun,
   k_windowActuatorSetup,
   k_pumpSwitch,
   k_pumpStatus,
@@ -52,6 +61,8 @@ struct Message {
 
 enum MotorDirection { k_windowExtend, k_windowRetract };
 
+enum Window { k_leftWindow, k_rightWindow };
+
 enum PumpStatus {
   k_waitingZ80,
   k_errorAckRF95,
@@ -67,7 +78,7 @@ typedef void (*StateCallback)(bool busy);
 
 void init(
   ::RHReliableDatagram *rd, ::RH_RF69 *rf69, RxCallback _rxCallback, StateCallback _stateCallback);
-Message rx(MessageType mt = k_messageTypeNotSet);
+void rx();
 bool tx(Message &m);
 void printBuffer(const __FlashStringHelper *prompt, uint8_t *data, uint8_t dataLen);
 

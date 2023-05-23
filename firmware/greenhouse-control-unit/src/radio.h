@@ -21,8 +21,8 @@ float getSoilTempsResult();
 bool txKeepAliveRelay();
 void txGetSoilTempsAsync();
 void txGetRelayStatusAsync();
-void txWindowActuatorRunAll(MotorDirection direction, int runtime);
-void txWindowActuatorSetup(int left, int right);
+void txWindowActuatorRun(MotorDirection direction, int runtime, Window window);
+void txWindowActuatorSetup(int speed, Window window);
 void txPumpSwitch(bool on);
 
 } // namespace radio

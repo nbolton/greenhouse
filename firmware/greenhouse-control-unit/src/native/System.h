@@ -39,11 +39,11 @@ protected:
   virtual void ReportWeather() {}
   virtual void ReportWaterHeaterInfo() {}
   virtual bool ReadSensors(int &failures) { return false; }
-  virtual void OpenWindow(float delta);
-  virtual void CloseWindow(float delta);
+  virtual void OpenWindows(float delta);
+  virtual void CloseWindows(float delta);
   virtual void ApplyWindowOpenPercent();
   virtual void ChangeWindowOpenPercentActual(float delta);
-  virtual void RunWindowActuator(bool extend, float delta) {}
+  virtual void RunWindowActuators(bool extend, float delta) {}
   virtual void Delay(unsigned long ms, const char *reason) {}
   virtual bool UpdateWeatherForecast() { return false; }
   virtual void HandleNightToDayTransition();

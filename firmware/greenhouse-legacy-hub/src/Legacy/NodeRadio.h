@@ -25,6 +25,7 @@ struct SendDesc {
   byte data1 = 0;
   byte data2 = 0;
   byte seq = 0;
+  bool seqAuto = true;
   int errors = 0;
   byte expectCmd = GH_CMD_ACK;
   callback okCallback = NULL;
@@ -99,9 +100,9 @@ public:
   String DebugInfo();
   bool Send(SendDesc &sendDesc);
   Node &GetNode(NodeId index);
-  bool MotorRunAll(MotorDirection direction, byte seconds);
+  bool MotorRun(MotorDirection direction, byte seconds, NodeId id);
   float GetSoilTemps();
-  bool SetWindowSpeeds(int left, int right);
+  bool SetWindowSpeed(int speed, NodeId id);
 
 private:
   void sr(int pin, bool set);

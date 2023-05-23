@@ -55,7 +55,7 @@ void queueMessage(Message &m);
 bool process(Message &m);
 void state(bool busy) { led(busy ? LOW : HIGH); }
 bool relaySoilTemps();
-bool relayWindowActuatorRunAll(Message &m);
+bool relayWindowActuatorRun(Message &m);
 bool txKeepAlive();
 bool txStatus();
 
@@ -78,6 +78,11 @@ void init(NodeRadio &nr, PumpRadio &pr)
   }
 
   rf69.setTxPower(20, true);
+
+  Message m;
+  m.to = RHRD_ADDR_SERVER;
+  m.type = MessageType::k_status;
+  queueMessage(m);
 }
 
 void update()
@@ -133,13 +138,20 @@ bool process(Message &m)
   case k_soilTemps: {
     return relaySoilTemps();
   }
-  case k_windowActuatorRunAll: {
-    return relayWindowActuatorRunAll(m);
+  case k_windowActuatorRun: {
+    return relayWindowActuatorRun(m);
   }
   case k_windowActuatorSetup: {
-    int l = (int)m.data[RADIO_NODE_WA_L];
-    int r = (int)m.data[RADIO_NODE_WA_R];
-    return p_nodeRadio->SetWindowSpeeds(l, r);
+    Window window = (Window)m.data[RADIO_NODE_WAS_N];
+    int speed = (int)m.data[RADIO_NODE_WAS_S];
+    legacy::NodeId node;
+    if (window == Window::k_leftWindow) {
+      node = legacy::NodeId::k_nodeLeftWindow;
+    }
+    else if (window == Window::k_rightWindow) {
+      node = legacy::NodeId::k_nodeRightWindow;
+    }
+    return p_nodeRadio->SetWindowSpeed(speed, node);
   }
   case k_pumpSwitch: {
     return p_pumpRadio->SwitchPump((bool)m.data[0]);
@@ -154,10 +166,14 @@ bool txStatus()
   m.to = RHRD_ADDR_SERVER;
   m.type = MessageType::k_status;
 
-  m.data[0] = messages.size();
-  m.data[1] = droppedMessages;
-  m.data[2] = queueFails;
-  m.dataLen = 3;
+  m.data[RADIO_RELAY_STATUS_QUEUE] = messages.size();
+  m.data[RADIO_RELAY_STATUS_DROP] = droppedMessages;
+  m.data[RADIO_RELAY_STATUS_FAIL] = queueFails;
+  m.data[RADIO_RELAY_STATUS_NSL] = p_nodeRadio->GetNode(NodeId::k_nodeLeftWindow).Online();
+  m.data[RADIO_RELAY_STATUS_NSR] = p_nodeRadio->GetNode(NodeId::k_nodeRightWindow).Online();
+  m.data[RADIO_RELAY_STATUS_NEL] = p_nodeRadio->GetNode(NodeId::k_nodeLeftWindow).Online();
+  m.data[RADIO_RELAY_STATUS_NER] = p_nodeRadio->GetNode(NodeId::k_nodeRightWindow).Online();
+  m.dataLen = 7;
 
   return common::tx(m);
 }
@@ -173,7 +189,7 @@ bool txKeepAlive()
 int getTimeToLive(MessageType t)
 {
   switch (t) {
-  case MessageType::k_windowActuatorRunAll: {
+  case MessageType::k_windowActuatorRun: {
     return WINDOW_ACTUATOR_RUN_TTL;
   }
   }
@@ -215,10 +231,18 @@ bool relaySoilTemps()
   return common::tx(m);
 }
 
-bool relayWindowActuatorRunAll(Message &m)
+bool relayWindowActuatorRun(Message &m)
 {
-  gr::MotorDirection d = (gr::MotorDirection)m.data[RADIO_NODE_WA_D];
-  byte r = (byte)m.data[RADIO_NODE_WA_R];
+  bool ok;
+  Message *p_m;
+  gr::MotorDirection d;
+  byte r;
+  gr::Window w;
+
+  p_m = &m;
+  d = (gr::MotorDirection)m.data[RADIO_NODE_WAR_D];
+  r = (byte)m.data[RADIO_NODE_WAR_R];
+  w = (gr::Window)m.data[RADIO_NODE_WAR_N];
 
   legacy::MotorDirection ld;
   if (d == gr::MotorDirection::k_windowExtend) {
@@ -228,7 +252,19 @@ bool relayWindowActuatorRunAll(Message &m)
     ld = legacy::MotorDirection::k_windowRetract;
   }
 
-  return p_nodeRadio->MotorRunAll(ld, r);
+  legacy::NodeId ln;
+  if (w == gr::Window::k_leftWindow) {
+    ln = legacy::NodeId::k_nodeLeftWindow;
+  }
+  else if (w == gr::Window::k_rightWindow) {
+    ln = legacy::NodeId::k_nodeRightWindow;
+  }
+
+  p_nodeRadio->MotorRun(ld, r, ln);
+
+  // always return true; multiple attempts would result in windows
+  // going haywire since there is no sequencing at this level.
+  return true;
 }
 
 bool txPumpStatus(PumpStatus status)

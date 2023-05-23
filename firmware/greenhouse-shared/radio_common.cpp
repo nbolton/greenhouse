@@ -64,13 +64,10 @@ bool tx(Message &m)
   return ok;
 }
 
-Message rx(MessageType match)
+void rx()
 {
-  Message m;
-  bool ok = false;
-  time_t start = millis();
-
   // keep receiving for a while to reduce channel conflicts
+  time_t start = millis();
   while (millis() < start + RX_PERIOD) {
     if (!p_rd->available()) {
       yield();
@@ -83,6 +80,8 @@ Message rx(MessageType match)
     uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
     uint8_t from;
+    bool ok = false;
+    Message m;
 
     if (p_rd->recvfromAck(buf, &len, &from)) {
       char *bufChar = (char *)buf;
@@ -108,28 +107,21 @@ Message rx(MessageType match)
         }
 
         ok = true;
-
-        if (m.type == match) {
-          TRACE_F(TRACE_DEBUG2, "RX message found, type=%d", (int)m.type);
-          break;
-        }
       }
       else {
         TRACE(TRACE_ERROR, "RX unexpected message");
       }
     }
     else {
-      TRACE(TRACE_ERROR, "RX could not acknowledge");
+      TRACE(TRACE_ERROR, "RX ack message failed");
     }
     stateCallback(false);
-  }
 
-  if (ok) {
-    TRACE(TRACE_DEBUG2, "RX callback");
-    rxCallback(m);
+    if (ok) {
+      TRACE(TRACE_DEBUG2, "RX callback");
+      rxCallback(m);
+    }
   }
-
-  return m;
 }
 
 void printBuffer(const __FlashStringHelper *prompt, uint8_t *data, uint8_t dataLen)
