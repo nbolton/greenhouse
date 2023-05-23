@@ -10,7 +10,7 @@
 #define PIN_TX PC14
 #define BAUD 9600
 #define RX_TIMEOUT 300
-#define TX_RETRY_ATTEMPTS 3
+#define TX_RETRY_ATTEMPTS 5
 #define TEMP_OFFSET -1.2
 #define TEMP_UNKNOWN 255
 #define KEEP_ALIVE_TIME 60000 // 60s
