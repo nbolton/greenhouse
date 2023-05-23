@@ -26,33 +26,35 @@ using namespace greenhouse;
 namespace ng = greenhouse::native;
 namespace eg = greenhouse::embedded;
 
-enum PumpMode { k_notSet, k_auto, k_manual };
-static PumpMode s_pumpMode = k_notSet;
+enum PumpMode { k_manual, k_auto };
+static PumpMode s_pumpMode = k_manual;
 
 namespace greenhouse {
 namespace embedded {
 
-#define SR_ON LOW
-#define SR_OFF HIGH
-#define LOOP_DELAY 10
 #define SOIL_TEMP_FAIL_MAX 10
 #define CASE_FAN_CURRENT_THRESHOLD 1
 #define CASE_FAN_VOLTAGE_THRESHOLD 14
 #define SHORT_BEEP_TIME 100
 #define LONG_BEEP_TIME 400
 #define BEEP_OFF_TIME 200
-#define IO_PIN_BEEP_SW P1
-#define IO_PIN_FAN_SW P0
-#define NODE_SWITCH_0 P1
-#define NODE_SWITCH_1 P2
 #define NODE_RESET_DELAY 100
+#define RELAY_RESET_DELAY 100
 #define NODE_BOOT_DELAY 2000
+
 #define ASCII_BS 0x08
 #define ASCII_ESC 0x1B
 #define ASCII_LF 0x0A
 #define ASCII_CR 0x0D
 #define SERIAL_BUF_LEN 3
 #define SERIAL_PROMPT "> "
+
+#define IO_PIN_BEEP_SW P1
+#define IO_PIN_FAN_SW P0
+#define IO_PIN_LIGHT_SW P0
+#define IO_PIN_NODE_SW_0 P1
+#define IO_PIN_NODE_SW_1 P2
+#define IO_PIN_RELAY_SW P3
 
 const bool k_enableLed = false;
 const int k_ledFlashDelay = 30; // ms
@@ -255,6 +257,7 @@ void System::PrintCommands()
     "Commands:\n"
     "s: status\n"
     "r: refresh\n"
+    "b: reboot\n"
     "l[n]: log level\n"
     "q: quit");
 }
@@ -310,6 +313,10 @@ void System::CommandMode()
 
     case 'r':
       Refresh();
+      break;
+
+    case 'b':
+      Restart();
       break;
 
     case 'l': {
@@ -684,6 +691,7 @@ void System::OnSystemStarted()
   // Power().InitPowerSource();
 
   ResetNodes();
+  ResetRelay();
 
   // run first refresh (instead of waiting for the 1st refresh timer).
   // we run the 1st refresh here instead of when the timer is created,
@@ -852,20 +860,23 @@ void System::OnBatteryCurrentChange()
 void System::ResetNodes()
 {
   TRACE(TRACE_DEBUG1, "Resetting nodes");
-  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_0, HIGH);
-  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_1, HIGH);
+  s_externalSwitchIo1.digitalWrite(IO_PIN_NODE_SW_0, HIGH);
+  s_externalSwitchIo1.digitalWrite(IO_PIN_NODE_SW_1, HIGH);
 
   Delay(NODE_RESET_DELAY, "Node reset");
 
-  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_0, LOW);
-  s_externalSwitchIo1.digitalWrite(NODE_SWITCH_1, LOW);
+  s_externalSwitchIo1.digitalWrite(IO_PIN_NODE_SW_0, LOW);
+  s_externalSwitchIo1.digitalWrite(IO_PIN_NODE_SW_1, LOW);
 
   Delay(NODE_BOOT_DELAY, "Node boot");
 }
 
 void System::ResetRelay()
 {
-  // TODO: once switchable (12V to USB)
+  TRACE(TRACE_DEBUG1, "Resetting relay");
+  s_externalSwitchIo1.digitalWrite(IO_PIN_RELAY_SW, HIGH);
+  Delay(RELAY_RESET_DELAY, "Relay reset");
+  s_externalSwitchIo1.digitalWrite(IO_PIN_RELAY_SW, LOW);
 }
 
 void System::WriteOnboardIO(uint8_t pin, uint8_t value)
@@ -923,7 +934,6 @@ BLYNK_CONNECTED()
     V17,
     V18,
     V21,
-    V22,
     V23,
     V24,
     V25,
@@ -1101,11 +1111,11 @@ BLYNK_WRITE(V80)
   radio::txPumpSwitch(pumpOn);
 }
 
-BLYNK_WRITE(V82)
+static bool s_tankFull = false;
+void updatePump()
 {
   if (s_pumpMode == PumpMode::k_auto) {
-    const bool tankFull = static_cast<bool>(param.asInt());
-    if (tankFull) {
+    if (s_tankFull) {
       eg::s_instance->ReportPumpStatus("Auto switching off");
       Blynk.logEvent("info", F("Tank is full, auto switching pump off."));
     }
@@ -1115,18 +1125,24 @@ BLYNK_WRITE(V82)
     }
 
     // tank not full? switch pump on
-    radio::txPumpSwitch(!tankFull);
+    radio::txPumpSwitch(!s_tankFull);
   }
 }
 
-// TODO: why isn't this being called?
-BLYNK_WRITE(V22)
+BLYNK_WRITE(V82)
+{
+  s_tankFull = static_cast<bool>(param.asInt());
+  updatePump();
+}
+
+BLYNK_WRITE(V21)
 {
   int i = param.asInt();
   TRACE_F(TRACE_DEBUG1, "Blynk pump mode: %d", i);
   s_pumpMode = (PumpMode)i;
   if (s_pumpMode == PumpMode::k_auto) {
     eg::s_instance->ReportPumpStatus("Pump set to auto");
+    updatePump();
   }
   else if (s_pumpMode == PumpMode::k_manual) {
     eg::s_instance->ReportPumpStatus("Pump set to manual");
