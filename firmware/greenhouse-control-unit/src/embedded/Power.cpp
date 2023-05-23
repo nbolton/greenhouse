@@ -125,7 +125,7 @@ void Power::Loop() {
       switchSource(PowerSource::k_powerSourceBattery);
       Native().ReportWarning("PSU undervoltage, using battery");
     }
-#endif  // POWER_SW_EN
+#endif  // POWER_EN
   }
   m_lastPsuVoltage = psuVoltage;
 
@@ -176,7 +176,7 @@ void Power::Loop() {
       }
     }
   }
-#endif  // POWER_SW_EN
+#endif  // POWER_EN
 
   MeasureCurrent();
 

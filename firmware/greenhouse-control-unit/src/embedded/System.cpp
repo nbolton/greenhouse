@@ -781,17 +781,22 @@ void System::UpdateCaseFan()
   // turn case fan on when PSU is in use
   bool onPsu = Power().Source() != PowerSource::k_powerSourceBattery;
 
+  // higher current means fets will warm up
   bool highCurrent = Power().BatteryCurrentOutput() > CASE_FAN_CURRENT_THRESHOLD;
 
-  bool on = onPsu || highCurrent;
+  // higher voltage means sun is beating down on the case
+  bool maxVoltage = Power().BatteryVoltageOutput() > CASE_FAN_VOLTAGE_THRESHOLD;
+
+  bool on = onPsu || highCurrent || maxVoltage;
   CaseFan(on);
 
   TRACE_F(
-    TRACE_DEBUG1,
-    "Case fan: %s (PSU=%s, HC=%s)", //
+    TRACE_DEBUG2,
+    "Case fan: %s (PSU=%s, HC=%s, MV=%s)", //
     BOOL_FS(on),
     BOOL_FS(onPsu),
-    BOOL_FS(highCurrent));
+    BOOL_FS(highCurrent),
+    BOOL_FS(maxVoltage));
 }
 
 void System::OnPowerSwitch()
