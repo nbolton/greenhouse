@@ -9,10 +9,10 @@ public:
   PumpRadio();
   void Init();
   void Update();
-  void SwitchPump(bool on);
+  bool SwitchPump(bool on);
 
 private:
-  void SendPumpMessage();
+  bool SendPumpMessage();
 };
 
 } // namespace legacy

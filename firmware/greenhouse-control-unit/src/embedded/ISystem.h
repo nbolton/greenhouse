@@ -11,7 +11,7 @@ public:
   virtual void OnPowerSwitch() = 0;
   virtual void WriteOnboardIO(uint8_t pin, uint8_t value) = 0;
   virtual void ReportPumpSwitch(bool pumpOn) = 0;
-  virtual void ReportPumpStatus(const char *message) = 0;
+  virtual void ReportPumpStatus(String message) = 0;
   virtual void OnBatteryCurrentChange() = 0;
 };
 

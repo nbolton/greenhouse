@@ -37,6 +37,7 @@ public:
 
   void Setup();
   void Loop();
+  void SerialMode();
   void Refresh() { Refresh(false); }
   void Refresh(bool first);
   void WeatherCallback();
@@ -49,7 +50,7 @@ public:
   void QueueCallback(CallbackFunction f, std::string name);
   void WindowSpeedUpdate();
   void ReportPumpSwitch(bool pumpOn);
-  void ReportPumpStatus(const char *message);
+  void ReportPumpStatus(String message);
   void SwitchLights(bool on);
   void OnBatteryCurrentChange();
   void ResetRelay();
@@ -132,6 +133,7 @@ private:
   int m_windowSpeedLeft;
   int m_windowSpeedRight;
   bool m_relayAlive;
+  bool m_commandMode;
 };
 
 } // namespace embedded

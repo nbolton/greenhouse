@@ -26,6 +26,8 @@ uint8_t len = sizeof(buf);
 #define LORA_ACK_TIMEOUT 3000
 #define PUMP_ACK_TIMEOUT 10000
 
+namespace radio = greenhouse::radio;
+
 namespace legacy {
 
 PumpRadio::PumpRadio() {}
@@ -49,12 +51,10 @@ void PumpRadio::Update()
         TRACE("Message received from Z80");
 
         if (std::string(bufChar).find("pump=1") != std::string::npos) {
-          relay::txPumpStatus("Pump running");
           relay::txPumpSwitch(true);
           pumpMessageAckWait = false;
         }
         else {
-          relay::txPumpStatus("Pump stopped");
           relay::txPumpSwitch(false);
           pumpMessageAckWait = false;
         }
@@ -84,7 +84,7 @@ void PumpRadio::Update()
   led(HIGH);
 }
 
-void PumpRadio::SendPumpMessage()
+bool PumpRadio::SendPumpMessage()
 {
   led(LOW);
 
@@ -94,6 +94,7 @@ void PumpRadio::SendPumpMessage()
   TRACE_F("RF95 TX: %s", (char *)data);
   s_rf95.send(data, sizeof(data));
 
+  bool ok = false;
   s_rf95.waitPacketSent();
   if (s_rf95.waitAvailableTimeout(LORA_ACK_TIMEOUT)) {
     if (s_rf95.recv(buf, &len)) {
@@ -102,35 +103,37 @@ void PumpRadio::SendPumpMessage()
 
       if (std::string(bufChar).find("ack") != std::string::npos) {
         TRACE("RF95 ack OK");
-        relay::txPumpStatus("Waiting for Z80");
+        relay::txPumpStatus(radio::PumpStatus::k_waitingZ80);
 
         pumpMessagePending = false;
         pumpMessageAckWait = true;
         pumpMessageAckWaitStart = millis();
+        ok = true;
       }
       else {
         TRACE("RF95 error: No ack");
-        relay::txPumpStatus("RF95 error: Ack failed");
+        relay::txPumpStatus(radio::PumpStatus::k_errorAckRF95);
       }
     }
     else {
       TRACE("RF95 RX failed");
-      relay::txPumpStatus("RF95 error: RX failed");
+      relay::txPumpStatus(radio::PumpStatus::k_errorRxFailRF95);
     }
   }
   else {
     TRACE_F("RF95 error: No reply within %dms", LORA_ACK_TIMEOUT);
-    relay::txPumpStatus("RF95 error: No reply");
+    relay::txPumpStatus(radio::PumpStatus::k_errorNoReplyRF95);
   }
 
   led(HIGH);
+  return ok;
 }
 
-void PumpRadio::SwitchPump(bool on)
+bool PumpRadio::SwitchPump(bool on)
 {
   pumpMessagePending = true;
   pumpSwitchOn = on;
-  relay::txPumpStatus("Waiting for RF95");
+  return relay::txPumpStatus(radio::PumpStatus::k_waitingRF95);
 }
 
 } // namespace legacy

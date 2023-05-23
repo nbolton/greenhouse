@@ -1,5 +1,7 @@
 #pragma once
 
+#include <radio_common.h>
+
 namespace legacy {
 
 class NodeRadio;
@@ -9,9 +11,11 @@ class PumpRadio;
 
 namespace relay {
 
+namespace radio = greenhouse::radio;
+
 void init(legacy::NodeRadio &nr, legacy::PumpRadio &pr);
 void update();
-void txPumpStatus(const char *stauts);
-void txPumpSwitch(bool on);
+bool txPumpStatus(radio::PumpStatus status);
+bool txPumpSwitch(bool on);
 
 } // namespace relay

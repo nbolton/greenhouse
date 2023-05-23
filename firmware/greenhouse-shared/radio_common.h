@@ -2,9 +2,6 @@
 
 #include <Arduino.h>
 
-#define RHRD_RETRIES 10  // default is 3
-#define RHRD_TIMEOUT 500 // default is 200 ms
-
 #define RHRD_ADDR_SERVER 0
 #define RHRD_ADDR_NODE1 1
 #define RHRD_ADDR_NODE2 2
@@ -16,7 +13,7 @@
 #define RADIO_MSG_META_TYPE RADIO_MSG_PRE_END
 #define RADIO_MSG_META_LEN RADIO_MSG_PRE_END + 1
 #define RADIO_MSG_META_END RADIO_MSG_PRE_END + 2
-#define RADIO_MSG_DATA_SIZE 100
+#define RADIO_MSG_DATA_SIZE 10
 
 #define RADIO_NODE_WA_D 0
 #define RADIO_NODE_WA_R 1
@@ -31,8 +28,6 @@ class RH_RF69;
 namespace greenhouse {
 namespace radio {
 
-enum MotorDirection { k_windowExtend, k_windowRetract };
-
 enum MessageType { //
   k_messageTypeNotSet,
 
@@ -42,6 +37,7 @@ enum MessageType { //
   k_pumpSwitch,
   k_pumpStatus,
 
+  k_status = 253,
   k_keepAlive = 254,
   k_reset = 255
 };
@@ -54,15 +50,25 @@ struct Message {
   unsigned char dataLen = 0;
 };
 
+enum MotorDirection { k_windowExtend, k_windowRetract };
+
+enum PumpStatus {
+  k_waitingZ80,
+  k_errorAckRF95,
+  k_errorRxFailRF95,
+  k_errorNoReplyRF95,
+  k_waitingRF95
+};
+
 namespace common {
 
-typedef void (*RxCallback)(Message m);
+typedef void (*RxCallback)(Message &m);
 typedef void (*StateCallback)(bool busy);
 
 void init(
   ::RHReliableDatagram *rd, ::RH_RF69 *rf69, RxCallback _rxCallback, StateCallback _stateCallback);
 Message rx(MessageType mt = k_messageTypeNotSet);
-bool tx(Message m);
+bool tx(Message &m);
 void printBuffer(const __FlashStringHelper *prompt, uint8_t *data, uint8_t dataLen);
 
 } // namespace common

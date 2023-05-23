@@ -99,9 +99,9 @@ public:
   String DebugInfo();
   bool Send(SendDesc &sendDesc);
   Node &GetNode(NodeId index);
-  void MotorRunAll(MotorDirection direction, byte seconds);
+  bool MotorRunAll(MotorDirection direction, byte seconds);
   float GetSoilTemps();
-  void SetWindowSpeeds(int left, int right);
+  bool SetWindowSpeeds(int left, int right);
 
 private:
   void sr(int pin, bool set);

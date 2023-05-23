@@ -118,14 +118,14 @@ void Power::Loop() {
     TRACE_F(TRACE_DEBUG1, "PSU voltage changed, was %.2fV, now %.2fV",
             m_lastPsuVoltage, psuVoltage);
 
-#if POWER_EN
+#if POWER_SW_EN
     if ((m_source == PowerSource::k_powerSourcePsu) &&
         (psuVoltage < k_psuVoltageMin)) {
       TRACE(TRACE_DEBUG1, "PSU undervoltage, switching to battery");
       switchSource(PowerSource::k_powerSourceBattery);
       Native().ReportWarning("PSU undervoltage, using battery");
     }
-#endif  // POWER_EN
+#endif  // POWER_SW_EN
   }
   m_lastPsuVoltage = psuVoltage;
 
@@ -136,18 +136,18 @@ void Power::Loop() {
     TRACE_F(TRACE_DEBUG2, "Battery voltage changed, was %.2fV now %.2fV",
             m_lastBatteryVoltage, batteryVoltage);
 
-#if POWER_EN
+#if POWER_SW_EN
     if ((m_source == PowerSource::k_powerSourceBattery) &&
         (batteryVoltage < k_batteryVoltageMin)) {
       TRACE(TRACE_DEBUG1, "Battery undervoltage, switching to PSU");
       switchSource(PowerSource::k_powerSourcePsu);
       Native().ReportWarning("Battery undervoltage, using PSU");
     }
-#endif  // POWER_EN
+#endif  // POWER_SW_EN
   }
   m_lastBatteryVoltage = m_batteryVoltageOutput;
 
-#if POWER_EN
+#if POWER_SW_EN
   if ((m_nextSwitch == k_unknownUL) || (millis() > m_nextSwitch)) {
     m_nextSwitch = millis() + SWITCH_LIMIT;
     if (Mode() != PowerMode::k_powerModeAuto) {
@@ -176,7 +176,7 @@ void Power::Loop() {
       }
     }
   }
-#endif  // POWER_EN
+#endif  // POWER_SW_EN
 
   MeasureCurrent();
 

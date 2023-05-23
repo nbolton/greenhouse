@@ -46,6 +46,12 @@ namespace embedded {
 #define NODE_SWITCH_1 P2
 #define NODE_RESET_DELAY 100
 #define NODE_BOOT_DELAY 2000
+#define ASCII_BS 0x08
+#define ASCII_ESC 0x1B
+#define ASCII_LF 0x0A
+#define ASCII_CR 0x0D
+#define SERIAL_BUF_LEN 3
+#define SERIAL_PROMPT "> "
 
 const bool k_enableLed = false;
 const int k_ledFlashDelay = 30; // ms
@@ -112,7 +118,8 @@ System::System() :
   m_lastLoop(0),
   m_windowSpeedLeft(k_unknown),
   m_windowSpeedRight(k_unknown),
-  m_relayAlive(false)
+  m_relayAlive(false),
+  m_commandMode(false)
 {
 }
 
@@ -167,6 +174,8 @@ void System::Setup()
 
 void System::Loop()
 {
+  SerialMode();
+
   radio::update();
 
   if (millis() < (m_lastLoop + k_loopFrequency)) {
@@ -181,20 +190,6 @@ void System::Loop()
 
   // always run before actuator check
   ng::System::Loop();
-
-  if (Serial.available() > 0) {
-    String s = Serial.readString();
-    const char c = s.c_str()[0];
-    switch (c) {
-    case 's':
-      PrintStatus();
-      break;
-
-    default:
-      PrintCommands();
-      break;
-    }
-  }
 
   const unsigned long now = Time().UptimeSeconds();
   const bool recoveredWithinTimeframe = ((now - m_lastBlynkFailure) > k_blynkRecoverTimeSec);
@@ -223,7 +218,7 @@ void System::Loop()
     while (!m_callbackQueue.empty()) {
       Callback callback = m_callbackQueue.front();
 
-      TRACE_F(TRACE_DEBUG1, "Callback function: %s", callback.m_name.c_str());
+      TRACE_F(TRACE_DEBUG2, "Callback function: %s", callback.m_name.c_str());
 
       m_callbackQueue.pop();
 
@@ -231,10 +226,10 @@ void System::Loop()
         (this->*callback.m_function)();
       }
       else {
-        TRACE(TRACE_DEBUG1, "Function pointer was null");
+        TRACE(TRACE_DEBUG2, "Function pointer was null");
       }
 
-      TRACE_F(TRACE_DEBUG1, "Callback queue remaining=%d", m_callbackQueue.size());
+      TRACE_F(TRACE_DEBUG2, "Callback queue remaining=%d", m_callbackQueue.size());
     }
   }
 
@@ -244,6 +239,74 @@ void System::Loop()
   }
 
   yield();
+}
+
+void System::SerialMode()
+{
+  if (Serial.available()) {
+    if (Serial.read() == ASCII_ESC) {
+      TRACE(TRACE_PRINT, "ESC pressed, entering command mode");
+      m_commandMode = true;
+      PrintCommands();
+    }
+  }
+
+  while (m_commandMode) {
+    Serial.print(SERIAL_PROMPT);
+
+    char buf[SERIAL_BUF_LEN] = {0};
+    int i = 0;
+    while (true) {
+      if (Serial.available()) {
+        char c = Serial.read();
+        if ((c == ASCII_ESC) || (c == ASCII_BS)) {
+          continue;
+        }
+        if ((c == ASCII_LF) || (c == ASCII_CR)) {
+          if (i == 0) {
+            continue;
+          }
+          break;
+        }
+        buf[i++] = c;
+        Serial.print(c);
+      }
+    }
+
+    while (Serial.available()) {
+      Serial.read();
+    }
+
+    Serial.println();
+    buf[SERIAL_BUF_LEN - 1] = '\0';
+
+    switch (buf[0]) {
+    case 'q':
+      TRACE(TRACE_PRINT, "Exiting command mode");
+      m_commandMode = false;
+      break;
+
+    case 's':
+      PrintStatus();
+      break;
+
+    case 'l': {
+      int level = (int)buf[1] - '0';
+      if ((level >= 0) && (level <= 5)) {
+        TRACE_F(TRACE_PRINT, "Set log level: %d", level);
+        shared::traceLevel(level);
+      }
+      else {
+        TRACE_F(TRACE_PRINT, "Invalid log level: %d", level);
+      }
+      break;
+    }
+
+    default:
+      TRACE_F(TRACE_PRINT, "Invalid input: %s", buf);
+      break;
+    }
+  }
 }
 
 void System::InitIO()
@@ -316,16 +379,25 @@ void System::Refresh(bool first)
   ReportPower();
   ReportWindowOpenPercent();
 
-  bool relayAlive = radio::keepAliveRelay();
-  if (first || (relayAlive != m_relayAlive)) {
-    if (!relayAlive) {
-      ReportCritical("Relay dead, keep alive failed");
-    }
-    m_relayAlive = relayAlive;
-  }
+  radio::update();
+  radio::txGetRelayStatusAsync();
+  radio::update();
+  radio::txGetSoilTempsAsync();
 
-  UpdateSoilTemps(true);
-  radio::getSoilTempsAsync();
+  if (!first) {
+    UpdateSoilTemps(true);
+
+    bool relayAlive = radio::isRelayAlive();
+    if (relayAlive != m_relayAlive) {
+      if (!relayAlive) {
+        ReportCritical("Relay dead, keep alive failed");
+      }
+      else if (!first) {
+        ReportInfo("Relay is back online");
+      }
+      m_relayAlive = relayAlive;
+    }
+  }
 
   TRACE(TRACE_DEBUG1, "Refresh done (embedded)");
 }
@@ -433,10 +505,10 @@ void System::RunWindowActuator(bool extend, float delta)
     runtimeSec);
 
   if (extend) {
-    radio::windowActuatorRunAll(radio::k_windowExtend, runtimeSec);
+    radio::txWindowActuatorRunAll(radio::k_windowExtend, runtimeSec);
   }
   else {
-    radio::windowActuatorRunAll(radio::k_windowRetract, runtimeSec);
+    radio::txWindowActuatorRunAll(radio::k_windowRetract, runtimeSec);
   }
 }
 
@@ -758,7 +830,15 @@ void System::WriteOnboardIO(uint8_t pin, uint8_t value)
   s_localSystemIo1.digitalWrite(pin, value);
 }
 
-void System::PrintCommands() { TRACE(TRACE_DEBUG1, "Commands\ns: status"); }
+void System::PrintCommands()
+{
+  TRACE(
+    TRACE_DEBUG1,
+    "Commands:\n"
+    "s: status\n"
+    "l[n]: log level\n"
+    "q: quit");
+}
 
 void System::PrintStatus()
 {
@@ -772,12 +852,21 @@ void System::QueueCallback(CallbackFunction f, std::string name)
 
 void System::WindowSpeedUpdate()
 {
-  radio::windowActuatorSetup(WindowSpeedLeft(), WindowSpeedRight());
+  radio::txWindowActuatorSetup(WindowSpeedLeft(), WindowSpeedRight());
 }
 
-void System::ReportPumpSwitch(bool pumpOn) { Blynk.virtualWrite(V80, pumpOn); }
+void System::ReportPumpSwitch(bool pumpOn)
+{
+  Blynk.virtualWrite(V80, pumpOn);
+  if (pumpOn) {
+    ReportPumpStatus("Pump is running");
+  }
+  else {
+    ReportPumpStatus("Pump has stopped");
+  }
+}
 
-void System::ReportPumpStatus(const char *message) { Blynk.virtualWrite(V81, message); }
+void System::ReportPumpStatus(String message) { Blynk.virtualWrite(V81, message.c_str()); }
 
 void System::SwitchLights(bool on) { TRACE(TRACE_DEBUG1, "Lights not implemented"); }
 
@@ -845,6 +934,10 @@ BLYNK_CONNECTED()
     V82,
     V127 /* last */);
 }
+
+// used only as the last value
+// TODO: find a more robust solution (it doesn't always write last)
+BLYNK_WRITE(V127) { eg::s_instance->OnLastWrite(); }
 
 BLYNK_WRITE(V0) { eg::s_instance->AutoMode(param.asInt() == 1); }
 
@@ -955,9 +1048,6 @@ BLYNK_WRITE(V76)
   }
 }
 
-// used only as the last value
-BLYNK_WRITE(V127) { eg::s_instance->OnLastWrite(); }
-
 BLYNK_WRITE(V78)
 {
   eg::s_instance->WindowSpeedLeft(param.asInt());
@@ -981,7 +1071,7 @@ BLYNK_WRITE(V80)
     eg::s_instance->ReportPumpStatus("Manually switching off");
     Blynk.logEvent("info", F("Manually switching pump off."));
   }
-  radio::pumpSwitch(pumpOn);
+  radio::txPumpSwitch(pumpOn);
 }
 
 BLYNK_WRITE(V82)
@@ -998,7 +1088,7 @@ BLYNK_WRITE(V82)
     }
 
     // tank not full? switch pump on
-    radio::pumpSwitch(!tankFull);
+    radio::txPumpSwitch(!tankFull);
   }
 }
 
@@ -1008,4 +1098,13 @@ BLYNK_WRITE(V22)
   int i = param.asInt();
   TRACE_F(TRACE_DEBUG1, "Blynk pump mode: %d", i);
   s_pumpMode = (PumpMode)i;
+  if (s_pumpMode == PumpMode::k_auto) {
+    eg::s_instance->ReportPumpStatus("Pump set to auto");
+  }
+  else if (s_pumpMode == PumpMode::k_manual) {
+    eg::s_instance->ReportPumpStatus("Pump set to manual");
+  }
+  else {
+    eg::s_instance->ReportPumpStatus("Pump mode invalid");
+  }
 }
